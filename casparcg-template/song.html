@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<head>
+		<title>
+			caspar beamer
+		</title>
+		<style>
+			body {
+				margin: 0;
+
+				overflow: hidden;
+
+				background-color: black;
+			}
+
+			#_main {
+				opacity: 0;
+
+				width: 100vw;
+				height: 100vh;
+
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#container {
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+				flex-direction: column;
+
+				justify-content: center;
+			}
+
+			.slide {
+				width: auto;
+				height: auto;
+
+				background-color: white;
+
+				margin: 100px;
+
+				/* width: 20vw; */
+				white-space: nowrap;
+
+				border: 1px solid red;
+			}
+
+			.text_line {
+				font-family: "Calibri";
+				font-size: inherit;
+
+				text-align: center;
+			}
+
+			#storage {
+				opacity: 0;
+
+				width: fit-content;
+			}
+		</style>
+	</head>
+	<body id="body">
+		<div id="_main">
+			<div id="container">
+
+			</div>
+		</div>
+		<div id="storage"></div>
+	</body>
+	<script>
+		let o_data = {};
+
+		let i_active_slide = 0;
+		let i_slide_count = 0;
+
+		function update(s_data) {
+			o_data = JSON.parse(s_data);
+
+			const c_div_text = document.getElementById("text");
+			const c_div_storage = document.getElementById("storage");
+
+			// clear the storage-container
+			c_div_storage.innerHTML = "";
+
+			let i_slide = 0;
+
+			for (const c_a_s_slide of o_data["slides"]) {
+				const c_div_slide = document.createElement("div");
+				c_div_slide.classList.add("slide");
+				c_div_slide.id = `slide_${i_slide}`;
+
+				for (const c_s_line of c_a_s_slide) {
+					const c_div_line = document.createElement("div");
+					c_div_line.classList.add("text_line");
+					c_div_line.innerText = c_s_line;
+
+					c_div_slide.append(c_div_line);
+				}
+
+				c_div_storage.append(c_div_slide);
+				i_slide++;
+			}
+
+			i_slide_count = i_slide;
+
+			display_slide(i_active_slide);
+			resize_slides();
+		}
+
+		function play() {
+			document.getElementById("_main").style.opacity = 1;
+		}
+
+		function next() {
+			display_slide(i_clamp_slide_counter(i_active_slide + 1));
+		}
+
+		function prev() {
+			display_slide(i_clamp_slide_counter(i_active_slide - 1));
+		}
+
+		function jump(i_counter) {
+			display_slide(i_clamp_slide_counter(i_counter));
+		}
+
+		function stop() {
+			document.getElementById("_main").style.opacity = 0;
+		}
+
+		function display_slide(i_counter) {
+			// get the container to display the load the slide into
+			const c_div__main = document.getElementById("container");
+
+			// clear the content of the container
+			c_div__main.innerHTML = "";
+
+			// clone the slide and change its id, so the id stays unique
+			const c_div_slide = document.getElementById(`slide_${i_counter}`).cloneNode(true);
+			c_div_slide.id = "slide_active";
+
+			c_div__main.appendChild(c_div_slide);
+
+			i_active_slide = i_counter;
+		}
+
+		function i_clamp_slide_counter(i_counter_raw) {
+			return Math.max(0, Math.min(i_slide_count - 1, i_counter_raw));
+		}
+
+		function resize_slides() {
+			const c_i_max_width = i_get_max_width();
+
+			const c_i_current_container_width = document.getElementById("slide_active").clientWidth;
+
+			document.getElementById("container").style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
+		}
+
+		function i_get_max_width() {
+			let i_max_width = 0;
+
+			for (let ii = 0; ii < i_slide_count; ii++) {
+				let i_current_width = document.getElementById(`slide_${ii}`).clientWidth;
+
+				i_max_width = Math.max(i_current_width, i_max_width);
+			}
+
+			return i_max_width;
+		}
+	</script>
+</html>

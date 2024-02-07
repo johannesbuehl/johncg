@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<title>
+			casparcg-beamer - Client
+		</title>
+		<link rel="stylesheet" href="css/all.css">
+		<style>
+			body {
+				background-color: green;
+			}
+
+			div.button {
+				background-color: lightgray;
+				border: 1px solid black;
+				border-radius: 0.25rem;
+
+				display: inline-block;
+
+				padding: 0.25rem;
+			}
+
+			#cnt_open_sequence {
+				font-size: 2rem;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="cnt_open_sequence" class="button">
+			<label for="input_choose_sequence" class="btn">
+				<i class="fa-solid fa-folder-open"></i>
+			</label>
+			<input type="file" id="input_choose_sequence" accept=".col" onclick="this.value=null;" onchange="file_select_change(this)" style="display: none;"/>
+		</div>
+		<script>
+			function file_select_change(data) {
+				let file = data.files[0];
+				let reader = new FileReader();
+				let rawData = new ArrayBuffer();            
+				reader.loadend = function() {
+				}
+				reader.onload = function(e) {
+					let rawData = e.target.result;
+
+					let s_send_data = JSON.stringify({command: "open-sequence", data: rawData});
+
+					ws.send(s_send_data);
+				}
+				reader.readAsText(file);
+			}
+
+			ws = new WebSocket("ws://localhost:8765", "beamer-control");
+
+			ws.addEventListener("open", (event) => {
+			});
+
+			ws.addEventListener("message", (event) => {
+				console.log(`Message from server: ${event.data}`);
+			});
+
+			ws.addEventListener("ping", (event) => {
+			});
+		</script>
+	</body>
+</html>
