@@ -3,7 +3,7 @@
 <html>
 	<head>
 		<title>
-			caspar beamer
+			johnCG - template
 		</title>
 		<style>
 			body {
@@ -77,22 +77,29 @@
 		let i_active_slide = 0;
 		let i_slide_count = 0;
 
+		// casparcg-function: transmits data
 		function update(s_data) {
+			// parse the transferred data into json
 			o_data = JSON.parse(s_data);
 
+			// get the div for the display and storage
 			const c_div_text = document.getElementById("text");
 			const c_div_storage = document.getElementById("storage");
 
 			// clear the storage-container
 			c_div_storage.innerHTML = "";
 
+			// counter for the individual slides
 			let i_slide = 0;
 
+			// create the slides and store them in the container
 			for (const c_a_s_slide of o_data["slides"]) {
+				// parent-div of slide
 				const c_div_slide = document.createElement("div");
 				c_div_slide.classList.add("slide");
 				c_div_slide.id = `slide_${i_slide}`;
 
+				// add the individual text-lines
 				for (const c_s_line of c_a_s_slide) {
 					const c_div_line = document.createElement("div");
 					c_div_line.classList.add("text_line");
@@ -105,33 +112,34 @@
 				i_slide++;
 			}
 
+			// store the amount of slides
 			i_slide_count = i_slide;
 
-			display_slide(i_active_slide);
+			// display the first slide
+			jump(i_active_slide);
+			// resize all the slides (has to be done after displayin the first slide)
 			resize_slides();
 		}
 
+		// casparcg-function: displays the template
 		function play() {
 			document.getElementById("_main").style.opacity = 1;
 		}
 
+		// casparcg-function: advances to the next step
 		function next() {
-			display_slide(i_clamp_slide_counter(i_active_slide + 1));
+			jump(i_active_slide + 1);
 		}
 
+		// custom-function (through invoke): advance to the previous step
 		function prev() {
-			display_slide(i_clamp_slide_counter(i_active_slide - 1));
+			jump(i_active_slide - 1);
 		}
 
-		function jump(i_counter) {
-			display_slide(i_clamp_slide_counter(i_counter));
-		}
+		// custom-function (through invoke): jump to an arbitrary slide
+		function jump(i_counter_raw) {
+			const i_counter = i_clamp_slide_counter(i_counter_raw)
 
-		function stop() {
-			document.getElementById("_main").style.opacity = 0;
-		}
-
-		function display_slide(i_counter) {
 			// get the container to display the load the slide into
 			const c_div__main = document.getElementById("container");
 
@@ -147,21 +155,33 @@
 			i_active_slide = i_counter;
 		}
 
+		// casparcg-function: hide the template
+		function stop() {
+			document.getElementById("_main").style.opacity = 0;
+		}
+
+		// clamp the counter to valid values
 		function i_clamp_slide_counter(i_counter_raw) {
 			return Math.max(0, Math.min(i_slide_count - 1, i_counter_raw));
 		}
 
+		// change the font-size so the slide with the highest width uses all of the available space
 		function resize_slides() {
+			// get the highest width
 			const c_i_max_width = i_get_max_width();
 
+			// get the width of the container
 			const c_i_current_container_width = document.getElementById("slide_active").clientWidth;
 
+			// change the font size by the size difference ratio
 			document.getElementById("container").style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
 		}
 
+		// get the width of the widest slide
 		function i_get_max_width() {
 			let i_max_width = 0;
 
+			// get the width of the individual slides and store the biggest one 
 			for (let ii = 0; ii < i_slide_count; ii++) {
 				let i_current_width = document.getElementById(`slide_${ii}`).clientWidth;
 

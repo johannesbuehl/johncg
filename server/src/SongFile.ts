@@ -1,29 +1,35 @@
 import fs from "fs";
+import iconv from "iconv-lite"
 
-type SongElement =
-	| "refrain"
-	| "chorus"
-	| "vers"
-	| "verse"
-	| "strophe"
-	| "intro"
-	| "coda"
-	| "ending"
-	| "bridge"
-	| "interlude"
-	| "zwischenspiel"
-	| "pre-chorus"
-	| "pre-refrain"
-	| "misc"
-	| "outro"
-	| "pre-bridge"
-	| "pre-coda"
-	| "part"
-	| "teil"
-	| "unbekannt"
-	| "unknown"
-	| "unbenannt";
+const c_a_s_verse_types = [
+	"refrain",
+	"chorus",
+	"vers",
+	"verse",
+	"strophe",
+	"intro",
+	"coda",
+	"ending",
+	"bridge",
+	"interlude",
+	"zwischenspiel",
+	"pre-chorus",
+	"pre-refrain",
+	"misc",
+	"outro",
+	"pre-bridge",
+	"pre-coda",
+	"part",
+	"teil",
+	"unbekannt",
+	"unknown",
+	"unbenannt"
+] as const;
 
+type SongElement = (typeof c_a_s_verse_types)[number];
+const b_isSongElement = (x: any): x is SongElement => c_a_s_verse_types.includes(x);
+
+// metadata of the songfile
 interface SongFileMetadata {
 	Title: string;
 	ChurchSongID?: string;
@@ -43,8 +49,7 @@ class SongFile {
 	private text: Record<string, string[][]> = {};
 
 	metadata: SongFileMetadata = {
-		Title: "",
-		BackgroundImage: ""
+		Title: ""
 	};
 
 	constructor(path: string) {
@@ -59,27 +64,27 @@ class SongFile {
 
 	/**
 	 * parses the metadata in a text header
-	 * @param header a string representing the header
+	 * @param s_header a string representing the header
 	 */
-	private parse_text_header(header: string): void {
-		const header_data: string[] = header.split(/\r?\n/);
+	private parse_text_header(s_header: string): void {
+		// split the header into the individual lines
+		const a_s_header_data: string[] = s_header.split(/\r?\n/);
 
-		header_data.forEach((row) => {
-			let key = row.split("=")[0];
-			const value = row.split("=")[1];
+		a_s_header_data.forEach((row) => {
+			const components = row.split('=');
+			const [s_key, s_value] = [components.shift().substring(1), components.join('=')];
 
-			key = key.substring(1);
-
-			switch (key) {
+			// handle different data differently
+			switch (s_key) {
 				// direct string data
 				case "Title":
 				case "ChurchSongID":
 				case "Book":
 				case "BackgroundImage":
-					this.metadata[key] = value;
+					this.metadata[s_key] = s_value;
 					break;
 				case "VerseOrder":
-					this.metadata[key] = value.split(",") as SongElement[];
+					this.metadata[s_key] = s_value.split(",") as SongElement[];
 					break;
 				default:
 					break;
@@ -89,33 +94,23 @@ class SongFile {
 
 	// parse the text-content
 	private parse_song_text() {
-		const raw_data = fs.readFileSync(this.s_song_file_path, "utf8");
+		// read the song-file in a byte-array
+		const a_by_raw_data = fs.readFileSync(this.s_song_file_path);
+		// utf-8-BOM
+		const a_by_bom = Buffer.from([239, 187, 191]);
 
-		// stores the different types of song-verses
-		const verse_types = [
-			"refrain",
-			"chorus",
-			"vers",
-			"verse",
-			"strophe",
-			"intro",
-			"coda",
-			"ending",
-			"bridge",
-			"interlude",
-			"zwischenspiel",
-			"pre-chorus",
-			"pre-refrain",
-			"misc",
-			"outro",
-			"pre-bridge",
-			"pre-coda",
-			"part",
-			"teil",
-			"unbekannt",
-			"unknown",
-			"unbenannt"
-		];
+		let encoding;
+
+		// check wether the song-file starts with the utf-8-BOM
+		if (a_by_raw_data.subarray(0, 3).compare(a_by_bom) === 0) {
+			encoding = "utf8";
+		// no utf-8-BOM -> encoding is cp1252
+		} else {
+			encoding = "cp1252";
+		}
+
+		// decode the song-file-bytes with the fitting encoding
+		const raw_data = iconv.decode(a_by_raw_data, encoding);
 
 		// the different slides are seperated by a line of 2 or 3 dashes
 		const data = String(raw_data).split(/\r?\n---?\r?\n/);
@@ -127,18 +122,16 @@ class SongFile {
 		data.splice(0, 1);
 
 		// go through all the text blocks and save them to the text-dictionary
-		// for-loop is allowed because the order is important
 		let key = "";
-		let index = 0;
-		// eslint-disable-next-line no-restricted-syntax
 		for (let data_block of data) {
+			// split the block into the individual lines
 			const lines = data_block.split(/\r?\n/);
 
 			const first_line_items = lines[0].split(" ");
 
 			// check if the first row describes the part
 			if (
-				verse_types.includes(first_line_items[0].toLowerCase()) &&
+				b_isSongElement(first_line_items[0].toLowerCase()) && 
 				first_line_items.length <= 2 &&
 				first_line_items.length > 0
 			) {
@@ -149,15 +142,10 @@ class SongFile {
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
 				this.text[key] = [];
-
-				// reset the index to 0
-				index = 0;
-			} else {
-				// increase the index counter
-				index += 1;
 			}
 
-			this.text[key][index] = lines;
+			// append the lines to the song-element
+			this.text[key].push(lines);
 		}
 	}
 

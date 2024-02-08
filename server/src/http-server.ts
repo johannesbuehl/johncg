@@ -13,7 +13,9 @@ class http_server {
 
 	start() {
 		this.server = http.createServer((request, response) => {
+			// override different requested urls
 			switch (request.url) {
+				// redirect the root to the main-site
 				case "/":
 					request.url = "main.html";
 					break;
@@ -21,13 +23,16 @@ class http_server {
 				
 			let s_content_type = "";
 
+			// guess the content-type based on the extension
 			switch (path.extname(request.url)) {
 				case "html":
 					s_content_type = "text/html";
 					break;
 			}
 
+			// try to serve the requested url
 			fs.readFile(path.join("client", request.url), (err, data) => {
+				// if there was an error while opening the file, serve a 404-error
 				if (err) {
 					response.writeHead(404, {
 						"Content-Type": "text/plain"
@@ -39,6 +44,7 @@ class http_server {
 						"Content-Type": s_content_type
 					});
 	
+					// serve the file-content
 					response.write(data);
 				}
 				
