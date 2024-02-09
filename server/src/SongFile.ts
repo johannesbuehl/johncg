@@ -11,6 +11,7 @@ const c_a_s_verse_types = [
 	"coda",
 	"ending",
 	"bridge",
+	"instrumental",
 	"interlude",
 	"zwischenspiel",
 	"pre-chorus",

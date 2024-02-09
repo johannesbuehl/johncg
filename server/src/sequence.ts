@@ -1,5 +1,8 @@
-import SongFile, { SongElement } from "./SongFile";
 import path from "path";
+
+import SongFile, { SongElement } from "./SongFile";
+
+const config = require("../config.json");
 
 // individual data of the sequence-file
 interface SequenceItemPartial {
@@ -18,17 +21,36 @@ interface SequenceItem extends SequenceItemPartial {
 
 // interface for a renderer-object
 interface RenderItem {
-	"slides": string[][];
+	slides: string[][];
+	BackgroundImage?: string;
 }
+
+interface ClientSequenceItem {
+	Caption: string;
+	ID: number;
+};
+
+interface ClientSequenceObject {
+	sequence_items: ClientSequenceItem[];
+	selection: number;
+};
+
+interface ClientItemObject {
+	metadata: {
+		ID: number;
+		BackgroundImage: string;
+	};
+	slides: {
+		type: string;
+		slides: string[][];
+	}[];
+};
 
 class Sequence {
 	// regex to split a sequence-file into individual items
 	private re_scan_sequence_file = /item\r?\n(\r?\n|.)+?end/gm;
 	// regex to extract information from an individual sequence-item
 	private re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\})$)/gm;
-
-	// TESTING: store a render-object to test functionality
-	temp_render_item: RenderItem;
 
 	// store the individual items of the sequence
 	a_sequence_items: SequenceItem[] = [];
@@ -72,36 +94,26 @@ class Sequence {
 
 			} while (re_results_item !== null);
 
-			// TESTING: if the element is a song-element, parse it into a songfile and store it
+			// store the sequence-item
+
+			// TESTING only if it is song-element, since the others aren't implemented
 			if (o_item_data.Type === "Song") {
-				o_item_data.Song = new SongFile(o_item_data.FileName);
-
-				this.temp_render_item = this.o_create_renderer_object(o_item_data);
-
-				console.debug(this.temp_render_item);
+				o_item_data.Song = new SongFile(s_get_song_path(o_item_data.FileName));
+				this.a_sequence_items.push(o_item_data);
 			}
-
-			// store the schedule-item
-			this.a_sequence_items.push(o_item_data);
 		}
 	}
 	
 	// package an item into a package for the casparcg-template renderer
-	o_create_renderer_object(item: SequenceItem): RenderItem {
+	o_create_renderer_object(i_item_number: number): RenderItem {
+		const item = this.a_sequence_items[i_item_number];
+		
 		const o_return_object: RenderItem = {
 			"slides": []
 		};
 		
-		let verse_order: SongElement[];
-		// if there is no verse-order specified in the schedule, take the verse-order of the song-file
-		if (item.VerseOrder !== undefined) {
-			verse_order = item.VerseOrder;
-		} else {
-			verse_order = item.Song.metadata.VerseOrder;
-		}
-
 		// add the individual part to the output-object
-		for (let s_part of item.Song.metadata.VerseOrder) {
+		for (let s_part of this.a_get_verse_order(i_item_number)) {
 			const a_part = item.Song.get_part(s_part);
 
 			// if a part is not available, skip it
@@ -110,11 +122,62 @@ class Sequence {
 			}
 		}
 
+		o_return_object.BackgroundImage = s_get_image_path(item.Song.metadata.BackgroundImage).replaceAll('\\', "\\\\");
+
 		return o_return_object;
+	}
+
+	o_create_client_object_sequence(): ClientSequenceObject {
+		const o_return_sequence: ClientSequenceObject = {
+			"sequence_items": [],
+			selection: 0
+		};
+
+		for (const [i, song_item] of this.a_sequence_items.entries()) {
+			const item_song: ClientSequenceItem = {
+					Caption: song_item.Caption,
+					ID: i
+			};
+
+			o_return_sequence.sequence_items.push(item_song)
+		}
+
+		return o_return_sequence;
+	}
+
+	o_create_client_object_item(i_item_number: number):  ClientItemObject{
+		const current_item: SequenceItem = this.a_sequence_items[i_item_number];
+
+		const o_return_item: ClientItemObject = {
+			metadata: {
+				ID: i_item_number,
+				BackgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
+			},
+			slides: []
+		};
+
+		for (let s_part of this.a_get_verse_order(i_item_number)) {
+			o_return_item.slides.push({
+				type: s_part,
+				slides: current_item.Song.get_part(s_part)
+			});
+		}
+
+		return o_return_item;
+	}
+
+	a_get_verse_order(i_item: number): string[] {
+		const o_item = this.a_sequence_items[i_item];
+
+		if (o_item.VerseOrder !== undefined) {
+			return o_item.VerseOrder;
+		} else {
+			return o_item.Song.metadata.VerseOrder;
+		}
 	}
 }
 
-// parse an individual schedule-item-value
+// parse an individual sequence-item-value
 function o_parse_item_value_string(s_key: string, s_value: string): SequenceItemPartial {
 	// remove line-breaks
 	s_value = s_value.replaceAll(/'\s\+\s+'/gm, "");
@@ -147,6 +210,14 @@ function o_parse_item_value_string(s_key: string, s_value: string): SequenceItem
 	}
 
 	return o_result;
+}
+
+function s_get_image_path(s_path: string): string {
+	return path.join(config.path.BackgroundImage, s_path);
+}
+
+function s_get_song_path(s_path: string): string {
+	return path.join(config.path.Song, s_path);
 }
 
 export { Sequence };
