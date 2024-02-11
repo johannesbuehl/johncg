@@ -1,0 +1,238 @@
+* {
+	overflow: hidden;
+}
+
+body {
+	background-color: rgb(31, 33, 42);
+
+	font-family: "Bahnschrift";
+	color: white;
+
+	margin: 0;
+
+	cursor: default;
+	user-select: none;
+}
+
+#main {
+	height: 100vh;
+	width: 100vw;
+
+	display: flex;
+	flex-direction: column;
+}
+
+div.button {
+	background-color: rgb(60, 64, 75);
+
+	border-radius: 0.25rem;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+
+	padding: 0.5rem;
+
+	aspect-ratio: 1;
+	max-height: 100%;
+}
+
+div.button:hover {
+	background-color: rgb(79, 83, 94);
+}
+
+div.button.selected {
+	background-color: rgb(40, 76, 184);
+}
+
+div.button.selected:hover {
+	background-color: rgb(54, 92, 192);
+}
+
+div.button, div.button > * {
+	cursor: pointer;
+}
+
+.scroll {
+	overflow: auto;
+}
+
+.scroll::-webkit-scrollbar {
+	width: calc(1rem + 0.25rem);
+}
+
+.scroll::-webkit-scrollbar-thumb {
+	background-color: rgb(60, 64, 75);
+
+	border-radius: 0.5rem;
+
+	border: 0.25rem solid transparent;
+	background-clip: padding-box;
+}
+
+.scroll::-webkit-scrollbar-thumb:hover {
+	background-color: rgb(79, 83, 94);
+}
+
+.scroll::-webkit-scrollbar-track {
+	background-color: rgb(43, 46, 56);
+}
+
+.scroll::-webkit-scrollbar-button {
+	height: 0;
+}
+
+.container {
+	background-color: rgb(43, 46, 56);
+
+	border-radius: 0.25rem;
+}
+
+.seperator-v {
+	border-left: 0.125rem solid black;
+	border-radius: 2rem;
+}
+
+#menubar {
+	display: flex;
+
+	margin: 0.25rem;
+	margin-bottom: 0;
+}
+
+#menubar > * {
+	margin: 0.25rem;
+}
+
+#menubar > .button {
+	font-size: 1.5rem;
+}
+
+#menubar > .seperator-v {
+	margin-top: 0.625rem;
+	margin-bottom: 0.625rem;
+}
+
+#main_view {
+	flex: 1;
+
+	column-gap: 0.25rem;
+	padding: 0.25rem;
+}
+
+.flex_container {
+	display: flex;
+}
+
+#sequence {
+	width: 32rem;
+}
+
+.header {
+	background-color: rgb(60, 64, 75);
+
+	font-weight: bold;
+
+	border-radius: inherit;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+
+	padding: 0.5rem;
+	padding-left: 0.75rem;
+}
+
+.sequence_item {
+	text-align: center;
+
+	background-color: rgb(60, 64, 75);
+
+	margin: 0.25rem;
+	border-radius: 0.25rem;
+	padding: 0.25rem;
+
+	cursor: pointer;
+}
+
+.sequence_item:hover {
+	background-color: rgb(79, 83, 94);
+}
+
+.sequence_item.selected {
+	background-color: rgb(40, 76, 184);
+}
+
+.sequence_item.selected:hover {
+	background-color: rgb(54, 92, 192);
+}
+
+#slides_view_container {
+	flex: 1;
+}
+
+.slide_part {
+	border-radius: inherit;
+}
+
+.slides_view {
+	display: flex;
+	flex-wrap: wrap;
+
+	align-items: center;
+
+	padding: 0.5rem;
+}
+
+.slide_container {
+	margin: 0.25rem;
+
+	overflow: visible; /* show the overflow, because the hover effects use thicker borders wich overflow (intended) */
+
+	cursor: pointer;
+}
+
+.slide {
+	justify-content: center;
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	
+	width: 16rem;
+	height: 9rem;
+	
+	border: 1px solid white;
+
+	border-radius: 0.125rem;
+	
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+}
+
+.slide:hover {
+	border-width: 2px;
+	
+	margin: -1px; /* difference in border width between selected and non-selected */
+}
+
+.slide.selected {
+	border-color: red;
+	border-width: 2px;
+
+	margin: -1px; /* difference in border width between selected and non-selected */
+}
+
+.slide.selected:hover {
+	border-color: red;
+	border-width: 4px;
+
+	margin: -3px; /* difference in border width between selected and non-selected */
+}
+
+.lyric_line {
+	white-space: nowrap;
+
+	font-family: "Calibri";
+	color: white;
+	text-shadow: calc(1em / 32) calc(1em / 32) calc(1em / 16) black;
+}

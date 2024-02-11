@@ -7,7 +7,7 @@ import { unescape } from "querystring";
 const config = require("../config.json");
 
 class http_server {
-	i_port: number;
+	private i_port: number;
 
 	server: http.Server
 

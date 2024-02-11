@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
 <html>
+	<script>
+		const o_config = {
+			
+		};
+	</script>
 	<head>
 		<title>
 			johnCG - template
@@ -118,6 +123,8 @@
 			i_slide_count = i_slide;
 
 			document.getElementById("container").style.backgroundImage = `url("${o_data.BackgroundImage.replace(/\\/g, "\\\\")}")`;
+
+			i_active_slide = o_data.slide;
 
 			// display the first slide
 			jump(i_active_slide);

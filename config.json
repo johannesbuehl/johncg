@@ -1,6 +1,26 @@
 {
 	"path": {
-		"BackgroundImage": "",
-		"Song": ""
+		"BackgroundImage": "W:\\Kirche\\SongBeamer\\Hintergrund",
+		"Song": "D:\\Coding_z1glr\\liedtexte_git"
+	},
+	"casparcg": {
+		"host": "127.0.0.1",
+		"port": 5250,
+		"channel": 1,
+		"layer": 20
+	},
+	"client_server": {
+		"http": {
+			"port": 8888
+		},
+		"websocket": {
+			"port": 8765
+		}
+	},
+	"client": {
+		"ping": {
+			"frequency": 1,
+			"timeout": 5
+		}
 	}
 }

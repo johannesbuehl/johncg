@@ -155,6 +155,10 @@ class SongFile {
 		return this.text[part];
 	}
 
+	has_text(part: string): boolean {
+		return this.avaliable_parts.includes(part);
+	}
+
 	/**
 	 * all the parts of the song in the order they are defined
 	 */

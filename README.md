@@ -8,12 +8,19 @@ Generate lyric-graphics and play them out through CasparCG.
 - SongFile: implement multi-language-songs
 - implement other sequence-items than song
 - implement pinging / auto-reconnect
-- settings-file
-- use async / await
-- transmit test-formatting to template-renderer
-- casparcg-config (including server and channel)
-- client: handle error message (e.g. sequence has not been loaded)
-- http-server: serve images
-- companion integration
 - client: information about connection (active / reconnecting / ...)
-- add command to show / hide casparcg (play / stop and play_on_load)
+- use async / await
+- companion integration
+- add command to show / hide casparcg (play / stop and play_on_load) -> disable auto-play
+- try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
+- check client -> server slide_number out of range
+- remove types in variable names (typescript is typed, vscode shows the types)
+- implement set_display
+- casparcg: only change output with click on thumbnail, not by selecting a different sequence-item
+
+### server
+- navigate buttons
+- show / hide buttons
+
+### client
+- show / hide state feedback

@@ -1,3 +1,4 @@
+import { ClientRequest, IncomingMessage } from 'http';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 
 // defintion of a JCGP-response
@@ -7,50 +8,77 @@ interface i_JGCP_response {
 	code: number;
 }
 
+interface MessageHandler {
+	message: (ws: WebSocket, data: RawData) => void;
+	open?: (ws: WebSocket) => void;
+	ping?: (ws: WebSocket, data: Buffer) => void;
+	pong?: (ws: WebSocket, data: Buffer) => void;
+	error?: (ws: WebSocket, err: Error) => void;
+	close?: (ws: WebSocket, reason: Buffer) => void;
+	"unexpected-response"?: (ws: WebSocket, request: ClientRequest, response: IncomingMessage) => void;
+	upgrade?: (ws: WebSocket, request: IncomingMessage) => void;
+	connection?: (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => void;
+}
+
 class websocket_server {
+	private i_port: number;
+
 	ws_server: WebSocketServer;
 
 	// store the message handlers for the different protocols
-	o_message_handlers: Record<string, (ws: WebSocket, data: RawData) => void>;
+	o_message_handlers: Record<string, MessageHandler>;
 
 	o_a_connections: Record<string, WebSocket[]> = {};
 
-	constructor(i_port: number, o_message_handlers: Record<string, (ws: WebSocket, data: RawData) => void>) {
+	constructor(i_port: number, o_message_handlers: Record<string, MessageHandler>) {
+		this.i_port = i_port;
+
 		this.o_message_handlers = o_message_handlers;
 
-		this.ws_server = new WebSocketServer({ port: i_port });
-
-		this.ws_server.on("connection", (data) => this.on_connection(data));
+		this.start();
 	}
 
-	private on_connection(ws_connection: WebSocket) {
+	start() {
+		this.ws_server = new WebSocketServer({ port: this.i_port });
+
+		this.ws_server.on("connection", (ws, socket, request) => this.on_connection(ws, socket, request));
+	}
+
+	private on_connection(ws: WebSocket,socket: WebSocket, request: IncomingMessage) {
 		// check wether there is a protocol handler for the used protocol
-		if (Object.keys(this.o_message_handlers).includes(ws_connection.protocol)) {
-			if (!Object.keys(this.o_a_connections).includes(ws_connection.protocol)) {
-				this.o_a_connections[ws_connection.protocol] = [];
+		if (Object.keys(this.o_message_handlers).includes(ws.protocol)) {
+			if (!Object.keys(this.o_a_connections).includes(ws.protocol)) {
+				this.o_a_connections[ws.protocol] = [];
 			}
 
-			this.o_a_connections[ws_connection.protocol].push(ws_connection);
+			this.o_a_connections[ws.protocol].push(ws);
 
-			// redirect messages to the protocol
-			ws_connection.on("message", (data) => this.o_message_handlers[ws_connection.protocol](ws_connection, data));
+			// register the different action-handlers
+			Object.entries(this.o_message_handlers[ws.protocol]).forEach(([s_type, f_handler]) => {
+				ws.on(s_type, (...data) => this.o_message_handlers[ws.protocol][s_type](ws, ...data));
+			});
+
+			// execute the on_connection function
+			if (this.o_message_handlers[ws.protocol].connection !== undefined) {
+				this.o_message_handlers[ws.protocol].connection(ws, socket, request);
+			}
 		} else {
 			// reject connection
-			ws_connection.send("Protocol not supported");
+			ws.send("Protocol not supported");
 
-			ws_connection.send(JSON.stringify({
+			ws.send(JSON.stringify({
 				command: "response",
-				message: `protocol '${ws_connection.protocol}' is not supported`,
+				message: `protocol '${ws.protocol}' is not supported`,
 				code: 400
 			}));
-			ws_connection.close();
+			ws.close();
 		}
 
 		// redirect errors to the console
-		ws_connection.on("error", console.error);
+		ws.on("error", console.error);
 
 		// TESTING: answer pings with pongs
-		ws_connection.on("ping", ws_connection.pong);
+		ws.on("ping", ws.pong);
 	}
 
 	a_get_connections(s_protocol: string): WebSocket[] {
@@ -62,4 +90,4 @@ class websocket_server {
 	}
 }
 
-export { websocket_server, i_JGCP_response };
+export { websocket_server, i_JGCP_response as JGCP_response };
