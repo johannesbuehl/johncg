@@ -2,7 +2,8 @@ import path from "path";
 
 import SongFile, { SongElement } from "./SongFile";
 
-const config = require("../config.json");
+import Config from "./config";
+import { CasparCG } from "casparcg-connection";
 
 // individual data of the sequence-file
 interface SequenceItemPartial {
@@ -12,13 +13,13 @@ interface SequenceItemPartial {
 	FileName?: string;
 	VerseOrder?: SongElement[];
 	Song?: SongFile;
-};
+}
 
 // individual data of the sequence-file with Caption mandatory
 interface SequenceItem extends SequenceItemPartial {
 	Caption: string;
 	SlideCount: number;
-};
+}
 
 // interface for a renderer-object
 interface RenderObject {
@@ -30,14 +31,17 @@ interface RenderObject {
 interface ClientSequenceItem {
 	Caption: string;
 	item: number;
-};
+}
 
-interface ClientSequenceObject {
+interface ClientSequenceItems {
 	sequence_items: ClientSequenceItem[];
-	item: number;
-};
+	metadata: {
+		item: number;
+		slide: number;
+	}
+}
 
-interface ClientItemObject {
+interface ClientItemSlides {
 	metadata: {
 		item: number;
 		BackgroundImage: string;
@@ -46,14 +50,21 @@ interface ClientItemObject {
 		type: string;
 		slides: string[][];
 	}[];
-};
+}
+
+interface ActiveItem {
+	item: number,
+	slide: number
+}
 
 const _item_navigate_type = ["item", "slide"] as const;
 type NavigateType = (typeof _item_navigate_type)[number];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isItemNavigateType = (x: any): x is NavigateType => _item_navigate_type.includes(x);
 
 const _item_navigate_direction = ["prev", "next"] as const;
 type NavigateDirection = (typeof _item_navigate_direction)[number];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isItemNavigateDirection = (x: any): x is NavigateDirection => _item_navigate_direction.includes(x);
 
 class Sequence {
@@ -65,10 +76,18 @@ class Sequence {
 	// store the individual items of the sequence
 	sequence_items: SequenceItem[] = [];
 
-	private active: [number, number] = [0, 0];
+	private active: ActiveItem = { item: 0, slide: 0 };
+
+	private casparcg_visibility: boolean = Config.behaviour.showOnLoad;
+
+	readonly casparcg_connection = new CasparCG({
+		...Config.casparcg
+	});
 
 	constructor(sequence: string) {
 		this.parse_sequence(sequence);
+
+		this.set_active_item(0, 0);
 	}
 
 	parse_sequence(sequence: string): void {
@@ -85,7 +104,7 @@ class Sequence {
 		}
 
 		// process every element individually
-		for (let sequence_item of re_results) {
+		for (const sequence_item of re_results) {
 			// reset the regex
 			this.re_scan_sequence_item.lastIndex = 0;
 
@@ -105,13 +124,13 @@ class Sequence {
 				
 				// if there was a result, process it
 				if (re_results_item !== null) {
-					let results = re_results_item.groups;
+					const results = re_results_item.groups;
 
 					// remove all undefined values
 					Object.keys(results).forEach(key => results[key] === undefined && delete results[key]);
 
 					// merge the result with the data object
-					item_data = {...item_data, ...o_parse_item_value_string(...Object.entries(results)[0])};
+					item_data = { ...item_data, ...o_parse_item_value_string(...Object.entries(results)[0]) };
 				}
 
 			} while (re_results_item !== null);
@@ -123,7 +142,7 @@ class Sequence {
 				item_data.Song = new SongFile(s_get_song_path(item_data.FileName));
 				
 				// count the slides
-				for (let part of this.get_verse_order(item_data)) {
+				for (const part of this.get_verse_order(item_data)) {
 					// check wether the part is actually defined in the songfile
 					if (item_data.Song.has_text(part)) {
 						item_data.SlideCount += item_data.Song.get_part(part).length;
@@ -136,35 +155,39 @@ class Sequence {
 	}
 	
 	// package an item into a package for the casparcg-template renderer
-	create_renderer_object(i_item: number): RenderObject {
-		this.validate_item_number(i_item);
+	private create_renderer_object(item: number, slide: number): RenderObject {
+		item = this.validate_item_number(item);
+		slide = this.validate_slide_number(slide, item);
 
-		const item = this.sequence_items[i_item];
+		const sequence_item = this.sequence_items[item];
 		
-		const o_return_object: RenderObject = {
+		const return_object: RenderObject = {
 			slides: [],
-			slide: this.active[1]
+			slide: slide
 		};
 		
 		// add the individual part to the output-object
-		for (let s_part of this.get_verse_order(i_item)) {
-			const a_part = item.Song.get_part(s_part);
+		for (const s_part of this.get_verse_order(item)) {
+			const a_part = sequence_item.Song.get_part(s_part);
 
 			// if a part is not available, skip it
 			if (a_part !== undefined){
-				o_return_object.slides.push(...a_part);
+				return_object.slides.push(...a_part);
 			}
 		}
 
-		o_return_object.BackgroundImage = s_get_image_path(item.Song.metadata.BackgroundImage).replaceAll('\\', "\\\\");
+		return_object.BackgroundImage = s_get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
 
-		return o_return_object;
+		return return_object;
 	}
 
-	create_client_object_sequence(): ClientSequenceObject {
-		const o_return_sequence: ClientSequenceObject = {
-			"sequence_items": [],
-			item: this.active_item
+	create_client_object_sequence(): ClientSequenceItems {
+		const o_return_sequence: ClientSequenceItems = {
+			sequence_items: [],
+			metadata: {
+				item: this.active_item,
+				slide: this.active_slide
+			}
 		};
 
 		for (const [i, song_item] of this.sequence_items.entries()) {
@@ -173,26 +196,26 @@ class Sequence {
 					item: i
 			};
 
-			o_return_sequence.sequence_items.push(current_item)
+			o_return_sequence.sequence_items.push(current_item);
 		}
 
 		return o_return_sequence;
 	}
 
-	create_client_object_item(i_item: number):  ClientItemObject{
-		this.validate_item_number(i_item);
+	create_client_object_item_slides(item: number):  ClientItemSlides{
+		item = this.validate_item_number(item);
 
-		const current_item: SequenceItem = this.sequence_items[i_item];
+		const current_item: SequenceItem = this.sequence_items[item];
 
-		const o_return_item: ClientItemObject = {
+		const o_return_item: ClientItemSlides = {
 			metadata: {
-				item: i_item,
+				item,
 				BackgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
 			},
 			slides: []
 		};
 
-		for (let s_part of this.get_verse_order(i_item)) {
+		for (const s_part of this.get_verse_order(item)) {
 			const a_part = current_item.Song.get_part(s_part);
 
 			// if a part is not available, skip it
@@ -207,36 +230,41 @@ class Sequence {
 		return o_return_item;
 	}
 
-	get_verse_order(i_item: number | SequenceItem): string[] {
-		let o_item: SequenceItem;
+	get_verse_order(item: number | SequenceItem): string[] {
+		let sequence_item: SequenceItem;
 
-		if (typeof(i_item) === "number") {
-			this.validate_item_number(i_item);
+		if (typeof item === "number") {
+			item = this.validate_item_number(item);
 
-			o_item = this.sequence_items[i_item];
+			sequence_item = this.sequence_items[item];
 		} else {
-			o_item = i_item;
+			sequence_item = item;
 		}
 
-		if (o_item.VerseOrder !== undefined) {
-			return o_item.VerseOrder;
+		if (sequence_item.VerseOrder !== undefined) {
+			return sequence_item.VerseOrder;
 		} else {
-			return o_item.Song.metadata.VerseOrder;
+			return sequence_item.Song.metadata.VerseOrder;
 		}
 	}
 
-	set_active_item(i_number): [number, number] {
-		this.validate_item_number(i_number);
+	set_active_item(item: number, slide: number = 0): ActiveItem {
+		item = this.validate_item_number(item);
+		slide = this.validate_slide_number(slide, item);
 
-		this.active = [i_number, 0];
+		this.active = { item, slide };
+
+		this.casparcg_load_item(this.active.item, this.active.slide);
 
 		return this.active;
 	}
 
-	set_active_slide(i_number): [number, number] {
-		this.validate_slide_number(i_number);
+	set_active_slide(slide): ActiveItem {
+		slide = this.validate_slide_number(slide);
 
-		this.active[1] = i_number;
+		this.active.slide = slide;
+
+		this.casparcg_select_slide(this.active_slide);
 
 		return this.active;
 	}
@@ -245,7 +273,7 @@ class Sequence {
 	 * Navigate to the next or previous item
 	 * @param direction navigate forward ('next') or backward ('prev')
 	 */
-	navigate_item(direction: NavigateDirection): void {
+	navigate_item(direction: NavigateDirection, slide: number = 0): void {
 		if (!isItemNavigateDirection(direction)) {
 			throw new RangeError(`direction is invalid ('${direction}')`);
 		}
@@ -260,18 +288,17 @@ class Sequence {
 				i_direction = 1;
 		}
 
-		let new_active_item_number = this.active[0] + i_direction;
+		let new_active_item_number = this.active_item + i_direction;
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
-			new_active_item_number = this.sequence_items[this.active[0]].SlideCount;
+			new_active_item_number = this.sequence_items.length - 1;
 		// index is bigger than the slide-count -> roll over to zero
-		} else if (new_active_item_number > this.sequence_items[this.active[0]].SlideCount) {
+		} else if (new_active_item_number > this.sequence_items.length - 1) {
 			new_active_item_number = 0;
 		}
 
-		// navigate to the first slide of the item
-		this.active = [new_active_item_number, 0];
+		this.set_active_item(new_active_item_number, slide);
 	}
 
 	/**
@@ -294,16 +321,16 @@ class Sequence {
 				nav_direction = 1;
 		}
 
-		let new_active_slide_number: number = this.active[1] + nav_direction;
+		let new_active_slide_number: number = this.active_slide + nav_direction;
 		let slideChange: boolean = true;
 
 		// new active item has negative index -> roll over to the last slide of the previous element
 		if (new_active_slide_number < 0) {
-			this.navigate_item("prev");
+			this.navigate_item("prev", -1);
 			
-			new_active_slide_number = this.sequence_items[this.active[1]].SlideCount;
+			new_active_slide_number = this.sequence_items[this.active_item].SlideCount - 1;
 		// index is bigger than the slide-count -> roll over to zero
-		} else if (new_active_slide_number > this.sequence_items[this.active[1]].SlideCount) {
+		} else if (new_active_slide_number >= this.sequence_items[this.active_item].SlideCount) {
 			this.navigate_item("next");
 			
 			new_active_slide_number = 0;
@@ -311,29 +338,93 @@ class Sequence {
 			slideChange = false;
 		}
 
-		this.active[1] = new_active_slide_number;
+		this.active.slide = new_active_slide_number;
+
+		this.casparcg_select_slide(this.active_slide);
 
 		return slideChange;
 	}
 
-	private validate_item_number(item: number): void {
-		if (item < 0 || item >= this.sequence_items.length) {
-			throw new RangeError(`item-number is out of range (0-${this.sequence_items.length})`);
+	private validate_item_number(item: number): number {
+		const item_count = this.sequence_items.length;
+
+		if (item < -item_count || item >= this.sequence_items.length) {
+			throw new RangeError(`item-number is out of range (${-item_count}-${item_count - 1})`);
 		}
+
+		if (item < 0) {
+			item += item_count;
+		}
+
+		return item;
 	}
 
-	private validate_slide_number(item: number): void {
-		if (item < 0 || item >= this.sequence_items[this.active[0]].SlideCount) {
-			throw new RangeError(`slide-number is out of range (0-${this.sequence_items[this.active[0]].SlideCount})`);
+	private validate_slide_number(slide: number, item?: number,): number {
+		if (item === undefined) {
+			item = this.active_item;
+		}
+		
+		const slide_count = this.sequence_items[item].SlideCount;
+
+		if (slide < -slide_count || slide >= slide_count) {
+			throw new RangeError(`slide-number is out of range (${-slide_count}-${slide_count - 1})`);
+		}
+
+		if (slide < 0) {
+			slide += slide_count;
+		}
+
+		return slide;
+	}
+
+	private casparcg_load_item(item: number, slide: number): void {
+		// load the item into casparcg
+		this.casparcg_connection.cgAdd({
+			channel: Config.casparcg.channel,
+			layer: Config.casparcg.layer,
+			cgLayer: 0,
+			playOnLoad: this.casparcg_visibility,
+			template: "Song",
+			data: this.create_renderer_object(item, slide)
+		});
+	}
+
+	private casparcg_select_slide(slide: number): void {
+		// jump to the slide-number in casparcg
+		this.casparcg_connection.cgInvoke({
+			channel: Config.casparcg.channel,
+			layer: Config.casparcg.layer,
+			cgLayer: 0,
+			method: `jump(${slide})`
+		});
+	}
+
+	casparcg_set_visibility(visibility: boolean): void {
+		const options = {
+			channel: Config.casparcg.channel,
+			layer: Config.casparcg.layer,
+			cgLayer: 0
+		};
+
+		this.casparcg_visibility = visibility;
+
+		if (visibility) {
+			this.casparcg_connection.cgPlay(options);
+		} else {
+			this.casparcg_connection.cgStop(options);
 		}
 	}
 
 	get active_item(): number {
-		return this.active[0];
+		return this.active.item;
 	}
 
 	get active_slide(): number {
-		return this.active[1];
+		return this.active.slide;
+	}
+
+	get visibility(): boolean {
+		return this.casparcg_visibility;
 	}
 }
 
@@ -342,10 +433,10 @@ function o_parse_item_value_string(s_key: string, s_value: string): SequenceItem
 	// remove line-breaks
 	s_value = s_value.replaceAll(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
-	s_value = s_value.replaceAll(/'#(\d+)'/gm, (_match, group, _offset) => String.fromCharCode(group));
+	s_value = s_value.replaceAll(/'#(\d+)'/gm, (_match, group) => String.fromCharCode(group));
 	
-	let o_result: SequenceItemPartial = {
-	}
+	const o_result: SequenceItemPartial = {
+	};
 
 	// do value-type specific stuff
 	switch (s_key) {
@@ -355,7 +446,7 @@ function o_parse_item_value_string(s_key: string, s_value: string): SequenceItem
 			break;
 		case "VerseOrder":
 			// split csv-line into an array
-			o_result.VerseOrder = s_value.split(',') as SongElement[];
+			o_result.VerseOrder = s_value.split(",") as SongElement[];
 			break;
 		case "FileName":
 			// assume the type from the file-extension
@@ -373,11 +464,11 @@ function o_parse_item_value_string(s_key: string, s_value: string): SequenceItem
 }
 
 function s_get_image_path(s_path: string): string {
-	return path.join(config.path.BackgroundImage, s_path);
+	return path.join(Config.path.BackgroundImage, s_path);
 }
 
 function s_get_song_path(s_path: string): string {
-	return path.join(config.path.Song, s_path);
+	return path.join(Config.path.Song, s_path);
 }
 
-export { Sequence, NavigateType, NavigateDirection, isItemNavigateType, isItemNavigateDirection };
+export { Sequence, NavigateType, NavigateDirection, isItemNavigateType, isItemNavigateDirection, ClientSequenceItems, ClientItemSlides };

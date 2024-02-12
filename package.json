@@ -8,6 +8,14 @@
   "devDependencies": {
     "@types/node": "^20.11.16",
     "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "husky": "^9.0.10",
     "typescript": "^5.3.3"
+  },
+  "scripts": {
+	"lint": "eslint --ext .ts",
+	"precommit": "eslint . --ext .ts"
   }
 }

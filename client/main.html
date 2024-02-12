@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
-	<script>
-		const config = {
-			websocket: {
-				host: "localhost",
-				port: 8765
-			}
-		};
-	</script>
 	<head>
 		<title>
 			casparcg-beamer - Client
@@ -19,34 +11,34 @@
 	<body id="body">
 		<div id="main">
 			<div id="menubar" class="container">
-				<div class="button" onclick="document.getElementById('input_choose_sequence').click()">
+				<div class="button" onclick="document.getElementById('input_open_sequence').click()">
 					<i class="fa-solid fa-folder-open"></i>
-					<input type="file" id="input_choose_sequence" accept=".col" onclick="this.value=null;" onchange="file_select_change(this)" style="display: none;"/>
+					<input type="file" id="input_open_sequence" accept=".col" onclick="this.value=null;" style="display: none;"/>
 				</div>
 				<div class="seperator-v"></div>
-				<div class="button" onclick="button_navigate('item', 'prev')">
+				<div id="navigate_item_prev" class="button">
 					<i class="fa-solid fa-backward-step"></i>
 				</div>
-				<div class="button" onclick="button_navigate('slide', 'prev')">
+				<div id="navigate_slide_prev" class="button">
 					<i class="fa-solid fa-angle-left"></i>
 				</div>
-				<div class="button" onclick="button_navigate('slide', 'next')">
+				<div id="navigate_slide_next" class="button">
 					<i class="fa-solid fa-angle-right"></i>
 				</div>
-				<div class="button" onclick="button_navigate('item', 'next')">
+				<div id="navigate_item_next" class="button">
 					<i class="fa-solid fa-forward-step"></i>
 				</div>
 				<div class="seperator-v"></div>
-				<div class="button" onclick="button_display(false)">
+				<div id="set_visibility_hide" class="button">
 					<i class="fa-solid fa-eye-slash"></i>
 				</div>
-				<div class="button" onclick="button_display(true)">
+				<div id="set_visibility_show" class="button">
 					<i class="fa-solid fa-eye"></i>
 				</div>
 			</div>
 			<div id="main_view" class="flex_container">
 				<div id="sequence" class="container scroll">
-					<div class="header">sequence</div>
+					<div class="header">Sequence</div>
 					<div id="sequence_items"></div>
 				</div>
 				<div id="slides_view_container" class="container scroll"></div>

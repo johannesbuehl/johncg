@@ -134,6 +134,7 @@ div.button, div.button > * {
 
 	font-weight: bold;
 
+
 	border-radius: inherit;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
@@ -142,14 +143,26 @@ div.button, div.button > * {
 	padding-left: 0.75rem;
 }
 
-.sequence_item {
+#sequence > .header {
 	text-align: center;
 
+	/* font-family: "Bahnschrift SemiBold"; */
+}
+
+.slide_part > .header.active {
+	background-color: rgb(40, 76, 184);
+}
+
+.sequence_item {
 	background-color: rgb(60, 64, 75);
 
 	margin: 0.25rem;
+
+	border: 0.125rem solid transparent;
+
 	border-radius: 0.25rem;
 	padding: 0.25rem;
+	padding-left: 0.5rem;
 
 	cursor: pointer;
 }
@@ -164,6 +177,10 @@ div.button, div.button > * {
 
 .sequence_item.selected:hover {
 	background-color: rgb(54, 92, 192);
+}
+
+.sequence_item.active {
+	border-color: white;
 }
 
 #slides_view_container {
@@ -215,14 +232,14 @@ div.button, div.button > * {
 	margin: -1px; /* difference in border width between selected and non-selected */
 }
 
-.slide.selected {
+.slide.active {
 	border-color: red;
 	border-width: 2px;
 
 	margin: -1px; /* difference in border width between selected and non-selected */
 }
 
-.slide.selected:hover {
+.slide.active:hover {
 	border-color: red;
 	border-width: 4px;
 

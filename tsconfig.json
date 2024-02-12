@@ -3,7 +3,8 @@
 		"target": "ES2022",
 		"module": "NodeNext",
 		"outDir": "out",
-		"sourceMap": true
+		"sourceMap": true,
+		"noUnusedLocals": false
 	},
 	"exclude": [
 		"node_modules"

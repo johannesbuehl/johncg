@@ -1,5 +1,5 @@
 import fs from "fs";
-import iconv from "iconv-lite"
+import iconv from "iconv-lite";
 
 const c_a_s_verse_types = [
 	"refrain",
@@ -28,6 +28,7 @@ const c_a_s_verse_types = [
 ] as const;
 
 type SongElement = (typeof c_a_s_verse_types)[number];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const b_isSongElement = (x: any): x is SongElement => c_a_s_verse_types.includes(x);
 
 // metadata of the songfile
@@ -72,8 +73,8 @@ class SongFile {
 		const a_s_header_data: string[] = s_header.split(/\r?\n/);
 
 		a_s_header_data.forEach((row) => {
-			const components = row.split('=');
-			const [s_key, s_value] = [components.shift().substring(1), components.join('=')];
+			const components = row.split("=");
+			const [s_key, s_value] = [components.shift().substring(1), components.join("=")];
 
 			// handle different data differently
 			switch (s_key) {
@@ -124,7 +125,7 @@ class SongFile {
 
 		// go through all the text blocks and save them to the text-dictionary
 		let key = "";
-		for (let data_block of data) {
+		for (const data_block of data) {
 			// split the block into the individual lines
 			const lines = data_block.split(/\r?\n/);
 

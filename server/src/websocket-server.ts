@@ -1,8 +1,8 @@
-import { ClientRequest, IncomingMessage } from 'http';
-import { WebSocketServer, WebSocket, RawData } from 'ws';
+import { ClientRequest, IncomingMessage } from "http";
+import { WebSocketServer, WebSocket, RawData } from "ws";
 
 // defintion of a JCGP-response
-interface i_JGCP_response {
+interface JGCPResponse {
 	command: "response";
 	message: string;
 	code: number;
@@ -54,7 +54,7 @@ class websocket_server {
 			this.o_a_connections[ws.protocol].push(ws);
 
 			// register the different action-handlers
-			Object.entries(this.o_message_handlers[ws.protocol]).forEach(([s_type, f_handler]) => {
+			Object.keys(this.o_message_handlers[ws.protocol]).forEach((s_type) => {
 				ws.on(s_type, (...data) => this.o_message_handlers[ws.protocol][s_type](ws, ...data));
 			});
 
@@ -81,7 +81,7 @@ class websocket_server {
 		ws.on("ping", ws.pong);
 	}
 
-	a_get_connections(s_protocol: string): WebSocket[] {
+	get_connections(s_protocol: string): WebSocket[] {
 		if (Object.keys(this.o_a_connections).includes(s_protocol)) {
 			return this.o_a_connections[s_protocol];
 		} else {
@@ -90,4 +90,4 @@ class websocket_server {
 	}
 }
 
-export { websocket_server, i_JGCP_response as JGCP_response };
+export { websocket_server, JGCPResponse };

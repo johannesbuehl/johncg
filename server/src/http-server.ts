@@ -4,12 +4,12 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-const config = require("../config.json");
+import Config from "./config";
 
 class http_server {
 	private i_port: number;
 
-	server: http.Server
+	server: http.Server;
 
 	constructor(i_port: number) {
 		this.i_port = i_port;
@@ -30,10 +30,8 @@ class http_server {
 					break;
 				default:
 					if (/\/BackgroundImage\/.*/.test(request.url)) {
-						resource_dir = config.path.BackgroundImage;
+						resource_dir = Config.path.BackgroundImage;
 						request.url = request.url.replace(/\/BackgroundImage\//, "");
-					} else {
-						
 					}
 			}
 				

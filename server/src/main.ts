@@ -1,113 +1,119 @@
-import { CasparCG } from 'casparcg-connection';
-import { WebSocket, RawData } from 'ws';
+import { WebSocket, RawData } from "ws";
 
 import { http_server } from "./http-server";
-import { Sequence, NavigateDirection, NavigateType, isItemNavigateType } from './Sequence';
-import { websocket_server, JGCP_response } from './websocket-server';
+import { Sequence, NavigateDirection, NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides } from "./Sequence";
+import { websocket_server, JGCPResponse } from "./websocket-server";
 
-const config = require("../config.json");
+import Config from "./config";
 
 // http-server
-const server = new http_server(config.client_server.http.port);
-// connection to casparcg
-const casparcg_connection = new CasparCG({
-	host: config.casparcg.host,
-	port: config.casparcg.port
-});
+const server = new http_server(Config.clientServer.http.port);
 
 let seq: Sequence;
 
 // interface for the websocket command to open a sequence-file
-interface open_sequence_object {
+interface RecvOpenSequence {
 	command: "open-sequence";
 	data: string;
-};
+	clientID?: string;
+}
 
-interface SequenceItemSelectObject {
-	command: "sequence-item-select";
+interface RecvRequestItemSlides {
+	command: "request-item-slides";
 	item: number;
-	slide?: number;
+	clientID?: string;
 }
 
-interface ItemSlideSelectObject {
-	command: "item-slide-select";
+interface RecvItemSlideSelect {
+	command: "select-item-slide";
+	item: number;
 	slide: number;
+	clientID?: string;
 }
 
-interface ItemNavigateObject {
+interface RecvItemNavigate {
 	command: "navigate";
 	type: NavigateType;
-	direction: NavigateDirection
+	direction: NavigateDirection;
+	clientID?: string;
 }
 
-// process 'open-sequence' commands
-function s_open_sequence(ws_connection: WebSocket, o_data: open_sequence_object): JGCP_response {
+interface RecvItemDisplay {
+	command: "display";
+	state: boolean;
+	clientID?: string;
+}
+
+interface SendSequence {
+	command: "sequence-items";
+	data: ClientSequenceItems
+	clientID?: string;
+}
+
+interface SendClientSetActive {
+	command: "set-active-item-slide",
+	data: {
+		item: number;
+		slide: number;
+	};
+	clientID?: string;
+}
+
+interface SendClientSlides {
+	command: "item-slides";
+	data: ClientItemSlides;
+	clientID?;
+}
+
+// process "open-sequence" commands
+function open_sequence(_ws_connection: WebSocket, data: RecvOpenSequence): JGCPResponse {
 	// check wether a data-field is included
-	if (o_data.data === undefined) {
-		return {
-			command: "response",
-			message: "'data' is missing",
-			code: 400
-		};
-	} else {
-		try {
-			// create a new sequence with the received data
-			seq = new Sequence(o_data.data.toString());
-		} catch (e) {
-			if (e instanceof SyntaxError) {
-				return {
-					command: "response",
-					message: e.message,
-					code: 400
-				};
-			} else {
-				throw e;
-			}
-		}
+	const error_response = check_field_included(data, ["data"], false);
 
-		// send the new sequence to all the connected clients
-		const a_ws_clients = ws_server.a_get_connections("JGCP");
-
-		const ws_client_json_string_sequence = create_sequence()[0];
-		const ws_client_json_string_slides = create_slides_client_object(seq.active_item)[0];
-		const ws_client_json_string_active_slide = create_set_active_slide(seq.active_slide)[0];
-
-		a_ws_clients.forEach((ws_client) => {
-			ws_client.send(ws_client_json_string_sequence);
-			ws_client.send(ws_client_json_string_slides);
-			ws_client.send(ws_client_json_string_active_slide);
-		});
-
-		// load the active-item into casparcg
-		casparcg_load_item(seq.active_item);
-
-		return {
-			command: "response",
-			message: "sequence has been loaded",
-			code: 200
-		};
+	if (error_response !== true) {
+		return error_response;
 	}
-}
+	
+	try {
+		// create a new sequence with the received data
+		seq = new Sequence(data.data.toString());
+	} catch (e) {
+		if (e instanceof SyntaxError) {
+			return {
+				command: "response",
+				message: e.message,
+				code: 400
+			};
+		} else {
+			throw e;
+		}
+	}
 
-function casparcg_load_item(item): JGCP_response {
-	// load the item into casparcg
-	casparcg_connection.cgAdd({ channel: config.casparcg.channel, layer: config.casparcg.layer, cgLayer: 1, playOnLoad: true, template: "Song", data: seq.create_renderer_object(item)});
+	// send the sequence to all clients
+	JGCP_send_all({
+		...create_client_sequence_object()[0],
+		clientID: data.clientID
+	});
+
+	// send the selected item-slide to all clients
+	JGCP_send_all({
+		...create_client_set_active_item_slide_object()[0],
+		clientID: data.clientID
+	});
 
 	return {
 		command: "response",
-		message: "item has been loaded into CasparCG",
+		message: "sequence has been loaded",
 		code: 200
 	};
 }
 
-function create_sequence(): [string, JGCP_response] {
-	const s_ws_client_json_string = JSON.stringify({
-		command: "sequence",
-		data: seq.create_client_object_sequence()
-	});
-
+function create_client_sequence_object(): [SendSequence, JGCPResponse] {
 	return [
-		s_ws_client_json_string,
+		{
+			command: "sequence-items",
+			data: seq.create_client_object_sequence()
+		},
 		{
 			command: "response",
 			message: "sequence has been loaded",
@@ -118,22 +124,22 @@ function create_sequence(): [string, JGCP_response] {
 
 /**
  * checks, wether all the required fields are included in the object
- * @param o_data object to be checked
- * @param a_s_fields fields to be checked for
+ * @param data object to be checked
+ * @param fields fields to be checked for
  * @returns all field found? -> true | not all found? / no scheduel loaded? -> JGCP_response-Message
  */
-function check_field_included(o_data: Object, a_s_fields: string[]): JGCP_response | true {
-	for (let s_field of a_s_fields) {
-		if (o_data[s_field] === undefined) {
+function check_field_included(data: object, fields: string[], checkSequenceExists: boolean = true): JGCPResponse | true {
+	for (const field of fields) {
+		if (data[field] === undefined) {
 			return {
 				command: "response",
-				message: `'${s_field}' is missing`,
+				message: `'${field}' is missing`,
 				code: 400
 			};
 		}
 	}
 	
-	if (seq === undefined) {
+	if (checkSequenceExists && seq === undefined) {
 		return {
 			command: "response",
 			message: "no sequence loaded",
@@ -144,18 +150,65 @@ function check_field_included(o_data: Object, a_s_fields: string[]): JGCP_respon
 	return true;
 }
 
-function item_select(_ws_connection: WebSocket, data: SequenceItemSelectObject): JGCP_response {
+function generate_item_slides(ws_connection: WebSocket, data: RecvRequestItemSlides): JGCPResponse {
 	// check wether a data-field is included
-	let response = check_field_included(data, ["item"]);
+	const error_response = check_field_included(data, ["item"]);
 
-	if (response !== true) {
-		return response;
+	if (error_response !== true) {
+		return error_response;
 	}
 
+	let ws_client_json_string_slides, response;
 	try {
-		seq.set_active_item(data.item)
+		[ws_client_json_string_slides, response] = create_client_slides_object(data.item);
+	} catch (e) {
+		if (e instanceof RangeError) {
+			return {
+				command: "response",
+				message: e.message,
+				code: 400
+			};
+		} else {
+			throw e;
+		}
+	}
+	
+	// send only to the requesting client
+	ws_connection.send(JSON.stringify({
+		...ws_client_json_string_slides,
+		clientID: data.clientID
+	}));
 
-		if (data.slide !== undefined) {
+	return response;
+}
+
+function create_client_slides_object(item: number): [SendClientSlides, JGCPResponse] {
+	return [
+		{
+			command: "item-slides",
+			data: seq.create_client_object_item_slides(item)
+		},
+		{
+			command: "response",
+			message: "item has been selected",
+			code: 200
+		}
+	];
+}
+
+function select_item_slide(_ws_connection: WebSocket, data: RecvItemSlideSelect): JGCPResponse {
+	// check wether a data-field is included
+	const error_response = check_field_included(data, ["item", "slide"]);
+
+	if (error_response !== true) {
+		return error_response;
+	}
+	
+	// try set the slide active
+	try {
+		if (data.item !== seq.active_item) {
+			seq.set_active_item(data.item, data.slide);
+		} else {
 			seq.set_active_slide(data.slide);
 		}
 	} catch (e) {
@@ -169,86 +222,26 @@ function item_select(_ws_connection: WebSocket, data: SequenceItemSelectObject):
 			throw e;
 		}
 	}
-		
-	// send the new sequence to all the connected clients
-	const a_ws_clients = ws_server.a_get_connections("JGCP");
 
-	let ws_client_json_string_slides: string;
-	[ws_client_json_string_slides, response] = create_slides_client_object(seq.active_item);
-	const ws_client_json_string_active_slide = create_set_active_slide(seq.active_slide)[0];
+	const [ws_client_json_string, response] = create_client_set_active_item_slide_object();
 
-	a_ws_clients.forEach((ws_client) => {
-		ws_client.send(ws_client_json_string_slides);
-		ws_client.send(ws_client_json_string_active_slide);
+	JGCP_send_all({
+		...ws_client_json_string,
+		clientID: data.clientID
 	});
 
 	return response;
 }
 
-function create_slides_client_object(item: number): [string, JGCP_response] {
-	const s_ws_client_json_string = JSON.stringify({
-		command: "item",
-		data: seq.create_client_object_item(item)
-	});
-
-	return [
-		s_ws_client_json_string,
-		{
-			command: "response",
-			message: "item has been selected",
-			code: 200
+function create_client_set_active_item_slide_object(): [SendClientSetActive, JGCPResponse] {
+	return [{
+			command: "set-active-item-slide",
+			data: {
+				item: seq.active_item,
+				slide: seq.active_slide
+			}
 		}
-	];
-}
-
-function slide_select(_ws_connection: WebSocket, o_data: ItemSlideSelectObject): JGCP_response {
-	// check wether a data-field is included
-	let response = check_field_included(o_data, ["slide"]);
-
-	if (response !== true) {
-		return response;
-	}
-	
-	// try set the slide active
-	try {
-		seq.set_active_slide(o_data.slide)
-	} catch (e) {
-		if (e instanceof RangeError) {
-			return {
-				command: "response",
-				message: e.message,
-				code: 400
-			};
-		} else {
-			throw e;
-		}
-	}
-
-	// jump to the slide-number in casparcg
-	casparcg_connection.cgInvoke({ channel: config.casparcg.channel, layer: config.casparcg.layer, cgLayer: 1, method: `jump(${seq.active_slide})`});
-
-	// send the new sequence to all the connected clients
-	const a_ws_clients = ws_server.a_get_connections("JGCP");
-
-	let s_ws_client_json_string: string;
-	[s_ws_client_json_string, response] = create_set_active_slide(seq.active_slide);
-
-	a_ws_clients.forEach((ws_client) => {
-		ws_client.send(s_ws_client_json_string);
-	});
-
-	return response;
-}
-
-function create_set_active_slide(slide): [string, JGCP_response] {
-	const s_ws_client_json_string = JSON.stringify({
-		command: "set-active-slide",
-		data: {slide: seq.active_slide}
-	});
-	
-
-	return [
-		s_ws_client_json_string,
+		,
 		{
 			command: "response",
 			message: "slide has been selected",
@@ -257,7 +250,7 @@ function create_set_active_slide(slide): [string, JGCP_response] {
 	];
 }
 
-function navigate(_ws_connection: WebSocket, data: ItemNavigateObject): JGCP_response {
+function navigate(ws_connection: WebSocket, data: RecvItemNavigate): JGCPResponse {
 	// check wether all the fields are included
 	const response = check_field_included(data, ["type", "direction"]);
 
@@ -274,53 +267,26 @@ function navigate(_ws_connection: WebSocket, data: ItemNavigateObject): JGCP_res
 		};
 	}
 
-	let item_changed: boolean = false;
-
-	try {
-		switch (data.type) {
-			case "item":
-				seq.navigate_item(data.direction);
-				break;
-			case "slide":
-				item_changed = seq.navigate_slide(data.direction);
-				break;
+	if (data.type === "item") {
+		try {
+			seq.navigate_item(data.direction);
+		} catch (e) {
+			if (e instanceof RangeError) {
+				return {
+					command: "response",
+					message: e.message,
+					code: 400
+				};
+			} else {
+				throw e;
+			}
 		}
-	} catch (e) {
-		if (e instanceof RangeError) {
-			return {
-				command: "response",
-				message: e.message,
-				code: 400
-			};
-		} else {
-			throw e;
 		}
-	}
 
-	// if the item changed, send the new slide to casparcg and the clients
-	if (item_changed) {
-		const data_item_select: SequenceItemSelectObject = {
-			command: "sequence-item-select",
-			item: seq.active_item,
-			slide: seq.active_slide
-		};
-
-		item_select(_ws_connection, data_item_select);
-	}
-
-	// jump to the slide-number in casparcg
-	casparcg_connection.cgInvoke({ channel: config.casparcg.channel, layer: config.casparcg.layer, cgLayer: 1, method: `jump(${seq.active_slide})`});
-
-	// send the new sequence to all the connected clients
-	const a_ws_clients = ws_server.a_get_connections("JGCP");
-
-	const s_ws_client_json_string = JSON.stringify({
-		command: "set-active-slide",
-		data: {slide: seq.active_slide}
-	});
-
-	a_ws_clients.forEach((ws_client) => {
-		ws_client.send(s_ws_client_json_string);
+	// send all the clients the new active-item-slide
+	JGCP_send_all({
+		...create_client_set_active_item_slide_object()[0],
+		clientID: data.clientID
 	});
 
 	return {
@@ -330,22 +296,51 @@ function navigate(_ws_connection: WebSocket, data: ItemNavigateObject): JGCP_res
 	};
 }
 
-// function set_display(_ws_connection: WebSocket, o_data: ItemSlideSelectObject): JGCP_response {
+function set_display(_ws_connection: WebSocket, data: RecvItemDisplay): JGCPResponse {
+	// check wether all the fields are included
+	const response = check_field_included(data, ["state"]);
+	if (response !== true) {
+		return response;
+	}
 
-// }
+	// check wether 'state' is a boolean
+	if (typeof data.state !== "boolean") {
+		return {
+			command: "response",
+			message: "'data.state' is no boolean",
+			code: 400
+		};
+	}
+
+	seq.casparcg_set_visibility(data.state);
+	
+	let message: string;
+
+	if (data.state) {
+		message = "item has been set to visible";
+	} else {
+		message = "item has been set to invisible";
+	}
+
+	return {
+		command: "response",
+		message: message,
+		code: 200
+	};
+}
 
 // handle commands in the JGCP-protocol
 function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 	const o_json_parse_wrapper = (s_raw_data: string) => {
 		try {
 			// parse the data in a JSON-object
-			const o_data = JSON.parse(s_raw_data);
+			const data = JSON.parse(s_raw_data);
 
-			if (!o_data || typeof o_data !== "object") {
+			if (!data || typeof data !== "object") {
 				throw new SyntaxError();
 			}
 
-			return o_data;
+			return data;
 		} catch (e) {
 			if (e instanceof SyntaxError) {
 				return undefined;
@@ -355,61 +350,77 @@ function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 		}	
 	};
 
-	const o_data = o_json_parse_wrapper(raw_data.toString());
+	const data = o_json_parse_wrapper(raw_data.toString());
 
 	// map of the functions for the individual commands
-	const o_command_map = {
-		"open-sequence": s_open_sequence,
-		"sequence-item-select": item_select,
-		"item-slide-select": slide_select,
-		"navigate": navigate,
-		// "display": set_display
+	const command_map = {
+		"open-sequence": open_sequence,
+		"request-item-slides": generate_item_slides,
+		"select-item-slide": select_item_slide,
+		navigate: navigate,
+		"set-display": set_display
 	};
 
 	// store the response send back to the client
-	let o_response: JGCP_response
+	let response: JGCPResponse;
+
+	console.debug(data);
 
 	// if o_data is undefined, there was no valid JSON transmitted
-	if (o_data === undefined) {
-		o_response = {
+	if (data === undefined) {
+		response = {
 				command: "response",
 				message: "invalid JSON",
 				code: 400
 		};
 	} else {
 		// check wether a command is given
-		if (o_data["command"] === undefined) {
-			o_response = {
+		if (data["command"] === undefined) {
+			response = {
 				command: "response",
 				message: "'command' is missing",
 				code: 400
 			};
 		// check wether the give command is valid
-		} else if (!Object.keys(o_command_map).includes(o_data.command)) {
-			o_response = {
+		} else if (!Object.keys(command_map).includes(data.command)) {
+			response = {
 				command: "response",
-				message: `'${o_data["command"]}' is not supported`,
+				message: `'${data["command"]}' is not supported`,
 				code: 400
 			};
 		// process the command
 		} else {
-			o_response = o_command_map[o_data["command"]](ws, o_data);
+			response = command_map[data["command"]](ws, data);
 		}
 	}
 
 	// send back the response
-	ws.send(JSON.stringify(o_response));
+	ws.send(JSON.stringify({
+		...response,
+		clientID: data.clientID
+	}));
+}
+
+/**
+ * Send a message to all connected JGCP-clients
+ * @param message 
+ */
+function JGCP_send_all(message: object) {
+	// send the new sequence to all the connected clients
+	const ws_clients = ws_server.get_connections("JGCP");
+
+	ws_clients.forEach((ws_client) => {
+		ws_client.send(JSON.stringify(message));
+	});
 }
 
 function JGCP_open_handler(ws: WebSocket) {
 	if (seq !== undefined) {
-		const s_ws_client_json_string_sequence = create_sequence()[0];
-		const s_ws_client_json_string_slides = create_slides_client_object(seq.active_item)[0];
-		const s_ws_client_json_string_active_slide = create_set_active_slide(seq.active_slide)[0];
+		const ws_client_json_string_sequence: SendSequence = create_client_sequence_object()[0];
+		const ws_client_json_string_active_slide: SendClientSetActive = create_client_set_active_item_slide_object()[0];
 
-		ws.send(s_ws_client_json_string_sequence);
-		ws.send(s_ws_client_json_string_slides);
-		ws.send(s_ws_client_json_string_active_slide);
+		ws.send(JSON.stringify(ws_client_json_string_sequence));
+		ws.send(JSON.stringify(ws_client_json_string_active_slide));
 
 		return {
 			command: "response",
@@ -420,11 +431,11 @@ function JGCP_open_handler(ws: WebSocket) {
 }
 
 // create a websocket-server
-const ws_server = new websocket_server(config.client_server.websocket.port, { 
-	"JGCP": {
+const ws_server = new websocket_server(Config.clientServer.websocket.port, { 
+	JGCP: {
 		message: JGCP_message_handler,
 		connection: JGCP_open_handler,
 	}
 });
 
-server.start()
+server.start();

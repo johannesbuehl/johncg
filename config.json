@@ -1,4 +1,7 @@
 {
+	"behaviour": {
+		"showOnLoad": true
+	},
 	"path": {
 		"BackgroundImage": "W:\\Kirche\\SongBeamer\\Hintergrund",
 		"Song": "D:\\Coding_z1glr\\liedtexte_git"
@@ -9,7 +12,7 @@
 		"channel": 1,
 		"layer": 20
 	},
-	"client_server": {
+	"clientServer": {
 		"http": {
 			"port": 8888
 		},

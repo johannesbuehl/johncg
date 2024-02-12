@@ -17,6 +17,13 @@ Generate lyric-graphics and play them out through CasparCG.
 - remove types in variable names (typescript is typed, vscode shows the types)
 - implement set_display
 - casparcg: only change output with click on thumbnail, not by selecting a different sequence-item
+- validate received command
+- implement eslint
+- check response-texts, if they are still correct
+- client: hightlight active song sequence-header
+- colorize sequence-items
+- config: specify caspercg template name
+- create message log / show error messages
 
 ### server
 - navigate buttons
