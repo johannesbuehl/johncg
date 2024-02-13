@@ -63,6 +63,10 @@ interface SendClientSlides extends ClientItemSlides {
 	clientID?;
 }
 
+interface SendClientClear {
+	command: "clear";
+}
+
 // process "open-sequence" commands
 function open_sequence(_ws_connection: WebSocket, data: RecvOpenSequence): JGCPResponse {
 	// check wether a data-field is included
@@ -346,7 +350,7 @@ function set_display(_ws_connection: WebSocket, data: RecvItemDisplay): JGCPResp
 
 // handle commands in the JGCP-protocol
 function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
-	const o_json_parse_wrapper = (s_raw_data: string) => {
+	const json_parse_wrapper = (s_raw_data: string) => {
 		try {
 			// parse the data in a JSON-object
 			const data = JSON.parse(s_raw_data);
@@ -365,7 +369,7 @@ function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 		}	
 	};
 
-	const data = o_json_parse_wrapper(raw_data.toString());
+	const data = json_parse_wrapper(raw_data.toString());
 
 	// map of the functions for the individual commands
 	const command_map = {
@@ -381,7 +385,7 @@ function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 
 	console.debug(data);
 
-	// if o_data is undefined, there was no valid JSON transmitted
+	// if data is undefined, there was no valid JSON transmitted
 	if (data === undefined) {
 		response = {
 				command: "response",
@@ -430,6 +434,9 @@ function JGCP_send_all(message: object) {
 }
 
 function JGCP_open_handler(ws: WebSocket) {
+	let response: JGCPResponse;
+	
+	// if a sequence is loaded, sent it to the client
 	if (seq !== undefined) {
 		const ws_client_json_string_sequence: SendSequence = create_client_sequence_object()[0];
 		const ws_client_json_string_active_slide: SendClientState = create_client_set_active_item_slide_object()[0];
@@ -437,19 +444,36 @@ function JGCP_open_handler(ws: WebSocket) {
 		ws.send(JSON.stringify(ws_client_json_string_sequence));
 		ws.send(JSON.stringify(ws_client_json_string_active_slide));
 
-		return {
+		response = {
 			command: "response",
 			message: "state has been synced from server",
 			code: 200
 		};
+	} else {
+		// else send a clear command to the client, so that it's currently loaded sequence gets removed (for example after a restart)
+		const clear_message: SendClientClear = {
+			command: "clear"
+		};
+
+		ws.send(JSON.stringify({
+			command: "clear"
+		}));
+
+		response = {
+			command: "response",
+			message: "connected to server",
+			code: 200
+		};
 	}
+
+	ws.send(JSON.stringify(response));
 }
 
 // create a websocket-server
 const ws_server = new websocket_server(Config.clientServer.websocket.port, { 
 	JGCP: {
 		message: JGCP_message_handler,
-		connection: JGCP_open_handler,
+		connection: JGCP_open_handler
 	}
 });
 

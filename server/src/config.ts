@@ -7,6 +7,9 @@ interface ConfigJSON {
 		Song: string;
 	};
 	casparcg: {
+		templates: {
+			Song: string
+		};
 		host: string;
 		port: number;
 		channel: number;

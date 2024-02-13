@@ -74,6 +74,9 @@ function request_item_slides(item) {
 		
 		// clear the current slides
 		document.querySelector("#slides_view_container").innerHTML = "";
+
+		// clear the selected item
+		document.querySelector(".sequence_item.selected")?.classList.remove("selected");
 	
 		ws.send(JSON.stringify({
 			command: "request-item-slides",
@@ -276,6 +279,10 @@ function random_4_hex() {
 	return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 }
 
+function blank_screen(state) {
+	document.querySelector("#blank").style.display = state ? "unset" : "none";
+}
+
 function init() {
 	selected_item_number = null;
 
@@ -287,42 +294,69 @@ function init() {
 }
 
 const clientID = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+let selected_item_number;
 
-let ws = new WebSocket(`ws://${config.websocket.host}:${config.websocket.port}`, "JGCP");
+function ws_connect() {
+	const ws_url = `ws://${config.websocket.host}:${config.websocket.port}`;
+
+	ws = new WebSocket(ws_url, "JGCP");
+	
+	ws.addEventListener("open", () => {
+		// unblank the screen
+		blank_screen(false);
+	});
+	
+	ws.addEventListener("message", (event) => {
+		const o_data = JSON.parse(event.data);
+	
+		const o_command_parser_map = {
+			"sequence-items": display_items,
+			"item-slides": display_item_slides,
+			state: display_state_change,
+			clear: init,
+			response: (response) => {
+				switch (Number(response.code.toString()[0])) {
+					case 4:
+						console.error(response);
+						break;
+					default:
+						console.debug(response);
+				}
+			}
+		};
+	
+		o_command_parser_map[o_data.command](o_data);
+	
+	});
+	
+	ws.addEventListener("ping", () => {
+	});
+	
+	ws.addEventListener("error", (event) => {
+		console.error(`Server connection encountered error '${event.message}'. Closing socket`);
+	
+		ws.close();
+	});
+	
+	
+	
+	ws.addEventListener("close", async () => {
+		console.error("No connection to server. Retrying in 1s");
+
+		// blank the screen because there is no connection
+		blank_screen(true);
+	
+		setTimeout(() => {
+			ws_connect();
+			
+		}, 1000);
+	})
+}
+
+let ws;
+ws_connect();
 
 let active_item_slide = {
 	item: 0,
 	slide: 0
 };
-
-let selected_item_number;
-
-ws.addEventListener("open", () => {
-});
-
-ws.addEventListener("message", (event) => {
-	const o_data = JSON.parse(event.data);
-
-	const o_command_parser_map = {
-		"sequence-items": display_items,
-		"item-slides": display_item_slides,
-		state: display_state_change,
-		response: (response) => {
-			switch (Number(response.code.toString()[0])) {
-				case 4:
-					console.error(response);
-					break;
-				default:
-					console.debug(response);
-			}
-		}
-	};
-
-	o_command_parser_map[o_data.command](o_data);
-
-});
-
-ws.addEventListener("ping", () => {
-});
-
-init();

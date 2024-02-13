@@ -7,6 +7,9 @@
 		"Song": "D:\\Coding_z1glr\\liedtexte_git"
 	},
 	"casparcg": {
+		"templates": {
+			"Song": "Song"
+		},
 		"host": "127.0.0.1",
 		"port": 5250,
 		"channel": 1,

@@ -405,7 +405,7 @@ class Sequence {
 			layer: Config.casparcg.layer,
 			cgLayer: 0,
 			playOnLoad: this.casparcg_visibility,
-			template: "Song",
+			template: Config.casparcg.templates.Song,
 			data: this.create_renderer_object(item, slide)
 		});
 	}

@@ -253,3 +253,18 @@ div.button, div.button > * {
 	color: white;
 	text-shadow: calc(1em / 32) calc(1em / 32) calc(1em / 16) black;
 }
+
+#blank {
+	background: white;
+	opacity: 0.5;
+
+	cursor: not-allowed;
+
+	display: none;
+
+	position: fixed;
+	height: 100%;
+	width: 100%;
+	top: 0;
+	left: 0;
+}
