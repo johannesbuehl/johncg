@@ -82,16 +82,31 @@ class Sequence {
 	private casparcg_visibility: boolean = Config.behaviour.showOnLoad;
 
 	readonly casparcg_connection = new CasparCG({
-		...Config.casparcg
+		...Config.casparcg,
+		autoConnect: true
 	});
 
 	constructor(sequence: string) {
 		this.parse_sequence(sequence);
 
 		this.set_active_item(0, 0);
+
+		// setup auto-loading of the current-item on reconnection
+		this.casparcg_connection.addListener("disconnect", () => {
+			// on disconnect register a connect-listener
+			this.casparcg_connection.addListener("connect", () => {
+				// load the active-item
+				this.casparcg_load_item(this.active_item, this.active_slide);
+
+				// remove the connect-listener again
+				this.casparcg_connection.removeAllListeners("connect");
+			});
+
+		});
 	}
 
 	destroy() {
+		this.casparcg_connection.removeAllListeners();
 		this.casparcg_connection.disconnect();
 	}
 
