@@ -11,10 +11,9 @@ const server = new http_server(Config.clientServer.http.port);
 
 let seq: Sequence;
 
-// interface for the websocket command to open a sequence-file
 interface RecvOpenSequence {
 	command: "open-sequence";
-	data: string;
+	sequence: string;
 	clientID?: string;
 }
 
@@ -44,39 +43,41 @@ interface RecvItemDisplay {
 	clientID?: string;
 }
 
-interface SendSequence {
+interface SendSequence extends ClientSequenceItems {
 	command: "sequence-items";
-	data: ClientSequenceItems
 	clientID?: string;
 }
 
-interface SendClientSetActive {
-	command: "set-active-item-slide",
-	data: {
+interface SendClientState {
+	command: "state",
+	"item-slide-selection"?: {
 		item: number;
 		slide: number;
 	};
+	visibility?: boolean;
 	clientID?: string;
 }
 
-interface SendClientSlides {
+interface SendClientSlides extends ClientItemSlides {
 	command: "item-slides";
-	data: ClientItemSlides;
 	clientID?;
 }
 
 // process "open-sequence" commands
 function open_sequence(_ws_connection: WebSocket, data: RecvOpenSequence): JGCPResponse {
 	// check wether a data-field is included
-	const error_response = check_field_included(data, ["data"], false);
+	const error_response = check_field_included(data, ["sequence"], false);
 
 	if (error_response !== true) {
 		return error_response;
 	}
 	
+	// if there was already a sequence open, call it's destroy function
+	seq?.destroy();
+
 	try {
 		// create a new sequence with the received data
-		seq = new Sequence(data.data.toString());
+		seq = new Sequence(data.sequence.toString());
 	} catch (e) {
 		if (e instanceof SyntaxError) {
 			return {
@@ -112,7 +113,7 @@ function create_client_sequence_object(): [SendSequence, JGCPResponse] {
 	return [
 		{
 			command: "sequence-items",
-			data: seq.create_client_object_sequence()
+			...seq.create_client_object_sequence()
 		},
 		{
 			command: "response",
@@ -186,7 +187,7 @@ function create_client_slides_object(item: number): [SendClientSlides, JGCPRespo
 	return [
 		{
 			command: "item-slides",
-			data: seq.create_client_object_item_slides(item)
+			...seq.create_client_object_item_slides(item)
 		},
 		{
 			command: "response",
@@ -233,10 +234,10 @@ function select_item_slide(_ws_connection: WebSocket, data: RecvItemSlideSelect)
 	return response;
 }
 
-function create_client_set_active_item_slide_object(): [SendClientSetActive, JGCPResponse] {
+function create_client_set_active_item_slide_object(): [SendClientState, JGCPResponse] {
 	return [{
-			command: "set-active-item-slide",
-			data: {
+			command: "state",
+			"item-slide-selection": {
 				item: seq.active_item,
 				slide: seq.active_slide
 			}
@@ -267,21 +268,26 @@ function navigate(ws_connection: WebSocket, data: RecvItemNavigate): JGCPRespons
 		};
 	}
 
-	if (data.type === "item") {
-		try {
-			seq.navigate_item(data.direction);
-		} catch (e) {
-			if (e instanceof RangeError) {
-				return {
-					command: "response",
-					message: e.message,
-					code: 400
-				};
-			} else {
-				throw e;
-			}
+	try {
+		switch (data.type) {
+			case "item":
+				seq.navigate_item(data.direction);
+				break;
+			case "slide":
+				seq.navigate_slide(data.direction);
+				break;
 		}
+	} catch (e) {
+		if (e instanceof RangeError) {
+			return {
+				command: "response",
+				message: e.message,
+				code: 400
+			};
+		} else {
+			throw e;
 		}
+	}
 
 	// send all the clients the new active-item-slide
 	JGCP_send_all({
@@ -313,7 +319,16 @@ function set_display(_ws_connection: WebSocket, data: RecvItemDisplay): JGCPResp
 	}
 
 	seq.casparcg_set_visibility(data.state);
-	
+
+	// send a new state to all clients with the visibility
+	const client_message: SendClientState = {
+		command: "state",
+		visibility: seq.visibility,
+		clientID: data.clientID
+	};
+
+	JGCP_send_all(client_message);
+
 	let message: string;
 
 	if (data.state) {
@@ -357,7 +372,7 @@ function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 		"open-sequence": open_sequence,
 		"request-item-slides": generate_item_slides,
 		"select-item-slide": select_item_slide,
-		navigate: navigate,
+		navigate,
 		"set-display": set_display
 	};
 
@@ -417,7 +432,7 @@ function JGCP_send_all(message: object) {
 function JGCP_open_handler(ws: WebSocket) {
 	if (seq !== undefined) {
 		const ws_client_json_string_sequence: SendSequence = create_client_sequence_object()[0];
-		const ws_client_json_string_active_slide: SendClientSetActive = create_client_set_active_item_slide_object()[0];
+		const ws_client_json_string_active_slide: SendClientState = create_client_set_active_item_slide_object()[0];
 
 		ws.send(JSON.stringify(ws_client_json_string_sequence));
 		ws.send(JSON.stringify(ws_client_json_string_active_slide));

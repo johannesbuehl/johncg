@@ -14,7 +14,7 @@ function open_sequence(e) {
 
 		ws.send(JSON.stringify({
 			command: "open-sequence",
-			data: rawData
+			sequence: rawData
 		}));
 	}
 
@@ -51,7 +51,7 @@ function display_items(data) {
 	// initialize
 	init();
 
-	for (let o_item of data.data.sequence_items) {
+	for (let o_item of data.sequence_items) {
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
 		div_sequence_item.innerText = o_item.Caption;
@@ -63,6 +63,9 @@ function display_items(data) {
 
 		div_sequence_items.append(div_sequence_item);
 	}
+
+	// display the visibility state
+	display_visibility_state(data.metadata.visibility);
 }
 
 function request_item_slides(item) {
@@ -84,11 +87,11 @@ function display_item_slides(data) {
 	const div_slides_view_container = document.querySelector("#slides_view_container");
 
 	// select the sequence-item
-	select_item(data.data.metadata.item);
+	select_item(data.metadata.item);
 
 	let slide_counter = 0;
 
-	for (let o_part of data.data.slides) {
+	for (let o_part of data.slides) {
 		// create the container for the part
 		const div_slide_part = document.createElement("div");
 		div_slide_part.classList.add("slide_part");
@@ -112,7 +115,7 @@ function display_item_slides(data) {
 
 			const div_slide = document.createElement("div");
 			div_slide.classList.add("slide");
-			div_slide.style.backgroundImage = `url("${data.data.metadata.BackgroundImage.replace(/\\/g, "\\\\")}")`;
+			div_slide.style.backgroundImage = `url("${data.metadata.BackgroundImage.replace(/\\/g, "\\\\")}")`;
 			div_slide.dataset.slide_number = slide_counter;
 			div_slide_container.append(div_slide);
 
@@ -221,19 +224,19 @@ function set_active_slide(scroll = false) {
 	}
 }
 
-function set_active_item_slide(data) {
+function set_active_item_slide(data, message_clientID) {
 	// store the data
-	active_item_slide = data.data;
+	active_item_slide = data;
 
 	// decide wether to jump there
-	const jump = data.clientID === clientID || data.clientID === undefined;
+	const jump = message_clientID === clientID || message_clientID === undefined;
 
 	// remove the "active" class from the previous sequence-item and add it to the new one
 	const prev_selected_item = document.querySelector(".sequence_item.active");
 	if (prev_selected_item !== null) {
 		prev_selected_item.classList.remove("active");
 	}
-	document.querySelector(`.sequence_item[data-item_number='${data.data.item}']`).classList.add("active");
+	document.querySelector(`.sequence_item[data-item_number='${active_item_slide.item}']`).classList.add("active");
 
 	if (jump && active_item_slide.item !== selected_item_number) {
 		request_item_slides(active_item_slide.item);
@@ -241,6 +244,33 @@ function set_active_item_slide(data) {
 		set_active_slide(jump);
 	}
 }
+
+function display_visibility_state(state) {
+	const button_hide = document.querySelector("#set_visibility_hide");
+	const button_show = document.querySelector("#set_visibility_show");
+
+	if (state) {
+		button_hide.classList.remove("selected");
+		button_show.classList.add("selected");
+	} else {
+		button_hide.classList.add("selected");
+		button_show.classList.remove("selected");
+	}
+}
+
+function display_state_change(data) {
+	const key_map = {
+		"item-slide-selection": set_active_item_slide,
+		visibility: display_visibility_state
+	};
+
+	Object.entries(data).forEach(([key, value]) => {
+		if (Object.keys(key_map).includes(key)) {
+			key_map[key](value, data.clientID);
+		}
+	});
+}
+
 
 function random_4_hex() {
 	return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -273,14 +303,10 @@ ws.addEventListener("open", () => {
 ws.addEventListener("message", (event) => {
 	const o_data = JSON.parse(event.data);
 
-	if (o_data.command !== "response")
-		console.log(event);
-
-
 	const o_command_parser_map = {
 		"sequence-items": display_items,
 		"item-slides": display_item_slides,
-		"set-active-item-slide": set_active_item_slide,
+		state: display_state_change,
 		response: (response) => {
 			switch (Number(response.code.toString()[0])) {
 				case 4:

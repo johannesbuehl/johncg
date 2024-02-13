@@ -1,0 +1,18 @@
+<svg
+   width="1024"
+   height="1024"
+   viewBox="0 0 1024 1024"
+   version="1.1"
+   xmlns="http://www.w3.org/2000/svg"
+   >
+    <circle
+       style="fill:black"
+       cx="256"
+       cy="768"
+       r="256" />
+    <circle
+       style="fill:black"
+       cx="768"
+       cy="256"
+       r="256" />
+</svg>

@@ -90,8 +90,8 @@
 			o_data = JSON.parse(s_data);
 
 			// get the div for the display and storage
-			const c_div_text = document.getElementById("text");
-			const c_div_storage = document.getElementById("storage");
+			const c_div_text = document.querySelector("#text");
+			const c_div_storage = document.querySelector("#storage");
 
 			// clear the storage-container
 			c_div_storage.innerHTML = "";
@@ -122,7 +122,7 @@
 			// store the amount of slides
 			i_slide_count = i_slide;
 
-			document.getElementById("container").style.backgroundImage = `url("${o_data.BackgroundImage.replace(/\\/g, "\\\\")}")`;
+			document.querySelector("#container").style.backgroundImage = `url("${o_data.BackgroundImage.replace(/\\/g, "\\\\")}")`;
 
 			i_active_slide = o_data.slide;
 
@@ -134,7 +134,7 @@
 
 		// casparcg-function: displays the template
 		function play() {
-			document.getElementById("_main").style.opacity = 1;
+			document.querySelector("#_main").style.opacity = 1;
 		}
 
 		// casparcg-function: advances to the next step
@@ -152,13 +152,13 @@
 			const i_counter = i_clamp_slide_counter(i_counter_raw)
 
 			// get the container to display the load the slide into
-			const c_div__main = document.getElementById("container");
+			const c_div__main = document.querySelector("#container");
 
 			// clear the content of the container
 			c_div__main.innerHTML = "";
 
 			// clone the slide and change its id, so the id stays unique
-			const c_div_slide = document.getElementById(`slide_${i_counter}`).cloneNode(true);
+			const c_div_slide = document.querySelector(`#slide_${i_counter}`).cloneNode(true);
 			c_div_slide.id = "slide_active";
 
 			c_div__main.appendChild(c_div_slide);
@@ -168,7 +168,7 @@
 
 		// casparcg-function: hide the template
 		function stop() {
-			document.getElementById("_main").style.opacity = 0;
+			document.querySelector("#_main").style.opacity = 0;
 		}
 
 		// clamp the counter to valid values
@@ -182,10 +182,10 @@
 			const c_i_max_width = i_get_max_width();
 
 			// get the width of the container
-			const c_i_current_container_width = document.getElementById("slide_active").clientWidth;
+			const c_i_current_container_width = document.querySelector("#slide_active").clientWidth;
 
 			// change the font size by the size difference ratio
-			document.getElementById("container").style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
+			document.querySelector("#container").style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
 		}
 
 		// get the width of the widest slide
@@ -194,7 +194,7 @@
 
 			// get the width of the individual slides and store the biggest one 
 			for (let ii = 0; ii < i_slide_count; ii++) {
-				let i_current_width = document.getElementById(`slide_${ii}`).clientWidth;
+				let i_current_width = document.querySelector(`#slide_${ii}`).clientWidth;
 
 				i_max_width = Math.max(i_current_width, i_max_width);
 			}

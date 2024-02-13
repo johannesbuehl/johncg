@@ -38,6 +38,7 @@ interface ClientSequenceItems {
 	metadata: {
 		item: number;
 		slide: number;
+		visibility: boolean;
 	}
 }
 
@@ -88,6 +89,10 @@ class Sequence {
 		this.parse_sequence(sequence);
 
 		this.set_active_item(0, 0);
+	}
+
+	destroy() {
+		this.casparcg_connection.disconnect();
 	}
 
 	parse_sequence(sequence: string): void {
@@ -186,7 +191,8 @@ class Sequence {
 			sequence_items: [],
 			metadata: {
 				item: this.active_item,
-				slide: this.active_slide
+				slide: this.active_slide,
+				visibility: this.visibility
 			}
 		};
 
