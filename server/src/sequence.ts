@@ -1,9 +1,9 @@
 import path from "path";
+import { CasparCG } from "casparcg-connection";
 
-import SongFile, { SongElement } from "./SongFile";
+import SongFile, { ItemPart, LyricPart, SongElement, TitlePart } from "./SongFile";
 
 import Config from "./config";
-import { CasparCG } from "casparcg-connection";
 
 // individual data of the sequence-file
 interface SequenceItemPartial {
@@ -25,7 +25,7 @@ interface SequenceItem extends SequenceItemPartial {
 
 // interface for a renderer-object
 interface RenderObject {
-	slides: string[][];
+	slides: ItemSlide[];
 	slide: number;
 	backgroundImage?: string;
 }
@@ -47,19 +47,27 @@ interface ClientSequenceItems {
 
 interface ClientItemSlides {
 	metadata: {
+		title: string;
 		item: number;
 		backgroundImage: string;
 	};
-	slides: {
-		type: string;
-		slides: string[][];
-	}[];
+	slides: ItemPart[];
 }
 
 interface ActiveItem {
 	item: number,
 	slide: number
 }
+
+interface TitleSlide extends TitlePart {
+}
+
+interface LyricSlide {
+	type: "lyric";
+	data: string[];
+}
+
+type ItemSlide = LyricSlide | TitleSlide;
 
 const _item_navigate_type = ["item", "slide"] as const;
 type NavigateType = (typeof _item_navigate_type)[number];
@@ -163,12 +171,19 @@ class Sequence {
 			// TESTING only if it is song-element, since the others aren't implemented
 			if (item_data.Type === "Song") {
 				item_data.Song = new SongFile(s_get_song_path(item_data.FileName));
+
+				// add the title-slide to the counter
+				item_data.SlideCount++;
 				
 				// count the slides
 				for (const part of this.get_verse_order(item_data)) {
 					// check wether the part is actually defined in the songfile
-					if (item_data.Song.has_text(part)) {
-						item_data.SlideCount += item_data.Song.get_part(part).length;
+					try {
+						item_data.SlideCount += item_data.Song.get_part(part).slides.length;
+					} catch (e) {
+						if (!(e instanceof ReferenceError)) {
+							throw e;
+						}
 					}
 				}
 				
@@ -185,17 +200,32 @@ class Sequence {
 		const sequence_item = this.sequence_items[item];
 		
 		const return_object: RenderObject = {
-			slides: [],
+			slides: [
+				sequence_item.Song.get_title()
+			],
 			slide: slide
 		};
 		
-		// add the individual part to the output-object
+		// add the individual parts to the output-object
 		for (const s_part of this.get_verse_order(item)) {
-			const a_part = sequence_item.Song.get_part(s_part);
+			let a_part: LyricPart = undefined;
+			try {
+				a_part = sequence_item.Song.get_part(s_part);
+			} catch (e) {
+				if (!(e instanceof ReferenceError)) {
+					throw e;
+				}
+			}
 
 			// if a part is not available, skip it
 			if (a_part !== undefined){
-				return_object.slides.push(...a_part);
+				// add the individual slides of the part to the output object
+				for (const slide of a_part.slides) {
+					return_object.slides.push({
+						type: a_part.type,
+						data: slide
+					});
+				}
 			}
 		}
 
@@ -234,21 +264,29 @@ class Sequence {
 
 		const o_return_item: ClientItemSlides = {
 			metadata: {
+				title: current_item.Caption,
 				item,
 				backgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
 			},
-			slides: []
+			slides: [
+				current_item.Song.get_title()
+			]
 		};
 
 		for (const s_part of this.get_verse_order(item)) {
-			const a_part = current_item.Song.get_part(s_part);
+			let part = undefined;
+
+			try {
+				part = current_item.Song.get_part(s_part);
+			} catch (e) {
+				if (!(e instanceof ReferenceError)) {
+					throw e;
+				}
+			}
 
 			// if a part is not available, skip it
-			if (a_part !== undefined){
-				o_return_item.slides.push({
-					type: s_part,
-					slides: current_item.Song.get_part(s_part)
-				});
+			if (part !== undefined){
+				o_return_item.slides.push(part);
 			}
 		}
 

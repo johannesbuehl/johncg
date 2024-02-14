@@ -15,5 +15,7 @@ Generate lyric-graphics and play them out through CasparCG.
 - remove types in variable names (typescript is typed, vscode shows the types)
 - validate received command
 - check response-texts, if they are still correct
-- colorize sequence-items
 - create message log / show error messages
+- multiple casparcg-clients
+- seamless template transition (2 render layers, wait for update, then stop)
+- structurize template-html, so the creation code can be used in the client for consistent slides

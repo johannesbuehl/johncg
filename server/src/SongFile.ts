@@ -1,7 +1,7 @@
 import fs from "fs";
 import iconv from "iconv-lite";
 
-const c_a_s_verse_types = [
+const verse_types = [
 	"refrain",
 	"chorus",
 	"vers",
@@ -22,14 +22,23 @@ const c_a_s_verse_types = [
 	"pre-coda",
 	"part",
 	"teil",
+	"title",
 	"unbekannt",
 	"unknown",
 	"unbenannt"
 ] as const;
 
-type SongElement = (typeof c_a_s_verse_types)[number];
+type SongElement = (typeof verse_types)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const b_isSongElement = (x: any): x is SongElement => c_a_s_verse_types.includes(x);
+const isSongElement = (x: any): x is SongElement => {
+	if (typeof x !== "string") {
+		return false;
+	}
+	
+	const stem = x.split(" ", 1)[0];
+
+	return verse_types.includes(stem.toLowerCase() as SongElement);
+};
 
 // metadata of the songfile
 interface SongFileMetadata {
@@ -39,6 +48,20 @@ interface SongFileMetadata {
 	VerseOrder?: SongElement[];
 	BackgroundImage?: string;
 }
+
+interface TitlePart {
+	type: "title";
+	title: string;
+	ChurchSongID?: string;
+}
+
+interface LyricPart {
+	type: "lyric";
+	part: SongElement;
+	slides: string[][];
+}
+
+type ItemPart = TitlePart | LyricPart;
 
 /**
  * processes and saves song-files (*.sng)
@@ -133,7 +156,7 @@ class SongFile {
 
 			// check if the first row describes the part
 			if (
-				b_isSongElement(first_line_items[0].toLowerCase()) && 
+				isSongElement(first_line_items[0].toLowerCase()) && 
 				first_line_items.length <= 2 &&
 				first_line_items.length > 0
 			) {
@@ -151,9 +174,30 @@ class SongFile {
 		}
 	}
 
+	get_title(): TitlePart {
+		const response: TitlePart = {
+			type: "title",
+			title: this.metadata.Title
+		};
+
+		if (this.metadata.ChurchSongID !== undefined) {
+			response.ChurchSongID = this.metadata.ChurchSongID;
+		}
+
+		return response;
+	}
+
 	// returns the different parts of the song
-	get_part(part: string): string[][] {
-		return this.text[part];
+	get_part(part: string): LyricPart {
+		if (!isSongElement(part) || !this.avaliable_parts.includes(part)) {
+			throw new ReferenceError(`'${part}' is no valid song-part`);
+		}
+
+		return {
+			type: "lyric",
+			part,
+			slides: this.text[part]
+		};
 	}
 
 	has_text(part: string): boolean {
@@ -169,4 +213,4 @@ class SongFile {
 }
 
 export default SongFile;
-export { SongFileMetadata, SongElement };
+export { SongFileMetadata, SongElement, ItemPart, LyricPart, TitlePart };

@@ -2,7 +2,7 @@
 <meta charset="UTF-8">
 <html>
 	<script>
-		const o_config = {
+		const Config = {
 			
 		};
 	</script>
@@ -31,21 +31,22 @@
 			}
 
 			#container {
-				font-family: "Bahnschrift";
 				color: white;
-				text-shadow: calc(1em / 32) calc(1em / 32) calc(1em / 16) black;
 
 				width: 100%;
 				height: 100%;
-
-				display: flex;
-				flex-direction: column;
-
-				justify-content: center;
-
+				
 				background-repeat: no-repeat;
 				background-position: center;
 				background-size: cover;
+			}
+
+			#container > * {
+				height: 100%;
+
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 
 			.slide {
@@ -53,20 +54,64 @@
 				height: auto;
 
 				margin: 100px;
+			}
+			
+			.slide.title {
+				display: grid;
+
+				grid-template-rows: 1fr 1fr;
+
+				height: 100%;
+				width: 100%;
+
+				font-size: 8em;
+			}
+
+			.slide > * {
+				text-shadow: calc(1em / 16) calc(1em / 16) calc(1em / 8) black;
+			}
+
+			.slide.lyric {
+				display: flex;
+				flex-direction: column;
+
+				justify-content: center;
+			}
+
+			.slide > .title {
+				font-family: "Bahnschrift Condensed";
+
+				display: flex;
+				align-items: flex-end;
+			}
+
+			.slide > .song_id {
+				font-family: "Bahnschrift Condensed";
+				font-weight: 100;
+
+				font-size: 0.75em;
+
 				white-space: nowrap;
 			}
 
 			.text_line {
-				font-family: inherit;
-				font-size: inherit;
+				font-family: "Bahnschrift";
+
+				font-size: 2em;
 
 				text-align: center;
 			}
 
 			#storage {
+				color: white;
 				opacity: 0;
 
 				width: fit-content;
+			}
+
+			/* Hide the title so it doesn't get width calculated */
+			#storage > * > .title {
+				display: none;
 			}
 		</style>
 	</head>
@@ -79,55 +124,82 @@
 		<div id="storage"></div>
 	</body>
 	<script>
-		let o_data = {};
+		let data = {};
 
-		let i_active_slide = 0;
-		let i_slide_count = 0;
+		let active_slide = 0;
+		let slide_count = 0;
 
 		// casparcg-function: transmits data
 		function update(s_data) {
 			// parse the transferred data into json
-			o_data = JSON.parse(s_data);
+			data = JSON.parse(s_data);
 
 			// get the div for the display and storage
-			const c_div_text = document.querySelector("#text");
-			const c_div_storage = document.querySelector("#storage");
+			const div_container = document.querySelector("#container");
+			const div_storage = document.querySelector("#storage");
 
 			// clear the storage-container
-			c_div_storage.innerHTML = "";
+			div_storage.innerHTML = "";
 
 			// counter for the individual slides
-			let i_slide = 0;
+			let slide_counter = 0;
 
 			// create the slides and store them in the container
-			for (const c_a_s_slide of o_data["slides"]) {
+			for (const slide of data["slides"]) {
 				// parent-div of slide
-				const c_div_slide = document.createElement("div");
-				c_div_slide.classList.add("slide");
-				c_div_slide.id = `slide_${i_slide}`;
+				const div_slide = document.createElement("div");
+				div_slide.dataset.slide = slide_counter;
 
-				// add the individual text-lines
-				for (const c_s_line of c_a_s_slide) {
-					const c_div_line = document.createElement("div");
-					c_div_line.classList.add("text_line");
-					c_div_line.innerText = c_s_line;
+				const div_content = document.createElement("div");
+				div_content.classList.add("slide");
+				div_slide.append(div_content);
 
-					c_div_slide.append(c_div_line);
-				}
+				switch (slide.type) {
+					case "title":
+							div_content.classList.add("title");
 
-				c_div_storage.append(c_div_slide);
-				i_slide++;
+							const div_title = document.createElement("div");
+							div_title.classList.add("title");
+							div_title.innerText = slide.title;
+							div_content.append(div_title);
+
+							const div_churchSongID = document.createElement("div");
+							div_churchSongID.classList.add("song_id");
+
+							if (slide.ChurchSongID !== undefined) {
+								div_churchSongID.innerText = slide.ChurchSongID;
+							}
+
+							div_content.append(div_churchSongID);
+
+						break;
+					case "lyric":
+						div_content.classList.add("lyric");
+
+						// add the individual text-lines
+						for (const s_line of slide.data) {
+							const div_line = document.createElement("div");
+							div_line.classList.add("text_line");
+							div_line.innerText = s_line;
+							
+							div_content.append(div_line);
+						}
+						break;
+					}
+						
+				div_storage.append(div_slide);
+				slide_counter++;
 			}
 
 			// store the amount of slides
-			i_slide_count = i_slide;
+			slide_count = slide_counter;
 
-			document.querySelector("#container").style.backgroundImage = `url("${o_data.backgroundImage.replace(/\\/g, "\\\\")}")`;
+			div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
 
-			i_active_slide = o_data.slide;
+			active_slide = data.slide;
 
 			// display the first slide
-			jump(i_active_slide);
+			jump(active_slide);
 			// resize all the slides (has to be done after displayin the first slide)
 			resize_slides();
 		}
@@ -139,12 +211,12 @@
 
 		// casparcg-function: advances to the next step
 		function next() {
-			jump(i_active_slide + 1);
+			jump(active_slide + 1);
 		}
 
 		// custom-function (through invoke): advance to the previous step
 		function prev() {
-			jump(i_active_slide - 1);
+			jump(active_slide - 1);
 		}
 
 		// custom-function (through invoke): jump to an arbitrary slide
@@ -158,12 +230,12 @@
 			c_div__main.innerHTML = "";
 
 			// clone the slide and change its id, so the id stays unique
-			const c_div_slide = document.querySelector(`#slide_${i_counter}`).cloneNode(true);
+			const c_div_slide = document.querySelector(`[data-slide='${i_counter}']`).cloneNode(true);
 			c_div_slide.id = "slide_active";
 
 			c_div__main.appendChild(c_div_slide);
 
-			i_active_slide = i_counter;
+			active_slide = i_counter;
 		}
 
 		// casparcg-function: hide the template
@@ -173,7 +245,7 @@
 
 		// clamp the counter to valid values
 		function i_clamp_slide_counter(i_counter_raw) {
-			return Math.max(0, Math.min(i_slide_count - 1, i_counter_raw));
+			return Math.max(0, Math.min(slide_count - 1, i_counter_raw));
 		}
 
 		// change the font-size so the slide with the highest width uses all of the available space
@@ -185,7 +257,9 @@
 			const c_i_current_container_width = document.querySelector("#slide_active").clientWidth;
 
 			// change the font size by the size difference ratio
-			document.querySelector("#container").style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
+			document.querySelectorAll(".slide.lyric").forEach((ele) => {
+				ele.style.fontSize = `${c_i_current_container_width / c_i_max_width}em`;
+			});
 		}
 
 		// get the width of the widest slide
@@ -193,10 +267,13 @@
 			let i_max_width = 0;
 
 			// get the width of the individual slides and store the biggest one 
-			for (let ii = 0; ii < i_slide_count; ii++) {
-				let i_current_width = document.querySelector(`#slide_${ii}`).clientWidth;
+			for (let ii = 0; ii < slide_count; ii++) {
+				const slide = document.querySelector(`#storage [data-slide='${ii}']`);
 
-				i_max_width = Math.max(i_current_width, i_max_width);
+				if (slide.querySelector(".lyric") !== undefined) {
+					let i_current_width = slide.clientWidth;
+					i_max_width = Math.max(i_current_width, i_max_width);
+				}
 			}
 
 			return i_max_width;

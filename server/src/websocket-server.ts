@@ -28,7 +28,7 @@ class websocket_server {
 	// store the message handlers for the different protocols
 	o_message_handlers: Record<string, MessageHandler>;
 
-	o_a_connections: Record<string, WebSocket[]> = {};
+	connections: Record<string, WebSocket[]> = {};
 
 	constructor(i_port: number, o_message_handlers: Record<string, MessageHandler>) {
 		this.i_port = i_port;
@@ -47,11 +47,11 @@ class websocket_server {
 	private on_connection(ws: WebSocket,socket: WebSocket, request: IncomingMessage) {
 		// check wether there is a protocol handler for the used protocol
 		if (Object.keys(this.o_message_handlers).includes(ws.protocol)) {
-			if (!Object.keys(this.o_a_connections).includes(ws.protocol)) {
-				this.o_a_connections[ws.protocol] = [];
+			if (!Object.keys(this.connections).includes(ws.protocol)) {
+				this.connections[ws.protocol] = [];
 			}
 
-			this.o_a_connections[ws.protocol].push(ws);
+			this.connections[ws.protocol].push(ws);
 
 			// register the different action-handlers
 			Object.keys(this.o_message_handlers[ws.protocol]).forEach((s_type) => {
@@ -75,15 +75,26 @@ class websocket_server {
 		}
 
 		// redirect errors to the console
-		ws.on("error", console.error);
+		ws.on("error", () => {
+			console.error();
 
-		// TESTING: answer pings with pongs
-		ws.on("ping", ws.pong);
+			ws.close();
+		});
+
+		ws.on("close", () => {
+			ws.close();
+
+			const index = this.connections[ws.protocol].indexOf(ws);
+
+			if (index > -1) {
+				this.connections[ws.protocol].splice(index, 1);
+			}
+		});
 	}
 
 	get_connections(s_protocol: string): WebSocket[] {
-		if (Object.keys(this.o_a_connections).includes(s_protocol)) {
-			return this.o_a_connections[s_protocol];
+		if (Object.keys(this.connections).includes(s_protocol)) {
+			return this.connections[s_protocol];
 		} else {
 			return [];
 		}

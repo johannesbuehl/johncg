@@ -112,7 +112,6 @@ function display_item_slides(data) {
 		// create the header of the part and append it to the part-container
 		const div_slide_part_header = document.createElement("div");
 		div_slide_part_header.classList.add("header");
-		div_slide_part_header.innerText = o_part.type;
 		div_slide_part.append(div_slide_part_header);
 
 		// create the slides-view and append it to the part container
@@ -120,35 +119,75 @@ function display_item_slides(data) {
 		div_slides_view.classList.add("slides_view");
 		div_slide_part.append(div_slides_view);
 
-		// add all the slides to the slides_view
-		for (let slide of o_part.slides) {
-			const div_slide_container = document.createElement("div");
-			div_slide_container.classList.add("slide_container");
-			div_slides_view.append(div_slide_container);
+		switch (o_part.type) {
+			case "title":
+				div_slide_part_header.innerText = data.metadata.title;
 
-			const div_slide = document.createElement("div");
-			div_slide.classList.add("slide");
-			div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
-			div_slide.dataset.slide_number = slide_counter;
-			div_slide_container.append(div_slide);
+				const div_slide_container = document.createElement("div");
+				div_slide_container.classList.add("slide_container");
+				div_slides_view.append(div_slide_container);
+				
+				const div_slide = document.createElement("div");
+				div_slide.classList.add("slide");
+				div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
+				div_slide.dataset.slide_number = slide_counter;
+				div_slide_container.append(div_slide);
+				
+				div_slide.onclick = function() {
+					request_item_slide_select(
+						Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
+						Number(this.dataset.slide_number)
+					);
+				};
 
-			div_slide.onclick = function() {
-				request_item_slide_select(
-					Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
-					Number(this.dataset.slide_number)
-				);
-			};
+				const div_title_line = document.createElement("div");
+				div_title_line.classList.add("lyric_line");
+				div_title_line.innerText = o_part.title;
+				div_slide.append(div_title_line);
 
-			// add the individual lyric-lines to the slide
-			for (let line of slide) {
-				const div_lyric_line = document.createElement("div");
-				div_lyric_line.classList.add("lyric_line");
-				div_lyric_line.innerText = line;
-				div_slide.append(div_lyric_line);
-			}
+				const div_songID_line = document.createElement("div");
+				div_songID_line.classList.add("lyric_line");
+				div_songID_line.innerText = o_part.ChurchSongID;
+				div_slide.append(div_songID_line);
 
-			slide_counter++;
+					
+
+				slide_counter++;
+				break;
+			case "lyric":		
+				div_slide_part_header.innerText = o_part.part;
+
+				// add all the slides to the slides_view
+				for (let slide of o_part.slides) {
+					const div_slide_container = document.createElement("div");
+					div_slide_container.classList.add("slide_container");
+					div_slides_view.append(div_slide_container);
+					
+					const div_slide = document.createElement("div");
+					div_slide.classList.add("slide");
+					div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
+					div_slide.dataset.slide_number = slide_counter;
+					div_slide_container.append(div_slide);
+					
+					div_slide.onclick = function() {
+						request_item_slide_select(
+							Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
+							Number(this.dataset.slide_number)
+						);
+					};
+
+					// add the individual lyric-lines to the slide
+					for (let line of slide) {
+						const div_lyric_line = document.createElement("div");
+						div_lyric_line.classList.add("lyric_line");
+						div_lyric_line.innerText = line;
+						div_slide.append(div_lyric_line);
+					}
+					slide_counter++;
+				}
+			break;
 		}
+
 		// add the song-part to the slide-container
 		div_slides_view_container.append(div_slide_part);
 	}
