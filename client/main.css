@@ -145,41 +145,59 @@ div.button, div.button > * {
 
 #sequence > .header {
 	text-align: center;
-
-	/* font-family: "Bahnschrift SemiBold"; */
 }
 
 .slide_part > .header.active {
 	background-color: rgb(40, 76, 184);
 }
 
-.sequence_item {
-	background-color: rgb(60, 64, 75);
-
-	margin: 0.25rem;
-
+.sequence_item_container {
+	margin: 0.0625rem;
+	margin-inline: 0.125rem;
+	
 	border: 0.125rem solid transparent;
-
+	
 	border-radius: 0.25rem;
-	padding: 0.25rem;
-	padding-left: 0.5rem;
-
+	
+	display: flex;
+	align-items: stretch;
+	
 	cursor: pointer;
 }
 
-.sequence_item:hover {
+.sequence_item_container:first-of-type {
+	margin-top: 0.125rem;
+}
+
+.item_color_indicator {
+	height: auto;
+	width: 1.5rem;
+}
+
+.sequence_item {
+	background-color: rgb(60, 64, 75);
+	
+	cursor: inherit;
+
+	padding: 0.375rem;
+	padding-left: 0.5rem;
+
+	flex: 1;
+}
+
+.sequence_item_container:hover > .sequence_item {
 	background-color: rgb(79, 83, 94);
 }
 
-.sequence_item.selected {
+.sequence_item_container.selected > .sequence_item {
 	background-color: rgb(40, 76, 184);
 }
 
-.sequence_item.selected:hover {
+.sequence_item_container.selected:hover > .sequence_item {
 	background-color: rgb(54, 92, 192);
 }
 
-.sequence_item.active {
+.sequence_item_container.active {
 	border-color: white;
 }
 
@@ -249,7 +267,7 @@ div.button, div.button > * {
 .lyric_line {
 	white-space: nowrap;
 
-	font-family: "Calibri";
+	font-family: "Bahnschrift";
 	color: white;
 	text-shadow: calc(1em / 32) calc(1em / 32) calc(1em / 16) black;
 }

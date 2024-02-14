@@ -30,7 +30,7 @@ class http_server {
 					break;
 				default:
 					if (/\/BackgroundImage\/.*/.test(request.url)) {
-						resource_dir = Config.path.BackgroundImage;
+						resource_dir = Config.path.backgroundImage;
 						request.url = request.url.replace(/\/BackgroundImage\//, "");
 					}
 			}

@@ -3,12 +3,12 @@ interface ConfigJSON {
 		showOnLoad: boolean;
 	};
 	path: {
-		BackgroundImage: string;
-		Song: string;
+		backgroundImage: string;
+		song: string;
 	};
 	casparcg: {
 		templates: {
-			Song: string
+			song: string
 		};
 		host: string;
 		port: number;

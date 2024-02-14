@@ -50,7 +50,7 @@ interface SendSequence extends ClientSequenceItems {
 
 interface SendClientState {
 	command: "state",
-	"item-slide-selection"?: {
+	itemSlideSelection?: {
 		item: number;
 		slide: number;
 	};
@@ -241,7 +241,7 @@ function select_item_slide(_ws_connection: WebSocket, data: RecvItemSlideSelect)
 function create_client_set_active_item_slide_object(): [SendClientState, JGCPResponse] {
 	return [{
 			command: "state",
-			"item-slide-selection": {
+			itemSlideSelection: {
 				item: seq.active_item,
 				slide: seq.active_slide
 			}
@@ -455,9 +455,7 @@ function JGCP_open_handler(ws: WebSocket) {
 			command: "clear"
 		};
 
-		ws.send(JSON.stringify({
-			command: "clear"
-		}));
+		ws.send(JSON.stringify(clear_message));
 
 		response = {
 			command: "response",

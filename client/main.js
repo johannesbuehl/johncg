@@ -52,16 +52,26 @@ function display_items(data) {
 	init();
 
 	for (let o_item of data.sequence_items) {
+		const div_sequence_item_container = document.createElement("div");
+		div_sequence_item_container.classList.add("sequence_item_container");
+		div_sequence_item_container.dataset.item_number = o_item.item;
+
+		const div_sequence_item_color_indicator = document.createElement("div");
+		div_sequence_item_color_indicator.classList.add("item_color_indicator");
+		div_sequence_item_color_indicator.style.backgroundColor = o_item.color;
+
+		div_sequence_item_container.append(div_sequence_item_color_indicator);
+
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
-		div_sequence_item.innerText = o_item.Caption;
-		div_sequence_item.dataset.item_number = o_item.item;
+		div_sequence_item.innerText = o_item.caption;
 
-		div_sequence_item.onclick = function() {
+		div_sequence_item_container.onclick = function() {
 			request_item_slides(Number(this.dataset.item_number));
 		};
 
-		div_sequence_items.append(div_sequence_item);
+		div_sequence_item_container.append(div_sequence_item);
+		div_sequence_items.append(div_sequence_item_container);
 	}
 
 	// display the visibility state
@@ -76,7 +86,7 @@ function request_item_slides(item) {
 		document.querySelector("#slides_view_container").innerHTML = "";
 
 		// clear the selected item
-		document.querySelector(".sequence_item.selected")?.classList.remove("selected");
+		document.querySelector(".sequence_item_container.selected")?.classList.remove("selected");
 	
 		ws.send(JSON.stringify({
 			command: "request-item-slides",
@@ -118,13 +128,13 @@ function display_item_slides(data) {
 
 			const div_slide = document.createElement("div");
 			div_slide.classList.add("slide");
-			div_slide.style.backgroundImage = `url("${data.metadata.BackgroundImage.replace(/\\/g, "\\\\")}")`;
+			div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
 			div_slide.dataset.slide_number = slide_counter;
 			div_slide_container.append(div_slide);
 
 			div_slide.onclick = function() {
 				request_item_slide_select(
-					Number(document.querySelector(".sequence_item.selected").dataset.item_number),
+					Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
 					Number(this.dataset.slide_number)
 				);
 			};
@@ -141,29 +151,29 @@ function display_item_slides(data) {
 		}
 		// add the song-part to the slide-container
 		div_slides_view_container.append(div_slide_part);
-		
-		// resize the lyrics-text to fit the slide
-		// get the highest width
-		let max_width = 0;
-
-		const div_lyrics_lines = document.querySelectorAll("div.lyric_line");
-
-		// get the width of the individual slides and store the biggest one
-		// for (let ii = 0; ii < i_slide_count; ii++) {
-		for (let div_lyric_line of div_lyrics_lines) {
-			let current_width = div_lyric_line.clientWidth;
-
-			max_width = Math.max(current_width, max_width);
-		}
-
-		// get the width of the container
-		const current_container_width = document.querySelector("div.slide").clientWidth;
-
-		// change the font size by the size difference ratio
-		div_lyrics_lines.forEach((div_lyric_line) => {
-			div_lyric_line.style.fontSize = `${current_container_width / max_width}em`;
-		});
 	}
+		
+	// resize the lyrics-text to fit the slide
+	// get the highest width
+	let max_width = 0;
+
+	const div_lyrics_lines = document.querySelectorAll("div.lyric_line");
+
+	// get the width of the individual slides and store the biggest one
+	// for (let ii = 0; ii < i_slide_count; ii++) {
+	for (let div_lyric_line of div_lyrics_lines) {
+		let current_width = div_lyric_line.clientWidth;
+
+		max_width = Math.max(current_width, max_width);
+	}
+
+	// get the width of the container
+	const current_container_width = document.querySelector("div.slide").clientWidth;
+
+	// change the font size by the size difference ratio
+	div_lyrics_lines.forEach((div_lyric_line) => {
+		div_lyric_line.style.fontSize = `${current_container_width / max_width}em`;
+	});
 
 	set_active_slide(data.clientID === clientID);
 }
@@ -173,7 +183,7 @@ function select_item(item) {
 	selected_item_number = item;
 
 	// remove the selected class from the previous item
-	const prev_selected_sequence_item = document.querySelector(".sequence_item.selected");
+	const prev_selected_sequence_item = document.querySelector(".sequence_item_container.selected");
 	if (prev_selected_sequence_item !== null) {
 		prev_selected_sequence_item.classList.remove("selected");
 	}
@@ -203,7 +213,7 @@ function set_active_slide(scroll = false) {
 		selected_header.classList.remove("active");
 	}
 
-	const selected_item = document.querySelector(".sequence_item.selected");
+	const selected_item = document.querySelector(".sequence_item_container.selected");
 	if (selected_item !== null) {
 		// if the currently displayed and selected sequence item is the active one, select the active slide
 		if (selected_item.dataset.item_number == active_item_slide.item) {
@@ -235,11 +245,11 @@ function set_active_item_slide(data, message_clientID) {
 	const jump = message_clientID === clientID || message_clientID === undefined;
 
 	// remove the "active" class from the previous sequence-item and add it to the new one
-	const prev_selected_item = document.querySelector(".sequence_item.active");
+	const prev_selected_item = document.querySelector(".sequence_item_container.active");
 	if (prev_selected_item !== null) {
 		prev_selected_item.classList.remove("active");
 	}
-	document.querySelector(`.sequence_item[data-item_number='${active_item_slide.item}']`).classList.add("active");
+	document.querySelector(`.sequence_item_container[data-item_number='${active_item_slide.item}']`).classList.add("active");
 
 	if (jump && active_item_slide.item !== selected_item_number) {
 		request_item_slides(active_item_slide.item);
@@ -263,7 +273,7 @@ function display_visibility_state(state) {
 
 function display_state_change(data) {
 	const key_map = {
-		"item-slide-selection": set_active_item_slide,
+		itemSlideSelection: set_active_item_slide,
 		visibility: display_visibility_state
 	};
 
@@ -273,7 +283,6 @@ function display_state_change(data) {
 		}
 	});
 }
-
 
 function random_4_hex() {
 	return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -307,9 +316,13 @@ function ws_connect() {
 	});
 	
 	ws.addEventListener("message", (event) => {
-		const o_data = JSON.parse(event.data);
+		const data = JSON.parse(event.data);
 	
-		const o_command_parser_map = {
+		if (data.command !== "response") {
+			console.log(data);
+		}
+
+		const command_parser_map = {
 			"sequence-items": display_items,
 			"item-slides": display_item_slides,
 			state: display_state_change,
@@ -325,7 +338,7 @@ function ws_connect() {
 			}
 		};
 	
-		o_command_parser_map[o_data.command](o_data);
+		command_parser_map[data.command](data);
 	
 	});
 	

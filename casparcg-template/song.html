@@ -31,7 +31,7 @@
 			}
 
 			#container {
-				font-family: "Calibri";
+				font-family: "Bahnschrift";
 				color: white;
 				text-shadow: calc(1em / 32) calc(1em / 32) calc(1em / 16) black;
 
@@ -122,7 +122,7 @@
 			// store the amount of slides
 			i_slide_count = i_slide;
 
-			document.querySelector("#container").style.backgroundImage = `url("${o_data.BackgroundImage.replace(/\\/g, "\\\\")}")`;
+			document.querySelector("#container").style.backgroundImage = `url("${o_data.backgroundImage.replace(/\\/g, "\\\\")}")`;
 
 			i_active_slide = o_data.slide;
 

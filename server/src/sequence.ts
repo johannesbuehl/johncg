@@ -8,8 +8,9 @@ import { CasparCG } from "casparcg-connection";
 // individual data of the sequence-file
 interface SequenceItemPartial {
 	Caption?: string;
+	Color?: string;
 	Type?: string;
-	Data?: string;
+	Cata?: string;
 	FileName?: string;
 	VerseOrder?: SongElement[];
 	Song?: SongFile;
@@ -19,18 +20,20 @@ interface SequenceItemPartial {
 interface SequenceItem extends SequenceItemPartial {
 	Caption: string;
 	SlideCount: number;
+	Color: string;
 }
 
 // interface for a renderer-object
 interface RenderObject {
 	slides: string[][];
 	slide: number;
-	BackgroundImage?: string;
+	backgroundImage?: string;
 }
 
 interface ClientSequenceItem {
-	Caption: string;
+	caption: string;
 	item: number;
+	color;
 }
 
 interface ClientSequenceItems {
@@ -45,7 +48,7 @@ interface ClientSequenceItems {
 interface ClientItemSlides {
 	metadata: {
 		item: number;
-		BackgroundImage: string;
+		backgroundImage: string;
 	};
 	slides: {
 		type: string;
@@ -134,7 +137,7 @@ class Sequence {
 			// store the data of the object
 			let item_data: SequenceItem = {
 				Caption: "",
-				Type: "", // define it empty, so it doesn't stay undefined
+				Color: "",
 				SlideCount: 0
 			};
 
@@ -196,7 +199,7 @@ class Sequence {
 			}
 		}
 
-		return_object.BackgroundImage = s_get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
+		return_object.backgroundImage = s_get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
 
 		return return_object;
 	}
@@ -213,7 +216,8 @@ class Sequence {
 
 		for (const [i, song_item] of this.sequence_items.entries()) {
 			const current_item: ClientSequenceItem = {
-					Caption: song_item.Caption,
+					caption: song_item.Caption,
+					color: song_item.Color,
 					item: i
 			};
 
@@ -231,7 +235,7 @@ class Sequence {
 		const o_return_item: ClientItemSlides = {
 			metadata: {
 				item,
-				BackgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
+				backgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
 			},
 			slides: []
 		};
@@ -405,7 +409,7 @@ class Sequence {
 			layer: Config.casparcg.layer,
 			cgLayer: 0,
 			playOnLoad: this.casparcg_visibility,
-			template: Config.casparcg.templates.Song,
+			template: Config.casparcg.templates.song,
 			data: this.create_renderer_object(item, slide)
 		});
 	}
@@ -450,46 +454,206 @@ class Sequence {
 }
 
 // parse an individual sequence-item-value
-function o_parse_item_value_string(s_key: string, s_value: string): SequenceItemPartial {
+function o_parse_item_value_string(key: string, value: string): SequenceItemPartial {
 	// remove line-breaks
-	s_value = s_value.replaceAll(/'\s\+\s+'/gm, "");
+	value = value.replaceAll(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
-	s_value = s_value.replaceAll(/'#(\d+)'/gm, (_match, group) => String.fromCharCode(group));
+	value = value.replaceAll(/'#(\d+)'/gm, (_match, group) => String.fromCharCode(group));
 	
-	const o_result: SequenceItemPartial = {
+	const result: SequenceItemPartial = {
 	};
 
 	// do value-type specific stuff
-	switch (s_key) {
+	switch (key) {
 		case "Data":
 			// remove whitespace and linebreaks
-			o_result[s_key] = s_value.replaceAll(/\s+/gm, "");
+			result[key] = value.replaceAll(/\s+/gm, "");
 			break;
 		case "VerseOrder":
 			// split csv-line into an array
-			o_result.VerseOrder = s_value.split(",") as SongElement[];
+			result.VerseOrder = value.split(",") as SongElement[];
 			break;
 		case "FileName":
 			// assume the type from the file-extension
-			if (path.extname(s_value) === ".sng") {
-				o_result["Type"] = "Song";
+			if (path.extname(value) === ".sng") {
+				result.Type = "Song";
 			}
-			o_result[s_key] = s_value;
+			result[key] = value;
+			break;
+		case "Color":
+			if (value.substring(0, 2) === "cl") {
+				result[key] = convert_color_to_hex(value);
+			} else {
+				const color_int = Number(value);
+
+				const color = (color_int & 0x0000ff) >> 16 | (color_int & 0x00ff00) | (color_int & 0xff0000) >> 16;
+
+				const color_string = color.toString(16);
+				result[key] = "#" + color_string.padStart(6, "0");
+			}
 			break;
 		default:
-			o_result[s_key] = s_value;
+			result[key] = value;
 			break;
 	}
 
-	return o_result;
+	return result;
 }
 
 function s_get_image_path(s_path: string): string {
-	return path.join(Config.path.BackgroundImage, s_path);
+	return path.join(Config.path.backgroundImage, s_path);
 }
 
 function s_get_song_path(s_path: string): string {
-	return path.join(Config.path.Song, s_path);
+	return path.join(Config.path.song, s_path);
+}
+
+function convert_color_to_hex(color: string): string | undefined {
+	const colours = {
+		claliceblue: "#f0f8ff",
+		clantiquewhite: "#faebd7",
+		claqua: "#00ffff",
+		claquamarine: "#7fffd4",
+		clazure: "#f0ffff",
+		clbeige: "#f5f5dc",
+		clbisque: "#ffe4c4",
+		clblack: "#000000",
+		clblanchedalmond: "#ffebcd",
+		clblue: "#0000ff",
+		clblueviolet: "#8a2be2",
+		clbrown: "#a52a2a",
+		clburlywood: "#deb887",
+		clcadetblue: "#5f9ea0",
+		clchartreuse: "#7fff00",
+		clchocolate: "#d2691e",
+		clcoral: "#ff7f50",
+		clcornflowerblue: "#6495ed",
+		clcornsilk: "#fff8dc",
+		clcrimson: "#dc143c",
+		clcyan: "#00ffff",
+		cldarkblue: "#00008b",
+		cldarkcyan: "#008b8b",
+		cldarkgoldenrod: "#b8860b",
+		cldarkgray: "#a9a9a9",
+		cldarkgreen: "#006400",
+		cldarkkhaki: "#bdb76b",
+		cldarkmagenta: "#8b008b",
+		cldarkolivegreen: "#556b2f",
+		cldarkorange: "#ff8c00",
+		cldarkorchid: "#9932cc",
+		cldarkred: "#8b0000",
+		cldarksalmon: "#e9967a",
+		cldarkseagreen: "#8fbc8f",
+		cldarkslateblue: "#483d8b",
+		cldarkslategray: "#2f4f4f",
+		cldarkturquoise: "#00ced1",
+		cldarkviolet: "#9400d3",
+		cldeeppink: "#ff1493",
+		cldeepskyblue: "#00bfff",
+		cldimgray: "#696969",
+		cldodgerblue: "#1e90ff",
+		clfirebrick: "#b22222",
+		clfloralwhite: "#fffaf0",
+		clforestgreen: "#228b22",
+		clfuchsia: "#ff00ff",
+		clgainsboro: "#dcdcdc",
+		clghostwhite: "#f8f8ff",
+		clgold: "#ffd700",
+		clgoldenrod: "#daa520",
+		clgray: "#808080",
+		clgreen: "#008000",
+		clgreenyellow: "#adff2f",
+		clhoneydew: "#f0fff0",
+		clhotpink: "#ff69b4",
+		clindianred: "#cd5c5c",
+		clindigo: "#4b0082",
+		clivory: "#fffff0",
+		clkhaki: "#f0e68c",
+		cllavender: "#e6e6fa",
+		cllavenderblush: "#fff0f5",
+		cllawngreen: "#7cfc00",
+		cllemonchiffon: "#fffacd",
+		cllightblue: "#add8e6",
+		cllightcoral: "#f08080",
+		cllightcyan: "#e0ffff",
+		cllightgoldenrodyellow: "#fafad2",
+		cllightgrey: "#d3d3d3",
+		cllightgreen: "#90ee90",
+		cllightpink: "#ffb6c1",
+		cllightsalmon: "#ffa07a",
+		cllightseagreen: "#20b2aa",
+		cllightskyblue: "#87cefa",
+		cllightslategray: "#778899",
+		cllightsteelblue: "#b0c4de",
+		cllightyellow: "#ffffe0",
+		cllime: "#00ff00",
+		cllimegreen: "#32cd32",
+		cllinen: "#faf0e6",
+		clmagenta: "#ff00ff",
+		clmaroon: "#800000",
+		clmediumaquamarine: "#66cdaa",
+		clmediumblue: "#0000cd",
+		clmediumorchid: "#ba55d3",
+		clmediumpurple: "#9370d8",
+		clmediumseagreen: "#3cb371",
+		clmediumslateblue: "#7b68ee",
+		clmediumspringgreen: "#00fa9a",
+		clmediumturquoise: "#48d1cc",
+		clmediumvioletred: "#c71585",
+		clmidnightblue: "#191970",
+		clmintcream: "#f5fffa",
+		clmistyrose: "#ffe4e1",
+		clmoccasin: "#ffe4b5",
+		clnavajowhite: "#ffdead",
+		clnavy: "#000080",
+		cloldlace: "#fdf5e6",
+		clolive: "#808000",
+		clolivedrab: "#6b8e23",
+		clorange: "#ffa500",
+		clorangered: "#ff4500",
+		clorchid: "#da70d6",
+		clpalegoldenrod: "#eee8aa",
+		clpalegreen: "#98fb98",
+		clpaleturquoise: "#afeeee",
+		clpalevioletred: "#d87093",
+		clpapayawhip: "#ffefd5",
+		clpeachpuff: "#ffdab9",
+		clperu: "#cd853f",
+		clpink: "#ffc0cb",
+		clplum: "#dda0dd",
+		clpowderblue: "#b0e0e6",
+		clpurple: "#800080",
+		clrebeccapurple: "#663399",
+		clred: "#ff0000",
+		clrosybrown: "#bc8f8f",
+		clroyalblue: "#4169e1",
+		clsaddlebrown: "#8b4513",
+		clsalmon: "#fa8072",
+		clsandybrown: "#f4a460",
+		clseagreen: "#2e8b57",
+		clseashell: "#fff5ee",
+		clsienna: "#a0522d",
+		clsilver: "#c0c0c0",
+		clskyblue: "#87ceeb",
+		clslateblue: "#6a5acd",
+		clslategray: "#708090",
+		clsnow: "#fffafa",
+		clspringgreen: "#00ff7f",
+		clsteelblue: "#4682b4",
+		cltan: "#d2b48c",
+		clteal: "#008080",
+		clthistle: "#d8bfd8",
+		cltomato: "#ff6347",
+		clturquoise: "#40e0d0",
+		clviolet: "#ee82ee",
+		clwheat: "#f5deb3",
+		clwhite: "#ffffff",
+		clwhitesmoke: "#f5f5f5",
+		clyellow: "#ffff00",
+		clyellowgreen: "#9acd32"
+	};
+	
+	return colours[color.toLowerCase()];
 }
 
 export { Sequence, NavigateType, NavigateDirection, isItemNavigateType, isItemNavigateDirection, ClientSequenceItems, ClientItemSlides };
