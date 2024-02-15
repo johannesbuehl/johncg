@@ -10,10 +10,12 @@ interface ConfigJSON {
 		templates: {
 			song: string
 		};
-		host: string;
-		port: number;
-		channel: number;
-		layer: number;
+		connections: {
+			host: string;
+			port: number;
+			channel: number;
+			layers: [number, number];
+		}[];
 	};
 	clientServer: {
 		http: {

@@ -3,17 +3,24 @@
 		"showOnLoad": true
 	},
 	"path": {
-		"backgroundImage": "W:\\Kirche\\SongBeamer\\Hintergrund",
-		"song": "D:\\Coding_z1glr\\liedtexte_git"
+		"backgroundImage": "C:/path/to/image/directory",
+		"song": "D:/path/to/song/directory"
 	},
 	"casparcg": {
 		"templates": {
 			"song": "Song"
 		},
-		"host": "127.0.0.1",
-		"port": 5250,
-		"channel": 1,
-		"layer": 20
+		"connections": [
+			{
+				"host": "127.0.0.1",
+				"port": 5250,
+				"channel": 1,
+				"layers": [
+					20,
+					21
+				]
+			}
+		]
 	},
 	"clientServer": {
 		"http": {

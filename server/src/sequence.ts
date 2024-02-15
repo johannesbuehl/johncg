@@ -1,5 +1,6 @@
 import path from "path";
 import { CasparCG } from "casparcg-connection";
+import fs from "fs";
 
 import SongFile, { ItemPartClient, LyricPart, SongElement, TitlePart } from "./SongFile";
 
@@ -92,33 +93,57 @@ class Sequence {
 
 	private casparcg_visibility: boolean = Config.behaviour.showOnLoad;
 
-	readonly casparcg_connection = new CasparCG({
-		...Config.casparcg,
-		autoConnect: true
-	});
+	readonly casparcg_connections: CasparCG[] = [];
 
 	constructor(sequence: string) {
+		// create the casparcg-connections
+		// use for loop to maintain the order
+		for (const connection_setting of Config.casparcg.connections) {
+			this.casparcg_connections.push(
+				new CasparCG({
+					...connection_setting,
+					autoConnect: true
+				})
+			);
+			
+			this.casparcg_connections.forEach((casparcg_connection) => {
+				// clear the layers that will be used
+				casparcg_connection.clear({
+					channel: connection_setting.channel,
+					layer: connection_setting.layers[0]
+				});
+				casparcg_connection.clear({
+					channel: connection_setting.channel,
+					layer: connection_setting.layers[1]
+				});
+			});
+		}
+
 		this.parse_sequence(sequence);
 
 		this.set_active_item(0, 0);
 
 		// setup auto-loading of the current-item on reconnection
-		this.casparcg_connection.addListener("disconnect", () => {
-			// on disconnect register a connect-listener
-			this.casparcg_connection.addListener("connect", () => {
-				// load the active-item
-				this.casparcg_load_item(this.active_item, this.active_slide);
-
-				// remove the connect-listener again
-				this.casparcg_connection.removeAllListeners("connect");
+		this.casparcg_connections.forEach((casparcg_connection, index) => {
+			casparcg_connection.addListener("disconnect", () => {
+				// on disconnect register a connect-listener
+				casparcg_connection.addListener("connect", () => {
+					// load the active-item
+					this.casparcg_load_item(this.active_item, this.active_slide, index, false);
+					
+					// remove the connect-listener again
+					casparcg_connection.removeAllListeners("connect");
+				});
+				
 			});
-
 		});
 	}
 
 	destroy() {
-		this.casparcg_connection.removeAllListeners();
-		this.casparcg_connection.disconnect();
+		this.casparcg_connections.forEach((casparcg_connection) => {
+			casparcg_connection.removeAllListeners();
+			casparcg_connection.disconnect();
+		});
 	}
 
 	parse_sequence(sequence: string): void {
@@ -229,7 +254,7 @@ class Sequence {
 			}
 		}
 
-		return_object.backgroundImage = get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
+		return_object.backgroundImage = get_image_b64(sequence_item.Song.metadata.BackgroundImage);
 
 		return return_object;
 	}
@@ -272,9 +297,6 @@ class Sequence {
 			],
 			slides_template: this.create_renderer_object(item, 0)
 		};
-
-		// replace the background-image
-		return_item.slides_template.backgroundImage = path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage);
 
 		for (const part_name of this.get_verse_order(item)) {
 			let part = undefined;
@@ -443,42 +465,75 @@ class Sequence {
 		return slide;
 	}
 
-	private casparcg_load_item(item: number, slide: number): void {
-		// load the item into casparcg
-		this.casparcg_connection.cgAdd({
-			channel: Config.casparcg.channel,
-			layer: Config.casparcg.layer,
-			cgLayer: 0,
-			playOnLoad: this.casparcg_visibility,
-			template: Config.casparcg.templates.song,
-			data: this.create_renderer_object(item, slide)
+	private casparcg_load_item(item: number, slide: number, index?: number, flip_layer: boolean = true): void {
+		if (flip_layer) {
+			// clear the lower layer
+			this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
+				casparcg_connection.cgClear({
+					channel: Config.casparcg.connections[loop_index].channel,
+					layer: Config.casparcg.connections[loop_index].layers[0]
+				});
+			});
+
+			// swap the higer layer to the lower layer
+			this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
+				casparcg_connection.swap({
+					channel: Config.casparcg.connections[loop_index].channel,
+					layer: Config.casparcg.connections[loop_index].layers[0],
+					channel2: Config.casparcg.connections[loop_index].channel,
+					layer2: Config.casparcg.connections[loop_index].layers[1],
+					transforms: true
+				});
+			});
+		}
+
+		this.casparcg_connections.forEach(async (casparcg_connection, loop_index) => {
+			// load the item into casparcg
+			casparcg_connection.cgAdd({
+				channel: Config.casparcg.connections[loop_index].channel,
+				layer: Config.casparcg.connections[loop_index].layers[1],
+				cgLayer: 0,
+				playOnLoad: this.casparcg_visibility,
+				template: Config.casparcg.templates.song,
+				data: this.create_renderer_object(item, slide)
+			});
 		});
 	}
 
 	private casparcg_select_slide(slide: number): void {
-		// jump to the slide-number in casparcg
-		this.casparcg_connection.cgInvoke({
-			channel: Config.casparcg.channel,
-			layer: Config.casparcg.layer,
-			cgLayer: 0,
-			method: `jump(${slide})`
+		this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
+			// jump to the slide-number in casparcg
+			casparcg_connection.cgInvoke({
+				channel: Config.casparcg.connections[loop_index].channel,
+				layer: Config.casparcg.connections[loop_index].layers[1],
+				cgLayer: 0,
+				method: `jump(${slide})`
+			});
 		});
 	}
 
 	casparcg_set_visibility(visibility: boolean): void {
-		const options = {
-			channel: Config.casparcg.channel,
-			layer: Config.casparcg.layer,
-			cgLayer: 0
-		};
+		this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
+			// clear the background-layer, so that the foreground has an hide-animation
+			casparcg_connection.clear({
+				channel: Config.casparcg.connections[loop_index].channel,
+				layer: Config.casparcg.connections[loop_index].layers[0]
+			});
 
-		this.casparcg_visibility = visibility;
-
-		if (visibility) {
-			this.casparcg_connection.cgPlay(options);
-		} else {
-			this.casparcg_connection.cgStop(options);
-		}
+			const options = {
+				channel: Config.casparcg.connections[loop_index].channel,
+				layer: Config.casparcg.connections[loop_index].layers[1],
+				cgLayer: 0
+			};
+	
+			this.casparcg_visibility = visibility;
+	
+			if (visibility) {
+				casparcg_connection.cgPlay(options);
+			} else {
+				casparcg_connection.cgStop(options);
+			}
+		});
 	}
 
 	get active_item(): number {
@@ -541,8 +596,8 @@ function parse_item_value_string(key: string, value: string): SequenceItemPartia
 	return result;
 }
 
-function get_image_path(image_path: string): string {
-	return path.join(Config.path.backgroundImage, image_path);
+function get_image_b64(image_path: string): string {
+	return "data:image/jpg;base64," + fs.readFileSync(path.join(Config.path.backgroundImage, image_path)).toString("base64");
 }
 
 function get_song_path(song_path: string): string {

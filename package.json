@@ -3,7 +3,6 @@
     "casparcg-connection": "^6.2.1",
     "iconv-lite": "^0.6.3",
     "mime-types": "^2.1.35",
-    "node-cache": "^5.1.2",
     "ws": "^8.16.0"
   },
   "devDependencies": {

@@ -104,7 +104,16 @@ function display_item_slides(data) {
 
 	let slide_counter = 0;
 
+	// create the individual arrays for parallel processing
+	let part_arrays = [];
+
 	for (let part of data.slides) {
+		part_arrays.push([slide_counter, part]);
+
+		slide_counter += part.slides;
+	}
+
+	part_arrays = part_arrays.map(([slides_start, part]) => {
 		// create the container for the part
 		const div_slide_part = document.createElement("div");
 		div_slide_part.classList.add("slide_part");
@@ -128,14 +137,34 @@ function display_item_slides(data) {
 			} break;
 		}
 
-		for (let ii = 0; ii < part.slides; ii++) {
-			div_slides_view.append(create_slide_iframe(data, slide_counter));
+		let iframe_iter_array = [...Array(part.slides).keys()];
 
-			slide_counter++;
+		iframe_iter_array = iframe_iter_array.map((ii) => { 
+			return {
+				index: ii,
+				slide: create_slide_iframe(data, slides_start + ii)
+			};
+		});
+
+		iframe_iter_array = iframe_iter_array.sort((a, b) => Boolean((a > b) * 2 - 1));
+
+		for (const iframe of iframe_iter_array) {
+			div_slides_view.append(iframe.slide);
 		}
 
 		// add the song-part to the slide-container
-		div_slides_view_container.append(div_slide_part);
+		// div_slides_view_container.append(div_slide_part);
+
+		return {
+			slides_start: slides_start,
+			slide_part: div_slide_part
+		}
+	});
+
+	part_arrays = part_arrays.sort((a, b) => Boolean((a > b) * 2 - 1));
+
+	for (const slide_part of part_arrays) {
+		div_slides_view_container.append(slide_part.slide_part);
 	}
 
 	set_active_slide(data.clientID === clientID);
@@ -312,10 +341,6 @@ function ws_connect() {
 	ws.addEventListener("message", (event) => {
 		const data = JSON.parse(event.data);
 	
-		if (data.command !== "response") {
-			console.log(data);
-		}
-
 		const command_parser_map = {
 			"sequence-items": display_items,
 			"item-slides": display_item_slides,

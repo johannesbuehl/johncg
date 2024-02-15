@@ -383,8 +383,6 @@ function JGCP_message_handler(ws: WebSocket, raw_data: RawData) {
 	// store the response send back to the client
 	let response: JGCPResponse;
 
-	console.debug(data);
-
 	// if data is undefined, there was no valid JSON transmitted
 	if (data === undefined) {
 		response = {

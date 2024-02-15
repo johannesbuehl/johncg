@@ -20,11 +20,13 @@
 
 				overflow: hidden;
 
-				background-color: black;
+				background-color: transparent;
 			}
 
 			#_main {
 				opacity: 0;
+
+				transition: opacity 0.5s linear;
 
 				width: 100vw;
 				height: 100vh;
@@ -132,15 +134,19 @@
 
 		let active_slide = 0;
 		let slide_count = 0;
-		
+
 		// casparcg-function: transmits data
 		function update(s_data) {
 			// parse the transferred data into json
 			data = JSON.parse(s_data);
-		
+			
 			// get the div for the display and storage
 			const div_container = document.querySelector("#container");
 			const div_storage = document.querySelector("#storage");
+
+			// initiate the background loading, so there is enough time to actually load it
+			// div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
+			div_container.style.backgroundImage = `url("${data.backgroundImage}")`;
 
 			// clear the storage-container
 			div_storage.innerHTML = "";
@@ -161,16 +167,14 @@
 			// store the amount of slides
 			slide_count = slide_counter;
 		
-			div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
-		
 			active_slide = data.slide;
-		
+
 			// display the first slide
 			jump(active_slide);
 			// resize all the slides (has to be done after displayin the first slide)
 			resize_slides();
 		}
-		
+
 		// casparcg-function: displays the template
 		function play() {
 			document.querySelector("#_main").style.opacity = 1;
