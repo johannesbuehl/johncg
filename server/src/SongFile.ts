@@ -63,12 +63,25 @@ interface LyricPart {
 
 type ItemPart = TitlePart | LyricPart;
 
+interface TitlePartClient {
+	type: "title";
+	slides: number;
+}
+
+interface LyricPartClient {
+	type: "lyric";
+	part: SongElement;
+	slides: number;
+}
+
+type ItemPartClient = TitlePartClient | LyricPartClient;
+
 /**
  * processes and saves song-files (*.sng)
  * They should be compatible with those created by songbeamer (no guarantee given)
  */
 class SongFile {
-	s_song_file_path: string;
+	song_file_path: string;
 
 	// private variables
 	private text: Record<string, string[][]> = {};
@@ -81,7 +94,7 @@ class SongFile {
 		if (path === undefined) {
 			throw new ReferenceError();
 		} else {
-			this.s_song_file_path = path;
+			this.song_file_path = path;
 		}
 
 		this.parse_song_text();
@@ -89,27 +102,27 @@ class SongFile {
 
 	/**
 	 * parses the metadata in a text header
-	 * @param s_header a string representing the header
+	 * @param header a string representing the header
 	 */
-	private parse_text_header(s_header: string): void {
+	private parse_text_header(header: string): void {
 		// split the header into the individual lines
-		const a_s_header_data: string[] = s_header.split(/\r?\n/);
+		const header_data: string[] = header.split(/\r?\n/);
 
-		a_s_header_data.forEach((row) => {
+		header_data.forEach((row) => {
 			const components = row.split("=");
-			const [s_key, s_value] = [components.shift().substring(1), components.join("=")];
+			const [key, value] = [components.shift().substring(1), components.join("=")];
 
 			// handle different data differently
-			switch (s_key) {
+			switch (key) {
 				// direct string data
 				case "Title":
 				case "ChurchSongID":
 				case "Book":
 				case "BackgroundImage":
-					this.metadata[s_key] = s_value;
+					this.metadata[key] = value;
 					break;
 				case "VerseOrder":
-					this.metadata[s_key] = s_value.split(",") as SongElement[];
+					this.metadata[key] = value.split(",") as SongElement[];
 					break;
 				default:
 					break;
@@ -120,14 +133,14 @@ class SongFile {
 	// parse the text-content
 	private parse_song_text() {
 		// read the song-file in a byte-array
-		const a_by_raw_data = fs.readFileSync(this.s_song_file_path);
+		const raw_data_buffer = fs.readFileSync(this.song_file_path);
 		// utf-8-BOM
-		const a_by_bom = Buffer.from([239, 187, 191]);
+		const bom = Buffer.from([239, 187, 191]);
 
 		let encoding;
 
 		// check wether the song-file starts with the utf-8-BOM
-		if (a_by_raw_data.subarray(0, 3).compare(a_by_bom) === 0) {
+		if (raw_data_buffer.subarray(0, 3).compare(bom) === 0) {
 			encoding = "utf8";
 		// no utf-8-BOM -> encoding is cp1252
 		} else {
@@ -135,7 +148,7 @@ class SongFile {
 		}
 
 		// decode the song-file-bytes with the fitting encoding
-		const raw_data = iconv.decode(a_by_raw_data, encoding);
+		const raw_data = iconv.decode(raw_data_buffer, encoding);
 
 		// the different slides are seperated by a line of 2 or 3 dashes
 		const data = String(raw_data).split(/\r?\n---?\r?\n/);
@@ -200,6 +213,27 @@ class SongFile {
 		};
 	}
 
+	get_title_client(): TitlePartClient {
+		const response: TitlePartClient = {
+			type: "title",
+			slides: 1 // static, since there is always only one title-slide
+		};
+
+		return response;
+	}
+
+	get_part_client(part: string): LyricPartClient {
+		if (!isSongElement(part) || !this.avaliable_parts.includes(part)) {
+			throw new ReferenceError(`'${part}' is no valid song-part`);
+		}
+
+		return {
+			type: "lyric",
+			part,
+			slides: this.text[part].length
+		};
+	}
+
 	has_text(part: string): boolean {
 		return this.avaliable_parts.includes(part);
 	}
@@ -213,4 +247,4 @@ class SongFile {
 }
 
 export default SongFile;
-export { SongFileMetadata, SongElement, ItemPart, LyricPart, TitlePart };
+export { SongFileMetadata, SongElement, ItemPart, LyricPart, TitlePart, ItemPartClient, LyricPartClient, TitlePartClient };

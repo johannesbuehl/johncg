@@ -1,7 +1,7 @@
 import path from "path";
 import { CasparCG } from "casparcg-connection";
 
-import SongFile, { ItemPart, LyricPart, SongElement, TitlePart } from "./SongFile";
+import SongFile, { ItemPartClient, LyricPart, SongElement, TitlePart } from "./SongFile";
 
 import Config from "./config";
 
@@ -49,9 +49,9 @@ interface ClientItemSlides {
 	metadata: {
 		title: string;
 		item: number;
-		backgroundImage: string;
 	};
-	slides: ItemPart[];
+	slides: ItemPartClient[];
+	slides_template: RenderObject;
 }
 
 interface ActiveItem {
@@ -161,7 +161,7 @@ class Sequence {
 					Object.keys(results).forEach(key => results[key] === undefined && delete results[key]);
 
 					// merge the result with the data object
-					item_data = { ...item_data, ...o_parse_item_value_string(...Object.entries(results)[0]) };
+					item_data = { ...item_data, ...parse_item_value_string(...Object.entries(results)[0]) };
 				}
 
 			} while (re_results_item !== null);
@@ -170,7 +170,7 @@ class Sequence {
 
 			// TESTING only if it is song-element, since the others aren't implemented
 			if (item_data.Type === "Song") {
-				item_data.Song = new SongFile(s_get_song_path(item_data.FileName));
+				item_data.Song = new SongFile(get_song_path(item_data.FileName));
 
 				// add the title-slide to the counter
 				item_data.SlideCount++;
@@ -207,10 +207,10 @@ class Sequence {
 		};
 		
 		// add the individual parts to the output-object
-		for (const s_part of this.get_verse_order(item)) {
-			let a_part: LyricPart = undefined;
+		for (const part_name of this.get_verse_order(item)) {
+			let part: LyricPart = undefined;
 			try {
-				a_part = sequence_item.Song.get_part(s_part);
+				part = sequence_item.Song.get_part(part_name);
 			} catch (e) {
 				if (!(e instanceof ReferenceError)) {
 					throw e;
@@ -218,24 +218,24 @@ class Sequence {
 			}
 
 			// if a part is not available, skip it
-			if (a_part !== undefined){
+			if (part !== undefined){
 				// add the individual slides of the part to the output object
-				for (const slide of a_part.slides) {
+				for (const slide of part.slides) {
 					return_object.slides.push({
-						type: a_part.type,
+						type: part.type,
 						data: slide
 					});
 				}
 			}
 		}
 
-		return_object.backgroundImage = s_get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
+		return_object.backgroundImage = get_image_path(sequence_item.Song.metadata.BackgroundImage).replaceAll("\\", "\\\\");
 
 		return return_object;
 	}
 
 	create_client_object_sequence(): ClientSequenceItems {
-		const o_return_sequence: ClientSequenceItems = {
+		const return_sequence: ClientSequenceItems = {
 			sequence_items: [],
 			metadata: {
 				item: this.active_item,
@@ -251,10 +251,10 @@ class Sequence {
 					item: i
 			};
 
-			o_return_sequence.sequence_items.push(current_item);
+			return_sequence.sequence_items.push(current_item);
 		}
 
-		return o_return_sequence;
+		return return_sequence;
 	}
 
 	create_client_object_item_slides(item: number):  ClientItemSlides{
@@ -262,22 +262,25 @@ class Sequence {
 
 		const current_item: SequenceItem = this.sequence_items[item];
 
-		const o_return_item: ClientItemSlides = {
+		const return_item: ClientItemSlides = {
 			metadata: {
 				title: current_item.Caption,
-				item,
-				backgroundImage: path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage)
+				item
 			},
 			slides: [
-				current_item.Song.get_title()
-			]
+				current_item.Song.get_title_client()
+			],
+			slides_template: this.create_renderer_object(item, 0)
 		};
 
-		for (const s_part of this.get_verse_order(item)) {
+		// replace the background-image
+		return_item.slides_template.backgroundImage = path.join("BackgroundImage", current_item.Song.metadata.BackgroundImage);
+
+		for (const part_name of this.get_verse_order(item)) {
 			let part = undefined;
 
 			try {
-				part = current_item.Song.get_part(s_part);
+				part = current_item.Song.get_part_client(part_name);
 			} catch (e) {
 				if (!(e instanceof ReferenceError)) {
 					throw e;
@@ -286,11 +289,11 @@ class Sequence {
 
 			// if a part is not available, skip it
 			if (part !== undefined){
-				o_return_item.slides.push(part);
+				return_item.slides.push(part);
 			}
 		}
 
-		return o_return_item;
+		return return_item;
 	}
 
 	get_verse_order(item: number | SequenceItem): string[] {
@@ -341,17 +344,17 @@ class Sequence {
 			throw new RangeError(`direction is invalid ('${direction}')`);
 		}
 
-		let i_direction;
+		let direction_delta;
 
 		switch (direction) {
 			case "prev":
-				i_direction = -1;
+				direction_delta = -1;
 				break;
 			case "next":
-				i_direction = 1;
+				direction_delta = 1;
 		}
 
-		let new_active_item_number = this.active_item + i_direction;
+		let new_active_item_number = this.active_item + direction_delta;
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
@@ -492,7 +495,7 @@ class Sequence {
 }
 
 // parse an individual sequence-item-value
-function o_parse_item_value_string(key: string, value: string): SequenceItemPartial {
+function parse_item_value_string(key: string, value: string): SequenceItemPartial {
 	// remove line-breaks
 	value = value.replaceAll(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
@@ -538,12 +541,12 @@ function o_parse_item_value_string(key: string, value: string): SequenceItemPart
 	return result;
 }
 
-function s_get_image_path(s_path: string): string {
-	return path.join(Config.path.backgroundImage, s_path);
+function get_image_path(image_path: string): string {
+	return path.join(Config.path.backgroundImage, image_path);
 }
 
-function s_get_song_path(s_path: string): string {
-	return path.join(Config.path.song, s_path);
+function get_song_path(song_path: string): string {
+	return path.join(Config.path.song, song_path);
 }
 
 function convert_color_to_hex(color: string): string | undefined {

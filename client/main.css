@@ -222,8 +222,6 @@ div.button, div.button > * {
 	margin: 0.25rem;
 
 	overflow: visible; /* show the overflow, because the hover effects use thicker borders wich overflow (intended) */
-
-	cursor: pointer;
 }
 
 .slide {

@@ -167,6 +167,7 @@
 		
 			// display the first slide
 			jump(active_slide);
+			
 			// resize all the slides (has to be done after displayin the first slide)
 			resize_slides();
 		}
@@ -188,21 +189,21 @@
 		
 		// custom-function (through invoke): jump to an arbitrary slide
 		function jump(i_counter_raw) {
-			const i_counter = i_clamp_slide_counter(i_counter_raw)
+			const counter = clamp_slide_counter(i_counter_raw)
 		
 			// get the container to display the load the slide into
-			const c_div__main = document.querySelector("#container");
+			const div__main = document.querySelector("#container");
 		
 			// clear the content of the container
-			c_div__main.innerHTML = "";
+			div__main.innerHTML = "";
 		
 			// clone the slide and change its id, so the id stays unique
-			const c_div_slide = document.querySelector(`[data-slide='${i_counter}']`).cloneNode(true);
-			c_div_slide.id = "slide_active";
+			const div_slide = document.querySelector(`[data-slide='${counter}']`).cloneNode(true);
+			div_slide.id = "slide_active";
 		
-			c_div__main.appendChild(c_div_slide);
+			div__main.appendChild(div_slide);
 		
-			active_slide = i_counter;
+			active_slide = counter;
 		}
 		
 		// casparcg-function: hide the template
@@ -211,14 +212,14 @@
 		}
 		
 		// clamp the counter to valid values
-		function i_clamp_slide_counter(i_counter_raw) {
-			return Math.max(0, Math.min(slide_count - 1, i_counter_raw));
+		function clamp_slide_counter(counter_raw) {
+			return Math.max(0, Math.min(slide_count - 1, counter_raw));
 		}
 		
 		// change the font-size so the slide with the highest width uses all of the available space
 		function resize_slides() {
 			// get the highest width
-			const max_width = i_get_max_width();
+			const max_width = get_max_width();
 		
 			// get the width of the container
 			const current_container_width = document.querySelector("#slide_active").clientWidth;
@@ -227,20 +228,20 @@
 		}
 		
 		// get the width of the widest slide
-		function i_get_max_width() {
-			let i_max_width = 0;
+		function get_max_width() {
+			let max_width = 0;
 		
 			// get the width of the individual slides and store the biggest one 
 			for (let ii = 0; ii < slide_count; ii++) {
 				const slide = document.querySelector(`#storage [data-slide='${ii}']`);
 		
 				if (slide.querySelector(".lyric") !== undefined) {
-					let i_current_width = slide.clientWidth;
-					i_max_width = Math.max(i_current_width, i_max_width);
+					let current_width = slide.clientWidth;
+					max_width = Math.max(current_width, max_width);
 				}
 			}
 		
-			return i_max_width;
+			return max_width;
 		}
 		
 		function create_slide(slide_data) {
@@ -273,10 +274,10 @@
 					div_content.classList.add("lyric");
 
 					// add the individual text-lines
-					for (const s_line of slide_data.data) {
+					for (const line of slide_data.data) {
 						const div_line = document.createElement("div");
 						div_line.classList.add("text_line");
-						div_line.innerText = s_line;
+						div_line.innerText = line;
 						
 						div_content.append(div_line);
 					}

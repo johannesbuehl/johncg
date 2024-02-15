@@ -21,32 +21,32 @@ interface MessageHandler {
 }
 
 class websocket_server {
-	private i_port: number;
+	private port: number;
 
 	ws_server: WebSocketServer;
 
 	// store the message handlers for the different protocols
-	o_message_handlers: Record<string, MessageHandler>;
+	message_handlers: Record<string, MessageHandler>;
 
 	connections: Record<string, WebSocket[]> = {};
 
-	constructor(i_port: number, o_message_handlers: Record<string, MessageHandler>) {
-		this.i_port = i_port;
+	constructor(port: number, message_handlers: Record<string, MessageHandler>) {
+		this.port = port;
 
-		this.o_message_handlers = o_message_handlers;
+		this.message_handlers = message_handlers;
 
 		this.start();
 	}
 
 	start() {
-		this.ws_server = new WebSocketServer({ port: this.i_port });
+		this.ws_server = new WebSocketServer({ port: this.port });
 
 		this.ws_server.on("connection", (ws, socket, request) => this.on_connection(ws, socket, request));
 	}
 
 	private on_connection(ws: WebSocket,socket: WebSocket, request: IncomingMessage) {
 		// check wether there is a protocol handler for the used protocol
-		if (Object.keys(this.o_message_handlers).includes(ws.protocol)) {
+		if (Object.keys(this.message_handlers).includes(ws.protocol)) {
 			if (!Object.keys(this.connections).includes(ws.protocol)) {
 				this.connections[ws.protocol] = [];
 			}
@@ -54,13 +54,13 @@ class websocket_server {
 			this.connections[ws.protocol].push(ws);
 
 			// register the different action-handlers
-			Object.keys(this.o_message_handlers[ws.protocol]).forEach((s_type) => {
-				ws.on(s_type, (...data) => this.o_message_handlers[ws.protocol][s_type](ws, ...data));
+			Object.keys(this.message_handlers[ws.protocol]).forEach((s_type) => {
+				ws.on(s_type, (...data) => this.message_handlers[ws.protocol][s_type](ws, ...data));
 			});
 
 			// execute the on_connection function
-			if (this.o_message_handlers[ws.protocol].connection !== undefined) {
-				this.o_message_handlers[ws.protocol].connection(ws, socket, request);
+			if (this.message_handlers[ws.protocol].connection !== undefined) {
+				this.message_handlers[ws.protocol].connection(ws, socket, request);
 			}
 		} else {
 			// reject connection

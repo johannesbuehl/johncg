@@ -51,20 +51,20 @@ function display_items(data) {
 	// initialize
 	init();
 
-	for (let o_item of data.sequence_items) {
+	for (let item of data.sequence_items) {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
-		div_sequence_item_container.dataset.item_number = o_item.item;
+		div_sequence_item_container.dataset.item_number = item.item;
 
 		const div_sequence_item_color_indicator = document.createElement("div");
 		div_sequence_item_color_indicator.classList.add("item_color_indicator");
-		div_sequence_item_color_indicator.style.backgroundColor = o_item.color;
+		div_sequence_item_color_indicator.style.backgroundColor = item.color;
 
 		div_sequence_item_container.append(div_sequence_item_color_indicator);
 
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
-		div_sequence_item.innerText = o_item.caption;
+		div_sequence_item.innerText = item.caption;
 
 		div_sequence_item_container.onclick = function() {
 			request_item_slides(Number(this.dataset.item_number));
@@ -104,7 +104,7 @@ function display_item_slides(data) {
 
 	let slide_counter = 0;
 
-	for (let o_part of data.slides) {
+	for (let part of data.slides) {
 		// create the container for the part
 		const div_slide_part = document.createElement("div");
 		div_slide_part.classList.add("slide_part");
@@ -119,102 +119,57 @@ function display_item_slides(data) {
 		div_slides_view.classList.add("slides_view");
 		div_slide_part.append(div_slides_view);
 
-		switch (o_part.type) {
-			case "title":
+		switch (part.type) {
+			case "title": {
 				div_slide_part_header.innerText = data.metadata.title;
+			} break;
+			case "lyric": {
+				div_slide_part_header.innerText = part.part;
+			} break;
+		}
 
-				const div_slide_container = document.createElement("div");
-				div_slide_container.classList.add("slide_container");
-				div_slides_view.append(div_slide_container);
-				
-				const div_slide = document.createElement("div");
-				div_slide.classList.add("slide");
-				div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
-				div_slide.dataset.slide_number = slide_counter;
-				div_slide_container.append(div_slide);
-				
-				div_slide.onclick = function() {
-					request_item_slide_select(
-						Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
-						Number(this.dataset.slide_number)
-					);
-				};
+		for (let ii = 0; ii < part.slides; ii++) {
+			div_slides_view.append(create_slide_iframe(data, slide_counter));
 
-				const div_title_line = document.createElement("div");
-				div_title_line.classList.add("lyric_line");
-				div_title_line.innerText = o_part.title;
-				div_slide.append(div_title_line);
-
-				const div_songID_line = document.createElement("div");
-				div_songID_line.classList.add("lyric_line");
-				div_songID_line.innerText = o_part.ChurchSongID;
-				div_slide.append(div_songID_line);
-
-					
-
-				slide_counter++;
-				break;
-			case "lyric":		
-				div_slide_part_header.innerText = o_part.part;
-
-				// add all the slides to the slides_view
-				for (let slide of o_part.slides) {
-					const div_slide_container = document.createElement("div");
-					div_slide_container.classList.add("slide_container");
-					div_slides_view.append(div_slide_container);
-					
-					const div_slide = document.createElement("div");
-					div_slide.classList.add("slide");
-					div_slide.style.backgroundImage = `url("${data.metadata.backgroundImage.replace(/\\/g, "\\\\")}")`;
-					div_slide.dataset.slide_number = slide_counter;
-					div_slide_container.append(div_slide);
-					
-					div_slide.onclick = function() {
-						request_item_slide_select(
-							Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
-							Number(this.dataset.slide_number)
-						);
-					};
-
-					// add the individual lyric-lines to the slide
-					for (let line of slide) {
-						const div_lyric_line = document.createElement("div");
-						div_lyric_line.classList.add("lyric_line");
-						div_lyric_line.innerText = line;
-						div_slide.append(div_lyric_line);
-					}
-					slide_counter++;
-				}
-			break;
+			slide_counter++;
 		}
 
 		// add the song-part to the slide-container
 		div_slides_view_container.append(div_slide_part);
 	}
-		
-	// resize the lyrics-text to fit the slide
-	// get the highest width
-	let max_width = 0;
-
-	const div_lyrics_lines = document.querySelectorAll("div.lyric_line");
-
-	// get the width of the individual slides and store the biggest one
-	// for (let ii = 0; ii < i_slide_count; ii++) {
-	for (let div_lyric_line of div_lyrics_lines) {
-		let current_width = div_lyric_line.clientWidth;
-
-		max_width = Math.max(current_width, max_width);
-	}
-
-	// get the width of the container
-	const current_container_width = document.querySelector("div.slide").clientWidth;
-
-	// change the font size by the size difference ratio
-	div_lyrics_lines.forEach((div_lyric_line) => {
-		div_lyric_line.style.fontSize = `${current_container_width / max_width}em`;
-	});
 
 	set_active_slide(data.clientID === clientID);
+}
+
+function create_slide_iframe(data, number) {
+	const div_slide_container = document.createElement("div");
+	div_slide_container.classList.add("slide_container");
+
+	const slide_iframe = document.createElement("iframe");
+	slide_iframe.src = "song.html";
+	slide_iframe.classList.add("slide");
+
+	div_slide_container.append(slide_iframe);
+
+	slide_iframe.dataset.slide_number = number;
+
+	slide_iframe.addEventListener("load", () => {
+		slide_iframe.contentWindow.rescale_to_parent_resolution(document.querySelector("body").clientWidth);
+
+		slide_iframe.contentWindow.update(JSON.stringify(data.slides_template));
+		slide_iframe.contentWindow.jump(number);
+		slide_iframe.contentWindow.play();
+
+		// register click event
+		slide_iframe.contentWindow.addEventListener("click", () => {
+			request_item_slide_select(
+				Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
+				number
+			);
+		})
+	});
+
+	return div_slide_container;
 }
 
 function select_item(item) {

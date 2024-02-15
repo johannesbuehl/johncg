@@ -7,12 +7,12 @@ import { unescape } from "querystring";
 import Config from "./config";
 
 class http_server {
-	private i_port: number;
+	private port: number;
 
 	server: http.Server;
 
-	constructor(i_port: number) {
-		this.i_port = i_port;
+	constructor(port: number) {
+		this.port = port;
 	}
 
 	start() {
@@ -55,7 +55,7 @@ class http_server {
 				
 				response.end();
 			});
-		}).listen(this.i_port);
+		}).listen(this.port);
 	}
 }
 
