@@ -92,9 +92,9 @@ class websocket_server {
 		});
 	}
 
-	get_connections(s_protocol: string): WebSocket[] {
-		if (Object.keys(this.connections).includes(s_protocol)) {
-			return this.connections[s_protocol];
+	get_connections(protocol: string): WebSocket[] {
+		if (Object.keys(this.connections).includes(protocol)) {
+			return this.connections[protocol];
 		} else {
 			return [];
 		}

@@ -1,8 +1,9 @@
 import { WebSocket, RawData } from "ws";
 
 import { http_server } from "./http-server";
-import { Sequence, NavigateDirection, NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides } from "./Sequence";
 import { websocket_server, JGCPResponse } from "./websocket-server";
+import OSCServer from "./osc-server";
+import { Sequence, NavigateDirection, NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides } from "./Sequence";
 
 import Config from "./config";
 
@@ -10,6 +11,38 @@ import Config from "./config";
 const server = new http_server(Config.clientServer.http.port);
 
 let seq: Sequence;
+
+const osc_server = new OSCServer(Config.oscServer.port);
+
+const osc_function_map = {
+	control: {
+		"sequence-item": {
+			navigate: {
+				direction: (value) => seq?.navigate_item(value)
+			}
+		},
+		"item-slide": {
+			navigate: {
+				direction: (value) => seq?.navigate_slide(value)
+			}
+		},
+		output: {
+			visibility: (value) => seq?.set_visibility(value)
+		}
+	}
+};
+
+osc_server.set_function_map(osc_function_map);
+
+// create a websocket-server
+const ws_server = new websocket_server(Config.clientServer.websocket.port, { 
+	JGCP: {
+		message: JGCP_message_handler,
+		connection: JGCP_open_handler
+	}
+});
+
+server.start();
 
 interface RecvOpenSequence {
 	command: "open-sequence";
@@ -273,13 +306,23 @@ function navigate(ws_connection: WebSocket, data: RecvItemNavigate): JGCPRespons
 	}
 
 	try {
+		let steps: number;
+		
+		switch (data.direction) {
+			case "prev":
+				steps = -1;
+				break;
+			case "next":
+				steps = 1;
+		}
+
 		switch (data.type) {
-			case "item":
-				seq.navigate_item(data.direction);
-				break;
-			case "slide":
-				seq.navigate_slide(data.direction);
-				break;
+			case "item": {
+				seq.navigate_item(steps);
+			} break;
+			case "slide": {
+				seq.navigate_slide(steps);
+			} break;
 		}
 	} catch (e) {
 		if (e instanceof RangeError) {
@@ -322,7 +365,7 @@ function set_display(_ws_connection: WebSocket, data: RecvItemDisplay): JGCPResp
 		};
 	}
 
-	seq.casparcg_set_visibility(data.state);
+	seq.set_visibility(data.state);
 
 	// send a new state to all clients with the visibility
 	const client_message: SendClientState = {
@@ -464,13 +507,3 @@ function JGCP_open_handler(ws: WebSocket) {
 
 	ws.send(JSON.stringify(response));
 }
-
-// create a websocket-server
-const ws_server = new websocket_server(Config.clientServer.websocket.port, { 
-	JGCP: {
-		message: JGCP_message_handler,
-		connection: JGCP_open_handler
-	}
-});
-
-server.start();

@@ -1,6 +1,7 @@
 import path from "path";
 import { CasparCG } from "casparcg-connection";
 import fs from "fs";
+import mime from "mime-types";
 
 import SongFile, { ItemPartClient, LyricPart, SongElement, TitlePart } from "./SongFile";
 
@@ -361,22 +362,17 @@ class Sequence {
 	 * Navigate to the next or previous item
 	 * @param direction navigate forward ('next') or backward ('prev')
 	 */
-	navigate_item(direction: NavigateDirection, slide: number = 0): void {
-		if (!isItemNavigateDirection(direction)) {
-			throw new RangeError(`direction is invalid ('${direction}')`);
+	// navigate_item(direction: NavigateDirection, slide: number = 0): void {
+	navigate_item(steps: number, slide: number = 0): void {
+		if (typeof steps !== "number") {
+			throw new TypeError(`steps ('${steps}') is no number`);
+		}
+		
+		if (![-1, 1].includes(steps)) {
+			throw new RangeError(`steps must be -1 or 1, but is ${steps}`);
 		}
 
-		let direction_delta;
-
-		switch (direction) {
-			case "prev":
-				direction_delta = -1;
-				break;
-			case "next":
-				direction_delta = 1;
-		}
-
-		let new_active_item_number = this.active_item + direction_delta;
+		let new_active_item_number = this.active_item + steps;
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
@@ -394,32 +390,26 @@ class Sequence {
 	 * @param direction navigate forward ('next') or backward ('prev')
 	 * @returns wether the slide has been changed
 	 */
-	navigate_slide(direction: NavigateDirection): boolean {
-		if (!isItemNavigateDirection(direction)) {
-			throw new RangeError(`direction is invalid ('${direction}')`);
+	navigate_slide(steps: number): boolean {
+		if (typeof steps !== "number") {
+			throw new TypeError(`steps ('${steps}') is no number`);
 		}
 
-		let nav_direction;
-
-		switch (direction) {
-			case "prev":
-				nav_direction = -1;
-				break;
-			case "next":
-				nav_direction = 1;
+		if (![-1, 1].includes(steps)) {
+			throw new RangeError(`steps must be -1 or 1, but is ${steps}`);
 		}
 
-		let new_active_slide_number: number = this.active_slide + nav_direction;
-		let slideChange: boolean = true;
+		let new_active_slide_number = this.active_slide + steps;
+		let slideChange = false;
 
 		// new active item has negative index -> roll over to the last slide of the previous element
 		if (new_active_slide_number < 0) {
-			this.navigate_item("prev", -1);
+			this.navigate_item(-1, -1);
 			
 			new_active_slide_number = this.sequence_items[this.active_item].SlideCount - 1;
 		// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_slide_number >= this.sequence_items[this.active_item].SlideCount) {
-			this.navigate_item("next");
+			this.navigate_item(1);
 			
 			new_active_slide_number = 0;
 		} else {
@@ -512,7 +502,7 @@ class Sequence {
 		});
 	}
 
-	casparcg_set_visibility(visibility: boolean): void {
+	set_visibility(visibility: boolean): void {
 		this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
 			// clear the background-layer, so that the foreground has an hide-animation
 			casparcg_connection.clear({
@@ -597,7 +587,11 @@ function parse_item_value_string(key: string, value: string): SequenceItemPartia
 }
 
 function get_image_b64(image_path: string): string {
-	return "data:image/jpg;base64," + fs.readFileSync(path.join(Config.path.backgroundImage, image_path)).toString("base64");
+	try {
+		return `data:${mime.lookup(image_path)};base64,` + fs.readFileSync(path.join(Config.path.backgroundImage, image_path)).toString("base64");
+	} catch (e) {
+		return "";
+	}
 }
 
 function get_song_path(song_path: string): string {

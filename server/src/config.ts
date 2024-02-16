@@ -25,11 +25,8 @@ interface ConfigJSON {
 			port: number;
 		};
 	};
-	client: {
-		ping: {
-			frequency: number;
-			timeout: number;
-		};
+	oscServer: {
+		port: number;
 	};
 }
 
