@@ -196,7 +196,17 @@ class Sequence {
 
 			// TESTING only if it is song-element, since the others aren't implemented
 			if (item_data.Type === "Song") {
-				item_data.Song = new SongFile(get_song_path(item_data.FileName));
+				try {
+					item_data.Song = new SongFile(get_song_path(item_data.FileName));
+				} catch (e) {
+					// if the error is because the file doesn't exist, skip the rest of the loop iteration
+					if (e.code === "ENOENT") {
+						console.debug(`song '${item_data.FileName}' does not exist`);
+						continue;
+					} else {
+						throw e;
+					}
+				}
 
 				// add the title-slide to the counter
 				item_data.SlideCount++;
