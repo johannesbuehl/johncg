@@ -77,9 +77,6 @@ type NavigateType = (typeof _item_navigate_type)[number];
 const isItemNavigateType = (x: any): x is NavigateType => _item_navigate_type.includes(x);
 
 class Sequence {
-	// filename of the loaded sequence
-	private filename: string;
-
 	// store the individual items of the sequence
 	sequence_items: SequenceItem[] = [];
 

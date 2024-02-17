@@ -21,3 +21,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - client communication with osc over websocket?
 - client: don't use ifames, include html directly
 - client: fix title-slide font size scaling on window resize
+- add support for NodeCG
