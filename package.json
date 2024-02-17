@@ -1,4 +1,6 @@
 {
+  "name": "JohnCG",
+  "bin": "out/main.js",
   "dependencies": {
     "casparcg-connection": "^6.2.1",
     "iconv-lite": "^0.6.3",
@@ -13,10 +15,21 @@
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.56.0",
     "husky": "^9.0.10",
-    "typescript": "^5.3.3"
+    "pkg": "^5.8.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.90.2"
   },
   "scripts": {
     "lint": "eslint --ext .ts",
-    "precommit": "eslint . --ext .ts"
-  }
+    "precommit": "eslint . --ext .ts",
+    "build": "pkg package.json"
+  },
+  "pkg": {
+    "scripts": "server/src/main.ts",
+    "targets": [
+      "latest-win-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "version": "0.0.0"
 }
