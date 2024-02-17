@@ -22,23 +22,23 @@ function open_sequence(e) {
 }
 document.querySelector("#input_open_sequence").addEventListener("change", open_sequence)
 
-function button_navigate(type, direction) {
+function button_navigate(type, steps) {
 	ws.send(JSON.stringify({
 		command: "navigate",
 		type,
-		direction,
+		steps,
 		clientID
 	}));
 }
-document.querySelector("#navigate_item_prev").addEventListener("click", () => { button_navigate("item", "prev") });
-document.querySelector("#navigate_slide_prev").addEventListener("click", () => { button_navigate("slide", "prev") });
-document.querySelector("#navigate_slide_next").addEventListener("click", () => { button_navigate("slide", "next") });
-document.querySelector("#navigate_item_next").addEventListener("click", () => { button_navigate("item", "next") });
+document.querySelector("#navigate_item_prev").addEventListener("click", () => { button_navigate("item", -1) });
+document.querySelector("#navigate_item_next").addEventListener("click", () => { button_navigate("item", 1) });
+document.querySelector("#navigate_slide_prev").addEventListener("click", () => { button_navigate("slide", -1) });
+document.querySelector("#navigate_slide_next").addEventListener("click", () => { button_navigate("slide", 1) });
 
-function button_visibility(state) {
+function button_visibility(visibility) {
 	ws.send(JSON.stringify({
-		command: "set-display",
-		state,
+		command: "set-visibility",
+		visibility,
 		clientID
 	}));
 }
@@ -286,17 +286,17 @@ function display_visibility_state(state) {
 	const button_show = document.querySelector("#set_visibility_show");
 
 	if (state) {
-		button_hide.classList.remove("selected");
-		button_show.classList.add("selected");
+		button_hide.classList.remove("active");
+		button_show.classList.add("active");
 	} else {
-		button_hide.classList.add("selected");
-		button_show.classList.remove("selected");
+		button_hide.classList.add("active");
+		button_show.classList.remove("active");
 	}
 }
 
 function display_state_change(data) {
 	const key_map = {
-		itemSlideSelection: set_active_item_slide,
+		activeItemSlide: set_active_item_slide,
 		visibility: display_visibility_state
 	};
 
@@ -323,6 +323,9 @@ function init() {
 
 	// remove all item-slides
 	document.querySelector("#slides_view_container").innerHTML = "";
+
+	// remove the visibility-selection
+	document.querySelector("[id^=set_visibility_].active")?.classList.remove("active");
 }
 
 const clientID = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;

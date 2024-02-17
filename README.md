@@ -15,8 +15,9 @@ Generate lyric-graphics and play them out through CasparCG.
 - companion integration (buttons for song parts -> send name to casparcg)
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
 - check client -> server slide_number out of range
-- validate received command
-- check response-texts, if they are still correct
+- client: check response-texts, if they are still correct
 - create message log / show error messages
 - write installation instruction
 - client communication with osc over websocket?
+- client: don't use ifames, include html directly
+- client: fix title-slide font size scaling on window resize

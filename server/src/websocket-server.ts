@@ -20,7 +20,13 @@ interface MessageHandler {
 	connection?: (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => void;
 }
 
-class websocket_server {
+interface WebsocketServerArguments {
+	port: number;
+}
+
+type WebsocketMessageHandler = Record<string, MessageHandler>;
+
+class WebsocketServer {
 	private port: number;
 
 	ws_server: WebSocketServer;
@@ -30,8 +36,9 @@ class websocket_server {
 
 	connections: Record<string, WebSocket[]> = {};
 
-	constructor(port: number, message_handlers: Record<string, MessageHandler>) {
-		this.port = port;
+	constructor(args: WebsocketServerArguments, 
+		message_handlers: WebsocketMessageHandler) {
+		this.port = args.port;
 
 		this.message_handlers = message_handlers;
 
@@ -84,6 +91,7 @@ class websocket_server {
 		ws.on("close", () => {
 			ws.close();
 
+			// remove the connection from the list
 			const index = this.connections[ws.protocol].indexOf(ws);
 
 			if (index > -1) {
@@ -101,4 +109,5 @@ class websocket_server {
 	}
 }
 
-export { websocket_server, JGCPResponse };
+export { JGCPResponse, WebsocketServerArguments, WebsocketMessageHandler };
+export default WebsocketServer;

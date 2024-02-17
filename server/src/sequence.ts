@@ -56,7 +56,7 @@ interface ClientItemSlides {
 	slides_template: RenderObject;
 }
 
-interface ActiveItem {
+interface ActiveItemSlide {
 	item: number,
 	slide: number
 }
@@ -76,27 +76,22 @@ type NavigateType = (typeof _item_navigate_type)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isItemNavigateType = (x: any): x is NavigateType => _item_navigate_type.includes(x);
 
-const _item_navigate_direction = ["prev", "next"] as const;
-type NavigateDirection = (typeof _item_navigate_direction)[number];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isItemNavigateDirection = (x: any): x is NavigateDirection => _item_navigate_direction.includes(x);
-
 class Sequence {
-	// regex to split a sequence-file into individual items
-	private re_scan_sequence_file = /item\r?\n(\r?\n|.)+?end/gm;
-	// regex to extract information from an individual sequence-item
-	private re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\})$)/gm;
+	// filename of the loaded sequence
+	private filename: string;
 
 	// store the individual items of the sequence
 	sequence_items: SequenceItem[] = [];
 
-	private active: ActiveItem = { item: 0, slide: 0 };
+	private active: ActiveItemSlide = { item: 0, slide: 0 };
 
 	private casparcg_visibility: boolean = Config.behaviour.showOnLoad;
 
 	readonly casparcg_connections: CasparCG[] = [];
 
 	constructor(sequence: string) {
+		this.parse_sequence(sequence);
+
 		// create the casparcg-connections
 		// use for loop to maintain the order
 		for (const connection_setting of Config.casparcg.connections) {
@@ -106,24 +101,27 @@ class Sequence {
 					autoConnect: true
 				})
 			);
-			
-			this.casparcg_connections.forEach((casparcg_connection) => {
-				// clear the layers that will be used
-				casparcg_connection.clear({
-					channel: connection_setting.channel,
-					layer: connection_setting.layers[0]
-				});
-				casparcg_connection.clear({
-					channel: connection_setting.channel,
-					layer: connection_setting.layers[1]
-				});
-			});
 		}
-
-		this.parse_sequence(sequence);
+			
+		// clear the previous casparcg-output on the layers
+		this.casparcg_clear_layers();
 
 		this.set_active_item(0, 0);
+	}
 
+	destroy() {
+		this.casparcg_clear_layers();
+
+		this.casparcg_connections.forEach((casparcg_connection) => {
+			casparcg_connection.removeAllListeners();
+			casparcg_connection.disconnect();
+		});
+	}
+
+	/**
+	 * clear the casparcg-layers used
+	 */
+	casparcg_clear_layers() {
 		// setup auto-loading of the current-item on reconnection
 		this.casparcg_connections.forEach((casparcg_connection, index) => {
 			casparcg_connection.addListener("disconnect", () => {
@@ -140,16 +138,21 @@ class Sequence {
 		});
 	}
 
-	destroy() {
-		this.casparcg_connections.forEach((casparcg_connection) => {
-			casparcg_connection.removeAllListeners();
-			casparcg_connection.disconnect();
-		});
+	parse_sequence(sequence: string): void {
+		// check, wether the file starts like a songbeamer schedule
+		if (sequence.startsWith("object AblaufPlanItems: TAblaufPlanItems")) {
+			this.parse_songbeamer_sequence(sequence);
+		}
 	}
 
-	parse_sequence(sequence: string): void {
+	parse_songbeamer_sequence(sequence: string) {
+		// regex to split a sequence-file into individual items
+		const re_scan_sequence_file = /item\r?\n(\r?\n|.)+?end/gm;
+		// regex to extract information from an individual sequence-item
+		const re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\})$)/gm;
+
 		// split the sequence into the individual items
-		const re_results = sequence.match(this.re_scan_sequence_file);
+		const re_results = sequence.match(re_scan_sequence_file);
 
 		if (!re_results) {
 			// if there were no results, check wether the sequence is empty
@@ -163,7 +166,7 @@ class Sequence {
 		// process every element individually
 		for (const sequence_item of re_results) {
 			// reset the regex
-			this.re_scan_sequence_item.lastIndex = 0;
+			re_scan_sequence_item.lastIndex = 0;
 
 			// store the regex results
 			let re_results_item: RegExpExecArray;
@@ -177,7 +180,7 @@ class Sequence {
 
 			// exec the item-regex until there are no more results
 			do {
-				re_results_item = this.re_scan_sequence_item.exec(sequence_item);
+				re_results_item = re_scan_sequence_item.exec(sequence_item);
 				
 				// if there was a result, process it
 				if (re_results_item !== null) {
@@ -337,7 +340,7 @@ class Sequence {
 		}
 	}
 
-	set_active_item(item: number, slide: number = 0): ActiveItem {
+	set_active_item(item: number, slide: number = 0): ActiveItemSlide {
 		item = this.validate_item_number(item);
 		slide = this.validate_slide_number(slide, item);
 
@@ -348,7 +351,7 @@ class Sequence {
 		return this.active;
 	}
 
-	set_active_slide(slide): ActiveItem {
+	set_active_slide(slide): ActiveItemSlide {
 		slide = this.validate_slide_number(slide);
 
 		this.active.slide = slide;
@@ -532,6 +535,13 @@ class Sequence {
 
 	get active_slide(): number {
 		return this.active.slide;
+	}
+
+	get active_item_slide(): ActiveItemSlide {
+		return {
+			item: this.active_item,
+			slide: this.active_slide
+		};
 	}
 
 	get visibility(): boolean {
@@ -746,4 +756,5 @@ function convert_color_to_hex(color: string): string | undefined {
 	return colours[color.toLowerCase()];
 }
 
-export { Sequence, NavigateType, NavigateDirection, isItemNavigateType, isItemNavigateDirection, ClientSequenceItems, ClientItemSlides };
+export { NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides, ActiveItemSlide };
+export default Sequence;

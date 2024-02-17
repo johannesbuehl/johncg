@@ -28,6 +28,10 @@ interface ConfigJSON {
 	oscServer: {
 		port: number;
 	};
+	companion: {
+		address: string;
+		oscPort: number;
+	}
 }
 
 
