@@ -2,6 +2,7 @@
   "name": "JohnCG",
   "bin": "out/main.js",
   "main": "server/src/main.ts",
+  "license": "MIT",
   "dependencies": {
     "casparcg-connection": "^6.2.1",
     "iconv-lite": "^0.6.3",

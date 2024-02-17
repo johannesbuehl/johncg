@@ -27,8 +27,6 @@ interface WebsocketServerArguments {
 type WebsocketMessageHandler = Record<string, MessageHandler>;
 
 class WebsocketServer {
-	private port: number;
-
 	ws_server: WebSocketServer;
 
 	// store the message handlers for the different protocols
@@ -38,16 +36,9 @@ class WebsocketServer {
 
 	constructor(args: WebsocketServerArguments, 
 		message_handlers: WebsocketMessageHandler) {
-		this.port = args.port;
-
 		this.message_handlers = message_handlers;
 
-		this.start();
-	}
-
-	start() {
-		this.ws_server = new WebSocketServer({ port: this.port });
-
+		this.ws_server = new WebSocketServer({ port: args.port });
 		this.ws_server.on("connection", (ws, socket, request) => this.on_connection(ws, socket, request));
 	}
 

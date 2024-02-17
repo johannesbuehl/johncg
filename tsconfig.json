@@ -4,7 +4,8 @@
 		"module": "NodeNext",
 		"outDir": "out",
 		"sourceMap": true,
-		"noUnusedLocals": false
+		"noUnusedLocals": true,
+		"removeComments": true
 	},
 	"exclude": [
 		"node_modules"

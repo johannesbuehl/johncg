@@ -1,6 +1,5 @@
 const config = {
 	websocket: {
-		host: "localhost",
 		port: 8765
 	}
 };
@@ -332,7 +331,9 @@ const clientID = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random
 let selected_item_number;
 
 function ws_connect() {
-	const ws_url = `ws://${config.websocket.host}:${config.websocket.port}`;
+	const url = new URL(document.URL);
+
+	const ws_url = `ws://${url.hostname}:${config.websocket.port}`;
 
 	ws = new WebSocket(ws_url, "JGCP");
 	

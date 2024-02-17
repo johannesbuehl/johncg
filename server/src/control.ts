@@ -53,8 +53,6 @@ class Control {
 
 		// initialize the osc server
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
-
-		// initialize the osc-client
 	}
 
 	/**
@@ -213,6 +211,11 @@ class Control {
 		ws_clients.forEach((ws_client) => {
 			ws_client.send(JSON.stringify(message));
 		});
+
+		// dummy-implementation-example
+		if (message.command === "state" && message.visibility !== undefined) {
+			this.osc_server.send_value("/not/implemented", message.visibility);
+		}
 	}
 
 	/**
