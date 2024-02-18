@@ -8,7 +8,6 @@ Generate lyric-graphics and play them out through CasparCG.
 - move the file `song.html` into your CasparCG template directory
 
 ## roadmap
-- SongFile: implement multi-language-songs
 - implement other sequence-items than song
 - client: information about connection (active / reconnecting / ...)
 - use async / await
@@ -19,6 +18,7 @@ Generate lyric-graphics and play them out through CasparCG.
 - create message log / show error messages
 - write installation instruction
 - client communication with osc over websocket?
-- client: don't use ifames, include html directly
-- client: fix title-slide font size scaling on window resize
+- client: don't use ifames, include html directly / alternatively: clone iframes instead of creating new ones
 - add support for NodeCG
+- look into document fragments
+- add CLI output to server

@@ -12,10 +12,12 @@ interface SequenceItemPartial {
 	Caption?: string;
 	Color?: string;
 	Type?: string;
-	Cata?: string;
 	FileName?: string;
-	VerseOrder?: SongElement[];
+	VerseOrder?: string[];
 	Song?: SongFile;
+	Language?: number;
+	PrimaryLanguage?: number;
+	Languages?: number[];
 }
 
 // individual data of the sequence-file with Caption mandatory
@@ -25,10 +27,19 @@ interface SequenceItem extends SequenceItemPartial {
 	Color: string;
 }
 
+// interface SequenceItemSong extends SequenceItem {
+// 	Type: "Song";
+// 	Song: SongFile;
+// 	Language: number[];
+// 	VerseOrder: string[];
+// 	FileName: string;
+// }
+
 // interface for a renderer-object
 interface RenderObject {
 	slides: ItemSlide[];
 	slide: number;
+	languages: number[];
 	backgroundImage?: string;
 }
 
@@ -66,7 +77,7 @@ interface TitleSlide extends TitlePart {
 
 interface LyricSlide {
 	type: "lyric";
-	data: string[];
+	data: string[][];
 }
 
 type ItemSlide = LyricSlide | TitleSlide;
@@ -146,7 +157,7 @@ class Sequence {
 		// regex to split a sequence-file into individual items
 		const re_scan_sequence_file = /item\r?\n(\r?\n|.)+?end/gm;
 		// regex to extract information from an individual sequence-item
-		const re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\})$)/gm;
+		const re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
 
 		// split the sequence into the individual items
 		const re_results = sequence.match(re_scan_sequence_file);
@@ -208,6 +219,20 @@ class Sequence {
 					}
 				}
 
+				// create the languages-array
+				// initialize the array with all languages
+				item_data.Languages = Array.from(Array(item_data.Song.languages).keys());
+
+				// if there is a 'PrimaryLanguage' specified, move it to the first position
+				if (item_data.PrimaryLanguage !== undefined) {
+					const temp = item_data.Languages.splice(item_data.PrimaryLanguage, 1);
+					item_data.Languages.unshift(...temp);
+				}
+				// if a 'Language' is specified, take only this one
+				if (item_data.Language !== undefined) {
+					item_data.Languages = [item_data.Languages[item_data.Language]];
+				}
+
 				// add the title-slide to the counter
 				item_data.SlideCount++;
 				
@@ -237,8 +262,9 @@ class Sequence {
 		
 		const return_object: RenderObject = {
 			slides: [
-				sequence_item.Song.get_title()
+				sequence_item.Song.title
 			],
+			languages: sequence_item.Languages,
 			slide: slide
 		};
 		
@@ -495,7 +521,14 @@ class Sequence {
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
 				template: Config.casparcg.templates.song,
-				data: this.create_renderer_object(item, slide)
+				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
+				data: JSON.stringify(JSON.stringify(this.create_renderer_object(item, slide), (key, val) => {
+					if (typeof val === "string") {
+						return val.replace("\"", "\\u0022");
+					} else {
+						return val;
+					}
+				}))
 			});
 		});
 	}
@@ -594,6 +627,10 @@ function parse_item_value_string(key: string, value: string): SequenceItemPartia
 				const color_string = color.toString(16);
 				result[key] = "#" + color_string.padStart(6, "0");
 			}
+			break;
+		case "PrimaryLanguage":
+		case "Language":
+			result[key] = Number(value) - 1; // subtract 1, because Songbeamer start counting at 1
 			break;
 		default:
 			result[key] = value;

@@ -42,23 +42,28 @@ const isSongElement = (x: any): x is SongElement => {
 
 // metadata of the songfile
 interface SongFileMetadata {
-	Title: string;
+	Title: string[];
 	ChurchSongID?: string;
-	Book?: string;
+	Songbook?: string;
 	VerseOrder?: SongElement[];
 	BackgroundImage?: string;
+	Author?: string;
+	Melody?: string;
+	Translation?: string;
+	Copyright?: string;
+	LangCount?: number;
 }
 
 interface TitlePart {
 	type: "title";
-	title: string;
+	title: string[];
 	ChurchSongID?: string;
 }
 
 interface LyricPart {
 	type: "lyric";
 	part: SongElement;
-	slides: string[][];
+	slides: string[][][];
 }
 
 type ItemPart = TitlePart | LyricPart;
@@ -84,10 +89,10 @@ class SongFile {
 	song_file_path: string;
 
 	// private variables
-	private text: Record<string, string[][]> = {};
+	private text: Record<string, string[][][]> = {};
 
 	metadata: SongFileMetadata = {
-		Title: ""
+		Title: []
 	};
 
 	constructor(path: string) {
@@ -116,13 +121,28 @@ class SongFile {
 			switch (key) {
 				// direct string data
 				case "Title":
+					this.metadata["Title"][0] = value;
+					break;
+				case "TitleLang2":
+				case "TitleLang3":
+				case "TitleLang4":
+					this.metadata["Title"][Number(key.charAt(key.length - 1)) - 1] = value;
+					break;
+				case "Songbook":
 				case "ChurchSongID":
-				case "Book":
 				case "BackgroundImage":
+				case "Author":
+				case "Melody":
 					this.metadata[key] = value;
+					break;
+				case "(c)":
+					this.metadata.Copyright = value;
 					break;
 				case "VerseOrder":
 					this.metadata[key] = value.split(",") as SongElement[];
+					break;
+				case "LangCount":
+					this.metadata[key] = Number(value);
 					break;
 				default:
 					break;
@@ -182,12 +202,23 @@ class SongFile {
 				this.text[key] = [];
 			}
 
-			// append the lines to the song-element
-			this.text[key].push(lines);
+			// pad the text with empty lines so that every language has an equal amount of lines
+			while (lines.length % this.metadata.LangCount !== 0) {
+				lines.push("");
+			}
+
+			const slide: string[][] = Array.from(Array(Math.ceil(lines.length / this.metadata.LangCount)), () => []);
+
+			// split the lines into the different languages
+			lines.forEach((vv, ii) => {
+				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
+			});
+
+			this.text[key].push(slide);
 		}
 	}
 
-	get_title(): TitlePart {
+	get title(): TitlePart {
 		const response: TitlePart = {
 			type: "title",
 			title: this.metadata.Title
@@ -241,8 +272,12 @@ class SongFile {
 	/**
 	 * all the parts of the song in the order they are defined
 	 */
-	get avaliable_parts() {
+	get avaliable_parts(): string[] {
 		return Object.keys(this.text);
+	}
+
+	get languages(): number {
+		return this.metadata.LangCount;
 	}
 }
 
