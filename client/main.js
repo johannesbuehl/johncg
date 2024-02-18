@@ -145,22 +145,15 @@ function display_item_slides(data) {
 			};
 		});
 
-		iframe_iter_array = iframe_iter_array.sort((a, b) => Boolean((a > b) * 2 - 1));
-
 		for (const iframe of iframe_iter_array) {
 			div_slides_view.append(iframe.slide);
 		}
-
-		// add the song-part to the slide-container
-		// div_slides_view_container.append(div_slide_part);
 
 		return {
 			slides_start: slides_start,
 			slide_part: div_slide_part
 		}
 	});
-
-	part_arrays = part_arrays.sort((a, b) => Boolean((a > b) * 2 - 1));
 
 	for (const slide_part of part_arrays) {
 		div_slides_view_container.append(slide_part.slide_part);
@@ -182,8 +175,6 @@ function create_slide_iframe(data, number) {
 	slide_iframe.dataset.slide_number = number;
 
 	slide_iframe.addEventListener("load", () => {
-		slide_iframe.contentWindow.rescale_to_parent_resolution(document.querySelector("body").clientWidth);
-
 		slide_iframe.contentWindow.update(JSON.stringify(data.slides_template));
 		slide_iframe.contentWindow.jump(number);
 		slide_iframe.contentWindow.play();

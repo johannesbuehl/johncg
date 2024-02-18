@@ -13,9 +13,13 @@
 		<style>
 			* {
 				cursor: pointer;
+
+				user-select: none;
 			}
 
 			body {
+				font-size: calc(1500vw / 1920);
+
 				margin: 0;
 
 				overflow: hidden;
@@ -75,9 +79,9 @@
 			}
 
 			.slide.title {
-				display: grid;
-
-				grid-template-rows: 1fr 1fr;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
 
 				height: 100%;
 				width: 100%;
@@ -96,11 +100,39 @@
 				justify-content: center;
 			}
 
-			.slide > .title {
-				font-family: "Bahnschrift Condensed";
-
+			.slide.title > .title_container {
 				display: flex;
-				align-items: flex-end;
+				justify-content: flex-end;
+				flex-direction: column;
+			}
+			
+			.slide.title > .title_container > div {
+				font-family: "Bahnschrift Condensed";
+			}
+
+			.slide.title > .title_container > .language_0 {
+
+			}
+
+			.slide.title > .title_container > .language_1 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.slide.title > .title_container > .language_2 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.slide.title > .title_container > .language_3 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
 			}
 
 			.slide > .song_id {
@@ -113,11 +145,34 @@
 			.text_line {
 				font-family: "Bahnschrift";
 				
-				font-size: 2em;
-				
 				text-align: center;
-
+				
 				white-space: nowrap;
+			}
+			
+			.text_line.language_0 {
+				font-size: 1em;
+			}
+
+			.text_line.language_1 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.text_line.language_2 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.text_line.language_3 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
 			}
 		</style>
 	</head>
@@ -134,19 +189,15 @@
 
 		let active_slide = 0;
 		let slide_count = 0;
-
+		
 		// casparcg-function: transmits data
 		function update(s_data) {
 			// parse the transferred data into json
 			data = JSON.parse(s_data);
-			
+		
 			// get the div for the display and storage
 			const div_container = document.querySelector("#container");
 			const div_storage = document.querySelector("#storage");
-
-			// initiate the background loading, so there is enough time to actually load it
-			// div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
-			div_container.style.backgroundImage = `url("${data.backgroundImage}")`;
 
 			// clear the storage-container
 			div_storage.innerHTML = "";
@@ -157,7 +208,7 @@
 			// create the slides and store them in the container
 			for (const slide_data of data["slides"]) {
 				// parent-div of slide
-				const div_slide = create_slide(slide_data);
+				const div_slide = create_slide(slide_data, data.languages);
 				div_slide.dataset.slide = slide_counter;
 				div_storage.append(div_slide);
 		
@@ -167,14 +218,17 @@
 			// store the amount of slides
 			slide_count = slide_counter;
 		
+			div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
+		
 			active_slide = data.slide;
-
+		
 			// display the first slide
 			jump(active_slide);
+			
 			// resize all the slides (has to be done after displayin the first slide)
 			resize_slides();
 		}
-
+		
 		// casparcg-function: displays the template
 		function play() {
 			document.querySelector("#_main").style.opacity = 1;
@@ -192,21 +246,21 @@
 		
 		// custom-function (through invoke): jump to an arbitrary slide
 		function jump(i_counter_raw) {
-			const i_counter = i_clamp_slide_counter(i_counter_raw)
+			const counter = clamp_slide_counter(i_counter_raw)
 		
 			// get the container to display the load the slide into
-			const c_div__main = document.querySelector("#container");
+			const div__main = document.querySelector("#container");
 		
 			// clear the content of the container
-			c_div__main.innerHTML = "";
+			div__main.innerHTML = "";
 		
 			// clone the slide and change its id, so the id stays unique
-			const c_div_slide = document.querySelector(`[data-slide='${i_counter}']`).cloneNode(true);
-			c_div_slide.id = "slide_active";
+			const div_slide = document.querySelector(`[data-slide='${counter}']`).cloneNode(true);
+			div_slide.id = "slide_active";
 		
-			c_div__main.appendChild(c_div_slide);
+			div__main.appendChild(div_slide);
 		
-			active_slide = i_counter;
+			active_slide = counter;
 		}
 		
 		// casparcg-function: hide the template
@@ -215,14 +269,14 @@
 		}
 		
 		// clamp the counter to valid values
-		function i_clamp_slide_counter(i_counter_raw) {
-			return Math.max(0, Math.min(slide_count - 1, i_counter_raw));
+		function clamp_slide_counter(counter_raw) {
+			return Math.max(0, Math.min(slide_count - 1, counter_raw));
 		}
 		
 		// change the font-size so the slide with the highest width uses all of the available space
 		function resize_slides() {
 			// get the highest width
-			const max_width = i_get_max_width();
+			const max_width = get_max_width();
 		
 			// get the width of the container
 			const current_container_width = document.querySelector("#slide_active").clientWidth;
@@ -231,23 +285,23 @@
 		}
 		
 		// get the width of the widest slide
-		function i_get_max_width() {
-			let i_max_width = 0;
+		function get_max_width() {
+			let max_width = 0;
 		
 			// get the width of the individual slides and store the biggest one 
 			for (let ii = 0; ii < slide_count; ii++) {
 				const slide = document.querySelector(`#storage [data-slide='${ii}']`);
 		
 				if (slide.querySelector(".lyric") !== undefined) {
-					let i_current_width = slide.clientWidth;
-					i_max_width = Math.max(i_current_width, i_max_width);
+					let current_width = slide.clientWidth;
+					max_width = Math.max(current_width, max_width);
 				}
 			}
 		
-			return i_max_width;
+			return max_width;
 		}
 		
-		function create_slide(slide_data) {
+		function create_slide(slide_data, languages) {
 			// parent-div of slide
 			const div_slide = document.createElement("div");
 
@@ -258,11 +312,17 @@
 			switch (slide_data.type) {
 				case "title": {
 					div_content.classList.add("title");
+					const title_container = document.createElement("div");
+					title_container.classList.add("title_container")
+					div_content.append(title_container);
 
-					const div_title = document.createElement("div");
-					div_title.classList.add("title");
-					div_title.innerText = slide_data.title;
-					div_content.append(div_title);
+					// create the titles for the individual languages
+					languages.forEach((language, index) => {
+						const div_title = document.createElement("div");
+						div_title.classList.add(`language_${index}`);
+						div_title.innerText = slide_data.title[language];
+						title_container.append(div_title);
+					})
 
 					const div_churchSongID = document.createElement("div");
 					div_churchSongID.classList.add("song_id");
@@ -277,12 +337,19 @@
 					div_content.classList.add("lyric");
 
 					// add the individual text-lines
-					for (const s_line of slide_data.data) {
-						const div_line = document.createElement("div");
-						div_line.classList.add("text_line");
-						div_line.innerText = s_line;
-						
-						div_content.append(div_line);
+					for (const line_package of slide_data.data) {
+						// create a template for the line
+						const line_template = document.createElement("div");
+						line_template.classList.add("text_line");
+
+						// add the individual languages
+						languages.forEach((language, index) => {
+							const line = line_template.cloneNode(true);
+							line.classList.add(`language_${index}`);
+							line.innerText = line_package[language];
+	
+							div_content.append(line);
+						});
 					}
 				} break;
 			}
@@ -296,17 +363,5 @@
 				ele.style.fontSize = `${container_width / max_width}em`;
 			});
 		}
-
-		function rescale_to_parent_resolution(parent_resolution) {
-			const body = document.querySelector("body");
-			body.style.fontSize = `${body.clientWidth / parent_resolution}rem`;
-		}
-		
-		function debug() {
-			update("{\"slides\":[{\"type\":\"title\",\"title\":\"As You Are\"},{\"type\":\"lyric\",\"data\":[\"If you're lonely longing for someone to hear you\",\"If your burdens feel like more than you can bear\"]},{\"type\":\"lyric\",\"data\":[\"If you're searching for a place to just be honest\",\"Come just as you are\"]},{\"type\":\"lyric\",\"data\":[\"If you're tired of just hoping for an answer\",\"If you're wishing you could let your guard come down\"]},{\"type\":\"lyric\",\"data\":[\"If you feel like you can't hold it all together\",\"Come just as you are\"]},{\"type\":\"lyric\",\"data\":[\"There's no need for any hiding\",\"In the Father's house you're met with open arms\"]},{\"type\":\"lyric\",\"data\":[\"He gives grace without conditions\",\"As you are, with nothing else,\",\"just come\"]},{\"type\":\"lyric\",\"data\":[\"There is space for everyone who feels unworthy\",\"A place for those who've never felt at home\"]},{\"type\":\"lyric\",\"data\":[\"Where you don't have to wonder if you're wanted\",\"Come just as you are\"]},{\"type\":\"lyric\",\"data\":[\"There's a hope for you and me, His name is Jesus\",\"He's the One who makes the broken whole again\"]},{\"type\":\"lyric\",\"data\":[\"There's no need for you to pick up all your pieces\",\"Come just as you are\"]},{\"type\":\"lyric\",\"data\":[\"There's no need for any hiding\",\"In the Father's house you're met with open arms\"]},{\"type\":\"lyric\",\"data\":[\"He gives grace without conditions\",\"As you are, with nothing else,\",\"just come\"]},{\"type\":\"lyric\",\"data\":[\"There's no need for any hiding\",\"In the Father's house you're met with open arms\"]},{\"type\":\"lyric\",\"data\":[\"He gives grace without conditions\",\"As you are, with nothing else,\",\"just come\"]},{\"type\":\"lyric\",\"data\":[\"Come\",\"Come\",\"Comme to Jesus\",\"Come to Jesus\"]},{\"type\":\"lyric\",\"data\":[\"Come\",\"Come\",\"Come to Jesus\",\"Come to Jesus\"]},{\"type\":\"lyric\",\"data\":[\"Come\",\"Come\",\"Come to Jesus\",\"Come to Jesus\"]},{\"type\":\"lyric\",\"data\":[\"Come\",\"Come\",\"Come to Jesus\",\"Come to Jesus\"]},{\"type\":\"lyric\",\"data\":[\"There's no need for any hiding\",\"In the Father's house you're met with open arms\"]},{\"type\":\"lyric\",\"data\":[\"He gives grace without conditions\",\"As you are, with nothing else,\",\"just come\"]},{\"type\":\"lyric\",\"data\":[\"Maybe you have always thought of God as distant\",\"Maybe you have never trusted Him at all\"]},{\"type\":\"lyric\",\"data\":[\"There's safety here to wrestle with your questions\",\"Come just as you are\"]},{\"type\":\"lyric\",\"data\":[\"\"]}],\"slide\":0,\"backgroundImage\":\"W:\\\\\\\\Kirche\\\\\\\\SongBeamer\\\\\\\\Hintergrund\\\\\\\\11_16x9\\\\\\\\Sterne\\\\\\\\Sterne mit Person - 1920x1080.jpg\"}");
-			play();
-		}
-
-		// debug();
 	</script>
 </html>
