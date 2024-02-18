@@ -21,3 +21,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - client: don't use ifames, include html directly / alternatively: clone iframes instead of creating new ones
 - add support for NodeCG
 - look into document fragments
+- add CLI output to server
