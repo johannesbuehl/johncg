@@ -27,14 +27,6 @@ interface SequenceItem extends SequenceItemPartial {
 	Color: string;
 }
 
-// interface SequenceItemSong extends SequenceItem {
-// 	Type: "Song";
-// 	Song: SongFile;
-// 	Language: number[];
-// 	VerseOrder: string[];
-// 	FileName: string;
-// }
-
 // interface for a renderer-object
 interface RenderObject {
 	slides: ItemSlide[];
@@ -101,15 +93,24 @@ class Sequence {
 		this.parse_sequence(sequence);
 
 		// create the casparcg-connections
-		// use for loop to maintain the order
-		for (const connection_setting of Config.casparcg.connections) {
-			this.casparcg_connections.push(
-				new CasparCG({
-					...connection_setting,
-					autoConnect: true
-				})
-			);
-		}
+		Config.casparcg.connections.forEach((connection_setting, index) => {
+			const casparcg_connection = new CasparCG({
+				...connection_setting,
+				autoConnect: true
+			});
+
+			// add a listener to send send the current-slide on connection
+			casparcg_connection.addListener("connect", () => {
+				// load the active-item
+				this.casparcg_load_item(this.active_item, this.active_slide, index, false);
+				
+				// remove the connect-listener again
+				casparcg_connection.removeAllListeners("connect");
+			});
+			
+			// add the connection to the stored connections
+			this.casparcg_connections.push(casparcg_connection);
+		});
 			
 		// clear the previous casparcg-output on the layers
 		this.casparcg_clear_layers();
@@ -132,16 +133,13 @@ class Sequence {
 	casparcg_clear_layers() {
 		// setup auto-loading of the current-item on reconnection
 		this.casparcg_connections.forEach((casparcg_connection, index) => {
-			casparcg_connection.addListener("disconnect", () => {
-				// on disconnect register a connect-listener
-				casparcg_connection.addListener("connect", () => {
-					// load the active-item
-					this.casparcg_load_item(this.active_item, this.active_slide, index, false);
-					
-					// remove the connect-listener again
-					casparcg_connection.removeAllListeners("connect");
-				});
-				
+			casparcg_connection.cgClear({
+				channel: Config.casparcg.connections[index].channel,
+				layer: Config.casparcg.connections[index].layers[0]
+			});
+			casparcg_connection.cgClear({
+				channel: Config.casparcg.connections[index].channel,
+				layer: Config.casparcg.connections[index].layers[1]
 			});
 		});
 	}

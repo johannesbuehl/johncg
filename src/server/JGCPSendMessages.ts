@@ -1,4 +1,4 @@
-import * as SequenceClass from "./Sequence";
+import * as SequenceClass from "../server/Sequence";
 
 /**
  * Base interface for sent JGCP-messages

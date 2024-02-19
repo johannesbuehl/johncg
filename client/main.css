@@ -126,7 +126,9 @@ div.button, div.button > * {
 }
 
 #sequence {
-	width: 32rem;
+	width: 24rem;
+
+	resize: horizontal;
 }
 
 .header {
@@ -183,6 +185,8 @@ div.button, div.button > * {
 	padding-left: 0.5rem;
 
 	flex: 1;
+
+	text-wrap: nowrap;
 }
 
 .sequence_item_container:hover > .sequence_item {

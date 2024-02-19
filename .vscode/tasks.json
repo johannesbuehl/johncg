@@ -11,6 +11,15 @@
 			"problemMatcher": [],
 			"label": "npm: build",
 			"detail": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1"
+		},
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig.json",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build",
+			"label": "tsc: build - server"
 		}
 	]
 }
