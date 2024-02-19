@@ -4,7 +4,7 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-import Config from "./config";
+import Config from "../config";
 
 class http_server {
 	private port: number;

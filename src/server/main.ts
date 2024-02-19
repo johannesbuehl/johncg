@@ -1,4 +1,4 @@
-import { http_server } from "./http-server";
+import { http_server } from "./servers/http-server";
 import Control from "./control";
 
 import Config from "./config";

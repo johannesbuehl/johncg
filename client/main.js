@@ -53,17 +53,17 @@ function display_items(data) {
 	for (let item of data.sequence_items) {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
-		div_sequence_item_container.dataset.item_number = item.item;
+		div_sequence_item_container.dataset.item_number = item.Item;
 
 		const div_sequence_item_color_indicator = document.createElement("div");
 		div_sequence_item_color_indicator.classList.add("item_color_indicator");
-		div_sequence_item_color_indicator.style.backgroundColor = item.color;
+		div_sequence_item_color_indicator.style.backgroundColor = item.Color;
 
 		div_sequence_item_container.append(div_sequence_item_color_indicator);
 
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
-		div_sequence_item.innerText = item.caption;
+		div_sequence_item.innerText = item.Caption;
 
 		div_sequence_item_container.onclick = function() {
 			request_item_slides(Number(this.dataset.item_number));
@@ -74,7 +74,7 @@ function display_items(data) {
 	}
 
 	// display the visibility state
-	display_visibility_state(data.metadata.visibility);
+	display_visibility_state(data.visibility);
 }
 
 function request_item_slides(item) {
@@ -99,7 +99,7 @@ function display_item_slides(data) {
 	const div_slides_view_container = document.querySelector("#slides_view_container");
 
 	// select the sequence-item
-	select_item(data.metadata.item);
+	select_item(data.item);
 
 	let slide_counter = 0;
 
@@ -129,7 +129,7 @@ function display_item_slides(data) {
 
 		switch (part.type) {
 			case "title": {
-				div_slide_part_header.innerText = data.metadata.title;
+				div_slide_part_header.innerText = data.title;
 			} break;
 			case "lyric": {
 				div_slide_part_header.innerText = part.part;

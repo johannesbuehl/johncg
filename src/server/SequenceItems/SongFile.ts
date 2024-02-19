@@ -218,7 +218,7 @@ class SongFile {
 		}
 	}
 
-	get title(): TitlePart {
+	get part_title(): TitlePart {
 		const response: TitlePart = {
 			type: "title",
 			title: this.metadata.Title

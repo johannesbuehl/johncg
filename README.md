@@ -24,3 +24,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - add CLI output to server
 - CasparCG: split text and image in two layers: enables text without background
 - rewrite client in typescript
+- create dummy-sequence-items for unsupported ones

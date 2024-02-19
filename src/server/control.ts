@@ -1,8 +1,8 @@
 import WebSocket, { RawData } from "ws";
 
 import Sequence from "./Sequence";
-import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./osc-server";
-import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./websocket-server";
+import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
+import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
 
 import * as JGCPSend from "./JGCPSendMessages";
 import * as JGCPRecv from "./JGCPReceiveMessages";
@@ -73,13 +73,8 @@ class Control {
 
 		this.send_all_clients(response_sequenceItems);
 		
-		// send the selected item-slide to all clients
-		const respone_activeItemSlide: JGCPSend.State = {
-			command: "state",
-			activeItemSlide: this.sequence.active_item_slide
-		};
-
-		this.send_all_clients(respone_activeItemSlide);
+		// send the current state to all clients
+		this.send_all_clients(this.sequence.state);
 
 		ws_send_response("sequence has been opened", true, ws);
 	}
@@ -103,7 +98,7 @@ class Control {
 
 			ws_send_response("slides have been sent", true, ws);
 		} else {
-			ws_send_response(`'${item} is not of type 'number''`, false, ws);
+			ws_send_response(`'${item} is not of type 'number'`, false, ws);
 		}
 	}
 
@@ -124,23 +119,23 @@ class Control {
 			} else {
 				this.sequence?.set_active_item(item, slide);
 			}
-
-			// send the response inside the try block, so it doesn't get send in case of an error
-			this.send_all_clients({
-				command: "state",
-				activeItemSlide: this.sequence.active_item_slide,
-				clientID
-			});
-
-			ws_send_response("slide has been selected", true, ws);
 		} catch (e) {
 			// catch invalid item or slide numbers
 			if (e instanceof RangeError) {
 				ws_send_response(e.message, true, ws);
+				return;
 			} else {
 				throw e;
 			}
 		}
+
+		this.send_all_clients({
+			command: "state",
+			activeItemSlide: this.sequence.active_item_slide,
+			clientID
+		});
+
+		ws_send_response("slide has been selected", true, ws);
 	}
 
 	/**
@@ -233,12 +228,7 @@ class Control {
 			ws.send(JSON.stringify(respone_sequence));
 
 			// send the selected item-slide
-			const respone_activeItemSlide: JGCPSend.State = {
-				command: "state",
-				activeItemSlide: this.sequence.active_item_slide
-			};
-	
-			ws.send(JSON.stringify(respone_activeItemSlide));
+			ws.send(JSON.stringify(this.sequence.state));
 		} else {
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
 			const clear_message: JGCPSend.Clear = {

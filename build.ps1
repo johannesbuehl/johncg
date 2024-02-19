@@ -8,7 +8,7 @@ New-Item -Type Directory .\Dist\build
 New-Item -Type Directory .\Dist\$build_name
 
 # bundle the files
-yarn esbuild server/src/main.ts --bundle --platform=node --outfile=dist/build/main.js
+yarn esbuild src/server/main.ts --bundle --platform=node --outfile=dist/build/main.js
 
 # create sea-prep.blob
 node --experimental-sea-config .\sea-config.json
@@ -23,7 +23,9 @@ node -e "require('fs').copyFileSync(process.execPath, 'dist/build/$build_name.ex
 yarn postject dist/build/$build_name.exe NODE_SEA_BLOB dist/build/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
 
 # copy the files in the output
-Copy-Item -Path .\config.json,.\casparcg-template,.\client -Destination .\dist\$build_name -Exclude .eslintrc -Recurse
+Copy-Item -Path .\config.json -Destination .\dist\$build_name -Exclude .eslintrc
+Copy-Item -Path .\casparcg-templates -Destination .\dist\$build_name -Exclude .eslintrc -Recurse
+Copy-Item -Path .\client -Destination .\dist\$build_name -Exclude .eslintrc -Recurse
 Copy-Item -Path .\dist\build\$build_name.exe .\dist\$build_name -Recurse
 
 # pack the files in a .tar.gz-file
