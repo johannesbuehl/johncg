@@ -63,7 +63,13 @@ function display_items(data) {
 
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
-		div_sequence_item.innerText = item.Caption;
+		
+		// if it's a  Countdown-Object, insert the time
+		if (item.Type === "Countdown") {
+			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
+		} else {
+			div_sequence_item.innerText = item.Caption;
+		}
 
 		div_sequence_item_container.onclick = function() {
 			request_item_slides(Number(this.dataset.item_number));
@@ -101,16 +107,38 @@ function display_item_slides(data) {
 	// select the sequence-item
 	select_item(data.item);
 
+	// create the individual arrays for parallel processing
+	let part_arrays = [];
+
+	switch (data.Type) {
+		case "Song":
+			part_arrays = create_song_slides(data);
+			break;
+		case "Countdown":
+			part_arrays = create_countdown_slides(data);
+			break;
+		default:
+			console.error(`'${data.Type}' is not supported`)
+	}
+
+	part_arrays.forEach((slide_part) => {
+		div_slides_view_container.append(slide_part);
+	});
+
+	set_active_slide(data.clientID === clientID);
+}
+
+function create_song_slides(data) {
 	let slide_counter = 0;
 
 	// create the individual arrays for parallel processing
 	let part_arrays = [];
 
-	for (let part of data.slides) {
+	data.slides.forEach((part) => {
 		part_arrays.push([slide_counter, part]);
 
 		slide_counter += part.slides;
-	}
+	});
 
 	part_arrays = part_arrays.map(([slides_start, part]) => {
 		// create the container for the part
@@ -145,40 +173,72 @@ function display_item_slides(data) {
 			};
 		});
 
-		for (const iframe of iframe_iter_array) {
+		iframe_iter_array.forEach((iframe) => {
 			div_slides_view.append(iframe.slide);
-		}
+		});
 
-		return {
-			slides_start: slides_start,
-			slide_part: div_slide_part
-		}
+		return div_slide_part;
 	});
 
-	for (const slide_part of part_arrays) {
-		div_slides_view_container.append(slide_part.slide_part);
-	}
+	return part_arrays;
+}
 
-	set_active_slide(data.clientID === clientID);
+function create_countdown_slides(data) {
+	// create the container for the part
+	const div_slide_part = document.createElement("div");
+	div_slide_part.classList.add("slide_part");
+
+	// create the header of the part and append it to the part-container
+	const div_slide_part_header = document.createElement("div");
+	div_slide_part_header.classList.add("header");
+	div_slide_part.append(div_slide_part_header);
+
+	// create the slides-view and append it to the part container
+	const div_slides_view = document.createElement("div");
+	div_slides_view.classList.add("slides_view");
+	div_slide_part.append(div_slides_view);
+
+	div_slide_part_header.innerText = data.title;
+
+	const iframe = create_slide_iframe(data, 0);
+
+	div_slides_view.append(iframe);
+
+	return [div_slide_part];
 }
 
 function create_slide_iframe(data, number) {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
-
+	
 	const slide_iframe = document.createElement("iframe");
-	slide_iframe.src = "song.html";
+
+	switch (data.Type) {
+		case "Song":
+			slide_iframe.src = "Templates/Song.html";
+			break;
+		case "Countdown":
+			slide_iframe.src = "Templates/Countdown.html"
+			break;
+	}
+
 	slide_iframe.classList.add("slide");
-
+	
 	div_slide_container.append(slide_iframe);
-
+	
 	slide_iframe.dataset.slide_number = number;
-
+	
 	slide_iframe.addEventListener("load", () => {
 		slide_iframe.contentWindow.update(JSON.stringify(data.slides_template));
-		slide_iframe.contentWindow.jump(number);
-		slide_iframe.contentWindow.play();
 
+		switch (data.Type) {
+			case "Song":
+				slide_iframe.contentWindow.jump(number);
+				break;
+		}
+
+		slide_iframe.contentWindow.play();
+	
 		// register click event
 		slide_iframe.contentWindow.addEventListener("click", () => {
 			request_item_slide_select(
@@ -187,7 +247,7 @@ function create_slide_iframe(data, number) {
 			);
 		})
 	});
-
+	
 	return div_slide_container;
 }
 

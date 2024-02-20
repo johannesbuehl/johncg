@@ -8,7 +8,8 @@ interface ConfigJSON {
 	};
 	casparcg: {
 		templates: {
-			song: string
+			Song: string,
+			Countdown: string
 		};
 		connections: {
 			host: string;

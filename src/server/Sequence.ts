@@ -3,11 +3,12 @@ import { CasparCG } from "casparcg-connection";
 
 import { SongElement } from "./SequenceItems/SongFile";
 import SequenceItem, { ClientItemSlides, ItemProps } from "./SequenceItems/SequenceItem";
-import { Song, SongProps } from "./SequenceItems/Song";
+import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
 
 import Config from "./config";
+import Countdown, { CountdownProps } from "./SequenceItems/Countdown";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
@@ -122,12 +123,11 @@ class Sequence {
 
 			// store the data of the object
 			let item_data: ItemProps = {
+				Type: null,
 				Caption: "",
 				Color: "",
 				SlideCount: 0,
-				Type: null,
-				Item: this.sequence_items.length,
-				FileName: null
+				Item: this.sequence_items.length
 			};
 
 			// exec the item-regex until there are no more results
@@ -148,10 +148,13 @@ class Sequence {
 			} while (re_results_item !== null);
 
 			// store the sequence-item
-
-			// TESTING only if it is song-element, since the others aren't implemented
-			if (item_data.Type === "Song") {
-				this.sequence_items.push(new Song(item_data as SongProps));
+			switch (item_data.Type) {
+				case "Song":
+					this.sequence_items.push(new Song(item_data as SongProps));
+					break;
+				case "Countdown":
+					this.sequence_items.push(new Countdown(item_data as CountdownProps));
+					break;
 			}
 		});
 	}
@@ -280,9 +283,9 @@ class Sequence {
 				layer: Config.casparcg.connections[loop_index].layers[1],
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
-				template: Config.casparcg.templates.song,
+				template: Config.casparcg.templates[this.active_sequence_item.props.Type],
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-				data: JSON.stringify(JSON.stringify(this.active_sequence_item.create_renderer_object(), (_key, val) => {
+				data: JSON.stringify(JSON.stringify(this.active_sequence_item.create_render_object(), (_key, val) => {
 					if (typeof val === "string") {
 						return val.replace("\"", "\\u0022");
 					} else {
@@ -378,7 +381,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			break;
 		case "VerseOrder":
 			// split csv-line into an array
-			return_props.VerseOrder = value.split(",") as SongElement[];
+			return_props["VerseOrder"] = value.split(",") as SongElement[];
 			break;
 		case "FileName":
 			// assume the type from the file-extension
@@ -402,6 +405,16 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 		case "PrimaryLanguage":
 		case "Language":
 			return_props[key] = Number(value) - 1; // subtract 1, because Songbeamer start counting at 1
+			break;
+		case "CaptionFmtValue":
+			return_props["Time"] = value;
+			break;
+		case "StreamClass":
+			if (value === "TPresentationObjectTimer") {
+				return_props.Type = "Countdown";
+			} else {
+				return_props[key] = value;
+			}
 			break;
 		default:
 			return_props[key] = value;
@@ -560,5 +573,5 @@ function convert_color_to_hex(color: string): string | undefined {
 }
 
 // export { NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides, ActiveItemSlide };
-export { ClientSequenceItems, ActiveItemSlide };
+export { ClientSequenceItems, ActiveItemSlide, convert_color_to_hex };
 export default Sequence;

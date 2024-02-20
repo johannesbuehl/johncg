@@ -8,7 +8,8 @@
 	},
 	"casparcg": {
 		"templates": {
-			"song": "Song"
+			"Song": "JohnCG/Song",
+			"Countdown": "JohnCG/Countdown"
 		},
 		"connections": [
 			{

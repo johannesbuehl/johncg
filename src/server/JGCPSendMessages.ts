@@ -1,5 +1,5 @@
 import * as SequenceClass from "../server/Sequence";
-import { ClientItemSlides } from "./SequenceItems/SequenceItem";
+import { ClientItemSlidesBase } from "./SequenceItems/SequenceItem";
 
 /**
  * Base interface for sent JGCP-messages
@@ -33,7 +33,7 @@ export interface State extends Base {
 	visibility?: boolean;
 }
 
-export interface ItemSlides extends Base, ClientItemSlides {
+export interface ItemSlides extends Base, ClientItemSlidesBase {
 	clientID: string;
 	command: "item-slides";
 }

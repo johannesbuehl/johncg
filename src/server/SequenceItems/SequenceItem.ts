@@ -3,38 +3,56 @@ import path from "path";
 import mime from "mime-types";
 
 import Config from "../config";
-import { SongProps } from "./Song";
+import { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
+import { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
 
 
 export interface ItemPropsBase {
+	Type: string;
 	Caption: string;
 	SlideCount: number;
 	Color: string;
 	Item: number;
 }
 
-export type ItemProps = SongProps
+export type ItemProps = ItemPropsBase | SongProps | CountdownProps
 
 // interface for a renderer-object
-export interface RenderObject {
-	slides: object;
+export interface ItemRenderObjectBase {
+	slides: Array<unknown>;
 	slide: number;
 	backgroundImage?: string;
+	backgroundColor?: string;
 }
 
-export interface ClientItemSlides {
+export type ItemRenderObject = ItemRenderObjectBase | SongRenderObject | CountdownRenderObject;
+
+export interface ClientItemSlidesBase {
+	Type: string;
 	title: string;
 	item: number;
 	slides: object;
-	slides_template: RenderObject;
+	slides_template: ItemRenderObject;
+}
+
+export type ClientItemSlides = ClientItemSlidesBase | ClientSongSlides | ClientCountdownSlides;
+
+export interface FontFormat {
+	fontFamily?: string;
+	fontSize: number;
+	fontWeight?: "bold";
+	fontStyle?: "italic";
+	fontDecoration?: "underline";
+	color: string;
 }
 
 export default abstract class SequenceItem {
 	protected abstract item_props: ItemProps;
 
-	abstract create_renderer_object(slide?: number);
+	abstract create_render_object(slide?: number);
 	abstract create_client_object_item_slides(): ClientItemSlides;
 	abstract set_active_slide(slide?: number): number;
+
 	/**
 	 * navigate the selected slide
 	 * @param steps steps to navigate; sign is used for direction

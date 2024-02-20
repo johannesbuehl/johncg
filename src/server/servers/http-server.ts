@@ -23,16 +23,21 @@ class http_server {
 			request.url = unescape(request.url);
 
 			// override different requested urls
-			switch (request.url) {
+			switch (true) {
 				// redirect the root to the main-site
-				case "/":
+				case /^\/$/.test(request.url):
 					request.url = "main.html";
 					break;
-				default:
-					if (/\/BackgroundImage\/.*/.test(request.url)) {
-						resource_dir = Config.path.backgroundImage;
-						request.url = request.url.replace(/\/BackgroundImage\//, "");
-					}
+				// serve the casparcg-templates
+				case /^\/Templates\//.test(request.url):
+					resource_dir = "casparcg-templates/JohnCG";
+					request.url = request.url.replace(/\/Templates\//, "");
+					break;
+				// serve the background-images
+				case /^\/BackgroundImage\//.test(request.url):
+					resource_dir = Config.path.backgroundImage;
+					request.url = request.url.replace(/\/BackgroundImage\//, "");
+					break;
 			}
 				
 			// try to serve the requested url

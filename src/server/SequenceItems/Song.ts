@@ -1,4 +1,4 @@
-import SequenceItem, { ClientItemSlides, ItemPropsBase, RenderObject, get_image_b64 } from "./SequenceItem";
+import SequenceItem, { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, TitlePart } from "./SongFile";
 import path from "path";
 
@@ -22,18 +22,19 @@ interface LyricSlide {
 
 type ItemSlide = LyricSlide | TitleSlide;
 
-interface SongRenderObject extends RenderObject {
+export interface SongRenderObject extends ItemRenderObjectBase {
 	type: "Song";
 	slides: ItemSlide[];
 	languages: number[];
 }
 
-export interface ClientSongItemSlides extends ClientItemSlides {
+export interface ClientSongSlides extends ClientItemSlidesBase {
+	Type: "Song"
 	slides: ItemPartClient[];
-	slides_template: RenderObject;
+	slides_template: SongRenderObject;
 }
 
-export class Song extends SequenceItem {
+export default class Song extends SequenceItem {
 	protected item_props: SongProps;
 
 	// amount of slides this element has
@@ -45,17 +46,17 @@ export class Song extends SequenceItem {
 
 	private SongFile: SongFile;
 
-	constructor(data: SongProps) {
+	constructor(props: SongProps) {
 		super();
 
-		this.item_props = data;
+		this.item_props = props;
 
 		try {
-			this.SongFile = new SongFile(get_song_path(data.FileName));
+			this.SongFile = new SongFile(get_song_path(props.FileName));
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e.code === "ENOENT") {
-				console.debug(`song '${data.FileName}' does not exist`);
+				console.debug(`song '${props.FileName}' does not exist`);
 				return null;
 			} else {
 				throw e;
@@ -101,7 +102,7 @@ export class Song extends SequenceItem {
 		}
 	}
 
-	create_renderer_object(slide: number): SongRenderObject {
+	create_render_object(slide: number): SongRenderObject {
 		if (slide === undefined) {
 			slide = this.active_slide;
 		}
@@ -184,13 +185,14 @@ export class Song extends SequenceItem {
 	}
 
 	create_client_object_item_slides() {
-		const return_item: ClientSongItemSlides = {
+		const return_item: ClientSongSlides = {
+			Type: "Song",
 			title: this.item_props.Caption,
 			item: this.item_props.Item,
 			slides: [
 				this.SongFile.get_title_client()
 			],
-			slides_template: this.create_renderer_object(0)
+			slides_template: this.create_render_object(0)
 		};
 
 		for (const part_name of this.get_verse_order()) {
