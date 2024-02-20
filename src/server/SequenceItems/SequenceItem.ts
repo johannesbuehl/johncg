@@ -46,8 +46,9 @@ export interface FontFormat {
 	color: string;
 }
 
-export default abstract class SequenceItem {
+export default abstract class SequenceItemBase {
 	protected abstract item_props: ItemProps;
+	protected abstract SlideCount: number;
 
 	abstract create_render_object(slide?: number);
 	abstract create_client_object_item_slides(): ClientItemSlides;
@@ -61,6 +62,24 @@ export default abstract class SequenceItem {
 	abstract navigate_slide(steps: number): number;
 
 	abstract get active_slide(): number;
+
+	protected validate_slide_number(slide: number): number {
+		const slide_count = this.SlideCount;
+
+		if (typeof slide !== "number") {
+			throw new TypeError(`'${slide} is not of type 'number'`);
+		}
+
+		if (slide < -slide_count || slide >= slide_count) {
+			throw new RangeError(`slide-number is out of range (${-slide_count}-${slide_count - 1})`);
+		}
+
+		if (slide < 0) {
+			slide += slide_count;
+		}
+
+		return slide;
+	}
 
 	get props(): ItemProps {
 		return this.item_props;

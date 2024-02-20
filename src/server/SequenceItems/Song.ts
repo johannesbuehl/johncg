@@ -1,4 +1,4 @@
-import SequenceItem, { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
+import SequenceItemBase, { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, TitlePart } from "./SongFile";
 import path from "path";
 
@@ -34,11 +34,11 @@ export interface ClientSongSlides extends ClientItemSlidesBase {
 	slides_template: SongRenderObject;
 }
 
-export default class Song extends SequenceItem {
+export default class Song extends SequenceItemBase {
 	protected item_props: SongProps;
 
 	// amount of slides this element has
-	private SlideCount: number = 0;
+	protected SlideCount: number = 0;
 	// currently active slide-number
 	private active_slide_number: number = 0;
 
@@ -217,24 +217,6 @@ export default class Song extends SequenceItem {
 
 	get active_slide(): number {
 		return this.active_slide_number;
-	}
-
-	private validate_slide_number(slide: number): number {
-		const slide_count = this.SlideCount;
-
-		if (typeof slide !== "number") {
-			throw new TypeError(`'${slide} is not of type 'number'`);
-		}
-
-		if (slide < -slide_count || slide >= slide_count) {
-			throw new RangeError(`slide-number is out of range (${-slide_count}-${slide_count - 1})`);
-		}
-
-		if (slide < 0) {
-			slide += slide_count;
-		}
-
-		return slide;
 	}
 }
 function get_song_path(song_path: string): string {

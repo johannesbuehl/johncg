@@ -2,7 +2,7 @@ import path from "path";
 import { CasparCG } from "casparcg-connection";
 
 import { SongElement } from "./SequenceItems/SongFile";
-import SequenceItem, { ClientItemSlides, ItemProps } from "./SequenceItems/SequenceItem";
+import SequenceItemBase, { ClientItemSlides, ItemProps } from "./SequenceItems/SequenceItem";
 import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
@@ -25,7 +25,7 @@ interface ActiveItemSlide {
 
 class Sequence {
 	// store the individual items of the sequence
-	sequence_items: SequenceItem[] = [];
+	sequence_items: SequenceItemBase[] = [];
 
 	private active_item_number: number = 0;
 
@@ -232,7 +232,8 @@ class Sequence {
 		const item_steps = this.active_sequence_item.navigate_slide(steps);
 
 		if (item_steps !== 0) {
-			this.navigate_item(steps);
+			// if the item_steps is forwards, navigate to the first slide; if it is backwards navigate to the last one
+			this.navigate_item(steps, steps > 0 ? 0 : -1);
 		} else {
 			this.casparcg_select_slide(this.active_sequence_item.active_slide);
 		}
@@ -336,7 +337,7 @@ class Sequence {
 		return this.active_item_number;
 	}
 
-	get active_sequence_item(): SequenceItem {
+	get active_sequence_item(): SequenceItemBase {
 		return this.sequence_items[this.active_item_number];
 	}
 

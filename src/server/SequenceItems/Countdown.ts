@@ -1,5 +1,5 @@
 import { convert_color_to_hex } from "../Sequence";
-import SequenceItem, { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
+import SequenceItemBase, { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end-time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
@@ -56,8 +56,10 @@ interface CountdownData {
 	backgroundColor?: string;
 }
 
-export default class Countdown extends SequenceItem {
+export default class Countdown extends SequenceItemBase {
 	protected item_props: CountdownProps;
+	
+	protected SlideCount: number = 1;
 
 	constructor(props: CountdownSequenceItemProps) {
 		super();
@@ -92,13 +94,7 @@ export default class Countdown extends SequenceItem {
 	}
 
 	set_active_slide(slide?: number): number {
-		if (typeof slide !== "number") {
-			throw new TypeError(`slide ('${slide}') is no number`);
-		}
-
-		if (slide !== 0) {
-			throw new RangeError(`slide ('${slide}') is out of range (0)`);
-		}
+		this.validate_slide_number(slide);
 
 		return slide;
 	}
@@ -112,12 +108,12 @@ export default class Countdown extends SequenceItem {
 		};
 		
 		return {
-			title: `${title_map[this.props.Mode]}: ${this.props.Time}`,
-			Type: this.props.Type,
-			item: this.props.Item,
+			title: `${title_map[this.item_props.Mode]}: ${this.item_props.Time}`,
+			Type: this.item_props.Type,
+			item: this.item_props.Item,
 			slides: [{
-				mode: this.props.Mode,
-				time: this.props.Time
+				mode: this.item_props.Mode,
+				time: this.item_props.Time
 			}],
 			slides_template: this.create_render_object(),
 		};
@@ -125,14 +121,14 @@ export default class Countdown extends SequenceItem {
 
 	create_render_object(): CountdownRenderObject {
 		return {
-			backgroundImage: get_image_b64(this.props.BackgroundImage),
-			backgroundColor: this.props.BackgroundColor,
+			backgroundImage: get_image_b64(this.item_props.BackgroundImage),
+			backgroundColor: this.item_props.BackgroundColor,
 			slide: 0,
 			slides: undefined,
-			time: this.props.Time,
-			fontFormat: this.props.FontFormat,
-			position: this.props.Position,
-			showSeconds: this.props.showSeconds
+			time: this.item_props.Time,
+			fontFormat: this.item_props.FontFormat,
+			position: this.item_props.Position,
+			showSeconds: this.item_props.showSeconds
 		};
 	}
 
