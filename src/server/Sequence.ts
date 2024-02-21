@@ -2,13 +2,14 @@ import path from "path";
 import { CasparCG } from "casparcg-connection";
 
 import { SongElement } from "./SequenceItems/SongFile";
-import SequenceItemBase, { ClientItemSlides, ItemProps } from "./SequenceItems/SequenceItem";
+import { ClientItemSlides, ItemProps, SequenceItem } from "./SequenceItems/SequenceItem";
 import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
 
 import Config from "./config";
 import Countdown, { CountdownProps } from "./SequenceItems/Countdown";
+import Comment, { CommentProps } from "./SequenceItems/Comment";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
@@ -25,7 +26,7 @@ interface ActiveItemSlide {
 
 class Sequence {
 	// store the individual items of the sequence
-	sequence_items: SequenceItemBase[] = [];
+	sequence_items: SequenceItem[] = [];
 
 	private active_item_number: number = 0;
 
@@ -127,7 +128,8 @@ class Sequence {
 				Caption: "",
 				Color: "",
 				SlideCount: 0,
-				Item: this.sequence_items.length
+				Item: this.sequence_items.length,
+				selectable: true
 			};
 
 			// exec the item-regex until there are no more results
@@ -155,6 +157,12 @@ class Sequence {
 				case "Countdown":
 					this.sequence_items.push(new Countdown(item_data as CountdownProps));
 					break;
+				default:
+					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
+					if (!Object.keys(item_data).includes("FileName")) {
+						this.sequence_items.push(new Comment(item_data as CommentProps));
+					}
+					break;
 			}
 		});
 	}
@@ -164,7 +172,6 @@ class Sequence {
 			sequence_items: this.sequence_items.map((item) => item.props),
 			metadata: {
 				item: this.active_item_number,
-				// slide: this.active_slide,
 				visibility: this.visibility
 			}
 		};
@@ -211,6 +218,19 @@ class Sequence {
 		}
 
 		let new_active_item_number = this.active_item_number + steps;
+		// steps until there is a selectable item
+		while (!this.sequence_items[new_active_item_number].props.selectable) {
+			new_active_item_number += steps;
+
+			// if the new_active_item_number is back at the start, break, since there are no selectable items
+			if (new_active_item_number === this.active_item_number) {
+				console.error("loop around");
+				return;
+			}
+
+			// sanitize the item-number
+			new_active_item_number = this.sanitize_item_number(new_active_item_number);
+		}
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
@@ -250,6 +270,27 @@ class Sequence {
 
 		if (item < 0) {
 			item += item_count;
+		}
+
+		return item;
+	}
+
+	/**
+	 * sanitize the item-number by over- / underrolling it.
+	 * @param item
+	 * @returns sanitized number; active_item_number if no integer was given
+	 */
+	private sanitize_item_number(item: number): number {
+		if (!Number.isInteger(item)) {
+			return this.active_item;
+		}
+
+		// clamp the range
+		item = item % this.sequence_items.length;
+
+		// if it is negative, roll over
+		if (item < 0) {
+			item += this.sequence_items.length;
 		}
 
 		return item;
@@ -337,7 +378,7 @@ class Sequence {
 		return this.active_item_number;
 	}
 
-	get active_sequence_item(): SequenceItemBase {
+	get active_sequence_item(): SequenceItem {
 		return this.sequence_items[this.active_item_number];
 	}
 

@@ -1,4 +1,4 @@
-import SequenceItemBase, { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
+import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase, get_image_b64 } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, TitlePart } from "./SongFile";
 import path from "path";
 
@@ -102,7 +102,7 @@ export default class Song extends SequenceItemBase {
 		}
 	}
 
-	create_render_object(slide: number): SongRenderObject {
+	create_render_object(slide?: number): SongRenderObject {
 		if (slide === undefined) {
 			slide = this.active_slide;
 		}

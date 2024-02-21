@@ -163,7 +163,9 @@ div.button, div.button > * {
 	
 	display: flex;
 	align-items: stretch;
-	
+}
+
+.sequence_item_container.selectable {
 	cursor: pointer;
 }
 
@@ -189,7 +191,7 @@ div.button, div.button > * {
 	text-wrap: nowrap;
 }
 
-.sequence_item_container:hover > .sequence_item {
+.sequence_item_container.selectable:hover > .sequence_item {
 	background-color: rgb(79, 83, 94);
 }
 
@@ -197,7 +199,7 @@ div.button, div.button > * {
 	background-color: rgb(40, 76, 184);
 }
 
-.sequence_item_container.active:hover > .sequence_item {
+.sequence_item_container.selectable.active:hover > .sequence_item {
 	background-color: rgb(54, 92, 192);
 }
 

@@ -55,6 +55,15 @@ function display_items(data) {
 		div_sequence_item_container.classList.add("sequence_item_container");
 		div_sequence_item_container.dataset.item_number = item.Item;
 
+		// if the item is selectable, give it the class and add the onclic-event
+		if (item.selectable) {
+			div_sequence_item_container.classList.add("selectable");
+			
+			div_sequence_item_container.onclick = function() {
+				request_item_slides(Number(this.dataset.item_number));
+			};
+		}
+
 		const div_sequence_item_color_indicator = document.createElement("div");
 		div_sequence_item_color_indicator.classList.add("item_color_indicator");
 		div_sequence_item_color_indicator.style.backgroundColor = item.Color;
@@ -70,10 +79,6 @@ function display_items(data) {
 		} else {
 			div_sequence_item.innerText = item.Caption;
 		}
-
-		div_sequence_item_container.onclick = function() {
-			request_item_slides(Number(this.dataset.item_number));
-		};
 
 		div_sequence_item_container.append(div_sequence_item);
 		div_sequence_items.append(div_sequence_item_container);

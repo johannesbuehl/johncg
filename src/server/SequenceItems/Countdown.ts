@@ -1,5 +1,5 @@
 import { convert_color_to_hex } from "../Sequence";
-import SequenceItemBase, { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, get_image_b64 } from "./SequenceItem";
+import { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase, get_image_b64 } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end-time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];

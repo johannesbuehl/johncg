@@ -3,9 +3,11 @@ import path from "path";
 import mime from "mime-types";
 
 import Config from "../config";
-import { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
-import { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
+import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
+import Countdown, { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
+import Comment from "./Comment";
 
+export type SequenceItem = Song | Countdown | Comment;
 
 export interface ItemPropsBase {
 	Type: string;
@@ -13,6 +15,7 @@ export interface ItemPropsBase {
 	SlideCount: number;
 	Color: string;
 	Item: number;
+	selectable: boolean;
 }
 
 export type ItemProps = ItemPropsBase | SongProps | CountdownProps
@@ -46,7 +49,7 @@ export interface FontFormat {
 	color: string;
 }
 
-export default abstract class SequenceItemBase {
+export abstract class SequenceItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract SlideCount: number;
 
