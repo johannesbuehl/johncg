@@ -1,5 +1,5 @@
 import { convert_color_to_hex } from "../Sequence";
-import { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase, get_image_b64 } from "./SequenceItem";
+import { ClientItemSlidesBase, FontFormat, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end-time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
@@ -17,7 +17,11 @@ export interface CountdownProps extends CountdownSequenceItemProps {
 	Position: CountdownPosition;
 	Mode: CountdownMode;
 	showSeconds: boolean;
-	BackgroundImage?: string;
+	BackgroundImage?: {
+		path: string;
+		orig?: string;
+		proxy?: string;
+	};
 	BackgroundColor?: string;
 }
 
@@ -27,7 +31,7 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 		time: string;
 		mode: CountdownMode;
 	}],
-	slides_template: CountdownRenderObject;
+	slides_template: CountdownRenderObject & { mute_transition: true; };
 }
 
 export interface CountdownRenderObject extends ItemRenderObjectBase {
@@ -75,7 +79,9 @@ export default class Countdown extends SequenceItemBase {
 			showSeconds: hex_data.showSeconds,
 			FontFormat: hex_data.fontFormat,
 			Mode: hex_data.mode,
-			BackgroundImage: hex_data.backgroundImage,
+			BackgroundImage: {
+				path: hex_data.backgroundImage
+			},
 			BackgroundColor: hex_data.backgroundColor
 		};
 	}
@@ -99,7 +105,7 @@ export default class Countdown extends SequenceItemBase {
 		return slide;
 	}
 	
-	create_client_object_item_slides(): ClientCountdownSlides {
+	async create_client_object_item_slides(): Promise<ClientCountdownSlides> {
 		const title_map = {
 			clock: "Clock",
 			stopwatch: "Stopwatch",
@@ -115,13 +121,16 @@ export default class Countdown extends SequenceItemBase {
 				mode: this.item_props.Mode,
 				time: this.item_props.Time
 			}],
-			slides_template: this.create_render_object(),
+			slides_template: {
+				...await this.create_render_object(true),
+				mute_transition: true
+			}
 		};
 	}
 
-	create_render_object(): CountdownRenderObject {
+	async create_render_object(proxy?: boolean): Promise<CountdownRenderObject> {
 		return {
-			backgroundImage: get_image_b64(this.item_props.BackgroundImage),
+			backgroundImage: await this.get_background_image(proxy),
 			backgroundColor: this.item_props.BackgroundColor,
 			slide: 0,
 			slides: undefined,
@@ -130,6 +139,15 @@ export default class Countdown extends SequenceItemBase {
 			position: this.item_props.Position,
 			showSeconds: this.item_props.showSeconds
 		};
+	}
+
+	protected async get_background_image(proxy?: boolean): Promise<string> {
+		// check wether the images have yet been laoded
+		if (this.props.backgroundImage === undefined) {
+			await this.load_backgroundImage(this.props.BackgroundImage.path);
+		}
+
+		return this.props.backgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {

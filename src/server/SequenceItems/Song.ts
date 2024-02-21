@@ -1,4 +1,4 @@
-import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase, get_image_b64 } from "./SequenceItem";
+import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, TitlePart } from "./SongFile";
 import path from "path";
 
@@ -31,7 +31,7 @@ export interface SongRenderObject extends ItemRenderObjectBase {
 export interface ClientSongSlides extends ClientItemSlidesBase {
 	Type: "Song"
 	slides: ItemPartClient[];
-	slides_template: SongRenderObject;
+	slides_template: SongRenderObject & { mute_transition: true; };
 }
 
 export default class Song extends SequenceItemBase {
@@ -91,7 +91,6 @@ export default class Song extends SequenceItemBase {
 				}
 			}
 		}
-		
 	}
 
 	get_verse_order(): string[] {
@@ -102,7 +101,7 @@ export default class Song extends SequenceItemBase {
 		}
 	}
 
-	create_render_object(slide?: number): SongRenderObject {
+	async create_render_object(proxy?: boolean, slide?: number): Promise<SongRenderObject> {
 		if (slide === undefined) {
 			slide = this.active_slide;
 		}
@@ -115,7 +114,8 @@ export default class Song extends SequenceItemBase {
 				this.SongFile.part_title
 			],
 			slide,
-			languages: this.languages
+			languages: this.languages,
+			backgroundImage: await this.get_background_image(proxy)
 		};
 		
 		// add the individual parts to the output-object
@@ -140,8 +140,6 @@ export default class Song extends SequenceItemBase {
 				}
 			}
 		}
-
-		return_object.backgroundImage = get_image_b64(this.SongFile.metadata.BackgroundImage);
 
 		return return_object;
 	}
@@ -184,7 +182,7 @@ export default class Song extends SequenceItemBase {
 		return slide_steps;
 	}
 
-	create_client_object_item_slides() {
+	async create_client_object_item_slides(): Promise<ClientSongSlides> {
 		const return_item: ClientSongSlides = {
 			Type: "Song",
 			title: this.item_props.Caption,
@@ -192,7 +190,10 @@ export default class Song extends SequenceItemBase {
 			slides: [
 				this.SongFile.get_title_client()
 			],
-			slides_template: this.create_render_object(0)
+			slides_template: {
+				...await this.create_render_object(true, 0),
+				mute_transition: true
+			}
 		};
 
 		for (const part_name of this.get_verse_order()) {
@@ -213,6 +214,15 @@ export default class Song extends SequenceItemBase {
 		}
 
 		return return_item;
+	}
+
+	protected async get_background_image(proxy?: boolean): Promise<string> {
+		// check wether the images have yet been laoded
+		if (this.props.backgroundImage === undefined) {
+			await this.load_backgroundImage(this.SongFile.metadata.BackgroundImage);
+		}
+
+		return this.props.backgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {

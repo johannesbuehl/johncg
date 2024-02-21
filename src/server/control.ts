@@ -85,13 +85,13 @@ class Control {
 	 * @param clientID 
 	 * @param ws 
 	 */
-	private get_item_slides(item: number, clientID?: string, ws?: WebSocket) {
+	private async get_item_slides(item: number, clientID?: string, ws?: WebSocket) {
 		// type-check the item
 		if (typeof item === "number") {
 			const message: JGCPSend.ItemSlides = {
 				command: "item-slides",
 				clientID,
-				...this.sequence.create_client_object_item_slides(item)
+				...await this.sequence.create_client_object_item_slides(item)
 			};
 
 			ws?.send(JSON.stringify(message));

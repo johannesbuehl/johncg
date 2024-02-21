@@ -1,6 +1,7 @@
-import fs from "fs";
+import { promises as fs } from "fs";
 import path from "path";
 import mime from "mime-types";
+import sharp from "sharp";
 
 import Config from "../config";
 import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
@@ -16,6 +17,10 @@ export interface ItemPropsBase {
 	Color: string;
 	Item: number;
 	selectable: boolean;
+	backgroundImage?: {
+		orig: string;
+		proxy: string;
+	}
 }
 
 export type ItemProps = ItemPropsBase | SongProps | CountdownProps
@@ -26,6 +31,7 @@ export interface ItemRenderObjectBase {
 	slide: number;
 	backgroundImage?: string;
 	backgroundColor?: string;
+	mute_transition?: boolean;
 }
 
 export type ItemRenderObject = ItemRenderObjectBase | SongRenderObject | CountdownRenderObject;
@@ -35,7 +41,7 @@ export interface ClientItemSlidesBase {
 	title: string;
 	item: number;
 	slides: object;
-	slides_template: ItemRenderObject;
+	slides_template: ItemRenderObject & { mute_transition: true; };
 }
 
 export type ClientItemSlides = ClientItemSlidesBase | ClientSongSlides | ClientCountdownSlides;
@@ -53,8 +59,8 @@ export abstract class SequenceItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract SlideCount: number;
 
-	abstract create_render_object(slide?: number);
-	abstract create_client_object_item_slides(): ClientItemSlides;
+	abstract create_render_object(proxy?: boolean, slide?: number);
+	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
 
 	/**
@@ -84,15 +90,31 @@ export abstract class SequenceItemBase {
 		return slide;
 	}
 
+	protected async load_backgroundImage(image_path: string) {
+		let img_buffer;
+		
+		try {
+			img_buffer = await fs.readFile(path.join(Config.path.backgroundImage, image_path));
+		} catch (e) {
+			this.item_props.backgroundImage = {
+				orig: "",
+				proxy: ""
+			};
+
+			return;
+		}
+		
+		const img_buffer_proxy = sharp(img_buffer).resize(240).toBuffer();
+
+		this.item_props.backgroundImage = {
+			orig: `data:${mime.lookup(image_path)};base64,` + (img_buffer).toString("base64"),
+			proxy: `data:${mime.lookup(image_path)};base64,` + (await img_buffer_proxy).toString("base64")
+		};
+	}
+
 	get props(): ItemProps {
 		return this.item_props;
 	}
-}
 
-export function get_image_b64(image_path: string): string {
-	try {
-		return `data:${mime.lookup(image_path)};base64,` + fs.readFileSync(path.join(Config.path.backgroundImage, image_path)).toString("base64");
-	} catch (e) {
-		return "";
-	}
+	protected abstract get_background_image(proxy?: boolean): Promise<string>;
 }

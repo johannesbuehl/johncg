@@ -169,17 +169,17 @@ function create_song_slides(data) {
 			} break;
 		}
 
-		let iframe_iter_array = [...Array(part.slides).keys()];
+		let object_iter_array = [...Array(part.slides).keys()];
 
-		iframe_iter_array = iframe_iter_array.map((ii) => { 
+		object_iter_array = object_iter_array.map((ii) => { 
 			return {
 				index: ii,
-				slide: create_slide_iframe(data, slides_start + ii)
+				slide: create_slide_object(data, slides_start + ii)
 			};
 		});
 
-		iframe_iter_array.forEach((iframe) => {
-			div_slides_view.append(iframe.slide);
+		object_iter_array.forEach((obj) => {
+			div_slides_view.append(obj.slide);
 		});
 
 		return div_slide_part;
@@ -205,47 +205,47 @@ function create_countdown_slides(data) {
 
 	div_slide_part_header.innerText = data.title;
 
-	const iframe = create_slide_iframe(data, 0);
+	const obj = create_slide_object(data, 0);
 
-	div_slides_view.append(iframe);
+	div_slides_view.append(obj);
 
 	return [div_slide_part];
 }
 
-function create_slide_iframe(data, number) {
+function create_slide_object(data, number) {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
 	
-	const slide_iframe = document.createElement("iframe");
+	const slide_object = document.createElement("object");
 
 	switch (data.Type) {
 		case "Song":
-			slide_iframe.src = "Templates/Song.html";
+			slide_object.data = "Templates/Song.html";
 			break;
 		case "Countdown":
-			slide_iframe.src = "Templates/Countdown.html"
+			slide_object.data = "Templates/Countdown.html"
 			break;
 	}
 
-	slide_iframe.classList.add("slide");
+	slide_object.classList.add("slide");
 	
-	div_slide_container.append(slide_iframe);
+	div_slide_container.append(slide_object);
 	
-	slide_iframe.dataset.slide_number = number;
+	slide_object.dataset.slide_number = number;
 	
-	slide_iframe.addEventListener("load", () => {
-		slide_iframe.contentWindow.update(JSON.stringify(data.slides_template));
+	slide_object.addEventListener("load", () => {
+		slide_object.contentWindow.update(JSON.stringify(data.slides_template));
 
 		switch (data.Type) {
 			case "Song":
-				slide_iframe.contentWindow.jump(number);
+				slide_object.contentWindow.jump(number);
 				break;
 		}
 
-		slide_iframe.contentWindow.play();
+		slide_object.contentWindow.play();
 	
 		// register click event
-		slide_iframe.contentWindow.addEventListener("click", () => {
+		slide_object.contentWindow.addEventListener("click", () => {
 			request_item_slide_select(
 				Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
 				number

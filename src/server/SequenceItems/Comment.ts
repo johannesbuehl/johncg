@@ -1,4 +1,4 @@
-import { ClientItemSlides, ItemProps, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlides, ItemProps, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
 
 export interface CommentProps extends ItemPropsBase {
 	selectable: false;
@@ -17,11 +17,11 @@ export default class Comment extends SequenceItemBase {
 		this.item_props.selectable = false;
 	}
 	
-	create_client_object_item_slides(): ClientItemSlides {
+	async create_client_object_item_slides(): Promise<ClientItemSlides> {
 		return undefined;
 	}
 	
-	create_render_object() {
+	async create_render_object(): Promise<ItemRenderObjectBase> {
 		return undefined;
 	}
 	
@@ -31,6 +31,10 @@ export default class Comment extends SequenceItemBase {
 	}
 	
 	set_active_slide(): number {
+		return undefined;
+	}
+
+	protected async get_background_image(): Promise<string> {
 		return undefined;
 	}
 	

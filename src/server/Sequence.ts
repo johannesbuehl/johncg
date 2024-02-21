@@ -179,7 +179,7 @@ class Sequence {
 		return return_sequence;
 	}
 
-	create_client_object_item_slides(item: number): ClientItemSlides {
+	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
 		return this.sequence_items[item].create_client_object_item_slides();
 	}
 
@@ -327,7 +327,7 @@ class Sequence {
 				playOnLoad: this.casparcg_visibility,
 				template: Config.casparcg.templates[this.active_sequence_item.props.Type],
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-				data: JSON.stringify(JSON.stringify(this.active_sequence_item.create_render_object(), (_key, val) => {
+				data: JSON.stringify(JSON.stringify(await this.active_sequence_item.create_render_object(), (_key, val) => {
 					if (typeof val === "string") {
 						return val.replace("\"", "\\u0022");
 					} else {

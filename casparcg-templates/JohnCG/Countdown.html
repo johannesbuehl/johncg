@@ -86,9 +86,16 @@
 		function update(str_args) {
 			// clear the old-state
 			clearInterval(updateInterval);
-
+			
 			data = JSON.parse(str_args);
-
+			
+			// if requested, diable transition-effects
+			if (data.mute_transition) {
+				document.querySelector("#main").style.transitionProperty = "none";
+			} else {
+				document.querySelector("#main").style.transitionProperty = "";
+			}
+			
 			// create the individual spans for the numbers
 			spans.hours = [
 				document.createElement("span"),

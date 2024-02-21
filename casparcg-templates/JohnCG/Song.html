@@ -194,10 +194,19 @@
 		function update(s_data) {
 			// parse the transferred data into json
 			data = JSON.parse(s_data);
-		
+
 			// get the div for the display and storage
 			const div_container = document.querySelector("#container");
 			const div_storage = document.querySelector("#storage");
+		
+			div_container.style.backgroundImage = `url("${data.backgroundImage}")`;
+
+			// if requested, diable transition-effects
+			if (data.mute_transition) {
+				document.querySelector("#_main").style.transitionProperty = "none";
+			} else {
+				document.querySelector("#_main").style.transitionProperty = "";
+			}
 
 			// clear the storage-container
 			div_storage.innerHTML = "";
@@ -217,8 +226,6 @@
 		
 			// store the amount of slides
 			slide_count = slide_counter;
-		
-			div_container.style.backgroundImage = `url("${data.backgroundImage.replace(/\\/g, "\\\\")}")`;
 		
 			active_slide = data.slide;
 		
