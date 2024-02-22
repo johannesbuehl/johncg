@@ -26,3 +26,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - disable buttons, when no sequence is loaded
 - standardize all interfaces to snake_case
 - implement all countdown modes
+- countdown: save in server wether it is finished

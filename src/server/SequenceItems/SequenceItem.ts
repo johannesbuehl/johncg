@@ -99,7 +99,8 @@ export abstract class SequenceItemBase {
 	}
 
 	protected async load_background_images(image_path?: string, background_color?: string) {
-		let img_buffer, img_buffer_proxy;
+		let img_buffer;
+		let img_buffer_proxy;
 		
 		if (image_path !== undefined) {
 			try {
@@ -112,28 +113,32 @@ export abstract class SequenceItemBase {
 	
 				return;
 			}
-			img_buffer_proxy = sharp(img_buffer).resize(240).toBuffer();
+			img_buffer_proxy = await sharp(img_buffer).resize(240).toBuffer();
 		}
 
 		// if the image_buffer is still undefined, try to use the backgroundColor
 		if (background_color !== undefined) {
-			img_buffer = sharp({
+			img_buffer = await sharp({
 				create: {
 					width: 1,
 					height: 1,
 					channels: 4,
-					background: color_string_to_object(background_color)
+					background: background_color
 				}
 			}).png().toBuffer();
+
 
 			// copy the the image to the proxy buffer, since only 1px anyway
 			img_buffer_proxy = img_buffer;
 		}
 
-		this.item_props.BackgroundImage = {
-			orig: `data:${mime.lookup(image_path)};base64,` + (img_buffer).toString("base64"),
-			proxy: `data:${mime.lookup(image_path)};base64,` + (await img_buffer_proxy).toString("base64")
-		};
+		if (img_buffer !== undefined && img_buffer_proxy !== undefined) {
+			this.item_props.BackgroundImage = {
+				// if there is no image-path, the mime-type is PNG, since we created them from the background-color
+				orig: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer).toString("base64"),
+				proxy: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer_proxy).toString("base64")
+			};
+		}
 	}
 
 	get props(): ItemProps {
@@ -141,19 +146,4 @@ export abstract class SequenceItemBase {
 	}
 
 	protected abstract get_background_image(proxy?: boolean): Promise<string>;
-}
-
-function color_string_to_object(color: string): { r: number, g: number, b: number, alpha?: number} {
-	const regex_result = color.match(/#(?<r>[0-9A-Fa-f]{2})(?<g>[0-9A-Fa-f]{2})(?<b>[0-9A-Fa-f]{2})(?<alpha>[0-9A-Fa-f]{2})?/mg);
-
-	if (!regex_result) {
-		throw new SyntaxError(`'${color}' is no valid color`);
-	}
-
-	return {
-		r: Number(regex_result.groups?.r),
-		g: Number(regex_result.groups?.g),
-		b: Number(regex_result.groups?.b),
-		alpha: Number(regex_result.groups?.alpha)
-	};
 }

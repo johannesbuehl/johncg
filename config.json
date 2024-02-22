@@ -4,7 +4,7 @@
 	},
 	"path": {
 		"background_image": "C:/path/to/image/directory",
-		"song": "D:/Coding_z1glr/liedtexte_git"
+		"song": "D:/path/to/song/directory"
 	},
 	"casparcg": {
 		"templates": {

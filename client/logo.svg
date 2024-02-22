@@ -9,10 +9,15 @@
        style="fill:rgb(224, 62, 62)"
        cx="256"
        cy="768"
-       r="256" />
+       r="192" />
     <circle
        style="fill:rgb(224, 62, 62)"
        cx="768"
        cy="256"
-       r="256" />
+       r="192" />
+    <circle
+       style="fill:rgb(224, 62, 62)"
+       cx="768"
+       cy="768"
+       r="192" />
 </svg>
