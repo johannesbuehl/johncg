@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"target": "ES2015",
+		"module": "ES2015",
+		"moduleResolution": "bundler",
+		"outDir": "casparcg-templates/JohnCG",
+		"removeComments": true
+	},
+	"include": [
+		"src\\templates"
+	]
+}

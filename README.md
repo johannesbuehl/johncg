@@ -24,3 +24,5 @@ Generate lyric-graphics and play them out through CasparCG.
 - rewrite client in typescript
 - create dummy-sequence-items for unsupported ones
 - disable buttons, when no sequence is loaded
+- standardize all interfaces to snake_case
+- implement all countdown modes

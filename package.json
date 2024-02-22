@@ -24,8 +24,15 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "lint": "eslint --ext .ts",
-    "precommit": "eslint . --ext .ts",
-    "build": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1"
+	"build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
+	
+	"build-server": "esbuild src/server/main.ts --tsconfig=tsconfig_server.json --bundle --platform=node --outfile=dist/build/main.js",
+
+	"build-client": "esbuild src/client/main.ts --tsconfig=tsconfig_client.json --bundle --outfile=client/main.js",
+	"watch-client": "esbuild src/client/main.ts --tsconfig=tsconfig_client.json --bundle --watch --outfile=client/main.js",
+
+	"build-templates": "esbuild src/templates/*.ts --target=chrome71 --tsconfig=tsconfig_templates.json --outdir=casparcg-templates/JohnCG/",
+	"watch-templates": "esbuild src/templates/*.ts --target=chrome71 --tsconfig=tsconfig_templates.json --watch --outdir=casparcg-templates/JohnCG/"
+
   }
 }

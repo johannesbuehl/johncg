@@ -2,7 +2,7 @@
  * Base interface for Received JGCP-messages
  */
 interface Base {
-	clientID?: string;
+	client_id?: string;
 }
 
 /**
@@ -30,10 +30,10 @@ export interface ItemSlideSelect extends Base {
 /**
  * The different navigation-types
  */
-const _item_navigate_type = ["item", "slide"] as const;
-export type NavigateType = (typeof _item_navigate_type)[number];
+const item_navigate_type = ["item", "slide"] as const;
+export type NavigateType = (typeof item_navigate_type)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isItemNavigateType = (x: any): x is NavigateType => _item_navigate_type.includes(x);
+export const is_item_navigate_type = (x: any): x is NavigateType => item_navigate_type.includes(x);
 
 export interface Navigate extends Base {
 	command: "navigate";

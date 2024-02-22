@@ -13,6 +13,25 @@
 		"semi": ["error", "always"],
 		"object-curly-spacing": ["error", "always"],
 		"quotes": ["error"],
-		"quote-props": ["error", "as-needed"]
+		"quote-props": ["error", "as-needed"],
+		"@typescript-eslint/naming-convention": [
+			"error",
+			{
+				"selector": "default",
+				"format": ["snake_case"]
+			},
+			{
+				"selector": "typeLike",
+				"format": ["PascalCase"],
+				"leadingUnderscore": "forbid",
+				"trailingUnderscore": "forbid"
+			},
+			{
+				"selector": "import",
+				"format": ["PascalCase", "snake_case", "camelCase"],
+				"leadingUnderscore": "forbid",
+				"trailingUnderscore": "forbid"
+			}
+		]
 	}
 }

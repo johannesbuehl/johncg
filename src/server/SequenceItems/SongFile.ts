@@ -30,7 +30,7 @@ const verse_types = [
 
 type SongElement = (typeof verse_types)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const isSongElement = (x: any): x is SongElement => {
+const is_song_element = (x: any): x is SongElement => {
 	if (typeof x !== "string") {
 		return false;
 	}
@@ -42,6 +42,7 @@ const isSongElement = (x: any): x is SongElement => {
 
 // metadata of the songfile
 interface SongFileMetadata {
+	/* eslint-disable @typescript-eslint/naming-convention */
 	Title: string[];
 	ChurchSongID?: string;
 	Songbook?: string;
@@ -51,13 +52,14 @@ interface SongFileMetadata {
 	Melody?: string;
 	Translation?: string;
 	Copyright?: string;
-	LangCount?: number;
+	LangCount: number;
+	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
 interface TitlePart {
 	type: "title";
 	title: string[];
-	ChurchSongID?: string;
+	church_song_id?: string;
 }
 
 interface LyricPart {
@@ -92,7 +94,10 @@ class SongFile {
 	private text: Record<string, string[][][]> = {};
 
 	metadata: SongFileMetadata = {
-		Title: []
+		/* eslint-disable @typescript-eslint/naming-convention */
+		Title: [],
+		LangCount: 1 // set it by default to 1. if there are more languages, they will be read from the header
+		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
 	constructor(path: string) {
@@ -115,7 +120,7 @@ class SongFile {
 
 		header_data.forEach((row) => {
 			const components = row.split("=");
-			const [key, value] = [components.shift().substring(1), components.join("=")];
+			const [key, value] = [components.shift()?.substring(1), components.join("=")];
 
 			// handle different data differently
 			switch (key) {
@@ -189,7 +194,7 @@ class SongFile {
 
 			// check if the first row describes the part
 			if (
-				isSongElement(first_line_items[0].toLowerCase()) && 
+				is_song_element(first_line_items[0].toLowerCase()) && 
 				first_line_items.length <= 2 &&
 				first_line_items.length > 0
 			) {
@@ -225,7 +230,7 @@ class SongFile {
 		};
 
 		if (this.metadata.ChurchSongID !== undefined) {
-			response.ChurchSongID = this.metadata.ChurchSongID;
+			response.church_song_id = this.metadata.ChurchSongID;
 		}
 
 		return response;
@@ -233,7 +238,7 @@ class SongFile {
 
 	// returns the different parts of the song
 	get_part(part: string): LyricPart {
-		if (!isSongElement(part) || !this.avaliable_parts.includes(part)) {
+		if (!is_song_element(part) || !this.avaliable_parts.includes(part)) {
 			throw new ReferenceError(`'${part}' is no valid song-part`);
 		}
 
@@ -254,7 +259,7 @@ class SongFile {
 	}
 
 	get_part_client(part: string): LyricPartClient {
-		if (!isSongElement(part) || !this.avaliable_parts.includes(part)) {
+		if (!is_song_element(part) || !this.avaliable_parts.includes(part)) {
 			throw new ReferenceError(`'${part}' is no valid song-part`);
 		}
 

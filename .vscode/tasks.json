@@ -3,23 +3,39 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "build",
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"script": "build-release",
+			"group": "build",
 			"problemMatcher": [],
-			"label": "npm: build",
-			"detail": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1"
+			"label": "build release"
 		},
 		{
 			"type": "typescript",
-			"tsconfig": "tsconfig.json",
+			"tsconfig": "tsconfig_server.json",
 			"problemMatcher": [
 				"$tsc"
 			],
 			"group": "build",
 			"label": "tsc: build - server"
+		},
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig_client.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "tsc: watch - tsconfig_client.json"
+		},
+		{
+			"type": "typescript",
+			"tsconfig": "tsconfig_templates.json",
+			"option": "watch",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"label": "tsc: watch - tsconfig_templates.json"
 		}
 	]
 }

@@ -15,6 +15,7 @@ interface MessageHandler {
 	pong?: (ws: WebSocket, data: Buffer) => void;
 	error?: (ws: WebSocket, err: Error) => void;
 	close?: (ws: WebSocket, reason: Buffer) => void;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	"unexpected-response"?: (ws: WebSocket, request: ClientRequest, response: IncomingMessage) => void;
 	upgrade?: (ws: WebSocket, request: IncomingMessage) => void;
 	connection?: (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => void;
@@ -58,7 +59,7 @@ class WebsocketServer {
 
 			// execute the on_connection function
 			if (this.message_handlers[ws.protocol].connection !== undefined) {
-				this.message_handlers[ws.protocol].connection(ws, socket, request);
+				this.message_handlers[ws.protocol].connection!(ws, socket, request);
 			}
 		} else {
 			// reject connection

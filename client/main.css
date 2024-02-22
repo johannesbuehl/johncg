@@ -290,3 +290,79 @@ div.button, div.button > * {
 	top: 0;
 	left: 0;
 }
+
+#error_container {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+
+	width: 32rem;
+}
+
+.message_box {
+	background-color: white;
+	color: black;
+
+	display: flex;
+	align-items: center;
+
+	border-radius: 0.25rem;
+	
+	max-height: 0;
+
+	cursor: pointer;
+}
+
+.message_box.visible {
+	max-height: 100vh;
+	transition: max-height 1s ease-in;
+
+	margin-bottom: 0.25rem;
+
+	opacity: 1;
+}
+
+.message_box.fade_out {
+	opacity: 0;
+	
+	transition: opacity 1s ease-out;
+}
+
+.message_box.visible:first-child {
+	margin-block-start: 0;
+}
+
+.message_box > .symbol {
+	margin: 0.25rem;
+
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	aspect-ratio: 1;
+	height: 1em;
+}
+
+.message_box > .symbol > i.error {
+	color: red;
+}
+
+.message_box > .symbol > i.log {
+	color: black;
+}
+
+.message_box > .symbol > i.debug {
+	color: lightblue;
+}
+
+.message_box > div {
+	display: inline-block;
+}
+
+.message_box > .text {
+	flex: 1;
+}
+
+.message_box > .time {
+	margin-left: auto;
+	margin-right: 0.5rem;
+}

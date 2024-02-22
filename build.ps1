@@ -8,7 +8,9 @@ New-Item -Type Directory .\Dist\build
 New-Item -Type Directory .\Dist\$build_name
 
 # bundle the files
-yarn esbuild src/server/main.ts --bundle --platform=node --outfile=dist/build/main.js
+yarn run build-server
+yarn run build-client
+yarn run build-templates
 
 # create sea-prep.blob
 node --experimental-sea-config .\sea-config.json

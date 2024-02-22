@@ -1,10 +1,10 @@
 {
 	"behaviour": {
-		"showOnLoad": true
+		"show_on_load": true
 	},
 	"path": {
-		"backgroundImage": "C:/path/to/image/directory",
-		"song": "D:/path/to/song/directory"
+		"background_image": "C:/path/to/image/directory",
+		"song": "D:/Coding_z1glr/liedtexte_git"
 	},
 	"casparcg": {
 		"templates": {
@@ -23,7 +23,7 @@
 			}
 		]
 	},
-	"clientServer": {
+	"client_server": {
 		"http": {
 			"port": 8888
 		},
@@ -31,11 +31,11 @@
 			"port": 8765
 		}
 	},
-	"oscServer": {
+	"osc_server": {
 		"port": 8766
 	},
 	"companion": {
 		"address": "localhost",
-		"oscPort": 12321
+		"osc_port": 12321
 	}
 }

@@ -1,67 +1,79 @@
+import MessageLog from "./message_box.js";
+
+import * as JGCPSend from "../server/JGCPSendMessages";
+import { ItemPartClient } from "../server/SequenceItems/SongFile";
+import { ClientItemSlides } from "../server/SequenceItems/SequenceItem";
+import { ClientSequenceItems } from "../server/Sequence";
+import { CountdownProps } from "../server/SequenceItems/Countdown";
+
 const config = {
 	websocket: {
 		port: 8765
 	}
 };
 
+const msg_log = new MessageLog(document.querySelector("#error_container")!);
+
 function open_sequence(e) {
-	let file = e.target.files[0];
-	let reader = new FileReader();
+	const file = e.target.files[0];
+	const reader = new FileReader();
 
 	reader.onload = function(e) {
-		let rawData = e.target.result;
+		const raw_data = e.target?.result;
 
 		ws.send(JSON.stringify({
-			command: "open-sequence",
-			sequence: rawData
+			command: "open_sequence",
+			sequence: raw_data
 		}));
-	}
+	};
 
 	reader.readAsText(file);
 }
-document.querySelector("#input_open_sequence").addEventListener("change", open_sequence)
+document.querySelector("#input_open_sequence")?.addEventListener("change", open_sequence);
 
 function button_navigate(type, steps) {
 	ws.send(JSON.stringify({
 		command: "navigate",
 		type,
 		steps,
-		clientID
+		client_id: client_id
 	}));
 }
-document.querySelector("#navigate_item_prev").addEventListener("click", () => { button_navigate("item", -1) });
-document.querySelector("#navigate_item_next").addEventListener("click", () => { button_navigate("item", 1) });
-document.querySelector("#navigate_slide_prev").addEventListener("click", () => { button_navigate("slide", -1) });
-document.querySelector("#navigate_slide_next").addEventListener("click", () => { button_navigate("slide", 1) });
+document.querySelector("#navigate_item_prev")?.addEventListener("click", () => { button_navigate("item", -1); });
+document.querySelector("#navigate_item_next")?.addEventListener("click", () => { button_navigate("item", 1); });
+document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { button_navigate("slide", -1); });
+document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { button_navigate("slide", 1); });
 
 function button_visibility(visibility) {
 	ws.send(JSON.stringify({
-		command: "set-visibility",
+		command: "set_visibility",
 		visibility,
-		clientID
+		client_id: client_id
 	}));
 }
-document.querySelector("#set_visibility_hide").addEventListener("click", () => { button_visibility(false) });
-document.querySelector("#set_visibility_show").addEventListener("click", () => { button_visibility(true) });
+document.querySelector("#set_visibility_hide")?.addEventListener("click", () => { button_visibility(false); });
+document.querySelector("#set_visibility_show")?.addEventListener("click", () => { button_visibility(true); });
 
-function display_items(data) {
+document.querySelector("#show_error_log")?.addEventListener("click", () => msg_log.error("foobar"));
+
+function display_items(data: ClientSequenceItems) {
 	const div_sequence_items = document.querySelector("#sequence_items");
 
 	// initialize
 	init();
 
-	for (let item of data.sequence_items) {
+	for (const item of data.sequence_items) {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
-		div_sequence_item_container.dataset.item_number = item.Item;
+		div_sequence_item_container.dataset.item_number = item.item.toString();
 
-		// if the item is selectable, give it the class and add the onclic-event
+		// if the item is selectable, give it the class and add the onclick-event
 		if (item.selectable) {
 			div_sequence_item_container.classList.add("selectable");
 			
-			div_sequence_item_container.onclick = function() {
+			div_sequence_item_container.addEventListener("click", function() {
 				request_item_slides(Number(this.dataset.item_number));
-			};
+			});
 		}
 
 		const div_sequence_item_color_indicator = document.createElement("div");
@@ -74,18 +86,20 @@ function display_items(data) {
 		div_sequence_item.classList.add("sequence_item");
 		
 		// if it's a  Countdown-Object, insert the time
-		if (item.Type === "Countdown") {
-			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
+		if (item.type === "Countdown") {
+			div_sequence_item.innerText = item.Caption.replace("%s", (item as CountdownProps).Time);
 		} else {
 			div_sequence_item.innerText = item.Caption;
 		}
 
 		div_sequence_item_container.append(div_sequence_item);
-		div_sequence_items.append(div_sequence_item_container);
+		div_sequence_items?.append(div_sequence_item_container);
 	}
 
 	// display the visibility state
-	display_visibility_state(data.visibility);
+	display_visibility_state(data.metadata.visibility);
+
+	msg_log.log("Sequence is loaded");
 }
 
 function request_item_slides(item) {
@@ -93,59 +107,64 @@ function request_item_slides(item) {
 		selected_item_number = item;
 		
 		// clear the current slides
-		document.querySelector("#slides_view_container").innerHTML = "";
+		const slides_view_container = document.querySelector("#slides_view_container");
+		if (slides_view_container !== null) {
+			slides_view_container.innerHTML = "";
+		}
 
 		// clear the selected item
 		document.querySelector(".sequence_item_container.selected")?.classList.remove("selected");
 	
 		ws.send(JSON.stringify({
-			command: "request-item-slides",
+			command: "request_item_slides",
 			item: item,
-			clientID
+			client_id: client_id
 		}));
 	}
 }
 
-function display_item_slides(data) {
+function display_item_slides(data: JGCPSend.ItemSlides) {
 	const div_slides_view_container = document.querySelector("#slides_view_container");
 
 	// select the sequence-item
 	select_item(data.item);
 
 	// create the individual arrays for parallel processing
-	let part_arrays = [];
+	let part_arrays: HTMLDivElement[] = [];
 
-	switch (data.Type) {
+	switch (data.type) {
 		case "Song":
-			part_arrays = create_song_slides(data);
+			part_arrays = create_song_slides(data as JGCPSend.SongSlides);
 			break;
 		case "Countdown":
-			part_arrays = create_countdown_slides(data);
+			part_arrays = create_countdown_slides(data as JGCPSend.CountdownSlides);
 			break;
 		default:
-			console.error(`'${data.Type}' is not supported`)
+			console.error(`'${data.type}' is not supported`);
 	}
 
 	part_arrays.forEach((slide_part) => {
-		div_slides_view_container.append(slide_part);
+		div_slides_view_container?.append(slide_part);
 	});
 
-	set_active_slide(data.clientID === clientID);
+	set_active_slide(data.client_id === client_id);
+
+	msg_log.log("Item is loaded");
 }
 
-function create_song_slides(data) {
-	let slide_counter = 0;
+function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
+	let slide_counter: number = 0;
 
 	// create the individual arrays for parallel processing
-	let part_arrays = [];
+	const part_arrays_prototype: [number, ItemPartClient][] = [];
 
 	data.slides.forEach((part) => {
-		part_arrays.push([slide_counter, part]);
+		part_arrays_prototype.push([slide_counter, part]);
 
 		slide_counter += part.slides;
 	});
 
-	part_arrays = part_arrays.map(([slides_start, part]) => {
+	const part_arrays = part_arrays_prototype.map(([slides_start, part]) => {
 		// create the container for the part
 		const div_slide_part = document.createElement("div");
 		div_slide_part.classList.add("slide_part");
@@ -169,9 +188,9 @@ function create_song_slides(data) {
 			} break;
 		}
 
-		let object_iter_array = [...Array(part.slides).keys()];
+		const object_iter_array_proto = [...Array(part.slides).keys()];
 
-		object_iter_array = object_iter_array.map((ii) => { 
+		const object_iter_array = object_iter_array_proto.map((ii) => { 
 			return {
 				index: ii,
 				slide: create_slide_object(data, slides_start + ii)
@@ -188,7 +207,7 @@ function create_song_slides(data) {
 	return part_arrays;
 }
 
-function create_countdown_slides(data) {
+function create_countdown_slides(data: JGCPSend.CountdownSlides) {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -212,18 +231,18 @@ function create_countdown_slides(data) {
 	return [div_slide_part];
 }
 
-function create_slide_object(data, number) {
+function create_slide_object(data: ClientItemSlides, number: number) {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
 	
 	const slide_object = document.createElement("object");
 
-	switch (data.Type) {
+	switch (data.type) {
 		case "Song":
 			slide_object.data = "Templates/Song.html";
 			break;
 		case "Countdown":
-			slide_object.data = "Templates/Countdown.html"
+			slide_object.data = "Templates/Countdown.html";
 			break;
 	}
 
@@ -231,32 +250,32 @@ function create_slide_object(data, number) {
 	
 	div_slide_container.append(slide_object);
 	
-	slide_object.dataset.slide_number = number;
+	slide_object.dataset.slide_number = number.toString();
 	
 	slide_object.addEventListener("load", () => {
-		slide_object.contentWindow.update(JSON.stringify(data.slides_template));
+		slide_object.contentWindow?.update(JSON.stringify(data.slides_template));
 
-		switch (data.Type) {
+		switch (data.type) {
 			case "Song":
-				slide_object.contentWindow.jump(number);
+				slide_object.contentWindow?.jump(number.toString());
 				break;
 		}
 
-		slide_object.contentWindow.play();
+		slide_object.contentWindow?.play();
 	
 		// register click event
-		slide_object.contentWindow.addEventListener("click", () => {
+		slide_object.contentWindow?.addEventListener("click", () => {
 			request_item_slide_select(
-				Number(document.querySelector(".sequence_item_container.selected").dataset.item_number),
+				Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
 				number
 			);
-		})
+		});
 	});
 	
 	return div_slide_container;
 }
 
-function select_item(item) {
+function select_item(item: number) {
 	// store the selected item
 	selected_item_number = item;
 
@@ -268,19 +287,19 @@ function select_item(item) {
 
 	// add the selected class to the current item
 	const selected_sequence_item = document.querySelector(`[data-item_number='${selected_item_number}']`);
-	selected_sequence_item.classList.add("selected");
+	selected_sequence_item?.classList.add("selected");
 }
 
-function request_item_slide_select(item, slide) {
+function request_item_slide_select(item: number, slide: number) {
 	ws.send(JSON.stringify({
-		command: "select-item-slide",
+		command: "select_item_slide",
 		item: item,
 		slide: slide,
-		clientID
+		client_id: client_id
 	}));
 }
 
-function set_active_slide(scroll = false) {
+function set_active_slide(scroll: boolean = false) {
 	// deselect the previous active slide
 	const selected_slide = document.querySelector(".slide.active");
 	if (selected_slide !== null) {
@@ -291,10 +310,10 @@ function set_active_slide(scroll = false) {
 		selected_header.classList.remove("active");
 	}
 
-	const selected_item = document.querySelector(".sequence_item_container.selected");
+	const selected_item = document.querySelector<HTMLDivElement>("div.sequence_item_container.selected");
 	if (selected_item !== null) {
 		// if the currently displayed and selected sequence item is the active one, select the active slide
-		if (selected_item.dataset.item_number == active_item_slide.item) {
+		if (Number(selected_item.dataset.item_number) === active_item_slide.item) {
 			// remove the selected class from the previous item
 			const prev_selected_item_slide = document.querySelector(".slide.active");
 			if (prev_selected_item_slide !== null) {
@@ -303,31 +322,31 @@ function set_active_slide(scroll = false) {
 		
 			// add the selected class to the current slide
 			const selected_item_slide = document.querySelector(`[data-slide_number='${active_item_slide.slide}']`);
-			selected_item_slide.classList.add("active");
+			selected_item_slide?.classList.add("active");
 
-			selected_item_slide.parentElement.parentElement.parentElement.querySelector(".header").classList.add("active");
+			selected_item_slide?.parentElement?.parentElement?.parentElement?.querySelector(".header")?.classList.add("active");
 			
 			// if we requested this, scroll there
 			if (scroll) {
-				selected_item_slide.parentElement.scrollIntoView({ behavior: "smooth", block: "nearest"});
+				selected_item_slide?.parentElement?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 			}
 		}
 	}
 }
 
-function set_active_item_slide(data, message_clientID) {
+function set_active_item_slide(data, message_client_id) {
 	// store the data
 	active_item_slide = data;
 
 	// decide wether to jump there
-	const jump = message_clientID === clientID || message_clientID === undefined;
+	const jump = message_client_id === client_id || message_client_id === undefined;
 
 	// remove the "active" class from the previous sequence-item and add it to the new one
 	const prev_selected_item = document.querySelector(".sequence_item_container.active");
 	if (prev_selected_item !== null) {
 		prev_selected_item.classList.remove("active");
 	}
-	document.querySelector(`.sequence_item_container[data-item_number='${active_item_slide.item}']`).classList.add("active");
+	document.querySelector<HTMLDivElement>(`div.sequence_item_container[data-item_number='${active_item_slide.item}']`)?.classList.add("active");
 
 	if (jump && active_item_slide.item !== selected_item_number) {
 		request_item_slides(active_item_slide.item);
@@ -341,17 +360,17 @@ function display_visibility_state(state) {
 	const button_show = document.querySelector("#set_visibility_show");
 
 	if (state) {
-		button_hide.classList.remove("active");
-		button_show.classList.add("active");
+		button_hide?.classList.remove("active");
+		button_show?.classList.add("active");
 	} else {
-		button_hide.classList.add("active");
-		button_show.classList.remove("active");
+		button_hide?.classList.add("active");
+		button_show?.classList.remove("active");
 	}
 }
 
 function display_state_change(data) {
 	const key_map = {
-		activeItemSlide: set_active_item_slide,
+		active_item_slide: set_active_item_slide,
 		visibility: display_visibility_state
 	};
 
@@ -367,23 +386,32 @@ function random_4_hex() {
 }
 
 function blank_screen(state) {
-	document.querySelector("#blank").style.display = state ? "unset" : "none";
+	const blank_div = document.querySelector<HTMLDivElement>("div#blank");
+	if (blank_div !== null) {
+		blank_div.style.display = state ? "unset" : "none";
+	}
 }
 
 function init() {
 	selected_item_number = null;
 
-	// remove all sequence-items
-	document.querySelector("#sequence_items").innerHTML = "";
+	// remove all sequence_items
+	const sequence_items = document.querySelector("#sequence_items");
+	if (sequence_items !== null) {
+		sequence_items.innerHTML = "";
+	}
 
 	// remove all item-slides
-	document.querySelector("#slides_view_container").innerHTML = "";
+	const slides_view_container = document.querySelector("#slides_view_container");
+	if (slides_view_container !== null) {
+		slides_view_container.innerHTML = "";
+	}
 
 	// remove the visibility-selection
 	document.querySelector("[id^=set_visibility_].active")?.classList.remove("active");
 }
 
-const clientID = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
 let selected_item_number;
 
 function ws_connect() {
@@ -400,19 +428,23 @@ function ws_connect() {
 	
 	ws.addEventListener("message", (event) => {
 		const data = JSON.parse(event.data);
+
+
+		console.dir(data);
+
 	
 		const command_parser_map = {
-			"sequence-items": display_items,
-			"item-slides": display_item_slides,
+			sequence_items: display_items,
+			item_slides: display_item_slides,
 			state: display_state_change,
 			clear: init,
 			response: (response) => {
 				switch (Number(response.code.toString()[0])) {
 					case 4:
-						console.error(response);
+						msg_log.error(response.message);
 						break;
 					default:
-						console.debug(response);
+						msg_log.debug(response.message);
 				}
 			}
 		};
@@ -425,15 +457,13 @@ function ws_connect() {
 	});
 	
 	ws.addEventListener("error", (event) => {
-		console.error(`Server connection encountered error '${event.message}'. Closing socket`);
+		msg_log.error(`Server connection encountered error '${event.message}'. Closing socket`);
 	
 		ws.close();
 	});
 	
-	
-	
 	ws.addEventListener("close", async () => {
-		console.error("No connection to server. Retrying in 1s");
+		console.log("No connection to server. Retrying in 1s");
 
 		// blank the screen because there is no connection
 		blank_screen(true);
@@ -442,7 +472,7 @@ function ws_connect() {
 			ws_connect();
 			
 		}, 1000);
-	})
+	});
 }
 
 let ws;

@@ -1,3 +1,5 @@
 node_modules
 out
 dist
+client/*.js
+casparcg-templates/JohnCG/*.js

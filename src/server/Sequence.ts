@@ -2,7 +2,7 @@ import path from "path";
 import { CasparCG } from "casparcg-connection";
 
 import { SongElement } from "./SequenceItems/SongFile";
-import { ClientItemSlides, ItemProps, SequenceItem } from "./SequenceItems/SequenceItem";
+import { ClientItemSlides, ItemProps, ItemPropsBase, SequenceItem } from "./SequenceItems/SequenceItem";
 import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
@@ -30,7 +30,7 @@ class Sequence {
 
 	private active_item_number: number = 0;
 
-	private casparcg_visibility: boolean = Config.behaviour.showOnLoad;
+	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
 
 	readonly casparcg_connections: CasparCG[] = [];
 
@@ -41,6 +41,7 @@ class Sequence {
 		Config.casparcg.connections.forEach((connection_setting, index) => {
 			const casparcg_connection = new CasparCG({
 				...connection_setting,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
 				autoConnect: true
 			});
 
@@ -48,9 +49,6 @@ class Sequence {
 			casparcg_connection.addListener("connect", () => {
 				// load the active-item
 				this.casparcg_load_item(this.active_item_number, index, false);
-				
-				// remove the connect-listener again
-				casparcg_connection.removeAllListeners("connect");
 			});
 			
 			// add the connection to the stored connections
@@ -120,16 +118,18 @@ class Sequence {
 			re_scan_sequence_item.lastIndex = 0;
 
 			// store the regex results
-			let re_results_item: RegExpExecArray;
+			let re_results_item: RegExpExecArray | null;
 
 			// store the data of the object
-			let item_data: ItemProps = {
-				Type: null,
+			let item_data: ItemPropsBase = {
+				/* eslint-disable @typescript-eslint/naming-convention */
+				type: "",
 				Caption: "",
 				Color: "",
-				SlideCount: 0,
-				Item: this.sequence_items.length,
+				slide_count: 0,
+				item: this.sequence_items.length,
 				selectable: true
+				/* eslint-enable @typescript-eslint/naming-convention */
 			};
 
 			// exec the item-regex until there are no more results
@@ -140,17 +140,20 @@ class Sequence {
 				if (re_results_item !== null) {
 					const results = re_results_item.groups;
 
-					// remove all undefined values
-					Object.keys(results).forEach(key => results[key] === undefined && delete results[key]);
-
-					// parse all remaining values
-					item_data = { ...item_data, ...parse_item_value_string(...Object.entries(results)[0]) };
+					// only proceeds, when there are results
+					if (results !== undefined) {	
+						// remove all undefined values
+						Object.keys(results).forEach(key => results[key] === undefined && delete results[key]);
+						
+						// parse all remaining values
+						item_data = { ...item_data, ...parse_item_value_string(...Object.entries(results)[0]) };
+					}
 				}
 
 			} while (re_results_item !== null);
 
 			// store the sequence-item
-			switch (item_data.Type) {
+			switch (item_data.type) {
 				case "Song":
 					this.sequence_items.push(new Song(item_data as SongProps));
 					break;
@@ -195,7 +198,7 @@ class Sequence {
 		return this.active_item_slide;
 	}
 
-	set_active_slide(slide): number {
+	set_active_slide(slide: number): number {
 		const response = this.active_sequence_item.set_active_slide(slide);
 		
 		this.casparcg_select_slide(this.active_slide);
@@ -217,9 +220,9 @@ class Sequence {
 			throw new RangeError(`steps must be -1 or 1, but is ${steps}`);
 		}
 
-		let new_active_item_number = this.active_item_number + steps;
+		let new_active_item_number = this.active_item_number;
 		// steps until there is a selectable item
-		while (!this.sequence_items[new_active_item_number].props.selectable) {
+		do {
 			new_active_item_number += steps;
 
 			// if the new_active_item_number is back at the start, break, since there are no selectable items
@@ -230,7 +233,7 @@ class Sequence {
 
 			// sanitize the item-number
 			new_active_item_number = this.sanitize_item_number(new_active_item_number);
-		}
+		} while (!this.sequence_items[new_active_item_number].props.selectable);
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
@@ -321,11 +324,12 @@ class Sequence {
 		this.casparcg_connections.forEach(async (casparcg_connection, loop_index) => {
 			// load the item into casparcg
 			casparcg_connection.cgAdd({
+				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: Config.casparcg.connections[loop_index].channel,
 				layer: Config.casparcg.connections[loop_index].layers[1],
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
-				template: Config.casparcg.templates[this.active_sequence_item.props.Type],
+				template: Config.casparcg.templates[this.active_sequence_item.props.type],
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
 				data: JSON.stringify(JSON.stringify(await this.active_sequence_item.create_render_object(), (_key, val) => {
 					if (typeof val === "string") {
@@ -334,6 +338,7 @@ class Sequence {
 						return val;
 					}
 				}))
+				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		});
 	}
@@ -342,10 +347,12 @@ class Sequence {
 		this.casparcg_connections.forEach((casparcg_connection, loop_index) => {
 			// jump to the slide-number in casparcg
 			casparcg_connection.cgInvoke({
+				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: Config.casparcg.connections[loop_index].channel,
 				layer: Config.casparcg.connections[loop_index].layers[1],
 				cgLayer: 0,
 				method: `jump(${slide})`
+				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		});
 	}
@@ -359,9 +366,11 @@ class Sequence {
 			});
 
 			const options = {
+				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: Config.casparcg.connections[loop_index].channel,
 				layer: Config.casparcg.connections[loop_index].layers[1],
 				cgLayer: 0
+				/* eslint-enable @typescript-eslint/naming-convention */
 			};
 	
 			this.casparcg_visibility = visibility;
@@ -379,7 +388,7 @@ class Sequence {
 	}
 
 	get active_sequence_item(): SequenceItem {
-		return this.sequence_items[this.active_item_number];
+		return this.sequence_items[this.active_item];
 	}
 
 	get active_slide(): number {
@@ -400,7 +409,7 @@ class Sequence {
 	get state(): JGCPSend.State {
 		return {
 			command: "state",
-			activeItemSlide: this.active_item_slide,
+			active_item_slide: this.active_item_slide,
 			visibility: this.visibility
 		};
 	}
@@ -409,9 +418,9 @@ class Sequence {
 // parse an individual sequence-item-value
 function parse_item_value_string(key: string, value: string): { [P in keyof ItemProps]?: ItemProps[P]; } {
 	// remove line-breaks
-	value = value.replaceAll(/'\s\+\s+'/gm, "");
+	value = value.replace(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
-	value = value.replaceAll(/'#(\d+)'/gm, (_match, group) => String.fromCharCode(group));
+	value = value.replace(/'#(\d+)'/gm, (match, group) => String.fromCharCode(group));
 	
 	const return_props: { [P in keyof ItemProps]?: ItemProps[P]; } = {};
 	
@@ -419,7 +428,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 	switch (key) {
 		case "Data":
 			// remove whitespace and linebreaks
-			return_props[key] = value.replaceAll(/\s+/gm, "");
+			return_props[key] = value.replace(/\s+/gm, "");
 			break;
 		case "VerseOrder":
 			// split csv-line into an array
@@ -428,7 +437,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 		case "FileName":
 			// assume the type from the file-extension
 			if (path.extname(value) === ".sng") {
-				return_props.Type = "Song";
+				return_props.type = "Song";
 			}
 			return_props[key] = value;
 			break;
@@ -453,7 +462,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			break;
 		case "StreamClass":
 			if (value === "TPresentationObjectTimer") {
-				return_props.Type = "Countdown";
+				return_props.type = "Countdown";
 			} else {
 				return_props[key] = value;
 			}

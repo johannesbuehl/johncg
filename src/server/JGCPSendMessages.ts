@@ -1,11 +1,12 @@
 import * as SequenceClass from "../server/Sequence";
-import { ClientItemSlidesBase } from "./SequenceItems/SequenceItem";
+import { ClientCountdownSlides } from "../server/SequenceItems/Countdown";
+import { ClientSongSlides } from "../server/SequenceItems/Song";
 
 /**
  * Base interface for sent JGCP-messages
  */
 interface Base {
-	clientID?: string;
+	client_id?: string;
 }
 
 /**
@@ -18,10 +19,10 @@ export interface Response {
 }
 
 /**
- * JGCP-messages with the sequence-items
+ * JGCP-messages with the sequence_items
  */
 export interface Sequence extends Base, SequenceClass.ClientSequenceItems {
-	command: "sequence-items";
+	command: "sequence_items";
 }
 
 /**
@@ -29,14 +30,29 @@ export interface Sequence extends Base, SequenceClass.ClientSequenceItems {
  */
 export interface State extends Base {
 	command: "state";
-	activeItemSlide?: SequenceClass.ActiveItemSlide,
+	active_item_slide?: SequenceClass.ActiveItemSlide,
 	visibility?: boolean;
 }
 
-export interface ItemSlides extends Base, ClientItemSlidesBase {
-	clientID: string;
-	command: "item-slides";
+// export interface ItemSlides extends Base, ClientItemSlidesBase {
+// 	clientID: string;
+// 	command: "item-slides";
+// 	slides: string[][];
+// }
+
+interface ItemSlidesBase extends Base{
+	client_id: string;
+	command: "item_slides";
 }
+
+export type SongSlides = ItemSlidesBase & ClientSongSlides;
+
+export type CountdownSlides = ItemSlidesBase & ClientCountdownSlides;
+
+// temporary until full feature set
+export type NotImplementedSlides = ItemSlidesBase & { type: string; item: number; };
+
+export type ItemSlides = SongSlides | CountdownSlides | NotImplementedSlides;
 
 export interface Clear extends Base {
 	command: "clear";
