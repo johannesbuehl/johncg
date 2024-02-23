@@ -348,28 +348,26 @@ class Sequence {
 	private casparcg_load_item(casparcg_connection?: CasparCGConnection): void {
 		const connections = casparcg_connection ? [casparcg_connection] : this.casparcg_connections;
 
-		// if no connection was give, flip the layers
-		if (casparcg_connection === undefined) {
-			// clear the lower layer
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			connections.forEach(async (casparcg_connection) => {
-				await casparcg_connection.connection.cgClear({
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers[0]
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		connections.forEach(async (connection) => {
+			// if no connection was give, flip the layers
+			if (casparcg_connection === undefined) {
+				// clear the lower layer
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
+				await connection.connection.cgClear({
+					channel: connection.settings.channel,
+					layer: connection.settings.layers[0]
 				});
-
-				void casparcg_connection.connection.swap({
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers[0],
-					channel2: casparcg_connection.settings.channel,
-					layer2: casparcg_connection.settings.layers[1],
+	
+				await connection.connection.swap({
+					channel: connection.settings.channel,
+					layer: connection.settings.layers[0],
+					channel2: connection.settings.channel,
+					layer2: connection.settings.layers[1],
 					transforms: true
 				});
-			});
-		}
-
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		connections.forEach(async (casparcg_connection) => {
+			}
+		
 			// generate the render-object
 			const render_object = await this.active_sequence_item.create_render_object();
 
@@ -377,10 +375,10 @@ class Sequence {
 			switch (render_object?.caspar_type) {
 				case "template": {
 
-					void casparcg_connection.connection.cgAdd({
+					void connection.connection.cgAdd({
 						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers[1],
+						channel: connection.settings.channel,
+						layer: connection.settings.layers[1],
 						cgLayer: 0,
 						playOnLoad: this.casparcg_visibility,
 						template: Config.casparcg.templates[this.active_sequence_item.props.type] as string,
@@ -402,7 +400,7 @@ class Sequence {
 					let media_result: ClipInfo | undefined;
 
 					// check all the casparcg-files, wether they contain a media-file that matches the path
-					for (const m of casparcg_connection.media) {
+					for (const m of connection.media) {
 						const media_file = m.clip.toUpperCase().replace(/\\/, "/");
 	
 						if (req_name.endsWith(media_file)) {
@@ -413,10 +411,10 @@ class Sequence {
 
 					// if a matching media-file was found, use it
 					if (media_result !== undefined) {
-						void casparcg_connection.connection.play({
+						void connection.connection.play({
 							/* eslint-disable @typescript-eslint/naming-convention */
-							channel:  casparcg_connection.settings.channel,
-							layer:  casparcg_connection.settings.layers[1],
+							channel:  connection.settings.channel,
+							layer:  connection.settings.layers[1],
 							clip: media_result.clip,
 							transition: {
 								duration: 12.5, // 25 frames = 1s@25fps
@@ -425,12 +423,12 @@ class Sequence {
 							/* eslint-enable @typescript-eslint/naming-convention */
 						});
 					} else {
-						void casparcg_connection.connection.executeCommand({
+						void connection.connection.executeCommand({
 							/* eslint-disable @typescript-eslint/naming-convention */
 							command: Commands.PlayHtml,
 							params: {
-								channel:  casparcg_connection.settings.channel,
-								layer:  casparcg_connection.settings.layers[1],
+								channel:  connection.settings.channel,
+								layer:  connection.settings.layers[1],
 								url: JSON.stringify(render_object.background_image),
 								transition: {
 									duration: 12.5, // 25 frames = 1s@25fps
