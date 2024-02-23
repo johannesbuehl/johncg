@@ -14,16 +14,17 @@ Generate lyric-graphics and play them out through CasparCG.
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
 - check client -> server slide_number out of range
 - client: check response-texts, if they are still correct
-- create message log / show error messages
-- write installation instruction
+- write installation instruction (including Bahnschrift-Font installation)
 - client communication with osc over websocket?
 - add support for NodeCG
-- look into document fragments
 - add CLI output to server
 - CasparCG: split text and image in two layers: enables text without background
-- rewrite client in typescript
 - create dummy-sequence-items for unsupported ones
 - disable buttons, when no sequence is loaded
-- standardize all interfaces to snake_case
 - implement all countdown modes
 - countdown: save in server wether it is finished
+- add option to change template-directory
+- make sequence-comments another design in client
+- client-messages: create message-log, group same
+- repo-file-managment (move tsconfig files in respective directories?)
+- build-script in node / integrate with license-generator

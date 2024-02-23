@@ -30,8 +30,8 @@ node -e "require('fs').copyFileSync(process.execPath, 'dist/build/$node_exec_nam
 
 # copy the files in the output
 Copy-Item -Path .\config.json -Destination .\dist\$build_name -Exclude .eslintrc
-Copy-Item -Path .\casparcg-templates -Destination .\dist\$build_name -Exclude .eslintrc -Recurse
-Copy-Item -Path .\client -Destination .\dist\$build_name -Exclude .eslintrc -Recurse
+Copy-Item -Path .\casparcg-templates -Destination .\dist\$build_name -Exclude .eslintrc,*.map -Recurse
+Copy-Item -Path .\client -Destination .\dist\$build_name -Exclude .eslintrc,*.map,bahnschrift.ttf -Recurse
 Copy-Item -Path .\dist\build\$node_exec_name .\dist\$build_name -Recurse
 
 Copy-Item -Path .\node_modules\@img -Destination .\dist\$build_name\node_modules\@img\ -Recurse
@@ -39,6 +39,14 @@ Copy-Item -Path .\dist\build\main.js -Destination .\dist\$build_name\main.js
 
 # create a batch file, that starts node with the main.js
 New-Item -Path .\dist\$build_name\$build_name.bat -Value "node.exe main.js`npause"
+
+# create and copy the licenses
+npx esbuild license-generator.ts --platform=node --bundle --minify --outfile=.\dist\build\license-generator.js
+npx license-reporter
+node .\dist\build\license-generator.js
+
+Copy-Item -Path .\dist\build\licenses -Destination .\dist\$build_name\ -Recurse
+# Copy-Item -Path .\LICENSE -Destination .\dist\$build_name\LICENSE
 
 # pack the files in a .tar.gz-file
 tar -cvzf .\dist\$build_name.tar.gz --directory=dist $build_name

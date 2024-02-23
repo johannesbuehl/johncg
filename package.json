@@ -6,6 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "casparcg-connection": "^6.2.1",
+    "fast-xml-parser": "^4.3.4",
     "iconv-lite": "^0.6.3",
     "mime-types": "^2.1.35",
     "osc": "^2.4.4",
@@ -17,22 +18,18 @@
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "@weichwarenprojekt/license-reporter": "^1.0.0",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
-    "husky": "^9.0.10",
     "postject": "^1.0.0-alpha.6",
     "typescript": "^5.3.3"
   },
   "scripts": {
-	"build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
-	
-	"build-server": "esbuild src/server/main.ts --tsconfig=tsconfig_server.json --bundle --platform=node --outfile=dist/build/main.js",
-
-	"build-client": "esbuild src/client/main.ts --tsconfig=tsconfig_client.json --bundle --outfile=client/main.js",
-	"watch-client": "esbuild src/client/main.ts --tsconfig=tsconfig_client.json --bundle --watch --outfile=client/main.js",
-
-	"build-templates": "esbuild src/templates/*.ts --target=chrome71 --tsconfig=tsconfig_templates.json --outdir=casparcg-templates/JohnCG/",
-	"watch-templates": "esbuild src/templates/*.ts --target=chrome71 --tsconfig=tsconfig_templates.json --watch --outdir=casparcg-templates/JohnCG/"
-
+    "build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
+    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=tsconfig_server.json --platform=node --minify --bundle",
+    "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=tsconfig_client.json --bundle --minify",
+    "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=tsconfig_client.json --bundle --sourcemap --watch",
+    "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=tsconfig_templates.json --target=chrome71 --minify",
+    "watch-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=tsconfig_templates.json --target=chrome71 --sourcemap --watch"
   }
 }

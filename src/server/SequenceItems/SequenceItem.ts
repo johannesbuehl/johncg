@@ -1,14 +1,13 @@
 import { promises as fs } from "fs";
-import path from "path";
 import mime from "mime-types";
 import sharp from "sharp";
 
-import Config from "../config";
 import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
 import Countdown, { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
 import Comment, { ClientCommentSlides, CommentProps, CommentRenderObject } from "./Comment";
+import Image, { ClientImageSlides, ImageProps, ImageRenderObject } from "./Image";
 
-export type SequenceItem = Song | Countdown | Comment;
+export type SequenceItem = Song | Countdown | Comment | Image;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -29,10 +28,13 @@ export interface ItemPropsBase {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export type ItemProps = SongProps | CountdownProps | CommentProps;
+export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps;
+
+type CasparGeneratorType = "media" | "template";
 
 // interface for a renderer-object
 export interface ItemRenderObjectBase {
+	caspar_type: CasparGeneratorType;
 	slides: Array<unknown>;
 	slide: number;
 	background_image?: string;
@@ -40,7 +42,7 @@ export interface ItemRenderObjectBase {
 	mute_transition?: boolean;
 }
 
-export type ItemRenderObject = SongRenderObject | CountdownRenderObject | CommentRenderObject;
+export type ItemRenderObject = SongRenderObject | CountdownRenderObject | CommentRenderObject | ImageRenderObject;
 
 export interface ClientItemSlidesBase {
 	type: string;
@@ -50,7 +52,7 @@ export interface ClientItemSlidesBase {
 	slides_template: ItemRenderObject & { mute_transition: true; };
 }
 
-export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides;
+export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides;
 
 export interface FontFormat {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -99,25 +101,21 @@ export abstract class SequenceItemBase {
 	}
 
 	protected async load_background_images(image_path?: string, background_color?: string) {
-		let img_buffer;
-		let img_buffer_proxy;
+		let img_buffer: Buffer | undefined = undefined;
+		let img_buffer_proxy: Buffer | undefined = undefined;
 		
 		if (image_path !== undefined) {
 			try {
-				img_buffer = await fs.readFile(path.join(Config.path.background_image, image_path));
+				img_buffer = await fs.readFile(image_path);
+
+				img_buffer_proxy = await sharp(img_buffer).resize(240).toBuffer();
 			} catch (e) {
-				this.item_props.BackgroundImage = {
-					orig: "",
-					proxy: ""
-				};
-	
-				return;
+				"";
 			}
-			img_buffer_proxy = await sharp(img_buffer).resize(240).toBuffer();
 		}
 
 		// if the image_buffer is still undefined, try to use the backgroundColor
-		if (background_color !== undefined) {
+		if (img_buffer === undefined && background_color !== undefined) {
 			img_buffer = await sharp({
 				create: {
 					width: 1,
@@ -126,8 +124,7 @@ export abstract class SequenceItemBase {
 					background: background_color
 				}
 			}).png().toBuffer();
-
-
+			
 			// copy the the image to the proxy buffer, since only 1px anyway
 			img_buffer_proxy = img_buffer;
 		}
@@ -138,6 +135,8 @@ export abstract class SequenceItemBase {
 				orig: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer).toString("base64"),
 				proxy: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer_proxy).toString("base64")
 			};
+		} else {
+			this.item_props.BackgroundImage = { orig: "", proxy: "" };
 		}
 	}
 

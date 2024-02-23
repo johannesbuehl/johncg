@@ -1,3 +1,10 @@
+export interface CasparCGConnectionSettings {
+	host: string;
+	port: number;
+	channel: number;
+	layers: [number, number];
+}
+
 interface ConfigJSON {
 	behaviour: {
 		show_on_load: boolean;
@@ -13,12 +20,7 @@ interface ConfigJSON {
 			Countdown: string
 			/* eslint-enable @typescript-eslint/naming-convention */
 		};
-		connections: {
-			host: string;
-			port: number;
-			channel: number;
-			layers: [number, number];
-		}[];
+		connections: CasparCGConnectionSettings[];
 	};
 	client_server: {
 		http: {

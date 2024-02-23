@@ -98,8 +98,6 @@ function display_items(data: ClientSequenceItems) {
 
 	// display the visibility state
 	display_visibility_state(data.metadata.visibility);
-
-	msg_log.log("Sequence is loaded");
 }
 
 function request_item_slides(item) {
@@ -137,7 +135,10 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 			part_arrays = create_song_slides(data as JGCPSend.SongSlides);
 			break;
 		case "Countdown":
-			part_arrays = create_countdown_slides(data as JGCPSend.CountdownSlides);
+			part_arrays = create_image_countdown_slides(data as JGCPSend.CountdownSlides);
+			break;
+		case "Image":
+			part_arrays = create_image_countdown_slides(data as JGCPSend.ImageSlides);
 			break;
 		default:
 			console.error(`'${data.type}' is not supported`);
@@ -148,8 +149,6 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 	});
 
 	set_active_slide(data.client_id === client_id);
-
-	msg_log.log("Item is loaded");
 }
 
 function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
@@ -207,7 +206,7 @@ function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 	return part_arrays;
 }
 
-function create_countdown_slides(data: JGCPSend.CountdownSlides) {
+function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend.ImageSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -244,6 +243,9 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 		case "Countdown":
 			slide_object.data = "Templates/Countdown.html";
 			break;
+		case "Image":
+			slide_object.data = `${data.slides_template.background_image?.replace(/\\/g, "\\\\")}`;
+			break;
 	}
 
 	slide_object.classList.add("slide");
@@ -263,8 +265,10 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 
 		slide_object.contentWindow?.play();
 	
+		const container = slide_object.contentDocument ?? div_slide_container;
+
 		// register click event
-		slide_object.contentWindow?.addEventListener("click", () => {
+		container.addEventListener("click", () => {
 			request_item_slide_select(
 				Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
 				number

@@ -25,6 +25,7 @@ export interface LyricSlide {
 export type ItemSlide = LyricSlide | TitleSlide;
 
 export interface SongRenderObject extends ItemRenderObjectBase {
+	caspar_type: "template";
 	type: "Song";
 	slides: ItemSlide[];
 	languages: number[];
@@ -114,6 +115,7 @@ export default class Song extends SequenceItemBase {
 
 		const return_object: SongRenderObject = {
 			type: "Song",
+			caspar_type: "template",
 			slides: [
 				this.song_file.part_title
 			],
@@ -223,7 +225,9 @@ export default class Song extends SequenceItemBase {
 	protected async get_background_image(proxy?: boolean): Promise<string> {
 		// check wether the images have yet been laoded
 		if (this.props.BackgroundImage === undefined) {
-			await this.load_background_images(this.song_file.metadata.BackgroundImage);
+			const image_path = path.join(Config.path.background_image, this.song_file.metadata.BackgroundImage ?? "");
+
+			await this.load_background_images(image_path);
 		}
 
 		return this.props.BackgroundImage![proxy ? "proxy" : "orig"];

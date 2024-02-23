@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'Bahnschrift';
+    src: url('/webfonts/bahnschrift.ttf');
+}
+
 * {
 	overflow: hidden;
 }
@@ -5,7 +10,7 @@
 body {
 	background-color: rgb(31, 33, 42);
 
-	font-family: "Bahnschrift";
+	font-family: Bahnschrift;
 	color: white;
 
 	margin: 0;
@@ -246,6 +251,8 @@ div.button, div.button > * {
 	background-repeat: no-repeat;
 	background-position: center;
 	background-size: cover;
+
+	cursor: pointer;
 }
 
 .slide:hover {

@@ -3,3 +3,5 @@ out
 dist
 client/*.js
 casparcg-templates/JohnCG/*.js
+*.map
+client/webfonts/bahnschrift.ttf

@@ -1,4 +1,6 @@
+import path from "path";
 import { convert_color_to_hex } from "../Sequence";
+import Config from "../config";
 import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
@@ -19,10 +21,9 @@ export interface CountdownProps extends CountdownSequenceItemProps {
 	position: CountdownPosition;
 	mode: CountdownMode;
 	show_seconds: boolean;
-	background: {
-		path?: string;
-		color?: string;
-	}
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	fileName?: string;
+	background_color?: string;
 }
 
 export interface ClientCountdownSlides extends ClientItemSlidesBase {
@@ -35,6 +36,8 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 }
 
 export interface CountdownRenderObject extends ItemRenderObjectBase {
+	type: "Countdown";
+	caspar_type: "template";
 	slides: [];
 	position: CountdownPosition;
 	font_format: FontFormat;
@@ -81,10 +84,9 @@ export default class Countdown extends SequenceItemBase {
 			show_seconds: hex_data.show_seconds,
 			font_format: hex_data.font_format,
 			mode: hex_data.mode,
-			background: {
-				path: hex_data.background_image,
-				color: hex_data.background_color
-			}
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			fileName: hex_data.background_image,
+			background_color: hex_data.background_color
 		};
 	}
 
@@ -132,6 +134,8 @@ export default class Countdown extends SequenceItemBase {
 
 	async create_render_object(proxy?: boolean): Promise<CountdownRenderObject> {
 		return {
+			caspar_type: "template",
+			type: "Countdown",
 			background_image: await this.get_background_image(proxy),
 			slide: 0,
 			slides: [],
@@ -145,7 +149,9 @@ export default class Countdown extends SequenceItemBase {
 	protected async get_background_image(proxy?: boolean): Promise<string> {
 		// check wether the images have yet been laoded
 		if (this.props.BackgroundImage === undefined) {
-			await this.load_background_images(this.props.background.path, this.props.background.color);
+			const image_path = path.join(Config.path.background_image, this.props.fileName ?? "");
+
+			await this.load_background_images(image_path, this.props.background_color);
 		}
 
 		return this.props.BackgroundImage![proxy ? "proxy" : "orig"];
