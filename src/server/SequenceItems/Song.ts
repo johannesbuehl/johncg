@@ -56,9 +56,9 @@ export default class Song extends SequenceItemBase {
 
 		try {
 			this.song_file = new SongFile(get_song_path(props.FileName));
-		} catch (e) {
+		} catch (e: unknown) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
-			if (e.code === "ENOENT") {
+			if (e instanceof Error && "type" in e && e.type === "ENOENT") {
 				console.debug(`song '${props.FileName}' does not exist`);
 				return;
 			} else {
@@ -164,6 +164,7 @@ export default class Song extends SequenceItemBase {
 
 	navigate_slide(steps: number): number {
 		if (typeof steps !== "number") {
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
 		}
 
@@ -230,7 +231,7 @@ export default class Song extends SequenceItemBase {
 			await this.load_background_images(image_path);
 		}
 
-		return this.props.BackgroundImage![proxy ? "proxy" : "orig"];
+		return this.props.BackgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {

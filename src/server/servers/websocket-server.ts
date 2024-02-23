@@ -40,7 +40,7 @@ class WebsocketServer {
 		this.message_handlers = message_handlers;
 
 		this.ws_server = new WebSocketServer({ port: args.port });
-		this.ws_server.on("connection", (ws, socket, request) => this.on_connection(ws, socket, request));
+		this.ws_server.on("connection", (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => this.on_connection(ws, socket, request));
 	}
 
 	private on_connection(ws: WebSocket,socket: WebSocket, request: IncomingMessage) {
@@ -53,13 +53,15 @@ class WebsocketServer {
 			this.connections[ws.protocol].push(ws);
 
 			// register the different action-handlers
-			Object.keys(this.message_handlers[ws.protocol]).forEach((s_type) => {
-				ws.on(s_type, (...data) => this.message_handlers[ws.protocol][s_type](ws, ...data));
+			Object.keys(this.message_handlers[ws.protocol]).forEach((s_type: keyof MessageHandler) => {
+				ws.on(s_type, (...args: [never, never]) => {
+					this.message_handlers[ws.protocol][s_type](ws, ...args);
+				});
 			});
 
 			// execute the on_connection function
 			if (this.message_handlers[ws.protocol].connection !== undefined) {
-				this.message_handlers[ws.protocol].connection!(ws, socket, request);
+				this.message_handlers[ws.protocol].connection(ws, socket, request);
 			}
 		} else {
 			// reject connection

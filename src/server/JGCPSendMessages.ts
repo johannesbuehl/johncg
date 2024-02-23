@@ -35,12 +35,6 @@ export interface State extends Base {
 	visibility?: boolean;
 }
 
-// export interface ItemSlides extends Base, ClientItemSlidesBase {
-// 	clientID: string;
-// 	command: "item-slides";
-// 	slides: string[][];
-// }
-
 interface ItemSlidesBase extends Base{
 	client_id: string;
 	command: "item_slides";

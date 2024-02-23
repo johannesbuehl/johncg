@@ -10,32 +10,12 @@
 		},
 		{
 			"type": "typescript",
-			"tsconfig": "tsconfig_server.json",
+			"tsconfig": "src/server/tsconfig.json",
 			"problemMatcher": [
 				"$tsc"
 			],
 			"group": "build",
 			"label": "tsc: build - server"
-		},
-		{
-			"type": "typescript",
-			"tsconfig": "tsconfig_client.json",
-			"option": "watch",
-			"problemMatcher": [
-				"$tsc-watch"
-			],
-			"group": "build",
-			"label": "tsc: watch - tsconfig_client.json"
-		},
-		{
-			"type": "typescript",
-			"tsconfig": "tsconfig_templates.json",
-			"option": "watch",
-			"problemMatcher": [
-				"$tsc-watch"
-			],
-			"group": "build",
-			"label": "tsc: watch - tsconfig_templates.json"
 		}
 	]
 }

@@ -86,7 +86,7 @@ export abstract class SequenceItemBase {
 		const slide_count = this.slide_count;
 
 		if (typeof slide !== "number") {
-			throw new TypeError(`'${slide} is not of type 'number'`);
+			throw new TypeError(`'${JSON.stringify(slide)} is not of type 'number'`);
 		}
 
 		if (slide < -slide_count || slide >= slide_count) {

@@ -5,8 +5,5 @@
 		"moduleResolution": "bundler",
 		"outDir": "casparcg-templates/JohnCG",
 		"removeComments": true
-	},
-	"include": [
-		"src\\templates"
-	]
+	}
 }

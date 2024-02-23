@@ -26,7 +26,7 @@ class Control {
 				}
 			},
 			output: {
-				visibility: (value: boolean) => this.set_visibility(value)
+				visibility: async (value: boolean) => this.set_visibility(value)
 			}
 		}
 	};
@@ -91,7 +91,7 @@ class Control {
 		if (typeof item === "number") {
 			const message: JGCPSend.ItemSlides = {
 				command: "item_slides",
-				client_id: client_id!,
+				client_id,
 				...await this.sequence.create_client_object_item_slides(item)
 			};
 
@@ -99,7 +99,8 @@ class Control {
 
 			ws_send_response("slides have been sent", true, ws);
 		} else {
-			ws_send_response(`'${item} is not of type 'number'`, false, ws);
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+			ws_send_response(`'${item}' is not of type 'number'`, false, ws);
 		}
 	}
 
@@ -181,7 +182,7 @@ class Control {
 	 * set the visibility of the sequence in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket) {
+	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): Promise<void> {
 		// if there is no sequence loaded, send a negative response back and exit
 		if (this.sequence === undefined) {
 			ws_send_response("no schedule loaded", false, ws);
@@ -189,7 +190,7 @@ class Control {
 		}
 
 		if (typeof visibility === "boolean") {
-			this.sequence.set_visibility(visibility);
+			await this.sequence.set_visibility(visibility);
 
 			this.send_all_clients({
 				command: "state",
@@ -216,7 +217,7 @@ class Control {
 
 		// dummy-implementation-example
 		if (message.command === "state" && message.visibility !== undefined) {
-			this.osc_server.send_value("/not/implemented", message.visibility);
+			this.osc_server.send_value("/custom-variable/johncg_visibility/value", message.visibility);
 		}
 	}
 
@@ -247,9 +248,10 @@ class Control {
 	}
 
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
-		let data;
+		let data: JGCPRecv.Message;
 		// try to parse the data as a JSON-object
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-base-to-string
 			data = JSON.parse(raw_data.toString());
 
 			// if the parsed is null or not an object, throw an exception
@@ -273,6 +275,7 @@ class Control {
 		} else if (!Object.keys(this.ws_function_map).includes(data.command)) {
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			this.ws_function_map[data.command](data, ws);
 		}
 	}

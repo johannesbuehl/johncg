@@ -9,7 +9,7 @@ let slide_count = 0;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
-	data = JSON.parse(s_data);
+	data = JSON.parse(s_data) as SongRenderObject;
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");

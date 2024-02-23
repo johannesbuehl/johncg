@@ -92,6 +92,7 @@ export default class Countdown extends SequenceItemBase {
 
 	navigate_slide(steps: number): number {
 		if (typeof steps !== "number") {
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
 		}
 
@@ -154,7 +155,7 @@ export default class Countdown extends SequenceItemBase {
 			await this.load_background_images(image_path, this.props.background_color);
 		}
 
-		return this.props.BackgroundImage![proxy ? "proxy" : "orig"];
+		return this.props.BackgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {
@@ -167,7 +168,7 @@ export default class Countdown extends SequenceItemBase {
 	}
 }
 
-function parse_hex_data(data_hex): CountdownData {
+function parse_hex_data(data_hex: string): CountdownData {
 	const regex_curse = /(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D650604(?<font_name>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
 
 
@@ -183,11 +184,11 @@ function parse_hex_data(data_hex): CountdownData {
 		show_seconds: true
 	};
 	
-	const to_string = (raw) => Buffer.from(raw, "hex").toString();
+	const to_string = (raw: string): string => Buffer.from(raw, "hex").toString();
 
-	const to_int = (r) => parseInt(r, 16);
+	const to_int = (r: string): number => parseInt(r, 16);
 
-	const to_rgb = (r) => {
+	const to_rgb = (r: string): string => {
 		// if it is longer than 6 bytes, it is an colorName
 		if (r.length > 6) {
 			return convert_color_to_hex(to_string(r));
@@ -206,10 +207,10 @@ function parse_hex_data(data_hex): CountdownData {
 						data.mode = countdown_mode_items[Number(val)];
 						break;
 					case "color":
-						data.font_format!.color = to_rgb(val);
+						data.font_format.color = to_rgb(val);
 						break;
 					case "font_size":
-						data.font_format!.fontSize = to_int(val);
+						data.font_format.fontSize = to_int(val);
 						break;
 					case "x":
 					case "y":
@@ -219,16 +220,16 @@ function parse_hex_data(data_hex): CountdownData {
 						data.show_seconds = !val;
 						break;
 					case "bold":
-						data.font_format!.fontWeight = "bold";
+						data.font_format.fontWeight = "bold";
 						break;
 					case "italic":
-						data.font_format!.fontStyle = "italic";
+						data.font_format.fontStyle = "italic";
 						break;
 					case "underline":
-						data.font_format!.textDecoration = "underline";
+						data.font_format.textDecoration = "underline";
 						break;
 					case "font_family":
-						data.font_format!.fontFamily = to_string(val);
+						data.font_format.fontFamily = to_string(val);
 						break;
 					case "background_image":
 						data.background_image = to_string(val);

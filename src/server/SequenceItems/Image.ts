@@ -65,6 +65,7 @@ export default class Image extends SequenceItemBase {
 
 	navigate_slide(steps: number): number {
 		if (typeof steps !== "number") {
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
 		}
 
@@ -87,7 +88,7 @@ export default class Image extends SequenceItemBase {
 			await this.load_background_images(filename);
 		}
 
-		return this.props.BackgroundImage![proxy ? "proxy" : "orig"];
+		return this.props.BackgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {

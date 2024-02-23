@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { IReporterConfiguration } from "@weichwarenprojekt/license-reporter";
 
 export const configuration: Partial<IReporterConfiguration> = {
 	defaultLicenseText: undefined,
-    output: "dist/build/3rdpartylicenses.json", // default: "./3rdpartylicenses.json"
+    output: "dist/build/3rdpartylicenses.json",
     overrides: [
         {
             name: "osc",

@@ -2,11 +2,9 @@
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "NodeNext",
-		"outDir": "out",
+		"outDir": "../../out",
 		"sourceMap": true,
-		"removeComments": true
-	},
-	"include": [
-		"src\\server"
-	]
+		"removeComments": true,
+		// "noImplicitAny": true
+	}
 }

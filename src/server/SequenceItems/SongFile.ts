@@ -162,7 +162,7 @@ class SongFile {
 		// utf-8-BOM
 		const bom = Buffer.from([239, 187, 191]);
 
-		let encoding;
+		let encoding: string;
 
 		// check wether the song-file starts with the utf-8-BOM
 		if (raw_data_buffer.subarray(0, 3).compare(bom) === 0) {
@@ -212,7 +212,7 @@ class SongFile {
 				lines.push("");
 			}
 
-			const slide: string[][] = Array.from(Array(Math.ceil(lines.length / this.metadata.LangCount)), () => []);
+			const slide: string[][] = Array.from(Array(Math.ceil(lines.length / this.metadata.LangCount)), (): string[] => []);
 
 			// split the lines into the different languages
 			lines.forEach((vv, ii) => {

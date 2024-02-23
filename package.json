@@ -9,12 +9,14 @@
     "fast-xml-parser": "^4.3.4",
     "iconv-lite": "^0.6.3",
     "mime-types": "^2.1.35",
-    "osc": "^2.4.4",
+    "node-osc": "^9.1.0",
     "sharp": "^0.33.2",
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^20.11.16",
+    "@types/node-osc": "^6.0.3",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
@@ -25,6 +27,7 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
+    "lint": "eslint src/**/*.ts",
     "build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
     "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=tsconfig_server.json --platform=node --minify --bundle",
     "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=tsconfig_client.json --bundle --minify",

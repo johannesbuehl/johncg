@@ -1,6 +1,6 @@
 import { CountdownRenderObject } from "../server/SequenceItems/Countdown";
 
-let update_interval;
+let update_interval: NodeJS.Timeout;
 const spans: {
 	hours?: HTMLSpanElement[],
 	minutes: HTMLSpanElement[],
@@ -17,11 +17,11 @@ let end_time_sign;
 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function update(str_args) {
+function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
 	
-	data = JSON.parse(str_args);
+	data = JSON.parse(str_args) as CountdownRenderObject;
 	
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");
@@ -141,7 +141,7 @@ function stop() {
 function next() {
 }
 
-function get_remaining_time(): [{ hours: string[], minutes: string[], seconds: string[] }, boolean] {
+function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean]  {
 	const time_remaining = new Date(end_time.getTime() - Date.now());
 
 	return [
@@ -185,7 +185,10 @@ function position_time() {
 }
 
 function update_time() {
-	const [time, finished] = get_remaining_time();
+	const [time, finished]: [
+		Record<keyof typeof spans, string[]>,
+		boolean
+	] = get_remaining_time();
 
 	if (finished) {
 		clearInterval(update_interval);
@@ -205,8 +208,8 @@ function update_time() {
 		}
 
 		Object.entries(spans).forEach(([key, val]) => {
-			val[0].innerText = time[key][0];
-			val[1].innerText = time[key][1];
+			val[0].innerText = time[key as keyof typeof spans][0];
+			val[1].innerText = time[key as keyof typeof spans][1];
 		});
 	}
 }

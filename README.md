@@ -28,3 +28,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - client-messages: create message-log, group same
 - repo-file-managment (move tsconfig files in respective directories?)
 - build-script in node / integrate with license-generator
+- media-to-media-switch: there is no switching to background-layer

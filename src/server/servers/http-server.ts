@@ -20,7 +20,7 @@ class HTTPServer {
 			let resource_dir = "client";
 
 			// unescape the percent signs in the url
-			request.url = unescape(request.url!);
+			request.url = unescape(request.url);
 
 			// override different requested urls
 			switch (true) {
@@ -51,9 +51,11 @@ class HTTPServer {
 
 					response.write("Resource not found");
 				} else {
+					const mime_type = mime.lookup(request.url);
+
 					response.writeHead(200, {
 						// eslint-disable-next-line @typescript-eslint/naming-convention
-						"Content-Type": mime.lookup(request.url)
+						"Content-Type": mime_type ? mime_type : "text/plain"
 					});
 	
 					// serve the file-content

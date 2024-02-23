@@ -1,10 +1,11 @@
 import MessageLog from "./message_box.js";
 
-import * as JGCPSend from "../server/JGCPSendMessages";
 import { ItemPartClient } from "../server/SequenceItems/SongFile";
 import { ClientItemSlides } from "../server/SequenceItems/SequenceItem";
-import { ClientSequenceItems } from "../server/Sequence";
-import { CountdownProps } from "../server/SequenceItems/Countdown";
+
+import * as JGCPSend from "../server/JGCPSendMessages";
+import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
+import { ActiveItemSlide } from "../server/Sequence.js";
 
 const config = {
 	websocket: {
@@ -12,10 +13,10 @@ const config = {
 	}
 };
 
-const msg_log = new MessageLog(document.querySelector("#error_container")!);
+const msg_log = new MessageLog(document.querySelector("#error_container"));
 
-function open_sequence(e) {
-	const file = e.target.files[0];
+function open_sequence(e: Event) {
+	const file = (<HTMLInputElement>e.target).files[0];
 	const reader = new FileReader();
 
 	reader.onload = function(e) {
@@ -31,7 +32,7 @@ function open_sequence(e) {
 }
 document.querySelector("#input_open_sequence")?.addEventListener("change", open_sequence);
 
-function button_navigate(type, steps) {
+function button_navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
 	ws.send(JSON.stringify({
 		command: "navigate",
 		type,
@@ -44,7 +45,7 @@ document.querySelector("#navigate_item_next")?.addEventListener("click", () => {
 document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { button_navigate("slide", -1); });
 document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { button_navigate("slide", 1); });
 
-function button_visibility(visibility) {
+function button_visibility(visibility: boolean) {
 	ws.send(JSON.stringify({
 		command: "set_visibility",
 		visibility,
@@ -56,7 +57,7 @@ document.querySelector("#set_visibility_show")?.addEventListener("click", () => 
 
 document.querySelector("#show_error_log")?.addEventListener("click", () => msg_log.error("foobar"));
 
-function display_items(data: ClientSequenceItems) {
+function display_items(data: JGCPSend.Sequence) {
 	const div_sequence_items = document.querySelector("#sequence_items");
 
 	// initialize
@@ -87,7 +88,7 @@ function display_items(data: ClientSequenceItems) {
 		
 		// if it's a  Countdown-Object, insert the time
 		if (item.type === "Countdown") {
-			div_sequence_item.innerText = item.Caption.replace("%s", (item as CountdownProps).Time);
+			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
 		} else {
 			div_sequence_item.innerText = item.Caption;
 		}
@@ -100,7 +101,7 @@ function display_items(data: ClientSequenceItems) {
 	display_visibility_state(data.metadata.visibility);
 }
 
-function request_item_slides(item) {
+function request_item_slides(item: number) {
 	if (item !== selected_item_number) {
 		selected_item_number = item;
 		
@@ -338,7 +339,7 @@ function set_active_slide(scroll: boolean = false) {
 	}
 }
 
-function set_active_item_slide(data, message_client_id) {
+function set_active_item_slide(data: ActiveItemSlide, message_client_id: string) {
 	// store the data
 	active_item_slide = data;
 
@@ -359,7 +360,7 @@ function set_active_item_slide(data, message_client_id) {
 	}
 }
 
-function display_visibility_state(state) {
+function display_visibility_state(state: boolean) {
 	const button_hide = document.querySelector("#set_visibility_hide");
 	const button_show = document.querySelector("#set_visibility_show");
 
@@ -372,15 +373,16 @@ function display_visibility_state(state) {
 	}
 }
 
-function display_state_change(data) {
+function display_state_change(data: JGCPSend.State) {
 	const key_map = {
 		active_item_slide: set_active_item_slide,
 		visibility: display_visibility_state
 	};
 
 	Object.entries(data).forEach(([key, value]) => {
-		if (Object.keys(key_map).includes(key)) {
-			key_map[key](value, data.clientID);
+		if (key in key_map) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			key_map[key as keyof typeof key_map](value, data.client_id);
 		}
 	});
 }
@@ -389,7 +391,7 @@ function random_4_hex() {
 	return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
 }
 
-function blank_screen(state) {
+function blank_screen(state: boolean) {
 	const blank_div = document.querySelector<HTMLDivElement>("div#blank");
 	if (blank_div !== null) {
 		blank_div.style.display = state ? "unset" : "none";
@@ -416,7 +418,7 @@ function init() {
 }
 
 const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
-let selected_item_number;
+let selected_item_number: number;
 
 function ws_connect() {
 	const url = new URL(document.URL);
@@ -430,8 +432,8 @@ function ws_connect() {
 		blank_screen(false);
 	});
 	
-	ws.addEventListener("message", (event) => {
-		const data = JSON.parse(event.data);
+	ws.addEventListener("message", (event: MessageEvent) => {
+		const data: JGCPSend.Message = JSON.parse(event.data as string) as JGCPSend.Message;
 
 
 		console.dir(data);
@@ -442,7 +444,7 @@ function ws_connect() {
 			item_slides: display_item_slides,
 			state: display_state_change,
 			clear: init,
-			response: (response) => {
+			response: (response: JGCPSend.Response) => {
 				switch (Number(response.code.toString()[0])) {
 					case 4:
 						msg_log.error(response.message);
@@ -453,20 +455,20 @@ function ws_connect() {
 			}
 		};
 	
-		command_parser_map[data.command](data);
+		command_parser_map[data.command](data as never);
 	
 	});
 	
 	ws.addEventListener("ping", () => {
 	});
 	
-	ws.addEventListener("error", (event) => {
+	ws.addEventListener("error", (event: ErrorEvent) => {
 		msg_log.error(`Server connection encountered error '${event.message}'. Closing socket`);
 	
 		ws.close();
 	});
 	
-	ws.addEventListener("close", async () => {
+	ws.addEventListener("close", () => {
 		console.log("No connection to server. Retrying in 1s");
 
 		// blank the screen because there is no connection
@@ -479,7 +481,7 @@ function ws_connect() {
 	});
 }
 
-let ws;
+let ws: WebSocket;
 ws_connect();
 
 let active_item_slide = {

@@ -9,7 +9,7 @@ interface Base {
  * sequence-file to be loaded
  */
 export interface OpenSequence extends Base {
-	command: "open-sequence";
+	command: "open_sequence";
 	sequence: string;
 }
 
@@ -17,7 +17,7 @@ export interface OpenSequence extends Base {
  * request for the slides of a specific item
  */
 export interface RequestItemSlides extends Base {
-	command: "request-item-slides";
+	command: "request-item_slides";
 	item: number;
 }
 
@@ -32,7 +32,7 @@ export interface ItemSlideSelect extends Base {
  */
 const item_navigate_type = ["item", "slide"] as const;
 export type NavigateType = (typeof item_navigate_type)[number];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 export const is_item_navigate_type = (x: any): x is NavigateType => item_navigate_type.includes(x);
 
 export interface Navigate extends Base {
@@ -45,12 +45,19 @@ export interface Navigate extends Base {
  * set the visibility of the output
  */
 export interface SetVisibility extends Base {
-	command: "set-visibility";
+	command: "set_visibility";
 	visibility: boolean;
+}
+
+export interface SelectItemSlide extends Base {
+	command: "select_item_slide";
+	item: number;
+	slide: number;
+
 }
 
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = RequestItemSlides | SetVisibility | OpenSequence | Navigate;
+export type Message = RequestItemSlides | SetVisibility | OpenSequence | Navigate | SelectItemSlide;
 

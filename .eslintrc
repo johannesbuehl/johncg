@@ -4,10 +4,18 @@
 	"plugins": [
 		"@typescript-eslint"
 	],
+	"parserOptions": {
+		"project": [
+			"src/server/tsconfig.json",
+			"src/client/tsconfig.json",
+			"src/templates/tsconfig.json"
+		]
+	},
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
-		"plugin:@typescript-eslint/recommended"
+		"plugin:@typescript-eslint/recommended",
+		"plugin:@typescript-eslint/recommended-type-checked"
 	],
 	"rules": {
 		"semi": ["error", "always"],

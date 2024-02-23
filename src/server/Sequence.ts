@@ -61,17 +61,19 @@ class Sequence {
 		const xml_parser = new XMLParser();
 
 		// create the casparcg-connections
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Config.casparcg.connections.forEach(async (connection_setting) => {
-			const connection = new CasparCG({
+			const connection: CasparCG = new CasparCG({
 				...connection_setting,
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				autoConnect: true
 			});
 
-			const casparcg_connection = {
+			const casparcg_connection: CasparCGConnection = {
 				connection,
 				settings: connection_setting,
-				paths: xml_parser.parse((await (await connection.infoPaths()).request)?.data as string ?? "")?.paths,
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				paths: xml_parser.parse((await (await connection.infoPaths()).request)?.data as string ?? "")?.paths as CasparCGPathsSettings,
 				media: (await (await connection.cls()).request)?.data ?? []
 			};
 
@@ -107,12 +109,12 @@ class Sequence {
 	 * clear the casparcg-layers used
 	 */
 	casparcg_clear_layers(casparcg_connection?: CasparCGConnection) {
-		const clear_layers = (connection) => {
-			connection.connection.cgClear({
+		const clear_layers = (connection: CasparCGConnection) => {
+			void connection.connection.cgClear({
 				channel: connection.settings.channel,
 				layer: connection.settings.layers[0]
 			});
-			connection.connection.cgClear({
+			void connection.connection.cgClear({
 				channel: connection.settings.channel,
 				layer: connection.settings.layers[1]
 			});
@@ -256,6 +258,7 @@ class Sequence {
 	// navigate_item(direction: NavigateDirection, slide: number = 0): void {
 	navigate_item(steps: number, slide: number = 0): void {
 		if (typeof steps !== "number") {
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
 		}
 		
@@ -348,13 +351,14 @@ class Sequence {
 		// if no connection was give, flip the layers
 		if (casparcg_connection === undefined) {
 			// clear the lower layer
-			connections.forEach((casparcg_connection) => {
-				casparcg_connection.connection.cgClear({
+			// eslint-disable-next-line @typescript-eslint/no-misused-promises
+			connections.forEach(async (casparcg_connection) => {
+				await casparcg_connection.connection.cgClear({
 					channel: casparcg_connection.settings.channel,
 					layer: casparcg_connection.settings.layers[0]
 				});
 
-				casparcg_connection.connection.swap({
+				void casparcg_connection.connection.swap({
 					channel: casparcg_connection.settings.channel,
 					layer: casparcg_connection.settings.layers[0],
 					channel2: casparcg_connection.settings.channel,
@@ -364,22 +368,24 @@ class Sequence {
 			});
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		connections.forEach(async (casparcg_connection) => {
 			// generate the render-object
 			const render_object = await this.active_sequence_item.create_render_object();
 
 			// depending on the type, use different caspar-cg-functions
 			switch (render_object?.caspar_type) {
-				case "template":
-					casparcg_connection.connection.cgAdd({
+				case "template": {
+
+					void casparcg_connection.connection.cgAdd({
 						/* eslint-disable @typescript-eslint/naming-convention */
 						channel: casparcg_connection.settings.channel,
 						layer: casparcg_connection.settings.layers[1],
 						cgLayer: 0,
 						playOnLoad: this.casparcg_visibility,
-						template: Config.casparcg.templates[this.active_sequence_item.props.type],
+						template: Config.casparcg.templates[this.active_sequence_item.props.type] as string,
 						// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-						data: JSON.stringify(JSON.stringify(render_object, (_key, val) => {
+						data: JSON.stringify(JSON.stringify(render_object, (_key, val: unknown) => {
 							if (typeof val === "string") {
 								return val.replace("\"", "\\u0022");
 							} else {
@@ -388,7 +394,7 @@ class Sequence {
 						}))
 						/* eslint-enable @typescript-eslint/naming-convention */
 					});
-					break;
+				} break;
 				case "media": {
 					// make it all uppercase and remove the extension to match casparcg-clips and make sure it uses forward slashes
 					const req_name = render_object.file_name.replace(/\.[^(\\.]+$/, "").toUpperCase().replace(/\\/g, "/");
@@ -407,7 +413,7 @@ class Sequence {
 
 					// if a matching media-file was found, use it
 					if (media_result !== undefined) {
-						casparcg_connection.connection.play({
+						void casparcg_connection.connection.play({
 							/* eslint-disable @typescript-eslint/naming-convention */
 							channel:  casparcg_connection.settings.channel,
 							layer:  casparcg_connection.settings.layers[1],
@@ -419,7 +425,7 @@ class Sequence {
 							/* eslint-enable @typescript-eslint/naming-convention */
 						});
 					} else {
-						casparcg_connection.connection.executeCommand({
+						void casparcg_connection.connection.executeCommand({
 							/* eslint-disable @typescript-eslint/naming-convention */
 							command: Commands.PlayHtml,
 							params: {
@@ -442,7 +448,7 @@ class Sequence {
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// jump to the slide-number in casparcg
-			casparcg_connection.connection.cgInvoke({
+			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[1],
@@ -453,10 +459,10 @@ class Sequence {
 		});
 	}
 
-	set_visibility(visibility: boolean): void {
-		this.casparcg_connections.forEach((casparcg_connection) => {
+	async set_visibility(visibility: boolean): Promise<void> {
+		for (const casparcg_connection of this.casparcg_connections) {
 			// clear the background-layer, so that the foreground has an hide-animation
-			casparcg_connection.connection.clear({
+			await casparcg_connection.connection.clear({
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0]
 			});
@@ -472,11 +478,11 @@ class Sequence {
 			this.casparcg_visibility = visibility;
 	
 			if (visibility) {
-				casparcg_connection.connection.cgPlay(options);
+				void casparcg_connection.connection.cgPlay(options);
 			} else {
-				casparcg_connection.connection.cgStop(options);
+				void casparcg_connection.connection.cgStop(options);
 			}
-		});
+		}
 	}
 
 	get active_item(): number {
@@ -516,7 +522,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 	// remove line-breaks
 	value = value.replace(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
-	value = value.replace(/'#(\d+)'/gm, (match, group) => String.fromCharCode(group));
+	value = value.replace(/'#(\d+)'/gm, (match, group: string) => String.fromCharCode(Number(group)));
 	
 	const return_props: { [P in keyof ItemProps]?: ItemProps[P]; } = {};
 	
@@ -534,8 +540,12 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			// assume the type from the file-extension
 			if (path.extname(value) === ".sng") {
 				return_props.type = "Song";
-			} else if (mime.lookup(value).split("/", 1)[0] === "image") {
-				return_props.type = "Image";
+			} else {
+				const mime_type = mime.lookup(value);
+
+				if (mime_type ? mime_type.split("/", 1)[0] === "image" : false) {
+					return_props.type = "Image";
+				}
 			}
 			return_props[key] = value;
 			break;
@@ -718,7 +728,13 @@ function convert_color_to_hex(color: string): string | undefined {
 		clyellowgreen: "#9acd32"
 	};
 	
-	return colours[color.toLowerCase()];
+	const return_value: unknown = colours[color.toLowerCase()];
+
+	if (typeof return_value !== "string") {
+		return "";
+	} else {
+		return return_value;
+	}
 }
 
 // export { NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides, ActiveItemSlide };

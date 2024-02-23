@@ -47,6 +47,6 @@ const config_path = "config.json";
 
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Config: ConfigJSON = JSON.parse(fs.readFileSync(config_path, { encoding: "utf-8" }));
+const Config: ConfigJSON = JSON.parse(fs.readFileSync(config_path, { encoding: "utf-8" })) as ConfigJSON;
 
 export default Config;
