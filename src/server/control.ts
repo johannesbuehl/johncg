@@ -26,7 +26,10 @@ class Control {
 				}
 			},
 			output: {
-				visibility: async (value: boolean) => this.set_visibility(value)
+				visibility: {
+					set: async (value: boolean) => this.set_visibility(value),
+					toggle: async (value: string) => this.toggle_visibility(value)
+				}
 			}
 		}
 	};
@@ -203,6 +206,20 @@ class Control {
 		}
 	}
 
+	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
+		let visibility_feedback = false;
+
+		// if a sequence is loaded, get it's visibility
+		if (this.sequence !== undefined) {
+			visibility_feedback = await this.sequence.toggle_visibility();
+		}
+
+		// if a feedback-path is given, write the feedback to it
+		if (osc_feedback_path !== undefined) {
+			this.osc_server.send_value(osc_feedback_path, visibility_feedback);
+		}
+	}
+
 	/**
 	 * Send a JGCP-message to all registered clients
 	 * @param message JSON-message to be sent
@@ -214,11 +231,6 @@ class Control {
 		ws_clients.forEach((ws_client) => {
 			ws_client.send(JSON.stringify(message));
 		});
-
-		// dummy-implementation-example
-		if (message.command === "state" && message.visibility !== undefined) {
-			this.osc_server.send_value("/custom-variable/johncg_visibility/value", message.visibility);
-		}
 	}
 
 	/**

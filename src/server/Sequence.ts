@@ -534,6 +534,33 @@ class Sequence {
 		}
 	}
 
+	async toggle_visibility(): Promise<boolean> {
+		this.casparcg_visibility = !this.visibility;
+
+		for (const casparcg_connection of this.casparcg_connections) {
+			await casparcg_connection.connection.clear({
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.song[0]
+			});
+
+			const options = {
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.song[1],
+				cgLayer: 0
+				/* eslint-enable @typescript-eslint/naming-convention */
+			};
+	
+			if (this.visibility) {
+				void casparcg_connection.connection.cgPlay(options);
+			} else {
+				void casparcg_connection.connection.cgStop(options);
+			}
+		}
+
+		return this.visibility;
+	}
+
 	get active_item(): number {
 		return this.active_item_number;
 	}
