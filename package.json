@@ -29,10 +29,10 @@
   "scripts": {
     "lint": "eslint src/**/*.ts",
     "build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
-    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=tsconfig_server.json --platform=node --minify --bundle",
-    "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=tsconfig_client.json --bundle --minify",
-    "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=tsconfig_client.json --bundle --sourcemap --watch",
-    "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=tsconfig_templates.json --target=chrome71 --minify",
-    "watch-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=tsconfig_templates.json --target=chrome71 --sourcemap --watch"
+    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle",
+    "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
+    "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",
+    "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome71 --minify",
+    "watch-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome71 --sourcemap --watch"
   }
 }

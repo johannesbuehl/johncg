@@ -6,8 +6,9 @@ import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
 import Countdown, { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
 import Comment, { ClientCommentSlides, CommentProps, CommentRenderObject } from "./Comment";
 import Image, { ClientImageSlides, ImageProps, ImageRenderObject } from "./Image";
+import CommandComment, { ClientCommandCommentSlides, CommandCommentProps, CommandCommentRenderObject } from "./CommandComment";
 
-export type SequenceItem = Song | Countdown | Comment | Image;
+export type SequenceItem = Song | Countdown | Comment | Image | CommandComment;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -28,7 +29,7 @@ export interface ItemPropsBase {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps;
+export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps | CommandCommentProps;
 
 type CasparGeneratorType = "media" | "template";
 
@@ -42,7 +43,7 @@ export interface ItemRenderObjectBase {
 	mute_transition?: boolean;
 }
 
-export type ItemRenderObject = SongRenderObject | CountdownRenderObject | CommentRenderObject | ImageRenderObject;
+export type ItemRenderObject = SongRenderObject | CountdownRenderObject | CommentRenderObject | ImageRenderObject | CommandCommentRenderObject;
 
 export interface ClientItemSlidesBase {
 	type: string;
@@ -52,7 +53,7 @@ export interface ClientItemSlidesBase {
 	slides_template: ItemRenderObject & { mute_transition: true; };
 }
 
-export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides;
+export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides | ClientCommandCommentSlides;
 
 export interface FontFormat {
 	/* eslint-disable @typescript-eslint/naming-convention */

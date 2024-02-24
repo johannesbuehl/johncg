@@ -7,19 +7,16 @@
 		"song": "D:/path/to/song/directory"
 	},
 	"casparcg": {
-		"templates": {
-			"Song": "JohnCG/Song",
-			"Countdown": "JohnCG/Countdown"
-		},
+		"templates": "E:/path/to/casparcg/templates",
 		"connections": [
 			{
 				"host": "127.0.0.1",
 				"port": 5250,
 				"channel": 1,
-				"layers": [
-					20,
-					21
-				]
+				"layers": {
+					"song": [20, 21],
+					"command_comment": 30
+				}
 			}
 		]
 	},

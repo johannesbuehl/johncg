@@ -141,6 +141,9 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 		case "Image":
 			part_arrays = create_image_countdown_slides(data as JGCPSend.ImageSlides);
 			break;
+		case "CommandComment":
+			part_arrays = create_template_slides(data as JGCPSend.CommandCommentSlides);
+			break;
 		default:
 			console.error(`'${data.type}' is not supported`);
 	}
@@ -231,21 +234,51 @@ function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend
 	return [div_slide_part];
 }
 
+function create_template_slides(data: JGCPSend.CommandCommentSlides): HTMLDivElement[] {
+	// create the container for the part
+	const div_slide_part = document.createElement("div");
+	div_slide_part.classList.add("slide_part");
+
+	// create the header of the part and append it to the part-container
+	const div_slide_part_header = document.createElement("div");
+	div_slide_part_header.classList.add("header");
+	div_slide_part.append(div_slide_part_header);
+
+	// create the slides-view and append it to the part container
+	const div_slides_view = document.createElement("div");
+	div_slides_view.classList.add("slides_view");
+	div_slide_part.append(div_slides_view);
+
+	div_slide_part_header.innerText = data.title;
+
+	const obj = create_slide_object(data, 0);
+
+	div_slides_view.append(obj);
+
+	return [div_slide_part];
+}
+
 function create_slide_object(data: ClientItemSlides, number: number) {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
 	
 	const slide_object = document.createElement("object");
 
+	let template_data: object = data.slides_template;
+
 	switch (data.type) {
 		case "Song":
-			slide_object.data = "Templates/Song.html";
+			slide_object.data = "Templates/JohnCG/Song.html";
 			break;
 		case "Countdown":
-			slide_object.data = "Templates/Countdown.html";
+			slide_object.data = "Templates/JohnCG/Countdown.html";
 			break;
 		case "Image":
 			slide_object.data = `${data.slides_template.background_image?.replace(/\\/g, "\\\\")}`;
+			break;
+		case "CommandComment":
+			slide_object.data = `Templates/${data.slides_template.slides[0].template}.html`;
+			template_data = data.slides_template.slides[0].data;
 			break;
 	}
 
@@ -256,7 +289,7 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	slide_object.dataset.slide_number = number.toString();
 	
 	slide_object.addEventListener("load", () => {
-		slide_object.contentWindow?.update(JSON.stringify(data.slides_template));
+		slide_object.contentWindow?.update(JSON.stringify(template_data));
 
 		switch (data.type) {
 			case "Song":

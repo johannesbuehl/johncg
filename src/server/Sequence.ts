@@ -1,5 +1,5 @@
 import path from "path";
-import { CasparCG, ClipInfo, Commands } from "casparcg-connection";
+import { CasparCG, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
 import mime from "mime-types";
 import { XMLParser } from "fast-xml-parser";
 
@@ -14,6 +14,7 @@ import Countdown, { CountdownProps } from "./SequenceItems/Countdown";
 import Comment, { CommentProps } from "./SequenceItems/Comment";
 import Image, { ImageProps } from "./SequenceItems/Image";
 import { TransitionType } from "casparcg-connection/dist/enums";
+import CommandComment, { CommandCommentProps } from "./SequenceItems/CommandComment";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
@@ -112,11 +113,15 @@ class Sequence {
 		const clear_layers = (connection: CasparCGConnection) => {
 			void connection.connection.cgClear({
 				channel: connection.settings.channel,
-				layer: connection.settings.layers[0]
+				layer: connection.settings.layers.song[0]
 			});
 			void connection.connection.cgClear({
 				channel: connection.settings.channel,
-				layer: connection.settings.layers[1]
+				layer: connection.settings.layers.song[1]
+			});
+			void connection.connection.cgClear({
+				channel: connection.settings.channel,
+				layer: connection.settings.layers.command_comment
 			});
 		};
 
@@ -208,7 +213,22 @@ class Sequence {
 				default:
 					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
 					if (!Object.keys(item_data).includes("FileName")) {
-						this.sequence_items.push(new Comment(item_data as CommentProps));
+						// try to parse the caption as an JSON-object for AMCP-Commands
+						const caption_json = JSON.parse(item_data.Caption) as unknown;
+
+						if (typeof caption_json === "object") {
+							console.debug(caption_json);
+
+							const props: CommandCommentProps = {
+								...item_data,
+								type: "CommandComment",
+								...caption_json as { template: string, data?: object }
+							};
+
+							this.sequence_items.push(new CommandComment(props));
+						} else {
+							this.sequence_items.push(new Comment(item_data as CommentProps));
+						}
 					}
 					break;
 			}
@@ -350,21 +370,29 @@ class Sequence {
 
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		connections.forEach(async (connection) => {
-			// if no connection was give, flip the layers
+			// if no connection was give, flip the layers and stop the template-layer
 			if (casparcg_connection === undefined) {
 				// clear the lower layer
 				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				await connection.connection.cgClear({
 					channel: connection.settings.channel,
-					layer: connection.settings.layers[0]
+					layer: connection.settings.layers.song[0]
 				});
 	
 				await connection.connection.swap({
 					channel: connection.settings.channel,
-					layer: connection.settings.layers[0],
+					layer: connection.settings.layers.song[0],
 					channel2: connection.settings.channel,
-					layer2: connection.settings.layers[1],
+					layer2: connection.settings.layers.song[1],
 					transforms: true
+				});
+
+				void connection.connection.cgStop({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: connection.settings.channel,
+					layer: connection.settings.layers.command_comment,
+					cgLayer: 0
+					/* eslint-enable @typescript-eslint/naming-convention */
 				});
 			}
 		
@@ -373,26 +401,48 @@ class Sequence {
 
 			// depending on the type, use different caspar-cg-functions
 			switch (render_object?.caspar_type) {
-				case "template": {
-
-					void connection.connection.cgAdd({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: connection.settings.channel,
-						layer: connection.settings.layers[1],
-						cgLayer: 0,
-						playOnLoad: this.casparcg_visibility,
-						template: Config.casparcg.templates[this.active_sequence_item.props.type] as string,
-						// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-						data: JSON.stringify(JSON.stringify(render_object, (_key, val: unknown) => {
-							if (typeof val === "string") {
-								return val.replace("\"", "\\u0022");
-							} else {
-								return val;
-							}
-						}))
-						/* eslint-enable @typescript-eslint/naming-convention */
-					});
-				} break;
+				case "template":
+					switch (this.active_sequence_item.props.type) {
+						case "CommandComment":
+							void connection.connection.cgAdd({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: connection.settings.channel,
+								layer: connection.settings.layers.command_comment,
+								cgLayer: 0,
+								playOnLoad: false,
+								template: this.active_sequence_item.props.template,
+								// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
+								data: JSON.stringify(JSON.stringify(this.active_sequence_item.props.data, (_key, val: unknown) => {
+									if (typeof val === "string") {
+										return val.replace("\"", "\\u0022");
+									} else {
+										return val;
+									}
+								}))
+								/* eslint-enable @typescript-eslint/naming-convention */
+							});
+							break;
+						default:
+							void connection.connection.cgAdd({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: connection.settings.channel,
+								layer: connection.settings.layers.song[1],
+								cgLayer: 0,
+								playOnLoad: this.casparcg_visibility,
+								template: `JohnCG/${render_object.type}`,
+								// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
+								data: JSON.stringify(JSON.stringify(render_object, (_key, val: unknown) => {
+									if (typeof val === "string") {
+										return val.replace("\"", "\\u0022");
+									} else {
+										return val;
+									}
+								}))
+								/* eslint-enable @typescript-eslint/naming-convention */
+							});
+						break;
+					}
+					break;
 				case "media": {
 					// make it all uppercase and remove the extension to match casparcg-clips and make sure it uses forward slashes
 					const req_name = render_object.file_name.replace(/\.[^(\\.]+$/, "").toUpperCase().replace(/\\/g, "/");
@@ -409,17 +459,21 @@ class Sequence {
 						}
 					}
 
+					const transition: TransitionParameters = {
+						/* eslint-disable @typescript-eslint/naming-convention */
+						duration: 12.5, // 25 frames = 1s@25fps
+						transitionType: TransitionType.Mix
+						/* eslint-enable @typescript-eslint/naming-convention */
+					};
+
 					// if a matching media-file was found, use it
 					if (media_result !== undefined) {
 						void connection.connection.play({
 							/* eslint-disable @typescript-eslint/naming-convention */
 							channel:  connection.settings.channel,
-							layer:  connection.settings.layers[1],
+							layer:  connection.settings.layers.song[1],
 							clip: media_result.clip,
-							transition: {
-								duration: 12.5, // 25 frames = 1s@25fps
-								transitionType: TransitionType.Mix
-							}
+							transition: !render_object.mute_transition ? transition : undefined
 							/* eslint-enable @typescript-eslint/naming-convention */
 						});
 					} else {
@@ -428,12 +482,9 @@ class Sequence {
 							command: Commands.PlayHtml,
 							params: {
 								channel:  connection.settings.channel,
-								layer:  connection.settings.layers[1],
+								layer:  connection.settings.layers.song[1],
 								url: JSON.stringify(render_object.background_image),
-								transition: {
-									duration: 12.5, // 25 frames = 1s@25fps
-									transitionType: TransitionType.Mix
-								}
+								transition: !render_object.mute_transition ? transition : undefined
 								/* eslint-enable @typescript-eslint/naming-convention */
 							}
 						});
@@ -449,7 +500,7 @@ class Sequence {
 			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[1],
+				layer: casparcg_connection.settings.layers.song[1],
 				cgLayer: 0,
 				method: `jump(${slide})`
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -462,13 +513,13 @@ class Sequence {
 			// clear the background-layer, so that the foreground has an hide-animation
 			await casparcg_connection.connection.clear({
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[0]
+				layer: casparcg_connection.settings.layers.song[0]
 			});
 
 			const options = {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[1],
+				layer: casparcg_connection.settings.layers.song[1],
 				cgLayer: 0
 				/* eslint-enable @typescript-eslint/naming-convention */
 			};

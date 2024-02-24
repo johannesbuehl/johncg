@@ -2,7 +2,10 @@ export interface CasparCGConnectionSettings {
 	host: string;
 	port: number;
 	channel: number;
-	layers: [number, number];
+	layers: {
+		song: [number, number];
+		command_comment: number;
+	};
 }
 
 interface ConfigJSON {
@@ -14,12 +17,7 @@ interface ConfigJSON {
 		song: string;
 	};
 	casparcg: {
-		templates: {
-			/* eslint-disable @typescript-eslint/naming-convention */
-			Song: string,
-			Countdown: string
-			/* eslint-enable @typescript-eslint/naming-convention */
-		};
+		templates: string;
 		connections: CasparCGConnectionSettings[];
 	};
 	client_server: {

@@ -30,7 +30,7 @@ class HTTPServer {
 					break;
 				// serve the casparcg-templates
 				case /^\/Templates\//.test(request.url):
-					resource_dir = "casparcg-templates/JohnCG";
+					resource_dir = Config.casparcg.templates;
 					request.url = request.url.replace(/\/Templates\//, "");
 					break;
 				// serve the background-images

@@ -27,3 +27,5 @@ Generate lyric-graphics and play them out through CasparCG.
 - make sequence-comments another design in client
 - client-messages: create message-log, group same
 - build-script in node / integrate with license-generator
+- command-comment: define commands / names which get loaded straigth from the start and can be shown anytime
+- song: transmit template in server->client message instead of hardcoding it into the client

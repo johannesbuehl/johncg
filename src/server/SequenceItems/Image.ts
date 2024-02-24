@@ -58,8 +58,7 @@ export default class Image extends SequenceItemBase {
 			slide: 0,
 			slides: [],
 			file_name: this.props.FileName,
-			background_image: await this.get_background_image(proxy),
-			mute_transition: true
+			background_image: await this.get_background_image(proxy)
 		};
 	}
 
