@@ -17,7 +17,7 @@ npm run build-client
 npm run build-templates
 
 # create sea-prep.blob
-node --experimental-sea-config .\sea-config.json
+# node --experimental-sea-config .\sea-config.json
 
 # get the node executable
 node -e "require('fs').copyFileSync(process.execPath, 'dist/build/$node_exec_name')"
