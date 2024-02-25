@@ -6,25 +6,33 @@
   "license": "MIT",
   "dependencies": {
     "casparcg-connection": "^6.2.1",
+    "fast-xml-parser": "^4.3.4",
     "iconv-lite": "^0.6.3",
     "mime-types": "^2.1.35",
-    "osc": "^2.4.4",
+    "node-osc": "^9.1.0",
+    "sharp": "^0.33.2",
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^20.11.16",
+    "@types/node-osc": "^6.0.3",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "@weichwarenprojekt/license-reporter": "^1.0.0",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
-    "husky": "^9.0.10",
     "postject": "^1.0.0-alpha.6",
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "lint": "eslint --ext .ts",
-    "precommit": "eslint . --ext .ts",
-    "build": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1"
+    "lint": "eslint src/**/*.ts",
+    "build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
+    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle",
+    "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
+    "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",
+    "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome71 --minify",
+    "watch-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome71 --sourcemap --watch"
   }
 }

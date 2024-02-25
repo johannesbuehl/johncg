@@ -4,9 +4,9 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-import Config from "./config";
+import Config from "../config";
 
-class http_server {
+class HTTPServer {
 	private port: number;
 
 	server: http.Server;
@@ -23,16 +23,21 @@ class http_server {
 			request.url = unescape(request.url);
 
 			// override different requested urls
-			switch (request.url) {
+			switch (true) {
 				// redirect the root to the main-site
-				case "/":
+				case /^\/$/.test(request.url):
 					request.url = "main.html";
 					break;
-				default:
-					if (/\/BackgroundImage\/.*/.test(request.url)) {
-						resource_dir = Config.path.backgroundImage;
-						request.url = request.url.replace(/\/BackgroundImage\//, "");
-					}
+				// serve the casparcg-templates
+				case /^\/Templates\//.test(request.url):
+					resource_dir = Config.casparcg.templates;
+					request.url = request.url.replace(/\/Templates\//, "");
+					break;
+				// serve the background-images
+				case /^\/BackgroundImage\//.test(request.url):
+					resource_dir = Config.path.background_image;
+					request.url = request.url.replace(/\/BackgroundImage\//, "");
+					break;
 			}
 				
 			// try to serve the requested url
@@ -40,13 +45,17 @@ class http_server {
 				// if there was an error while opening the file, serve a 404-error
 				if (err) {
 					response.writeHead(404, {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
 						"Content-Type": "text/plain"
 					});
 
 					response.write("Resource not found");
 				} else {
+					const mime_type = mime.lookup(request.url);
+
 					response.writeHead(200, {
-						"Content-Type": mime.lookup(request.url)
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						"Content-Type": mime_type ? mime_type : "text/plain"
 					});
 	
 					// serve the file-content
@@ -59,4 +68,4 @@ class http_server {
 	}
 }
 
-export { http_server };
+export default HTTPServer;

@@ -10,15 +10,24 @@ Generate lyric-graphics and play them out through CasparCG.
 ## roadmap
 - implement other sequence-items than song
 - client: information about connection (active / reconnecting / ...)
-- use async / await
 - companion integration (buttons for song parts -> send name to casparcg)
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
 - check client -> server slide_number out of range
 - client: check response-texts, if they are still correct
-- create message log / show error messages
-- write installation instruction
+- write installation instruction (including Bahnschrift-Font installation)
 - client communication with osc over websocket?
-- client: don't use ifames, include html directly / alternatively: clone iframes instead of creating new ones
 - add support for NodeCG
-- look into document fragments
 - add CLI output to server
+- CasparCG: split text and image in two layers: enables text without background
+- create dummy-sequence-items for unsupported ones
+- disable buttons, when no sequence is loaded
+- implement all countdown modes
+- countdown: save in server wether it is finished
+- add option to change template-directory
+- make sequence-comments another design in client
+- client-messages: create message-log, group same
+- build-script in node / integrate with license-generator
+- command-comment: define commands / names which get loaded straigth from the start and can be shown anytime
+- song: transmit template in server->client message instead of hardcoding it into the client
+- fix "Buffer() is deprecated"
+- generate background-image-b64 only if needed

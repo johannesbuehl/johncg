@@ -1,8 +1,8 @@
 import WebSocket, { RawData } from "ws";
 
 import Sequence from "./Sequence";
-import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./osc-server";
-import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./websocket-server";
+import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
+import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
 
 import * as JGCPSend from "./JGCPSendMessages";
 import * as JGCPRecv from "./JGCPReceiveMessages";
@@ -15,32 +15,36 @@ class Control {
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
 		control: {
-			"sequence-item": {
+			sequence_item: {
 				navigate: {
 					direction: (value: number) => this.navigate("item", value)
 				}
 			},
-			"item-slide": {
+			item_slide: {
 				navigate: {
 					direction: (value: number) => this.navigate("slide", value)
 				}
 			},
 			output: {
-				visibility: (value: boolean) => this.set_visibility(value)
+				visibility: {
+					set: async (value: boolean) => this.set_visibility(value),
+					toggle: async (value: string) => this.toggle_visibility(value)
+				}
 			}
 		}
 	};
 
 	// mapping of the websocket-messages to the functions
 	private readonly ws_function_map = {
-		"open-sequence": (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
-		"request-item-slides": (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.clientID, ws),
-		"select-item-slide": (msg: JGCPRecv.ItemSlideSelect, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.clientID, ws),
-		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.clientID, ws),
-		"set-visibility": (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.clientID, ws)
+		open_sequence: (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
+		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
+		select_item_slide: (msg: JGCPRecv.ItemSlideSelect, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
+		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
+		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.client_id, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		JGCP: {
 			connection: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
@@ -66,20 +70,15 @@ class Control {
 		this.sequence = new Sequence(sequence);
 
 		// send the sequence to all clients
-		const response_sequenceItems: JGCPSend.Sequence = {
-			command: "sequence-items",
+		const response_sequence_items: JGCPSend.Sequence = {
+			command: "sequence_items",
 			...this.sequence.create_client_object_sequence()
 		};
 
-		this.send_all_clients(response_sequenceItems);
+		this.send_all_clients(response_sequence_items);
 		
-		// send the selected item-slide to all clients
-		const respone_activeItemSlide: JGCPSend.State = {
-			command: "state",
-			activeItemSlide: this.sequence.active_item_slide
-		};
-
-		this.send_all_clients(respone_activeItemSlide);
+		// send the current state to all clients
+		this.send_all_clients(this.sequence.state);
 
 		ws_send_response("sequence has been opened", true, ws);
 	}
@@ -87,27 +86,28 @@ class Control {
 	/**
 	 * Reply on a item-slides-request with the requested item-slides
 	 * @param item 
-	 * @param clientID 
+	 * @param client_id 
 	 * @param ws 
 	 */
-	private get_item_slides(item: number, clientID?: string, ws?: WebSocket) {
+	private async get_item_slides(item: number, client_id?: string, ws?: WebSocket) {
 		// type-check the item
 		if (typeof item === "number") {
 			const message: JGCPSend.ItemSlides = {
-				command: "item-slides",
-				clientID,
-				...this.sequence.create_client_object_item_slides(item)
+				command: "item_slides",
+				client_id,
+				...await this.sequence.create_client_object_item_slides(item)
 			};
 
 			ws?.send(JSON.stringify(message));
 
 			ws_send_response("slides have been sent", true, ws);
 		} else {
-			ws_send_response(`'${item} is not of type 'number''`, false, ws);
+			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+			ws_send_response(`'${item}' is not of type 'number'`, false, ws);
 		}
 	}
 
-	private select_item_slide(item: number, slide: number, clientID?: string, ws?: WebSocket) {
+	private select_item_slide(item: number, slide: number, client_id?: string, ws?: WebSocket) {
 		if (typeof item !== "number") {
 			ws_send_response("'item' is not of type number", false, ws);
 		}
@@ -124,34 +124,40 @@ class Control {
 			} else {
 				this.sequence?.set_active_item(item, slide);
 			}
-
-			// send the response inside the try block, so it doesn't get send in case of an error
-			this.send_all_clients({
-				command: "state",
-				activeItemSlide: this.sequence.active_item_slide,
-				clientID
-			});
-
-			ws_send_response("slide has been selected", true, ws);
 		} catch (e) {
 			// catch invalid item or slide numbers
 			if (e instanceof RangeError) {
 				ws_send_response(e.message, true, ws);
+				return;
 			} else {
 				throw e;
 			}
 		}
+
+		this.send_all_clients({
+			command: "state",
+			active_item_slide: this.sequence.active_item_slide,
+			client_id: client_id
+		});
+
+		ws_send_response("slide has been selected", true, ws);
 	}
 
 	/**
 	 * navigate the active item or slide forwards or backwards
 	 * @param type 
 	 * @param steps 
-	 * @param clientID 
+	 * @param client_id 
 	 */
-	private navigate(type: JGCPRecv.NavigateType, steps: number, clientID?: string, ws?: WebSocket) {
-		if (!JGCPRecv.isItemNavigateType(type)) {
-			ws_send_response(`'type' has to be one of ${JSON.stringify(JGCPRecv.isItemNavigateType)}`, false, ws);
+	private navigate(type: JGCPRecv.NavigateType, steps: number, client_id?: string, ws?: WebSocket) {
+		// if there is no sequence loaded, send a negative response back and exit
+		if (this.sequence === undefined) {
+			ws_send_response("no schedule loaded", false, ws);
+			return;
+		}
+
+		if (!JGCPRecv.is_item_navigate_type(type)) {
+			ws_send_response(`'type' has to be one of ${JSON.stringify(JGCPRecv.is_item_navigate_type)}`, false, ws);
 		}
 
 		if (![-1, 1].includes(steps)) {
@@ -168,8 +174,8 @@ class Control {
 		
 		this.send_all_clients({
 			command: "state",
-			activeItemSlide: this.sequence.active_item_slide,
-			clientID
+			active_item_slide: this.sequence.active_item_slide,
+			client_id: client_id
 		});
 
 		ws_send_response(`'${type}' has been navigated`, true, ws);
@@ -179,7 +185,7 @@ class Control {
 	 * set the visibility of the sequence in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private set_visibility(visibility: boolean, _clientID?: string, ws?: WebSocket) {
+	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): Promise<void> {
 		// if there is no sequence loaded, send a negative response back and exit
 		if (this.sequence === undefined) {
 			ws_send_response("no schedule loaded", false, ws);
@@ -187,7 +193,7 @@ class Control {
 		}
 
 		if (typeof visibility === "boolean") {
-			this.sequence.set_visibility(visibility);
+			await this.sequence.set_visibility(visibility);
 
 			this.send_all_clients({
 				command: "state",
@@ -197,6 +203,20 @@ class Control {
 			ws_send_response("visibility has been set", true, ws);
 		} else {
 			ws_send_response("'visibility' has to be of type boolean", false, ws);
+		}
+	}
+
+	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
+		let visibility_feedback = false;
+
+		// if a sequence is loaded, get it's visibility
+		if (this.sequence !== undefined) {
+			visibility_feedback = await this.sequence.toggle_visibility();
+		}
+
+		// if a feedback-path is given, write the feedback to it
+		if (osc_feedback_path !== undefined) {
+			this.osc_server.send_value(osc_feedback_path, visibility_feedback);
 		}
 	}
 
@@ -211,11 +231,6 @@ class Control {
 		ws_clients.forEach((ws_client) => {
 			ws_client.send(JSON.stringify(message));
 		});
-
-		// dummy-implementation-example
-		if (message.command === "state" && message.visibility !== undefined) {
-			this.osc_server.send_value("/not/implemented", message.visibility);
-		}
 	}
 
 	/**
@@ -227,18 +242,13 @@ class Control {
 		if (this.sequence !== undefined) {
 			// send the sequence
 			const respone_sequence: JGCPSend.Sequence = {
-				command: "sequence-items",
+				command: "sequence_items",
 				...this.sequence.create_client_object_sequence()
 			};
 			ws.send(JSON.stringify(respone_sequence));
 
 			// send the selected item-slide
-			const respone_activeItemSlide: JGCPSend.State = {
-				command: "state",
-				activeItemSlide: this.sequence.active_item_slide
-			};
-	
-			ws.send(JSON.stringify(respone_activeItemSlide));
+			ws.send(JSON.stringify(this.sequence.state));
 		} else {
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
 			const clear_message: JGCPSend.Clear = {
@@ -250,9 +260,10 @@ class Control {
 	}
 
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
-		let data;
+		let data: JGCPRecv.Message;
 		// try to parse the data as a JSON-object
 		try {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-base-to-string
 			data = JSON.parse(raw_data.toString());
 
 			// if the parsed is null or not an object, throw an exception
@@ -276,6 +287,7 @@ class Control {
 		} else if (!Object.keys(this.ws_function_map).includes(data.command)) {
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			this.ws_function_map[data.command](data, ws);
 		}
 	}
@@ -287,7 +299,7 @@ class Control {
  * @param success status code 200 = SUCCESS (true) or 400 = ERROR (false)
  * @param ws 
  */
-function ws_send_response(message: string, success: boolean, ws: WebSocket) {
+function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	const response = {
 		command: "response",
 		message: message,
