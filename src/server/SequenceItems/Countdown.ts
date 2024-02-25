@@ -1,7 +1,7 @@
 import path from "path";
 import { convert_color_to_hex } from "../Sequence";
 import Config from "../config";
-import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, ItemRenderObjectBase, ItemTemplateData, SequenceItemBase } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
@@ -35,14 +35,20 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 	slides_template: CountdownRenderObject & { mute_transition: true; };
 }
 
-export interface CountdownRenderObject extends ItemRenderObjectBase {
-	type: "Countdown";
-	caspar_type: "template";
-	slides: [];
+export interface CountdownTemplateData extends ItemTemplateData {
 	position: CountdownPosition;
 	font_format: FontFormat;
 	time: string;
 	show_seconds: boolean;
+	mode: CountdownMode;
+}
+
+export interface CountdownRenderObject extends ItemRenderObjectBase {
+	type: "Countdown";
+	template: {
+		template: "JohnCG/Countdown",
+		data: CountdownTemplateData
+	}
 }
 
 // data from in the hex-string of the countdown, uses CSS-notation for easy translation in the renderer
@@ -135,15 +141,20 @@ export default class Countdown extends SequenceItemBase {
 
 	async create_render_object(proxy?: boolean): Promise<CountdownRenderObject> {
 		return {
-			caspar_type: "template",
 			type: "Countdown",
 			background_image: await this.get_background_image(proxy),
 			slide: 0,
 			slides: [],
+			template: {
+				template: "JohnCG/Countdown",
+				data: {
 			time: this.props.Time,
 			font_format: this.props.font_format,
 			position: this.props.position,
-			show_seconds: this.props.show_seconds
+					show_seconds: this.props.show_seconds,
+					mode: this.props.mode
+				}
+			}
 		};
 	}
 

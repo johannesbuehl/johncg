@@ -1,4 +1,4 @@
-import { CountdownRenderObject } from "../server/SequenceItems/Countdown";
+import { CountdownTemplateData } from "../server/SequenceItems/Countdown";
 
 let update_interval: NodeJS.Timeout;
 const spans: {
@@ -9,7 +9,7 @@ const spans: {
 	hours: [],
 	minutes: []
 };
-let data: CountdownRenderObject;
+let data: CountdownTemplateData;
 
 const end_time = new Date();
 
@@ -21,7 +21,7 @@ function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
 	
-	data = JSON.parse(str_args) as CountdownRenderObject;
+	data = JSON.parse(str_args) as CountdownTemplateData;
 	
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");
@@ -95,15 +95,6 @@ function update(str_args: string) {
 		Object.entries(this_format).forEach(([key, val]) => {
 			time_div.style[key] = val;
 		});
-	}
-
-	if (main_div !== null) {
-		if (data.background_image !== undefined) {
-			main_div.style.backgroundImage = `url("${data.background_image.replace(/\\/g, "\\\\")}")`;
-		} 
-		if (data.background_color !== undefined) {
-			main_div.style.backgroundImage = data.background_color;
-		}
 	}
 
 	if (data.time !== undefined) {

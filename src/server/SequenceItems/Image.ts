@@ -14,6 +14,7 @@ export interface ImageRenderObject extends ItemRenderObjectBase {
 	caspar_type: "media";
 	file_name: string;
 	slides: [];
+	media: string;
 }
 
 export interface ClientImageSlides extends ClientItemSlidesBase {
@@ -58,6 +59,7 @@ export default class Image extends SequenceItemBase {
 			slide: 0,
 			slides: [],
 			file_name: this.props.FileName,
+			media: this.props.FileName,
 			background_image: await this.get_background_image(proxy)
 		};
 	}

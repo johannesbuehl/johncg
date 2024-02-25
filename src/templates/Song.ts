@@ -1,6 +1,6 @@
-import { ItemSlide, SongRenderObject } from "../server/SequenceItems/Song";
+import { ItemSlide, SongTemplateData } from "../server/SequenceItems/Song";
 
-let data: SongRenderObject;
+let data: SongTemplateData;
 
 let active_slide = 0;
 let slide_count = 0;
@@ -9,15 +9,13 @@ let slide_count = 0;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
-	data = JSON.parse(s_data) as SongRenderObject;
+	data = JSON.parse(s_data) as SongTemplateData;
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");
 	const div_storage = document.querySelector<HTMLDivElement>("div#storage");
 
 	if (div_container === null || div_storage === null) return;
-
-	div_container.style.backgroundImage = `url("${data.background_image}")`;
 
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");

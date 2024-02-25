@@ -14,12 +14,10 @@ export interface ClientCommandCommentSlides extends ClientItemSlidesBase {
 export interface CommandCommentRenderObject extends ItemRenderObjectBase {
 	type: "CommandComment";
 	caspar_type: "template";
-	slides: [
-		{
-			template: string;
-			data?: object;
-		}
-	];
+	template: {
+		template: string;
+		data: object;
+	};
 }
 
 export default class CommandComment extends SequenceItemBase {
@@ -55,7 +53,11 @@ export default class CommandComment extends SequenceItemBase {
 				slides: [{
 					template: this.props.template,
 					data: this.props.data
-				}]
+				}],
+				template: {
+					template: this.props.template,
+					data: this.props.data
+				}
 			});
 		});
 	}

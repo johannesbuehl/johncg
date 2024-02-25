@@ -1,10 +1,10 @@
 import path from "path";
-import { CasparCG, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
+import { APIRequest, CasparCG, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
 import mime from "mime-types";
 import { XMLParser } from "fast-xml-parser";
 
 import { SongElement } from "./SequenceItems/SongFile";
-import { ClientItemSlides, ItemProps, ItemPropsBase, SequenceItem } from "./SequenceItems/SequenceItem";
+import { ClientItemSlides, ItemProps, ItemPropsBase, ItemRenderObject, SequenceItem } from "./SequenceItems/SequenceItem";
 import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
@@ -55,6 +55,13 @@ class Sequence {
 	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
 
 	readonly casparcg_connections: CasparCGConnection[] = [];
+
+	readonly casparcg_transition: TransitionParameters = {
+		/* eslint-disable @typescript-eslint/naming-convention */
+		duration: Config.casparcg.transition_length,
+		transitionType: TransitionType.Mix
+		/* eslint-enable @typescript-eslint/naming-convention */
+	};
 
 	constructor(sequence: string) {
 		this.parse_sequence(sequence);
@@ -113,15 +120,11 @@ class Sequence {
 		const clear_layers = (connection: CasparCGConnection) => {
 			void connection.connection.cgClear({
 				channel: connection.settings.channel,
-				layer: connection.settings.layers.song[0]
+				layer: connection.settings.layers[0]
 			});
 			void connection.connection.cgClear({
 				channel: connection.settings.channel,
-				layer: connection.settings.layers.song[1]
-			});
-			void connection.connection.cgClear({
-				channel: connection.settings.channel,
-				layer: connection.settings.layers.command_comment
+				layer: connection.settings.layers[1]
 			});
 		};
 
@@ -214,20 +217,24 @@ class Sequence {
 					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
 					if (!Object.keys(item_data).includes("FileName")) {
 						// try to parse the caption as an JSON-object for AMCP-Commands
-						const caption_json = JSON.parse(item_data.Caption) as unknown;
+						try {
+							const caption_json = JSON.parse(item_data.Caption) as unknown;
 
-						if (typeof caption_json === "object") {
-							console.debug(caption_json);
-
-							const props: CommandCommentProps = {
-								...item_data,
-								type: "CommandComment",
-								...caption_json as { template: string, data?: object }
-							};
-
-							this.sequence_items.push(new CommandComment(props));
-						} else {
-							this.sequence_items.push(new Comment(item_data as CommentProps));
+							if (typeof caption_json === "object") {
+								const props: CommandCommentProps = {
+									...item_data,
+									type: "CommandComment",
+									...caption_json as { template: string, data?: object }
+								};
+	
+								this.sequence_items.push(new CommandComment(props));
+							} else {
+								throw new SyntaxError();
+							}
+						} catch (e) {
+							if (e instanceof SyntaxError) {
+								this.sequence_items.push(new Comment(item_data as CommentProps));
+							}
 						}
 					}
 					break;
@@ -365,133 +372,122 @@ class Sequence {
 		return item;
 	}
 
-	private casparcg_load_item(casparcg_connection?: CasparCGConnection): void {
+	private casparcg_load_item(casparcg_connection?: CasparCGConnection, media_only?: boolean): void {
 		const connections = casparcg_connection ? [casparcg_connection] : this.casparcg_connections;
 
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		connections.forEach(async (connection) => {
-			// if no connection was give, flip the layers and stop the template-layer
-			if (casparcg_connection === undefined) {
-				// clear the lower layer
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				await connection.connection.cgClear({
-					channel: connection.settings.channel,
-					layer: connection.settings.layers.song[0]
-				});
-	
-				await connection.connection.swap({
-					channel: connection.settings.channel,
-					layer: connection.settings.layers.song[0],
-					channel2: connection.settings.channel,
-					layer2: connection.settings.layers.song[1],
-					transforms: true
-				});
-
-				void connection.connection.cgStop({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: connection.settings.channel,
-					layer: connection.settings.layers.command_comment,
-					cgLayer: 0
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			}
-		
 			// generate the render-object
 			const render_object = await this.active_sequence_item.create_render_object();
+			
+			await this.casparcg_load_media(connection, render_object);
 
-			// depending on the type, use different caspar-cg-functions
-			switch (render_object?.caspar_type) {
-				case "template":
-					switch (this.active_sequence_item.props.type) {
-						case "CommandComment":
-							void connection.connection.cgAdd({
-								/* eslint-disable @typescript-eslint/naming-convention */
-								channel: connection.settings.channel,
-								layer: connection.settings.layers.command_comment,
-								cgLayer: 0,
-								playOnLoad: false,
-								template: this.active_sequence_item.props.template,
-								// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-								data: JSON.stringify(JSON.stringify(this.active_sequence_item.props.data, (_key, val: unknown) => {
-									if (typeof val === "string") {
-										return val.replace("\"", "\\u0022");
-									} else {
-										return val;
-									}
-								}))
-								/* eslint-enable @typescript-eslint/naming-convention */
-							});
-							break;
-						default:
-							void connection.connection.cgAdd({
-								/* eslint-disable @typescript-eslint/naming-convention */
-								channel: connection.settings.channel,
-								layer: connection.settings.layers.song[1],
-								cgLayer: 0,
-								playOnLoad: this.casparcg_visibility,
-								template: `JohnCG/${render_object.type}`,
-								// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-								data: JSON.stringify(JSON.stringify(render_object, (_key, val: unknown) => {
-									if (typeof val === "string") {
-										return val.replace("\"", "\\u0022");
-									} else {
-										return val;
-									}
-								}))
-								/* eslint-enable @typescript-eslint/naming-convention */
-							});
-						break;
-					}
-					break;
-				case "media": {
-					// make it all uppercase and remove the extension to match casparcg-clips and make sure it uses forward slashes
-					const req_name = render_object.file_name.replace(/\.[^(\\.]+$/, "").toUpperCase().replace(/\\/g, "/");
-
-					let media_result: ClipInfo | undefined;
-
-					// check all the casparcg-files, wether they contain a media-file that matches the path
-					for (const m of connection.media) {
-						const media_file = m.clip.toUpperCase().replace(/\\/, "/");
-	
-						if (req_name.endsWith(media_file)) {
-							media_result = m;
-							break;
-						}
-					}
-
-					const transition: TransitionParameters = {
-						/* eslint-disable @typescript-eslint/naming-convention */
-						duration: 12.5, // 25 frames = 1s@25fps
-						transitionType: TransitionType.Mix
-						/* eslint-enable @typescript-eslint/naming-convention */
-					};
-
-					// if a matching media-file was found, use it
-					if (media_result !== undefined) {
-						void connection.connection.play({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel:  connection.settings.channel,
-							layer:  connection.settings.layers.song[1],
-							clip: media_result.clip,
-							transition: !render_object.mute_transition ? transition : undefined
-							/* eslint-enable @typescript-eslint/naming-convention */
-						});
-					} else {
-						void connection.connection.executeCommand({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							command: Commands.PlayHtml,
-							params: {
-								channel:  connection.settings.channel,
-								layer:  connection.settings.layers.song[1],
-								url: JSON.stringify(render_object.background_image),
-								transition: !render_object.mute_transition ? transition : undefined
-								/* eslint-enable @typescript-eslint/naming-convention */
-							}
-						});
-					}
-				} break;
+			if (!media_only) {
+				void this.casparcg_load_template(connection, render_object);
 			}
 		});
+	}
+
+	private casparcg_load_media(casparcg_connection: CasparCGConnection, render_object: ItemRenderObject): Promise<APIRequest<Commands.CgAdd>> {
+		// if a media-file is defined, load it
+		if (render_object.media) {
+			// make it all uppercase and remove the extension to match casparcg-clips and make sure it uses forward slashes
+			const req_name = render_object.media.replace(/\.[^(\\.]+$/, "").toUpperCase().replace(/\\/g, "/");
+
+			let media_result: ClipInfo | undefined;
+
+			// check all the casparcg-files, wether they contain a media-file that matches the path
+			for (const m of casparcg_connection.media) {
+				const media_file = m.clip.toUpperCase().replace(/\\/, "/");
+
+				if (req_name.endsWith(media_file)) {
+					media_result = m;
+					break;
+				}
+			}
+
+			// if a matching media-file was found, use it
+			if (media_result !== undefined) {
+				// if the state is "visible", play it directly
+				if (this.visibility) {
+					return casparcg_connection.connection.play({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[0],
+						clip: media_result.clip,
+						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+						/* eslint-enable @typescript-eslint/naming-convention */
+					});
+				} else {
+					//  if the current stat is invisible, only load it in the background
+					return casparcg_connection.connection.loadbg({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[0],
+						clip: media_result.clip,
+						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+						/* eslint-enable @typescript-eslint/naming-convention */
+					});
+				}
+			} else {
+				const command = this.visibility ? Commands.PlayHtml : Commands.LoadbgHtml;
+
+				return casparcg_connection.connection.executeCommand({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					command: command,
+					params: {
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[0],
+						url: JSON.stringify(render_object.background_image),
+						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+						/* eslint-enable @typescript-eslint/naming-convention */
+					}
+				});
+			}
+		} else {
+			// clear the media-output
+			return casparcg_connection.connection.play({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel:  casparcg_connection.settings.channel,
+				layer:  casparcg_connection.settings.layers[0],
+				clip: "EMPTY",
+				transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
+	}
+
+	private casparcg_load_template(casparcg_connection: CasparCGConnection, render_object: ItemRenderObject): Promise<APIRequest<Commands.CgAdd>> {
+		// if a template was specified, load it
+		if (render_object.template !== undefined) {
+			return casparcg_connection.connection.cgAdd({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers[1],
+				cgLayer: 0,
+				playOnLoad: this.casparcg_visibility,
+				template: render_object.template.template,
+				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
+				data: JSON.stringify(JSON.stringify(render_object.template.data, (_key, val: unknown) => {
+					if (typeof val === "string") {
+						return val.replace("\"", "\\u0022");
+					} else {
+						return val;
+					}
+				}))
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		} else {
+			// if not, clear the previous template
+			return casparcg_connection.connection.play({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel:  casparcg_connection.settings.channel,
+				layer:  casparcg_connection.settings.layers[1],
+				clip: "EMPTY",
+				transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
 	}
 
 	private casparcg_select_slide(slide: number): void {
@@ -500,7 +496,7 @@ class Sequence {
 			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.song[1],
+				layer: casparcg_connection.settings.layers[1],
 				cgLayer: 0,
 				method: `jump(${slide})`
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -509,54 +505,48 @@ class Sequence {
 	}
 
 	async set_visibility(visibility: boolean): Promise<void> {
-		for (const casparcg_connection of this.casparcg_connections) {
-			// clear the background-layer, so that the foreground has an hide-animation
-			await casparcg_connection.connection.clear({
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.song[0]
-			});
+		this.casparcg_visibility = visibility;
 
-			const options = {
-				/* eslint-disable @typescript-eslint/naming-convention */
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.song[1],
-				cgLayer: 0
-				/* eslint-enable @typescript-eslint/naming-convention */
-			};
-	
-			this.casparcg_visibility = visibility;
-	
+		for (const casparcg_connection of this.casparcg_connections) {
 			if (visibility) {
-				void casparcg_connection.connection.cgPlay(options);
+				// load the media-item. Since it is invisible, it will only be prepared
+				this.casparcg_load_item(casparcg_connection, true);
+
+				await casparcg_connection.connection.cgPlay({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[1],
+						cgLayer: 0
+						/* eslint-enable @typescript-eslint/naming-convention */
+					});
+
 			} else {
-				void casparcg_connection.connection.cgStop(options);
+				await Promise.allSettled([
+					// fade-out the media
+					casparcg_connection.connection.play({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[0],
+						clip: "EMPTY",
+						transition: this.casparcg_transition
+						/* eslint-enable @typescript-eslint/naming-convention */
+					}),
+	
+					// stop the template-layer
+					casparcg_connection.connection.cgStop({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel:  casparcg_connection.settings.channel,
+						layer:  casparcg_connection.settings.layers[1],
+						cgLayer: 0
+						/* eslint-enable @typescript-eslint/naming-convention */
+					})
+				]);
 			}
 		}
 	}
 
 	async toggle_visibility(): Promise<boolean> {
-		this.casparcg_visibility = !this.visibility;
-
-		for (const casparcg_connection of this.casparcg_connections) {
-			await casparcg_connection.connection.clear({
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.song[0]
-			});
-
-			const options = {
-				/* eslint-disable @typescript-eslint/naming-convention */
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.song[1],
-				cgLayer: 0
-				/* eslint-enable @typescript-eslint/naming-convention */
-			};
-	
-			if (this.visibility) {
-				void casparcg_connection.connection.cgPlay(options);
-			} else {
-				void casparcg_connection.connection.cgStop(options);
-			}
-		}
+		await this.set_visibility(!this.visibility);
 
 		return this.visibility;
 	}

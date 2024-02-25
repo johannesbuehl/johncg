@@ -2,10 +2,7 @@ export interface CasparCGConnectionSettings {
 	host: string;
 	port: number;
 	channel: number;
-	layers: {
-		song: [number, number];
-		command_comment: number;
-	};
+	layers: [number, number];
 }
 
 interface ConfigJSON {
@@ -18,6 +15,7 @@ interface ConfigJSON {
 	};
 	casparcg: {
 		templates: string;
+		transition_length: number;
 		connections: CasparCGConnectionSettings[];
 	};
 	client_server: {

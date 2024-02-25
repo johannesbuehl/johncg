@@ -30,4 +30,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - command-comment: define commands / names which get loaded straigth from the start and can be shown anytime
 - song: transmit template in server->client message instead of hardcoding it into the client
 - fix "Buffer() is deprecated"
-- cgplay after invisible: only foreground / send background as fast as possible dark
+- generate background-image-b64 only if needed

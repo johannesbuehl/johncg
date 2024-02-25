@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import mime from "mime-types";
-import sharp from "sharp";
+import sharp, { AvifOptions, FormatEnum, GifOptions, HeifOptions, Jp2Options, JpegOptions, JxlOptions, OutputOptions, PngOptions, TiffOptions, WebpOptions } from "sharp";
 
 import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
 import Countdown, { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
@@ -31,13 +31,19 @@ export interface ItemPropsBase {
 
 export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps | CommandCommentProps;
 
-type CasparGeneratorType = "media" | "template";
+export interface ItemTemplateData {
+	mute_transition?: boolean;
+}
 
 // interface for a renderer-object
 export interface ItemRenderObjectBase {
-	caspar_type: CasparGeneratorType;
 	slides: Array<unknown>;
 	slide: number;
+	media?: string;
+	template?: {
+		template: string;
+		data: object;
+	};
 	background_image?: string;
 	background_color?: string;
 	mute_transition?: boolean;
@@ -102,40 +108,69 @@ export abstract class SequenceItemBase {
 	}
 
 	protected async load_background_images(image_path?: string, background_color?: string) {
-		let img_buffer: Buffer | undefined = undefined;
-		let img_buffer_proxy: Buffer | undefined = undefined;
+		let img: sharp.Sharp = undefined;
+		let img_proxy: sharp.Sharp = undefined;
 		
 		if (image_path !== undefined) {
 			try {
-				img_buffer = await fs.readFile(image_path);
+				img = sharp(await fs.readFile(image_path));
 
-				img_buffer_proxy = await sharp(img_buffer).resize(240).toBuffer();
+				img_proxy = img.clone().resize(240);
 			} catch (e) {
 				"";
 			}
 		}
 
 		// if the image_buffer is still undefined, try to use the backgroundColor
-		if (img_buffer === undefined && background_color !== undefined) {
-			img_buffer = await sharp({
+		if (img === undefined && background_color !== undefined) {
+			img = sharp({
 				create: {
 					width: 1,
 					height: 1,
 					channels: 4,
 					background: background_color
 				}
-			}).png().toBuffer();
+			}).png();
 			
 			// copy the the image to the proxy buffer, since only 1px anyway
-			img_buffer_proxy = img_buffer;
+			img_proxy = img;
 		}
 
-		if (img_buffer !== undefined && img_buffer_proxy !== undefined) {
+		if (img !== undefined && img_proxy !== undefined) {
 			this.item_props.BackgroundImage = {
 				// if there is no image-path, the mime-type is PNG, since we created them from the background-color
-				orig: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer).toString("base64"),
-				proxy: `data:${mime.lookup(image_path ?? ".png")};base64,` + (img_buffer_proxy).toString("base64")
+				orig: `data:${mime.lookup(image_path ?? ".png")};base64,` + (await (img.toBuffer())).toString("base64"),
+				proxy: `data:${mime.lookup(image_path ?? ".png")};base64,` + (await (img_proxy.toBuffer())).toString("base64")
 			};
+
+			const sharp_formats: [keyof FormatEnum,
+            options?:
+                | OutputOptions
+                | JpegOptions
+                | PngOptions
+                | WebpOptions
+                | AvifOptions
+                | HeifOptions
+                | JxlOptions
+                | GifOptions
+                | Jp2Options
+                | TiffOptions
+			][]
+			= [
+				["webp", { lossless: true }],
+				["jpg", { quality: 100 }]
+			];
+
+			// check wether the base64-string is too long
+			while (this.item_props.BackgroundImage.orig.length > 2097152) {
+				const [format, options] = sharp_formats.shift();
+				this.item_props.BackgroundImage = {
+					// if there is no image-path, the mime-type is PNG, since we created them from the background-color
+					orig: `data:${mime.lookup(`.${format}`)};base64,` + (await (img.toFormat(format, options)).toBuffer()).toString("base64"),
+					proxy: `data:${mime.lookup(`.${format}`)};base64,` + (await (img_proxy.jpeg({ quality: 100 }).toBuffer())).toString("base64")
+				};
+			}
+		
 		} else {
 			this.item_props.BackgroundImage = { orig: "", proxy: "" };
 		}

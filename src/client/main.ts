@@ -264,7 +264,7 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	
 	const slide_object = document.createElement("object");
 
-	let template_data: object = data.slides_template;
+	const template_data: object & { template?: { template: string, data: object } } = data.slides_template;
 
 	switch (data.type) {
 		case "Song":
@@ -273,14 +273,12 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 		case "Countdown":
 			slide_object.data = "Templates/JohnCG/Countdown.html";
 			break;
-		case "Image":
-			slide_object.data = `${data.slides_template.background_image?.replace(/\\/g, "\\\\")}`;
-			break;
 		case "CommandComment":
-			slide_object.data = `Templates/${data.slides_template.slides[0].template}.html`;
-			template_data = data.slides_template.slides[0].data;
+			slide_object.data = `Templates/${data.slides_template.template.template}.html`;
 			break;
 	}
+
+	slide_object.style.backgroundImage = `url("${data.slides_template.background_image?.replace(/\\/g, "\\\\") ?? ""}")`;
 
 	slide_object.classList.add("slide");
 	
@@ -288,8 +286,16 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	
 	slide_object.dataset.slide_number = number.toString();
 	
+	// register click event
+	div_slide_container.addEventListener("click", () => {
+		request_item_slide_select(
+			Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
+			number
+		);
+	});
+
 	slide_object.addEventListener("load", () => {
-		slide_object.contentWindow?.update(JSON.stringify(template_data));
+		slide_object.contentWindow?.update(JSON.stringify({ ...template_data?.template.data, mute_transition: true }));
 
 		switch (data.type) {
 			case "Song":
@@ -298,17 +304,11 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 		}
 
 		slide_object.contentWindow?.play();
-	
-		const container = slide_object.contentDocument ?? div_slide_container;
-
-		// register click event
-		container.addEventListener("click", () => {
-			request_item_slide_select(
-				Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
-				number
-			);
-		});
 	});
+
+	const catcher = document.createElement("div");
+
+	div_slide_container.append(catcher);
 	
 	return div_slide_container;
 }

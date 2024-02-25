@@ -1,4 +1,4 @@
-import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, ItemTemplateData, SequenceItemBase } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile";
 import path from "path";
 
@@ -24,11 +24,19 @@ export interface LyricSlide {
 
 export type ItemSlide = LyricSlide | TitleSlide;
 
+export interface SongTemplateData extends ItemTemplateData {
+	slides: ItemSlide[];
+	languages: number[];
+	slide: number;
+}
+
 export interface SongRenderObject extends ItemRenderObjectBase {
 	caspar_type: "template";
 	type: "Song";
-	slides: ItemSlide[];
-	languages: number[];
+	template: {
+		template: "JohnCG/Song",
+		data: SongTemplateData
+	}
 }
 
 export interface ClientSongSlides extends ClientItemSlidesBase {
@@ -116,12 +124,22 @@ export default class Song extends SequenceItemBase {
 		const return_object: SongRenderObject = {
 			type: "Song",
 			caspar_type: "template",
+			slide,
 			slides: [
 				this.song_file.part_title
 			],
-			slide,
+			background_image: await this.get_background_image(proxy),
+			template: {
+				template: "JohnCG/Song",
+				data: {
 			languages: this.languages,
-			background_image: await this.get_background_image(proxy)
+					slides: [
+						this.song_file.part_title
+					],
+					slide
+				}
+			},
+			media: this.song_file.metadata.BackgroundImage
 		};
 		
 		// add the individual parts to the output-object
@@ -139,10 +157,13 @@ export default class Song extends SequenceItemBase {
 			if (part !== undefined){
 				// add the individual slides of the part to the output object
 				for (const slide of part.slides) {
-					return_object.slides.push({
+					const slide_obj = {
 						type: part.type,
 						data: slide
-					});
+					};
+
+					return_object.slides.push(slide_obj);
+					return_object.template.data.slides.push(slide_obj);
 				}
 			}
 		}
