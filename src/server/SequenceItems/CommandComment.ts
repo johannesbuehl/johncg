@@ -29,6 +29,12 @@ export default class CommandComment extends SequenceItemBase {
 		super();
 
 		this.item_props = props;
+
+		this.item_props.Caption = `Template: "${this.props.template.toUpperCase()}"`;
+
+		if (this.props.data) {
+			this.item_props.Caption += ` (${JSON.stringify(this.props.data, undefined, " ").slice(3, -2)})`;
+		}
 	}
 	
 	async create_client_object_item_slides(): Promise<ClientItemSlides> {
