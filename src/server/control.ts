@@ -35,7 +35,7 @@ class Control {
 	};
 
 	// mapping of the websocket-messages to the functions
-	private readonly ws_function_map: Record<string, (...unknown) => void | Promise<void>> = {
+	private readonly ws_function_map = {
 		open_sequence: (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
@@ -287,8 +287,7 @@ class Control {
 		} else if (!Object.keys(this.ws_function_map).includes(data.command)) {
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			void this.ws_function_map[data.command](data, ws);
+			void this.ws_function_map[data.command](data as never, ws);
 		}
 	}
 }

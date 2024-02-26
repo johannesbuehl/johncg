@@ -1,4 +1,4 @@
-import { ClientItemSlidesBase, ItemProps, ItemPropsBase, ItemRenderObjectBase, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlidesBase, ItemProps, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
 
 export interface CommentProps extends ItemPropsBase {
 	type: "Comment";
@@ -7,11 +7,6 @@ export interface CommentProps extends ItemPropsBase {
 
 export interface ClientCommentSlides extends ClientItemSlidesBase {
 	type: "Comment";
-	slides_template: CommentRenderObject & { mute_transition: true; };
-}
-
-export interface CommentRenderObject extends ItemRenderObjectBase {
-	caspar_type: "media";
 }
 
 export default class Comment extends SequenceItemBase {
@@ -28,24 +23,16 @@ export default class Comment extends SequenceItemBase {
 	}
 	
 	create_client_object_item_slides(): Promise<ClientCommentSlides> {
-		return new Promise((resolve) => {
-			resolve({
-				type: "Comment",
-				title: this.props.Caption,
-				item: this.props.item,
-				slides: [],
-				slides_template: {
-					caspar_type: "media",
-					slides: [],
-					slide: 0,
-					mute_transition: true
-				}
-			});
+		return Promise.resolve({
+			type: "Comment",
+			title: this.props.Caption,
+			item: this.props.item,
+			slides: []
 		});
 	}
 	
 	create_render_object(): Promise<undefined> {
-		return new Promise((resolve) => resolve(undefined));
+		return Promise.resolve<undefined>(undefined);
 	}
 	
 	navigate_slide(steps: number): number {
@@ -56,10 +43,6 @@ export default class Comment extends SequenceItemBase {
 	set_active_slide(): number {
 		return 0;
 	}
-
-	protected get_background_image(): Promise<string> {
-		return new Promise((resolve) => resolve(""));
-	}
 	
 	get active_slide(): number {
 		return -1;
@@ -67,5 +50,9 @@ export default class Comment extends SequenceItemBase {
 
 	get props(): ItemProps {
 		return this.item_props;
+	}
+
+	get template(): undefined {
+		return undefined;
 	}
 }

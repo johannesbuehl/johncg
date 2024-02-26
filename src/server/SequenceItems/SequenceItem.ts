@@ -2,17 +2,21 @@ import { promises as fs } from "fs";
 import mime from "mime-types";
 import sharp, { AvifOptions, FormatEnum, GifOptions, HeifOptions, Jp2Options, JpegOptions, JxlOptions, OutputOptions, PngOptions, TiffOptions, WebpOptions } from "sharp";
 
-import Song, { ClientSongSlides, SongProps, SongRenderObject } from "./Song";
-import Countdown, { ClientCountdownSlides, CountdownProps, CountdownRenderObject } from "./Countdown";
-import Comment, { ClientCommentSlides, CommentProps, CommentRenderObject } from "./Comment";
-import Image, { ClientImageSlides, ImageProps, ImageRenderObject } from "./Image";
-import CommandComment, { ClientCommandCommentSlides, CommandCommentProps, CommandCommentRenderObject } from "./CommandComment";
+import Song, { ClientSongSlides, SongProps, SongTemplate } from "./Song";
+import Countdown, { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown";
+import Comment, { ClientCommentSlides, CommentProps } from "./Comment";
+import Image, { ClientImageSlides, ImageProps } from "./Image";
+import CommandComment, { ClientCommandCommentSlides, CommandCommentProps, CommandCommentTemplate } from "./CommandComment";
+import Config from "../config";
+import path from "path";
 
 export type SequenceItem = Song | Countdown | Comment | Image | CommandComment;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
+
+export type Template = CountdownTemplate | SongTemplate | CommandCommentTemplate;
 
 export interface ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -22,41 +26,25 @@ export interface ItemPropsBase {
 	Color: string;
 	item: number;
 	selectable: boolean;
-	BackgroundImage?: {
-		orig: string;
-		proxy: string;
-	}
+	background_color?: string;
+	background_image?: string;
+	media?: string;
+	template?: Template;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
 export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps | CommandCommentProps;
 
-export interface ItemTemplateData {
-	mute_transition?: boolean;
-}
-
-// interface for a renderer-object
-export interface ItemRenderObjectBase {
-	slides: Array<unknown>;
-	slide: number;
-	media?: string;
-	template?: {
-		template: string;
-		data: object;
-	};
-	background_image?: string;
-	background_color?: string;
-	mute_transition?: boolean;
-}
-
-export type ItemRenderObject = SongRenderObject | CountdownRenderObject | CommentRenderObject | ImageRenderObject | CommandCommentRenderObject;
-
 export interface ClientItemSlidesBase {
 	type: string;
 	title: string;
 	item: number;
-	slides: object;
-	slides_template: ItemRenderObject & { mute_transition: true; };
+	slides: Array<unknown>;
+	media_b64?: string;
+	template?: {
+		template: string;
+		data: object;
+	};
 }
 
 export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides | ClientCommandCommentSlides;
@@ -67,7 +55,7 @@ export interface FontFormat {
 	fontSize: number;
 	fontWeight?: "bold";
 	fontStyle?: "italic";
-	fontDecoration?: "underline";
+	textDecoration?: "underline";
 	color: string;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
@@ -76,7 +64,7 @@ export abstract class SequenceItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
 
-	abstract create_render_object(proxy?: boolean, slide?: number);
+	// abstract create_render_object(proxy?: boolean, slide?: number);
 	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
 
@@ -107,22 +95,28 @@ export abstract class SequenceItemBase {
 		return slide;
 	}
 
-	protected async load_background_images(image_path?: string, background_color?: string) {
+	async get_media_b64(proxy: boolean = false): Promise<string> {
 		let img: sharp.Sharp = undefined;
-		let img_proxy: sharp.Sharp = undefined;
-		
-		if (image_path !== undefined) {
-			try {
-				img = sharp(await fs.readFile(image_path));
 
-				img_proxy = img.clone().resize(240);
+		// if no background-color is specified, set it to transparent
+		const background_color = this.props.background_color ?? "#00000000";
+		
+		if (this.media !== undefined) {
+			try {
+				img = sharp(await fs.readFile(this.media));
+			
+				// if a proxy is requested, downscale teh image
+				if (proxy) {
+					img.resize(240);
+				}
+
 			} catch (e) {
-				"";
+				/* empty */
 			}
 		}
 
-		// if the image_buffer is still undefined, try to use the backgroundColor
-		if (img === undefined && background_color !== undefined) {
+		// if the image_buffer is still undefined, use the backgroundColor
+		if (img === undefined) {
 			img = sharp({
 				create: {
 					width: 1,
@@ -131,54 +125,60 @@ export abstract class SequenceItemBase {
 					background: background_color
 				}
 			}).png();
-			
-			// copy the the image to the proxy buffer, since only 1px anyway
-			img_proxy = img;
 		}
 
-		if (img !== undefined && img_proxy !== undefined) {
-			this.item_props.BackgroundImage = {
-				// if there is no image-path, the mime-type is PNG, since we created them from the background-color
-				orig: `data:${mime.lookup(image_path ?? ".png")};base64,` + (await (img.toBuffer())).toString("base64"),
-				proxy: `data:${mime.lookup(image_path ?? ".png")};base64,` + (await (img_proxy.toBuffer())).toString("base64")
-			};
+		const pack_b64_string = async (img: sharp.Sharp, path: string = this.props.background_image) => `data:${mime.lookup(path)};base64,` + (await img.toBuffer()).toString("base64");
 
-			const sharp_formats: [keyof FormatEnum,
-            options?:
-                | OutputOptions
-                | JpegOptions
-                | PngOptions
-                | WebpOptions
-                | AvifOptions
-                | HeifOptions
-                | JxlOptions
-                | GifOptions
-                | Jp2Options
-                | TiffOptions
-			][]
-			= [
-				["webp", { lossless: true }],
-				["jpg", { quality: 100 }]
-			];
+		let ret_string: string = await pack_b64_string(img);
 
-			// check wether the base64-string is too long
-			while (this.item_props.BackgroundImage.orig.length > 2097152) {
-				const [format, options] = sharp_formats.shift();
-				this.item_props.BackgroundImage = {
-					// if there is no image-path, the mime-type is PNG, since we created them from the background-color
-					orig: `data:${mime.lookup(`.${format}`)};base64,` + (await (img.toFormat(format, options)).toBuffer()).toString("base64"),
-					proxy: `data:${mime.lookup(`.${format}`)};base64,` + (await (img_proxy.jpeg({ quality: 100 }).toBuffer())).toString("base64")
-				};
-			}
+		const sharp_formats: [keyof FormatEnum,
+		options?:
+			| OutputOptions
+			| JpegOptions
+			| PngOptions
+			| WebpOptions
+			| AvifOptions
+			| HeifOptions
+			| JxlOptions
+			| GifOptions
+			| Jp2Options
+			| TiffOptions
+		][]
+		= [
+			["webp", { lossless: true }],
+			["jpg", { quality: 100 }]
+		];
+
+		while (ret_string.length > 2097152) {
+			const [format, options] = sharp_formats.shift();
+
+			ret_string = await pack_b64_string(img.toFormat(format, options), `.${format}`);
+		}
 		
+		return ret_string;
+	}
+
+	abstract get props(): ItemProps;
+
+	get media(): string {
+		return this.props.media;
+	}
+
+	protected resolve_image_path(img_path: string): string {
+		const return_path = path.isAbsolute(img_path) ? img_path : path.resolve(Config.path.background_image, img_path);
+
+		return return_path.replaceAll("\\", "/");
+	}
+
+	protected get_background_image(img_path: string = this.props.background_image): string {
+		// if it is not defined, return the backgroundcolor instead
+		if (img_path === undefined) {
+			// if the background-color too isn't defined, return transparency
+			return this.props.background_color ?? "#00000000";
 		} else {
-			this.item_props.BackgroundImage = { orig: "", proxy: "" };
+			return this.resolve_image_path(img_path);
 		}
 	}
 
-	get props(): ItemProps {
-		return this.item_props;
-	}
-
-	protected abstract get_background_image(proxy?: boolean): Promise<string>;
+	abstract get template(): Template;
 }

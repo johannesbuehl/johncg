@@ -6,6 +6,10 @@ import { ClientItemSlides } from "../server/SequenceItems/SequenceItem";
 import * as JGCPSend from "../server/JGCPSendMessages";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
 import { ActiveItemSlide } from "../server/Sequence.js";
+import { ClientSongSlides } from "../server/SequenceItems/Song.js";
+import { ClientCountdownSlides } from "../server/SequenceItems/Countdown.js";
+import { ClientImageSlides } from "../server/SequenceItems/Image.js";
+import { ClientCommandCommentSlides } from "../server/SequenceItems/CommandComment.js";
 
 const config = {
 	websocket: {
@@ -92,6 +96,13 @@ function display_items(data: JGCPSend.Sequence) {
 		
 		// if it's a  Countdown-Object, insert the time
 		if (item.type === "Countdown") {
+			const title_map = {
+				clock: "Clock",
+				stopwatch: "Stopwatch",
+				duration: "Countdown (duration)",
+				end_time: "Countdown (end time)"
+			};
+
 			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
 		} else {
 			div_sequence_item.innerText = item.Caption;
@@ -139,16 +150,16 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 
 	switch (data.type) {
 		case "Song":
-			part_arrays = create_song_slides(data as JGCPSend.SongSlides);
+			part_arrays = create_song_slides(data as ClientSongSlides);
 			break;
 		case "Countdown":
-			part_arrays = create_image_countdown_slides(data as JGCPSend.CountdownSlides);
+			part_arrays = create_image_countdown_slides(data as ClientCountdownSlides);
 			break;
 		case "Image":
-			part_arrays = create_image_countdown_slides(data as JGCPSend.ImageSlides);
+			part_arrays = create_image_countdown_slides(data as ClientImageSlides);
 			break;
 		case "CommandComment":
-			part_arrays = create_template_slides(data as JGCPSend.CommandCommentSlides);
+			part_arrays = create_template_slides(data as ClientCommandCommentSlides);
 			break;
 		default:
 			console.error(`'${data.type}' is not supported`);
@@ -161,7 +172,7 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 	set_active_slide(data.client_id === client_id);
 }
 
-function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
+function create_song_slides(data: ClientSongSlides): HTMLDivElement[] {
 	let slide_counter: number = 0;
 
 	// create the individual arrays for parallel processing
@@ -216,7 +227,7 @@ function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 	return part_arrays;
 }
 
-function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend.ImageSlides): HTMLDivElement[] {
+function create_image_countdown_slides(data: ClientCountdownSlides | ClientImageSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -240,7 +251,7 @@ function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend
 	return [div_slide_part];
 }
 
-function create_template_slides(data: JGCPSend.CommandCommentSlides): HTMLDivElement[] {
+function create_template_slides(data: ClientCommandCommentSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -270,21 +281,11 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	
 	const slide_object = document.createElement("object");
 
-	const template_data: object & { template?: { template: string, data: object } } = data.slides_template;
-
-	switch (data.type) {
-		case "Song":
-			slide_object.data = "Templates/JohnCG/Song.html";
-			break;
-		case "Countdown":
-			slide_object.data = "Templates/JohnCG/Countdown.html";
-			break;
-		case "CommandComment":
-			slide_object.data = `Templates/${data.slides_template.template.template}.html`;
-			break;
+	if (data.template !== undefined) {
+		slide_object.data = "Templates/" + data.template.template;
 	}
 
-	slide_object.style.backgroundImage = `url("${data.slides_template.background_image?.replace(/\\/g, "\\\\") ?? ""}")`;
+	slide_object.style.backgroundImage = `url("${data.media_b64}")`;
 
 	slide_object.classList.add("slide");
 	
@@ -301,7 +302,7 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	});
 
 	slide_object.addEventListener("load", () => {
-		slide_object.contentWindow?.update(JSON.stringify({ ...template_data?.template.data, mute_transition: true }));
+		slide_object.contentWindow?.update(JSON.stringify({ ...data.template.data, mute_transition: true }));
 
 		switch (data.type) {
 			case "Song":

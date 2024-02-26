@@ -1,7 +1,5 @@
-import path from "path";
 import { convert_color_to_hex } from "../Sequence";
-import Config from "../config";
-import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, ItemRenderObjectBase, ItemTemplateData, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
@@ -16,14 +14,16 @@ interface CountdownSequenceItemProps extends ItemPropsBase {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
+export interface CountdownTemplate {
+	template: "JohnCG/Countdown";
+	data: CountdownTemplateData;
+}
+
 export interface CountdownProps extends CountdownSequenceItemProps {
-	font_format: FontFormat;
-	position: CountdownPosition;
-	mode: CountdownMode;
-	show_seconds: boolean;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	fileName?: string;
 	background_color?: string;
+	template: CountdownTemplate;
 }
 
 export interface ClientCountdownSlides extends ClientItemSlidesBase {
@@ -32,23 +32,16 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 		time: string;
 		mode: CountdownMode;
 	}],
-	slides_template: CountdownRenderObject & { mute_transition: true; };
+	media_b64: string;
+	template: CountdownTemplate;
 }
 
-export interface CountdownTemplateData extends ItemTemplateData {
+export interface CountdownTemplateData {
 	position: CountdownPosition;
 	font_format: FontFormat;
 	time: string;
 	show_seconds: boolean;
 	mode: CountdownMode;
-}
-
-export interface CountdownRenderObject extends ItemRenderObjectBase {
-	type: "Countdown";
-	template: {
-		template: "JohnCG/Countdown",
-		data: CountdownTemplateData
-	}
 }
 
 // data from in the hex-string of the countdown, uses CSS-notation for easy translation in the renderer
@@ -83,17 +76,25 @@ export default class Countdown extends SequenceItemBase {
 		
 		this.item_props = {
 			...props,
-			position: {
-				x: hex_data.x,
-				y: hex_data.y
-			},
-			show_seconds: hex_data.show_seconds,
-			font_format: hex_data.font_format,
-			mode: hex_data.mode,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			fileName: hex_data.background_image,
-			background_color: hex_data.background_color
+			background_image: hex_data.background_image,
+			background_color: hex_data.background_color,
+			template: {
+				template: "JohnCG/Countdown",
+				data: {
+					font_format: hex_data.font_format,
+					show_seconds: hex_data.show_seconds,
+					mode: hex_data.mode,
+					position: {
+						x: hex_data.x,
+						y: hex_data.y
+					},
+					time: props.Time
+				}
+			}
 		};
+
+		this.item_props.media = this.get_background_image(this.props.background_image);
 	}
 
 	navigate_slide(steps: number): number {
@@ -125,48 +126,16 @@ export default class Countdown extends SequenceItemBase {
 		};
 		
 		return {
-			title: `${title_map[this.props.mode]}: ${this.props.Time}`,
+			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
 			type: this.props.type,
 			item: this.props.item,
 			slides: [{
-				mode: this.props.mode,
+				mode: this.template.data.mode,
 				time: this.props.Time
 			}],
-			slides_template: {
-				...await this.create_render_object(true),
-				mute_transition: true
-			}
+			media_b64: await this.get_media_b64(true),
+			template: this.props.template
 		};
-	}
-
-	async create_render_object(proxy?: boolean): Promise<CountdownRenderObject> {
-		return {
-			type: "Countdown",
-			background_image: await this.get_background_image(proxy),
-			slide: 0,
-			slides: [],
-			template: {
-				template: "JohnCG/Countdown",
-				data: {
-			time: this.props.Time,
-			font_format: this.props.font_format,
-			position: this.props.position,
-					show_seconds: this.props.show_seconds,
-					mode: this.props.mode
-				}
-			}
-		};
-	}
-
-	protected async get_background_image(proxy?: boolean): Promise<string> {
-		// check wether the images have yet been laoded
-		if (this.props.BackgroundImage === undefined) {
-			const image_path = path.join(Config.path.background_image, this.props.fileName ?? "");
-
-			await this.load_background_images(image_path, this.props.background_color);
-		}
-
-		return this.props.BackgroundImage[proxy ? "proxy" : "orig"];
 	}
 
 	get active_slide(): number {
@@ -176,6 +145,10 @@ export default class Countdown extends SequenceItemBase {
 
 	get props(): CountdownProps {
 		return this.item_props;
+	}
+
+	get template(): CountdownTemplate {
+		return this.props.template;
 	}
 }
 

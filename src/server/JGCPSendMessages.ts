@@ -1,8 +1,5 @@
 import * as SequenceClass from "../server/Sequence";
-import { ClientCountdownSlides } from "../server/SequenceItems/Countdown";
-import { ClientSongSlides } from "../server/SequenceItems/Song";
-import { ClientCommandCommentSlides } from "./SequenceItems/CommandComment";
-import { ClientImageSlides } from "./SequenceItems/Image";
+import { ClientItemSlides } from "./SequenceItems/SequenceItem";
 
 /**
  * Base interface for sent JGCP-messages
@@ -41,18 +38,7 @@ interface ItemSlidesBase extends Base{
 	command: "item_slides";
 }
 
-export type SongSlides = ItemSlidesBase & ClientSongSlides;
-
-export type CountdownSlides = ItemSlidesBase & ClientCountdownSlides;
-
-export type ImageSlides = ItemSlidesBase & ClientImageSlides;
-
-export type CommandCommentSlides = ItemSlidesBase & ClientCommandCommentSlides;
-
-// temporary until full feature set
-export type NotImplementedSlides = ItemSlidesBase & { type: string; item: number; };
-
-export type ItemSlides = SongSlides | CountdownSlides | NotImplementedSlides;
+export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 
 export interface Clear extends Base {
 	command: "clear";
