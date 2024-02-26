@@ -20,37 +20,41 @@ function open_sequence(e: Event) {
 	const reader = new FileReader();
 
 	reader.onload = function(e) {
-		const raw_data = e.target?.result;
-
-		ws.send(JSON.stringify({
+		const message: JGCPRecv.OpenSequence = {
 			command: "open_sequence",
-			sequence: raw_data
-		}));
+			sequence: e.target?.result as string
+		};
+
+		ws.send(JSON.stringify(message));
 	};
 
 	reader.readAsText(file);
 }
 document.querySelector("#input_open_sequence")?.addEventListener("change", open_sequence);
 
-function button_navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
-	ws.send(JSON.stringify({
+function navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
+	const command: JGCPRecv.Navigate = {
 		command: "navigate",
 		type,
 		steps,
 		client_id: client_id
-	}));
+	};
+
+	ws.send(JSON.stringify((command)));
 }
-document.querySelector("#navigate_item_prev")?.addEventListener("click", () => { button_navigate("item", -1); });
-document.querySelector("#navigate_item_next")?.addEventListener("click", () => { button_navigate("item", 1); });
-document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { button_navigate("slide", -1); });
-document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { button_navigate("slide", 1); });
+document.querySelector("#navigate_item_prev")?.addEventListener("click", () => { navigate("item", -1); });
+document.querySelector("#navigate_item_next")?.addEventListener("click", () => { navigate("item", 1); });
+document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { navigate("slide", -1); });
+document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { navigate("slide", 1); });
 
 function button_visibility(visibility: boolean) {
-	ws.send(JSON.stringify({
+	const message: JGCPRecv.SetVisibility = {
 		command: "set_visibility",
 		visibility,
 		client_id: client_id
-	}));
+	};
+
+	ws.send(JSON.stringify(message));
 }
 document.querySelector("#set_visibility_hide")?.addEventListener("click", () => { button_visibility(false); });
 document.querySelector("#set_visibility_show")?.addEventListener("click", () => { button_visibility(true); });
@@ -114,11 +118,13 @@ function request_item_slides(item: number) {
 		// clear the selected item
 		document.querySelector(".sequence_item_container.selected")?.classList.remove("selected");
 	
-		ws.send(JSON.stringify({
+		const command: JGCPRecv.RequestItemSlides = {
 			command: "request_item_slides",
 			item: item,
 			client_id: client_id
-		}));
+		};
+
+		ws.send(JSON.stringify(command));
 	}
 }
 
@@ -329,13 +335,15 @@ function select_item(item: number) {
 }
 
 function request_item_slide_select(item: number, slide: number) {
-	ws.send(JSON.stringify({
+	const message: JGCPRecv.SelectItemSlide = {
 		command: "select_item_slide",
 		item: item,
 		slide: slide,
 		client_id: client_id
-	}));
-}
+	};
+
+	ws.send(JSON.stringify(message));
+}	
 
 function set_active_slide(scroll: boolean = false) {
 	// deselect the previous active slide
@@ -468,10 +476,6 @@ function ws_connect() {
 	ws.addEventListener("message", (event: MessageEvent) => {
 		const data: JGCPSend.Message = JSON.parse(event.data as string) as JGCPSend.Message;
 
-
-		console.dir(data);
-
-	
 		const command_parser_map = {
 			sequence_items: display_items,
 			item_slides: display_item_slides,
@@ -521,3 +525,32 @@ let active_item_slide = {
 	item: 0,
 	slide: 0
 };
+
+document.addEventListener("keydown", (event) => {
+	// exit on composing
+	if (event.isComposing || event.keyCode === 229) {
+		return;
+	}
+
+	if (!event.repeat) {
+		switch (event.code) {
+			case "PageUp":
+			case "ArrowLeft":
+				navigate("slide", -1);
+				break;
+			case "PageDown":
+			case "ArrowRight":
+				navigate("slide", 1);
+				break;
+			case "ArrowUp":
+				navigate("item", -1);
+				break;
+			case "ArrowDown":
+				navigate("item", 1);
+				break;
+			default:
+				console.debug(event.code);
+				break;
+		}
+	}
+});

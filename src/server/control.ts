@@ -35,10 +35,10 @@ class Control {
 	};
 
 	// mapping of the websocket-messages to the functions
-	private readonly ws_function_map = {
+	private readonly ws_function_map: Record<string, (...unknown) => void | Promise<void>> = {
 		open_sequence: (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
-		select_item_slide: (msg: JGCPRecv.ItemSlideSelect, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
+		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
 		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
 		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.client_id, ws)
 	};
@@ -288,7 +288,7 @@ class Control {
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			this.ws_function_map[data.command](data, ws);
+			void this.ws_function_map[data.command](data, ws);
 		}
 	}
 }

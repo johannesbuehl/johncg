@@ -17,14 +17,8 @@ export interface OpenSequence extends Base {
  * request for the slides of a specific item
  */
 export interface RequestItemSlides extends Base {
-	command: "request-item_slides";
+	command: "request_item_slides";
 	item: number;
-}
-
-export interface ItemSlideSelect extends Base {
-	command: "select-item-slide";
-	item: number;
-	slide: number;
 }
 
 /**
@@ -53,11 +47,9 @@ export interface SelectItemSlide extends Base {
 	command: "select_item_slide";
 	item: number;
 	slide: number;
-
 }
 
 /**
  * Uniun of the different JGCP-messages
  */
 export type Message = RequestItemSlides | SetVisibility | OpenSequence | Navigate | SelectItemSlide;
-
