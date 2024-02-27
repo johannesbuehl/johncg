@@ -9,7 +9,7 @@ const spans: {
 	hours: [],
 	minutes: []
 };
-let data: CountdownTemplateData;
+let data: CountdownTemplateData & { mute_transition: boolean };
 
 const end_time = new Date();
 
@@ -21,7 +21,7 @@ function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
 	
-	data = JSON.parse(str_args) as CountdownTemplateData;
+	data = JSON.parse(str_args) as CountdownTemplateData & { mute_transition: boolean };
 	
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");

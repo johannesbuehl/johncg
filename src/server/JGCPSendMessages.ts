@@ -1,5 +1,9 @@
 import * as SequenceClass from "../server/Sequence";
-import { ClientItemSlides } from "./SequenceItems/SequenceItem";
+import { ClientCommandCommentSlides } from "./SequenceItems/CommandComment";
+import { ClientCommentSlides } from "./SequenceItems/Comment";
+import { ClientCountdownSlides } from "./SequenceItems/Countdown";
+import { ClientImageSlides } from "./SequenceItems/Image";
+import { ClientSongSlides } from "./SequenceItems/Song";
 
 /**
  * Base interface for sent JGCP-messages
@@ -36,9 +40,16 @@ export interface State extends Base {
 interface ItemSlidesBase extends Base{
 	client_id: string;
 	command: "item_slides";
+	resolution: SequenceClass.CasparCGResolution;
 }
 
-export type ItemSlides = ClientItemSlides & ItemSlidesBase;
+export type SongSlides = ClientSongSlides & ItemSlidesBase;
+export type CountdownSlides = ClientCountdownSlides & ItemSlidesBase;
+export type ImageSlides = ClientImageSlides & ItemSlidesBase;
+export type CommandCommentSlides = ClientCommandCommentSlides & ItemSlidesBase;
+export type CommentSlides = ClientCommentSlides & ItemSlidesBase;
+
+export type ItemSlides = SongSlides | CountdownSlides | ImageSlides | CommandCommentSlides | CommentSlides;
 
 export interface Clear extends Base {
 	command: "clear";

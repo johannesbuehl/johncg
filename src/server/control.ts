@@ -1,16 +1,40 @@
 import WebSocket, { RawData } from "ws";
 
-import Sequence from "./Sequence";
+import Sequence, { CasparCGResolution } from "./Sequence";
 import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
 import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
 
 import * as JGCPSend from "./JGCPSendMessages";
 import * as JGCPRecv from "./JGCPReceiveMessages";
+import { CasparCG, ClipInfo } from "casparcg-connection";
+import Config, { CasparCGConnectionSettings } from "./config";
+import { XMLParser } from "fast-xml-parser";
+
+interface CasparCGPathsSettings {
+	/* eslint-disable @typescript-eslint/naming-convention */
+	"data-path": string;
+	"initial-path": string;
+	"log-path": string;
+	"media-path": string;
+	"template-path": string;
+	/* eslint-enable @typescript-eslint/naming-convention */
+}
+
+export interface CasparCGConnection {
+	connection:	CasparCG;
+	settings: CasparCGConnectionSettings;
+	paths: CasparCGPathsSettings;
+	media: ClipInfo[];
+	resolution: CasparCGResolution;
+	framerate: number;
+}
 
 class Control {
 	private sequence: Sequence;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
+
+	readonly casparcg_connections: CasparCGConnection[] = [];
 
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
@@ -57,6 +81,64 @@ class Control {
 
 		// initialize the osc server
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
+
+		const xml_parser = new XMLParser();
+
+		// create the casparcg-connections
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		Config.casparcg.connections.forEach(async (connection_setting) => {
+			const connection: CasparCG = new CasparCG({
+				...connection_setting,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				autoConnect: true
+			});
+
+			const casparcg_config = (await (await connection.infoConfig()).request).data;
+
+			let resolution: CasparCGResolution;
+			let framerate: number;
+
+			const video_mode_regex_results = casparcg_config.channels[connection_setting.channel - 1].videoMode.match(/(?:(?<dci>dci)?(?<width>\d+)(?:x(?<height>\d+))?[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/);
+
+			// if the resolution is given as PAL or NTSC, convert it
+			if (video_mode_regex_results.groups.mode) {
+				switch (video_mode_regex_results.groups.mode) {
+					case "PAL":
+						resolution = {
+							width: 720,
+							height: 576
+						};
+						framerate = 25;
+						break;
+					case "NTSC":
+						resolution = {
+							width: 720,
+							height: 480
+						};
+						framerate = 29.97;
+						break;
+				}
+			} else {
+				resolution = {
+					width: Number(video_mode_regex_results.groups.width),
+					height: Number(video_mode_regex_results.groups.height ?? Number(video_mode_regex_results.groups.width) / 16 * 9)
+				};
+				framerate = Number(video_mode_regex_results.groups.framerate) / 100;
+			}
+
+			const casparcg_connection: CasparCGConnection = {
+				connection,
+				settings: connection_setting,
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				paths: xml_parser.parse((await (await connection.infoPaths()).request)?.data as string ?? "")?.paths as CasparCGPathsSettings,
+				media: (await (await connection.cls()).request)?.data ?? [],
+				resolution,
+				framerate
+			};
+			
+			// add the connection to the stored connections
+			this.casparcg_connections.push(casparcg_connection);
+		});
 	}
 
 	/**
@@ -67,7 +149,7 @@ class Control {
 		// if there was already a sequence open, call it's destroy function
 		this.sequence?.destroy();
 
-		this.sequence = new Sequence(sequence);
+		this.sequence = new Sequence(sequence, this.casparcg_connections);
 
 		// send the sequence to all clients
 		const response_sequence_items: JGCPSend.Sequence = {
@@ -95,6 +177,7 @@ class Control {
 			const message: JGCPSend.ItemSlides = {
 				command: "item_slides",
 				client_id,
+				resolution: this.sequence.casparcg_connections[0].resolution,
 				...await this.sequence.create_client_object_item_slides(item)
 			};
 

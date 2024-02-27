@@ -31,10 +31,6 @@ export default class Comment extends SequenceItemBase {
 		});
 	}
 	
-	create_render_object(): Promise<undefined> {
-		return Promise.resolve<undefined>(undefined);
-	}
-	
 	navigate_slide(steps: number): number {
 		// return the steps, since there are no slides to navigate
 		return steps;

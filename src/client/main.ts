@@ -71,7 +71,7 @@ function display_items(data: JGCPSend.Sequence) {
 	// initialize
 	init();
 
-	for (const item of data.sequence_items) {
+	data.sequence_items.forEach((item) => {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
 		div_sequence_item_container.dataset.item_number = item.item.toString();
@@ -93,6 +93,7 @@ function display_items(data: JGCPSend.Sequence) {
 
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
+		div_sequence_item.classList.add(item.type);
 		
 		// if it's a  Countdown-Object, insert the time
 		if (item.type === "Countdown") {
@@ -110,7 +111,7 @@ function display_items(data: JGCPSend.Sequence) {
 
 		div_sequence_item_container.append(div_sequence_item);
 		div_sequence_items?.append(div_sequence_item_container);
-	}
+	});
 
 	// display the visibility state
 	display_visibility_state(data.metadata.visibility);
@@ -150,19 +151,19 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 
 	switch (data.type) {
 		case "Song":
-			part_arrays = create_song_slides(data as ClientSongSlides);
+			part_arrays = create_song_slides(data);
 			break;
 		case "Countdown":
-			part_arrays = create_image_countdown_slides(data as ClientCountdownSlides);
+			part_arrays = create_image_countdown_slides(data);
 			break;
 		case "Image":
-			part_arrays = create_image_countdown_slides(data as ClientImageSlides);
+			part_arrays = create_image_countdown_slides(data);
 			break;
 		case "CommandComment":
-			part_arrays = create_template_slides(data as ClientCommandCommentSlides);
+			part_arrays = create_template_slides(data as JGCPSend.ItemSlides);
 			break;
 		default:
-			console.error(`'${data.type}' is not supported`);
+			console.error(`'${data["type"]}' is not supported`);
 	}
 
 	part_arrays.forEach((slide_part) => {
@@ -172,7 +173,7 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 	set_active_slide(data.client_id === client_id);
 }
 
-function create_song_slides(data: ClientSongSlides): HTMLDivElement[] {
+function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 	let slide_counter: number = 0;
 
 	// create the individual arrays for parallel processing
@@ -227,7 +228,7 @@ function create_song_slides(data: ClientSongSlides): HTMLDivElement[] {
 	return part_arrays;
 }
 
-function create_image_countdown_slides(data: ClientCountdownSlides | ClientImageSlides): HTMLDivElement[] {
+function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend.ImageSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -251,7 +252,7 @@ function create_image_countdown_slides(data: ClientCountdownSlides | ClientImage
 	return [div_slide_part];
 }
 
-function create_template_slides(data: ClientCommandCommentSlides): HTMLDivElement[] {
+function create_template_slides(data: JGCPSend.ItemSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -275,9 +276,20 @@ function create_template_slides(data: ClientCommandCommentSlides): HTMLDivElemen
 	return [div_slide_part];
 }
 
-function create_slide_object(data: ClientItemSlides, number: number) {
+function create_slide_object(data: JGCPSend.ItemSlides, number: number) {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
+	
+	const img_media = document.createElement("img");
+	img_media.src = data.media_b64 ?? "";
+
+	// add an error listener, to set the opacity to zero (avoids error symbol)
+	img_media.addEventListener("error", () => {
+		img_media.style.opacity = "0";
+	});
+
+	img_media.style.aspectRatio = (data.resolution.width / data.resolution.height).toString();
+	div_slide_container.append(img_media);
 	
 	const slide_object = document.createElement("object");
 
@@ -285,13 +297,7 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 		slide_object.data = "Templates/" + data.template.template;
 	}
 
-	slide_object.style.backgroundImage = `url("${data.media_b64}")`;
-
-	slide_object.classList.add("slide");
-	
 	div_slide_container.append(slide_object);
-	
-	slide_object.dataset.slide_number = number.toString();
 	
 	// register click event
 	div_slide_container.addEventListener("click", () => {
@@ -314,6 +320,8 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	});
 
 	const catcher = document.createElement("div");
+	catcher.classList.add("slide");
+	catcher.dataset.slide_number = number.toString();
 
 	div_slide_container.append(catcher);
 	

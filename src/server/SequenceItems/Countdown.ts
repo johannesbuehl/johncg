@@ -153,7 +153,7 @@ export default class Countdown extends SequenceItemBase {
 }
 
 function parse_hex_data(data_hex: string): CountdownData {
-	const regex_curse = /(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D650604(?<font_name>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
+	const regex_curse = /(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D65(?:0[A-F0-9])+(?<font_family>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
 
 
 	const data: DeepPartial<CountdownData> = {

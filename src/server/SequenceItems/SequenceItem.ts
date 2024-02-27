@@ -64,7 +64,6 @@ export abstract class SequenceItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
 
-	// abstract create_render_object(proxy?: boolean, slide?: number);
 	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
 
