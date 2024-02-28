@@ -5,7 +5,7 @@ export interface CasparCGConnectionSettings {
 	layers: [number, number];
 }
 
-interface ConfigJSON {
+export interface ConfigJSON {
 	behaviour: {
 		show_on_load: boolean;
 	};

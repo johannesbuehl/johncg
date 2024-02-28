@@ -1,8 +1,13 @@
-import { ClientItemSlidesBase, ItemPropsBase, ItemRenderObjectBase, ItemTemplateData, SequenceItemBase } from "./SequenceItem";
+import { ClientItemSlidesBase, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
 import SongFile, { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile";
 import path from "path";
 
 import Config from "../config";
+
+export interface SongTemplate {
+	template: "JohnCG/Song";
+	data: SongTemplateData;
+}
 
 export interface SongProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -11,6 +16,8 @@ export interface SongProps extends ItemPropsBase {
 	VerseOrder?: string[];
 	Language?: number;
 	PrimaryLanguage?: number;
+	media?: string[];
+	template?: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -24,25 +31,17 @@ export interface LyricSlide {
 
 export type ItemSlide = LyricSlide | TitleSlide;
 
-export interface SongTemplateData extends ItemTemplateData {
+export interface SongTemplateData {
 	slides: ItemSlide[];
 	languages: number[];
 	slide: number;
 }
 
-export interface SongRenderObject extends ItemRenderObjectBase {
-	caspar_type: "template";
-	type: "Song";
-	template: {
-		template: "JohnCG/Song",
-		data: SongTemplateData
-	}
-}
-
 export interface ClientSongSlides extends ClientItemSlidesBase {
 	type: "Song"
 	slides: ItemPartClient[];
-	slides_template: SongRenderObject & { mute_transition: true; };
+	media_b64: string;
+	template: SongTemplate;
 }
 
 export default class Song extends SequenceItemBase {
@@ -102,6 +101,15 @@ export default class Song extends SequenceItemBase {
 				}
 			}
 		}
+
+		// store the media
+		this.item_props.media = [this.get_background_image(this.song_file.metadata.BackgroundImage)];
+
+		// create the template data
+		this.item_props.template = {
+			template: "JohnCG/Song",
+			data: this.create_template_data()
+		};
 	}
 
 	get_verse_order(): string[] {
@@ -114,32 +122,15 @@ export default class Song extends SequenceItemBase {
 		}
 	}
 
-	async create_render_object(proxy?: boolean, slide?: number): Promise<SongRenderObject> {
-		if (slide === undefined) {
-			slide = this.active_slide;
-		}
-		
-		slide = this.validate_slide_number(slide);
+	create_template_data(slide?: number) {
+		slide = this.active_slide ?? this.validate_slide_number(slide);
 
-		const return_object: SongRenderObject = {
-			type: "Song",
-			caspar_type: "template",
+		const return_object: SongTemplateData = {
 			slide,
 			slides: [
 				this.song_file.part_title
 			],
-			background_image: await this.get_background_image(proxy),
-			template: {
-				template: "JohnCG/Song",
-				data: {
-			languages: this.languages,
-					slides: [
-						this.song_file.part_title
-					],
-					slide
-				}
-			},
-			media: this.song_file.metadata.BackgroundImage
+			languages: this.languages
 		};
 		
 		// add the individual parts to the output-object
@@ -156,15 +147,15 @@ export default class Song extends SequenceItemBase {
 			// if a part is not available, skip it
 			if (part !== undefined){
 				// add the individual slides of the part to the output object
-				for (const slide of part.slides) {
-					const slide_obj = {
+				part.slides.forEach((slide) => {
+
+					const slide_obj: LyricSlide = {
 						type: part.type,
 						data: slide
 					};
-
+					
 					return_object.slides.push(slide_obj);
-					return_object.template.data.slides.push(slide_obj);
-				}
+				});
 			}
 		}
 
@@ -214,14 +205,12 @@ export default class Song extends SequenceItemBase {
 		const return_item: ClientSongSlides = {
 			type: "Song",
 			title: this.item_props.Caption,
-			item: this.item_props.item,
+			item: this.props.item,
 			slides: [
 				this.song_file.get_title_client()
 			],
-			slides_template: {
-				...await this.create_render_object(true, 0),
-				mute_transition: true
-			}
+			media_b64: await this.get_media_b64(true),
+			template: this.props.template
 		};
 
 		for (const part_name of this.get_verse_order()) {
@@ -244,21 +233,28 @@ export default class Song extends SequenceItemBase {
 		return return_item;
 	}
 
-	protected async get_background_image(proxy?: boolean): Promise<string> {
-		// check wether the images have yet been laoded
-		if (this.props.BackgroundImage === undefined) {
-			const image_path = path.join(Config.path.background_image, this.song_file.metadata.BackgroundImage ?? "");
-
-			await this.load_background_images(image_path);
-		}
-
-		return this.props.BackgroundImage[proxy ? "proxy" : "orig"];
+	get props(): SongProps {
+		return this.item_props;
 	}
 
 	get active_slide(): number {
 		return this.active_slide_number;
 	}
+
+	get template(): SongTemplate {
+		const template = structuredClone(this.props.template);
+		template.data.slide = this.active_slide;
+
+		return template;
+	}
+
+	get media(): string {
+		return this.props.media[0];
+	}
 }
-function get_song_path(song_path: string): string {
-	return path.join(Config.path.song, song_path);
+
+export function get_song_path(song_path: string): string {
+	const return_path = path.isAbsolute(song_path) ? song_path : path.resolve(Config.path.song, song_path);
+
+	return return_path.replaceAll("\\", "/");
 }

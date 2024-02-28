@@ -9,7 +9,7 @@ const spans: {
 	hours: [],
 	minutes: []
 };
-let data: CountdownTemplateData;
+let data: CountdownTemplateData & { mute_transition: boolean };
 
 const end_time = new Date();
 
@@ -21,7 +21,16 @@ function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
 	
-	data = JSON.parse(str_args) as CountdownTemplateData;
+	try {
+		data = JSON.parse(str_args) as CountdownTemplateData & { mute_transition: boolean };
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			throw error;
+		} else {
+			return;
+		}
+	}
+
 	
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");
@@ -54,6 +63,8 @@ function update(str_args: string) {
 	const time_div = document.querySelector<HTMLDivElement>("#time");
 	if (time_div === null) {
 		return;
+	} else {
+		time_div.innerHTML = "";
 	}
 
 	const colon_hm: HTMLSpanElement = document.createElement("span");
@@ -77,6 +88,12 @@ function update(str_args: string) {
 		}
 	});
 
+	// create an overlaying div for the underline
+	const underline_div = document.createElement("div");
+	underline_div.classList.add("underline");
+	underline_div.id = "underline";
+	time_div.append(underline_div);
+
 	// if the position is undefined, set them to center
 	if (data.position.x === undefined) {
 		data.position.x = 50;
@@ -91,6 +108,14 @@ function update(str_args: string) {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			fontSize: `${data.font_format.fontSize}em`
 		};
+
+		// remove the underline property and show / hide the underline div
+		if (this_format.textDecoration === "underline") {
+			delete this_format.textDecoration;
+			document.querySelector<HTMLDivElement>("#underline").style.display = "";
+		} else {
+			document.querySelector<HTMLDivElement>("#underline").style.display = "none";
+		}
 
 		Object.entries(this_format).forEach(([key, val]) => {
 			time_div.style[key] = val;

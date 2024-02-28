@@ -1,7 +1,6 @@
 import MessageLog from "./message_box.js";
 
 import { ItemPartClient } from "../server/SequenceItems/SongFile";
-import { ClientItemSlides } from "../server/SequenceItems/SequenceItem";
 
 import * as JGCPSend from "../server/JGCPSendMessages";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
@@ -20,37 +19,41 @@ function open_sequence(e: Event) {
 	const reader = new FileReader();
 
 	reader.onload = function(e) {
-		const raw_data = e.target?.result;
-
-		ws.send(JSON.stringify({
+		const message: JGCPRecv.OpenSequence = {
 			command: "open_sequence",
-			sequence: raw_data
-		}));
+			sequence: e.target?.result as string
+		};
+
+		ws.send(JSON.stringify(message));
 	};
 
 	reader.readAsText(file);
 }
 document.querySelector("#input_open_sequence")?.addEventListener("change", open_sequence);
 
-function button_navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
-	ws.send(JSON.stringify({
+function navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
+	const command: JGCPRecv.Navigate = {
 		command: "navigate",
 		type,
 		steps,
 		client_id: client_id
-	}));
+	};
+
+	ws.send(JSON.stringify((command)));
 }
-document.querySelector("#navigate_item_prev")?.addEventListener("click", () => { button_navigate("item", -1); });
-document.querySelector("#navigate_item_next")?.addEventListener("click", () => { button_navigate("item", 1); });
-document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { button_navigate("slide", -1); });
-document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { button_navigate("slide", 1); });
+document.querySelector("#navigate_item_prev")?.addEventListener("click", () => { navigate("item", -1); });
+document.querySelector("#navigate_item_next")?.addEventListener("click", () => { navigate("item", 1); });
+document.querySelector("#navigate_slide_prev")?.addEventListener("click", () => { navigate("slide", -1); });
+document.querySelector("#navigate_slide_next")?.addEventListener("click", () => { navigate("slide", 1); });
 
 function button_visibility(visibility: boolean) {
-	ws.send(JSON.stringify({
+	const message: JGCPRecv.SetVisibility = {
 		command: "set_visibility",
 		visibility,
 		client_id: client_id
-	}));
+	};
+
+	ws.send(JSON.stringify(message));
 }
 document.querySelector("#set_visibility_hide")?.addEventListener("click", () => { button_visibility(false); });
 document.querySelector("#set_visibility_show")?.addEventListener("click", () => { button_visibility(true); });
@@ -63,7 +66,7 @@ function display_items(data: JGCPSend.Sequence) {
 	// initialize
 	init();
 
-	for (const item of data.sequence_items) {
+	data.sequence_items.forEach((item) => {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
 		div_sequence_item_container.dataset.item_number = item.item.toString();
@@ -85,9 +88,17 @@ function display_items(data: JGCPSend.Sequence) {
 
 		const div_sequence_item = document.createElement("div");
 		div_sequence_item.classList.add("sequence_item");
+		div_sequence_item.classList.add(item.type);
 		
 		// if it's a  Countdown-Object, insert the time
 		if (item.type === "Countdown") {
+			const title_map = {
+				clock: "Clock",
+				stopwatch: "Stopwatch",
+				duration: "Countdown (duration)",
+				end_time: "Countdown (end time)"
+			};
+
 			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
 		} else {
 			div_sequence_item.innerText = item.Caption;
@@ -95,7 +106,7 @@ function display_items(data: JGCPSend.Sequence) {
 
 		div_sequence_item_container.append(div_sequence_item);
 		div_sequence_items?.append(div_sequence_item_container);
-	}
+	});
 
 	// display the visibility state
 	display_visibility_state(data.metadata.visibility);
@@ -114,11 +125,13 @@ function request_item_slides(item: number) {
 		// clear the selected item
 		document.querySelector(".sequence_item_container.selected")?.classList.remove("selected");
 	
-		ws.send(JSON.stringify({
+		const command: JGCPRecv.RequestItemSlides = {
 			command: "request_item_slides",
 			item: item,
 			client_id: client_id
-		}));
+		};
+
+		ws.send(JSON.stringify(command));
 	}
 }
 
@@ -133,19 +146,22 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 
 	switch (data.type) {
 		case "Song":
-			part_arrays = create_song_slides(data as JGCPSend.SongSlides);
+			part_arrays = create_song_slides(data);
 			break;
 		case "Countdown":
-			part_arrays = create_image_countdown_slides(data as JGCPSend.CountdownSlides);
+			part_arrays = create_image_countdown_slides(data);
 			break;
 		case "Image":
-			part_arrays = create_image_countdown_slides(data as JGCPSend.ImageSlides);
+			part_arrays = create_image_countdown_slides(data);
 			break;
 		case "CommandComment":
-			part_arrays = create_template_slides(data as JGCPSend.CommandCommentSlides);
+			part_arrays = create_template_slides(data as JGCPSend.ItemSlides);
+			break;
+		case "PDF":
+			part_arrays = create_pdf_slides(data as JGCPSend.PDFSlides);
 			break;
 		default:
-			console.error(`'${data.type}' is not supported`);
+			console.error(`'${data["type"]}' is not supported`);
 	}
 
 	part_arrays.forEach((slide_part) => {
@@ -196,7 +212,7 @@ function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 		const object_iter_array = object_iter_array_proto.map((ii) => { 
 			return {
 				index: ii,
-				slide: create_slide_object(data, slides_start + ii)
+				slide: create_template_object(data, slides_start + ii)
 			};
 		});
 
@@ -227,14 +243,14 @@ function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend
 
 	div_slide_part_header.innerText = data.title;
 
-	const obj = create_slide_object(data, 0);
+	const obj = create_template_object(data, 0);
 
 	div_slides_view.append(obj);
 
 	return [div_slide_part];
 }
 
-function create_template_slides(data: JGCPSend.CommandCommentSlides): HTMLDivElement[] {
+function create_pdf_slides(data: JGCPSend.PDFSlides): HTMLDivElement[] {
 	// create the container for the part
 	const div_slide_part = document.createElement("div");
 	div_slide_part.classList.add("slide_part");
@@ -251,40 +267,62 @@ function create_template_slides(data: JGCPSend.CommandCommentSlides): HTMLDivEle
 
 	div_slide_part_header.innerText = data.title;
 
-	const obj = create_slide_object(data, 0);
+	data.slides.forEach((slide, index) => {
+		const obj = create_media_object(data, index);
+
+		div_slides_view.append(obj);
+	});
+
+
+	return [div_slide_part];
+}
+
+function create_template_slides(data: JGCPSend.ItemSlides): HTMLDivElement[] {
+	// create the container for the part
+	const div_slide_part = document.createElement("div");
+	div_slide_part.classList.add("slide_part");
+
+	// create the header of the part and append it to the part-container
+	const div_slide_part_header = document.createElement("div");
+	div_slide_part_header.classList.add("header");
+	div_slide_part.append(div_slide_part_header);
+
+	// create the slides-view and append it to the part container
+	const div_slides_view = document.createElement("div");
+	div_slides_view.classList.add("slides_view");
+	div_slide_part.append(div_slides_view);
+
+	div_slide_part_header.innerText = data.title;
+
+	const obj = create_template_object(data, 0);
 
 	div_slides_view.append(obj);
 
 	return [div_slide_part];
 }
 
-function create_slide_object(data: ClientItemSlides, number: number) {
+function create_template_object(data: JGCPSend.ItemSlides, number: number): HTMLDivElement {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
 	
+	const img_media = document.createElement("img");
+	img_media.src = data.media_b64 ?? "";
+
+	// add an error listener, to set the opacity to zero (avoids error symbol)
+	img_media.addEventListener("error", () => {
+		img_media.style.opacity = "0";
+	});
+
+	img_media.style.aspectRatio = (data.resolution.width / data.resolution.height).toString();
+	div_slide_container.append(img_media);
+	
 	const slide_object = document.createElement("object");
 
-	const template_data: object & { template?: { template: string, data: object } } = data.slides_template;
-
-	switch (data.type) {
-		case "Song":
-			slide_object.data = "Templates/JohnCG/Song.html";
-			break;
-		case "Countdown":
-			slide_object.data = "Templates/JohnCG/Countdown.html";
-			break;
-		case "CommandComment":
-			slide_object.data = `Templates/${data.slides_template.template.template}.html`;
-			break;
+	if (data.template !== undefined) {
+		slide_object.data = "Templates/" + data.template.template;
 	}
 
-	slide_object.style.backgroundImage = `url("${data.slides_template.background_image?.replace(/\\/g, "\\\\") ?? ""}")`;
-
-	slide_object.classList.add("slide");
-	
 	div_slide_container.append(slide_object);
-	
-	slide_object.dataset.slide_number = number.toString();
 	
 	// register click event
 	div_slide_container.addEventListener("click", () => {
@@ -295,7 +333,7 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	});
 
 	slide_object.addEventListener("load", () => {
-		slide_object.contentWindow?.update(JSON.stringify({ ...template_data?.template.data, mute_transition: true }));
+		slide_object.contentWindow?.update(JSON.stringify({ ...data.template.data, mute_transition: true }));
 
 		switch (data.type) {
 			case "Song":
@@ -307,6 +345,40 @@ function create_slide_object(data: ClientItemSlides, number: number) {
 	});
 
 	const catcher = document.createElement("div");
+	catcher.classList.add("slide");
+	catcher.dataset.slide_number = number.toString();
+
+	div_slide_container.append(catcher);
+	
+	return div_slide_container;
+}
+
+function create_media_object(data: JGCPSend.PDFSlides, number: number): HTMLDivElement {
+	const div_slide_container = document.createElement("div");
+	div_slide_container.classList.add("slide_container");
+	
+	const img_media = document.createElement("img");
+	img_media.src = data.slides[number] ?? "";
+
+	// add an error listener, to set the opacity to zero (avoids error symbol)
+	img_media.addEventListener("error", () => {
+		img_media.style.opacity = "0";
+	});
+
+	img_media.style.aspectRatio = (data.resolution.width / data.resolution.height).toString();
+	div_slide_container.append(img_media);
+	
+	// register click event
+	div_slide_container.addEventListener("click", () => {
+		request_item_slide_select(
+			Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
+			number
+		);
+	});
+
+	const catcher = document.createElement("div");
+	catcher.classList.add("slide");
+	catcher.dataset.slide_number = number.toString();
 
 	div_slide_container.append(catcher);
 	
@@ -329,13 +401,15 @@ function select_item(item: number) {
 }
 
 function request_item_slide_select(item: number, slide: number) {
-	ws.send(JSON.stringify({
+	const message: JGCPRecv.SelectItemSlide = {
 		command: "select_item_slide",
 		item: item,
 		slide: slide,
 		client_id: client_id
-	}));
-}
+	};
+
+	ws.send(JSON.stringify(message));
+}	
 
 function set_active_slide(scroll: boolean = false) {
 	// deselect the previous active slide
@@ -468,10 +542,6 @@ function ws_connect() {
 	ws.addEventListener("message", (event: MessageEvent) => {
 		const data: JGCPSend.Message = JSON.parse(event.data as string) as JGCPSend.Message;
 
-
-		console.dir(data);
-
-	
 		const command_parser_map = {
 			sequence_items: display_items,
 			item_slides: display_item_slides,
@@ -521,3 +591,32 @@ let active_item_slide = {
 	item: 0,
 	slide: 0
 };
+
+document.addEventListener("keydown", (event) => {
+	// exit on composing
+	if (event.isComposing || event.keyCode === 229) {
+		return;
+	}
+
+	if (!event.repeat) {
+		switch (event.code) {
+			case "PageUp":
+			case "ArrowLeft":
+				navigate("slide", -1);
+				break;
+			case "PageDown":
+			case "ArrowRight":
+				navigate("slide", 1);
+				break;
+			case "ArrowUp":
+				navigate("item", -1);
+				break;
+			case "ArrowDown":
+				navigate("item", 1);
+				break;
+			default:
+				console.debug(event.code);
+				break;
+		}
+	}
+});

@@ -2,5 +2,6 @@ node_modules
 out
 dist
 casparcg-templates
+client
 license-generator.ts
 license-reporter.config.ts

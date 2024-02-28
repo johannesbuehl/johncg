@@ -1,20 +1,21 @@
 import path from "path";
-import { APIRequest, CasparCG, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
+import { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
 import mime from "mime-types";
-import { XMLParser } from "fast-xml-parser";
 
 import { SongElement } from "./SequenceItems/SongFile";
-import { ClientItemSlides, ItemProps, ItemPropsBase, ItemRenderObject, SequenceItem } from "./SequenceItems/SequenceItem";
+import { ClientItemSlides, ItemProps, ItemPropsBase, SequenceItem } from "./SequenceItems/SequenceItem";
 import Song, { SongProps } from "./SequenceItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
 
-import Config, { CasparCGConnectionSettings } from "./config";
+import Config from "./config";
 import Countdown, { CountdownProps } from "./SequenceItems/Countdown";
 import Comment, { CommentProps } from "./SequenceItems/Comment";
 import Image, { ImageProps } from "./SequenceItems/Image";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import CommandComment, { CommandCommentProps } from "./SequenceItems/CommandComment";
+import { CasparCGConnection } from "./control";
+import PDF, { PDFProps } from "./SequenceItems/PDF";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
@@ -29,21 +30,9 @@ interface ActiveItemSlide {
 	slide: number
 }
 
-interface CasparCGPathsSettings {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	"data-path": string;
-	"initial-path": string;
-	"log-path": string;
-	"media-path": string;
-	"template-path": string;
-	/* eslint-enable @typescript-eslint/naming-convention */
-}
-
-interface CasparCGConnection {
-	connection:	CasparCG,
-	settings: CasparCGConnectionSettings,
-	paths: CasparCGPathsSettings,
-	media: ClipInfo[]
+export interface CasparCGResolution {
+	width: number;
+	height: number;
 }
 
 class Sequence {
@@ -63,42 +52,23 @@ class Sequence {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(sequence: string) {
+	constructor(sequence: string, casparcg_connections: CasparCGConnection[]) {
 		this.parse_sequence(sequence);
 
-		const xml_parser = new XMLParser();
+		this.casparcg_connections = casparcg_connections;	
 
-		// create the casparcg-connections
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		Config.casparcg.connections.forEach(async (connection_setting) => {
-			const connection: CasparCG = new CasparCG({
-				...connection_setting,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				autoConnect: true
-			});
-
-			const casparcg_connection: CasparCGConnection = {
-				connection,
-				settings: connection_setting,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				paths: xml_parser.parse((await (await connection.infoPaths()).request)?.data as string ?? "")?.paths as CasparCGPathsSettings,
-				media: (await (await connection.cls()).request)?.data ?? []
-			};
-
+		this.casparcg_connections.forEach((casparcg_connection) => {
 			// add a listener to send send the current-slide on connection
-			connection.addListener("connect", () => {
+			casparcg_connection.connection.addListener("connect", () => {
 				// load the active-item
 				this.casparcg_load_item(casparcg_connection);
 			});
 			
 			// clear the previous casparcg-output on the layers
 			this.casparcg_clear_layers(casparcg_connection);
-
+			
 			// load the first slide
 			this.casparcg_load_item(casparcg_connection);
-			
-			// add the connection to the stored connections
-			this.casparcg_connections.push(casparcg_connection);
 		});
 
 		this.set_active_item(0, 0);
@@ -108,8 +78,9 @@ class Sequence {
 		this.casparcg_clear_layers();
 
 		this.casparcg_connections.forEach((casparcg_connection) => {
-			casparcg_connection.connection.removeAllListeners();
-			casparcg_connection.connection.disconnect();
+			// casparcg_connection.connection.removeAllListeners();
+
+			casparcg_connection.connection.removeListener("connect");
 		});
 	}
 
@@ -213,6 +184,9 @@ class Sequence {
 				case "Image":
 					this.sequence_items.push(new Image(item_data as ImageProps));
 					break;
+				case "PDF":
+					this.sequence_items.push(new PDF(item_data as PDFProps));
+					break;
 				default:
 					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
 					if (!Object.keys(item_data).includes("FileName")) {
@@ -224,15 +198,19 @@ class Sequence {
 								const props: CommandCommentProps = {
 									...item_data,
 									type: "CommandComment",
-									...caption_json as { template: string, data?: object }
+									template: caption_json as { template: string, data: object }
 								};
 	
+								props.type = "CommandComment";
+
 								this.sequence_items.push(new CommandComment(props));
 							} else {
 								throw new SyntaxError();
 							}
 						} catch (e) {
 							if (e instanceof SyntaxError) {
+								item_data.type = "Comment";
+
 								this.sequence_items.push(new Comment(item_data as CommentProps));
 							}
 						}
@@ -377,98 +355,86 @@ class Sequence {
 
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		connections.forEach(async (connection) => {
-			// generate the render-object
-			const render_object = await this.active_sequence_item.create_render_object();
-			
-			await this.casparcg_load_media(connection, render_object);
+			await this.casparcg_load_media(connection);
 
 			if (!media_only) {
-				void this.casparcg_load_template(connection, render_object);
+				void this.casparcg_load_template(connection);
 			}
 		});
 	}
 
-	private casparcg_load_media(casparcg_connection: CasparCGConnection, render_object: ItemRenderObject): Promise<APIRequest<Commands.CgAdd>> {
+	private casparcg_load_media(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
+		let media = this.active_sequence_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
+
 		// if a media-file is defined, load it
-		if (render_object.media) {
-			// make it all uppercase and remove the extension to match casparcg-clips and make sure it uses forward slashes
-			const req_name = render_object.media.replace(/\.[^(\\.]+$/, "").toUpperCase().replace(/\\/g, "/");
+		if (media) {
+			// test wether it is a color-string
+			const test_rgb_string = media.match(/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/);
 
-			let media_result: ClipInfo | undefined;
+			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+			if (test_rgb_string) {
+				media = `#${test_rgb_string.groups.alpha ?? ""}${test_rgb_string.groups.rgb}`;
+			} else {
+				// make it all uppercase and remove the extension to match casparcg-clips
+				const req_name = media.replace(/\.[^(\\.]+$/, "").toUpperCase();
 
-			// check all the casparcg-files, wether they contain a media-file that matches the path
-			for (const m of casparcg_connection.media) {
-				const media_file = m.clip.toUpperCase().replace(/\\/, "/");
+				// check all the casparcg-files, wether they contain a media-file that matches the path
+				for (const m of casparcg_connection.media) {
+					const media_file = m.clip.toUpperCase().replace(/\\/, "/");
 
-				if (req_name.endsWith(media_file)) {
-					media_result = m;
-					break;
+					if (req_name.endsWith(media_file)) {
+						media = m.clip;
+						break;
+					}
 				}
 			}
 
-			// if a matching media-file was found, use it
-			if (media_result !== undefined) {
-				// if the state is "visible", play it directly
-				if (this.visibility) {
-					return casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[0],
-						clip: media_result.clip,
-						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
-						/* eslint-enable @typescript-eslint/naming-convention */
-					});
-				} else {
-					//  if the current stat is invisible, only load it in the background
-					return casparcg_connection.connection.loadbg({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[0],
-						clip: media_result.clip,
-						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
-						/* eslint-enable @typescript-eslint/naming-convention */
-					});
-				}
-			} else {
-				const command = this.visibility ? Commands.PlayHtml : Commands.LoadbgHtml;
-
-				return casparcg_connection.connection.executeCommand({
+			// if the state is "visible", play it directly
+			if (this.visibility) {
+				return casparcg_connection.connection.play({
 					/* eslint-disable @typescript-eslint/naming-convention */
-					command: command,
-					params: {
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[0],
-						url: JSON.stringify(render_object.background_image),
-						transition: !render_object.mute_transition ? this.casparcg_transition : undefined
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}
+					channel:  casparcg_connection.settings.channel,
+					layer:  casparcg_connection.settings.layers[0],
+					clip: media,
+					transition: this.casparcg_transition
+					/* eslint-enable @typescript-eslint/naming-convention */
+				});
+			} else {
+				//  if the current stat is invisible, only load it in the background
+				return casparcg_connection.connection.loadbg({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel:  casparcg_connection.settings.channel,
+					layer:  casparcg_connection.settings.layers[0],
+					clip: media,
+					transition: this.casparcg_transition
+					/* eslint-enable @typescript-eslint/naming-convention */
 				});
 			}
 		} else {
-			// clear the media-output
+			// no media-file selected -> clear the media-output
 			return casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel:  casparcg_connection.settings.channel,
 				layer:  casparcg_connection.settings.layers[0],
 				clip: "EMPTY",
-				transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
 	}
 
-	private casparcg_load_template(casparcg_connection: CasparCGConnection, render_object: ItemRenderObject): Promise<APIRequest<Commands.CgAdd>> {
+	private casparcg_load_template(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
 		// if a template was specified, load it
-		if (render_object.template !== undefined) {
+		if (this.active_sequence_item.template !== undefined) {
 			return casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[1],
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
-				template: render_object.template.template,
+				template: this.active_sequence_item.template.template,
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-				data: JSON.stringify(JSON.stringify(render_object.template.data, (_key, val: unknown) => {
+				data: JSON.stringify(JSON.stringify(this.active_sequence_item.template.data, (_key, val: unknown) => {
 					if (typeof val === "string") {
 						return val.replace("\"", "\\u0022");
 					} else {
@@ -484,7 +450,7 @@ class Sequence {
 				channel:  casparcg_connection.settings.channel,
 				layer:  casparcg_connection.settings.layers[1],
 				clip: "EMPTY",
-				transition: !render_object.mute_transition ? this.casparcg_transition : undefined
+				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
@@ -492,6 +458,11 @@ class Sequence {
 
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
+			// if the item has multiple media-files, load the new one
+			if (this.active_sequence_item.props.media.length > 1) {
+				void this.casparcg_load_media(casparcg_connection);
+			}
+
 			// jump to the slide-number in casparcg
 			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
@@ -588,7 +559,15 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 	// remove line-breaks
 	value = value.replace(/'\s\+\s+'/gm, "");
 	// un-escape escaped characters
-	value = value.replace(/'#(\d+)'/gm, (match, group: string) => String.fromCharCode(Number(group)));
+	value = value.replace(/'((?:#(?:\d+))+)'/gm, (match, group: string) => {
+		const chars = group.split("#").slice(1);
+
+		let return_string = "";
+
+		chars.forEach((char) => return_string += String.fromCharCode(Number(char)));
+		
+		return return_string;
+	});
 	
 	const return_props: { [P in keyof ItemProps]?: ItemProps[P]; } = {};
 	
@@ -602,19 +581,24 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			// split csv-line into an array
 			return_props["VerseOrder"] = value.split(",") as SongElement[];
 			break;
-		case "FileName":
-			// assume the type from the file-extension
-			if (path.extname(value) === ".sng") {
-				return_props.type = "Song";
-			} else {
-				const mime_type = mime.lookup(value);
-
-				if (mime_type ? mime_type.split("/", 1)[0] === "image" : false) {
+		case "FileName": {
+			// assume the type from the mime-type
+			const mime_type = mime.lookup(value);
+			switch (true) {
+				case mime_type ? mime_type.split("/", 1)[0] === "image" : false:
 					return_props.type = "Image";
-				}
+					break;
+				case mime_type === "application/pdf":
+					return_props.type  = "PDF";
+					break;
+				case !mime_type:
+					if (path.extname(value) === ".sng") {
+						return_props.type = "Song";
+					}
+					break;
 			}
 			return_props[key] = value;
-			break;
+		} break;
 		case "Color":
 			if (value.substring(0, 2) === "cl") {
 				return_props[key] = convert_color_to_hex(value);

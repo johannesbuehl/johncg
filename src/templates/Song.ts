@@ -1,6 +1,6 @@
 import { ItemSlide, SongTemplateData } from "../server/SequenceItems/Song";
 
-let data: SongTemplateData;
+let data: SongTemplateData & { mute_transition: boolean };
 
 let active_slide = 0;
 let slide_count = 0;
@@ -9,7 +9,15 @@ let slide_count = 0;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
-	data = JSON.parse(s_data) as SongTemplateData;
+	try {
+		data = JSON.parse(s_data) as SongTemplateData & { mute_transition: boolean };
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			throw error;
+		} else {
+			return;
+		}
+	}
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");
@@ -163,7 +171,7 @@ function create_slide(slide_data: ItemSlide, languages: number[]) {
 			languages.forEach((language, index) => {
 				const div_title = document.createElement("div");
 				div_title.classList.add(`language_${index}`);
-				div_title.innerText = slide_data.title[language];
+				div_title.innerText = slide_data.title[language] ?? "";
 				title_container.append(div_title);
 			});
 

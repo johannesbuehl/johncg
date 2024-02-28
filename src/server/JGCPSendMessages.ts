@@ -1,8 +1,10 @@
 import * as SequenceClass from "../server/Sequence";
-import { ClientCountdownSlides } from "../server/SequenceItems/Countdown";
-import { ClientSongSlides } from "../server/SequenceItems/Song";
 import { ClientCommandCommentSlides } from "./SequenceItems/CommandComment";
+import { ClientCommentSlides } from "./SequenceItems/Comment";
+import { ClientCountdownSlides } from "./SequenceItems/Countdown";
 import { ClientImageSlides } from "./SequenceItems/Image";
+import { ClientPDFSlides } from "./SequenceItems/PDF";
+import { ClientSongSlides } from "./SequenceItems/Song";
 
 /**
  * Base interface for sent JGCP-messages
@@ -39,20 +41,17 @@ export interface State extends Base {
 interface ItemSlidesBase extends Base{
 	client_id: string;
 	command: "item_slides";
+	resolution: SequenceClass.CasparCGResolution;
 }
 
-export type SongSlides = ItemSlidesBase & ClientSongSlides;
+export type SongSlides = ClientSongSlides & ItemSlidesBase;
+export type CountdownSlides = ClientCountdownSlides & ItemSlidesBase;
+export type ImageSlides = ClientImageSlides & ItemSlidesBase;
+export type CommandCommentSlides = ClientCommandCommentSlides & ItemSlidesBase;
+export type CommentSlides = ClientCommentSlides & ItemSlidesBase;
+export type PDFSlides = ClientPDFSlides & ItemSlidesBase;
 
-export type CountdownSlides = ItemSlidesBase & ClientCountdownSlides;
-
-export type ImageSlides = ItemSlidesBase & ClientImageSlides;
-
-export type CommandCommentSlides = ItemSlidesBase & ClientCommandCommentSlides;
-
-// temporary until full feature set
-export type NotImplementedSlides = ItemSlidesBase & { type: string; item: number; };
-
-export type ItemSlides = SongSlides | CountdownSlides | NotImplementedSlides;
+export type ItemSlides = SongSlides | CountdownSlides | ImageSlides | CommandCommentSlides | CommentSlides | PDFSlides;
 
 export interface Clear extends Base {
 	command: "clear";

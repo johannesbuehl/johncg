@@ -32,6 +32,14 @@ class HTTPServer {
 				case /^\/Templates\//.test(request.url):
 					resource_dir = Config.casparcg.templates;
 					request.url = request.url.replace(/\/Templates\//, "");
+
+					// check, wether the file exits
+					try {
+						fs.accessSync(path.join(resource_dir, request.url));
+					} catch (e) {
+						// if it doesn't exist, add an html-extension
+						request.url += ".html";
+					}
 					break;
 				// serve the background-images
 				case /^\/BackgroundImage\//.test(request.url):
