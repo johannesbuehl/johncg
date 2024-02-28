@@ -20,6 +20,7 @@
     "@types/mime-types": "^2.1.4",
     "@types/node": "^20.11.16",
     "@types/node-osc": "^6.0.3",
+    "@types/tar": "^6.1.11",
     "@types/tmp": "^0.2.6",
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
@@ -28,12 +29,13 @@
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
     "postject": "^1.0.0-alpha.6",
+    "tar": "^6.2.0",
     "typescript": "^5.3.3"
   },
   "scripts": {
     "lint": "eslint src/**/*.ts",
-    "build-release": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./build.ps1",
-    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle",
+	"build-release": "esbuild build/scripts/build.ts --outfile=build/scripts/build.js --tsconfig=build/scripts/tsconfig.json --platform=node --bundle && node build/scripts/build.js",
+    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle --external:pdfjs-dist --external:canvas",
     "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
     "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",
     "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome117 --minify",

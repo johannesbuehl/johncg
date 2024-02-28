@@ -5,3 +5,5 @@ client/*.js
 casparcg-templates/JohnCG/*.js
 *.map
 client/webfonts/bahnschrift.ttf
+build/scripts/*.js
+build/scripts/3rdpartylicenses.json

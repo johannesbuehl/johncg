@@ -2,7 +2,8 @@ import { IReporterConfiguration } from "@weichwarenprojekt/license-reporter";
 
 export const configuration: Partial<IReporterConfiguration> = {
 	// defaultLicenseText: undefined,
-    output: "dist/build/3rdpartylicenses.json",
+    output: "build/scripts/3rdpartylicenses.json",
+	ignore: ["dist/*"],
     overrides: [
         {
             name: "osc"
