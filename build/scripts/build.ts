@@ -116,4 +116,4 @@ copy_release_file("LICENSE", "LICENSE.txt");
 copy_release_dir(path.join(build_dir, "licenses"));
 
 // pack the files in a .tar.gz-file
-void tar.c({ gzip: true, file: release_dir + ".tar.gz" }, [release_dir]);
+void tar.c({ gzip: true, file: release_dir + ".tar.gz", cwd: "dist" }, [path.relative("dist", release_dir)]);
