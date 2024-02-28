@@ -65,8 +65,10 @@ export default class Song extends SequenceItemBase {
 			this.song_file = new SongFile(get_song_path(props.FileName));
 		} catch (e: unknown) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
-			if (e instanceof Error && "type" in e && e.type === "ENOENT") {
+			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				console.debug(`song '${props.FileName}' does not exist`);
+
+				this.item_props.selectable = false;
 				return;
 			} else {
 				throw e;
