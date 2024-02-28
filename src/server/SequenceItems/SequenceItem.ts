@@ -9,8 +9,9 @@ import Image, { ClientImageSlides, ImageProps } from "./Image";
 import CommandComment, { ClientCommandCommentSlides, CommandCommentProps, CommandCommentTemplate } from "./CommandComment";
 import Config from "../config";
 import path from "path";
+import PDF, { ClientPDFSlides, PDFProps } from "./PDF";
 
-export type SequenceItem = Song | Countdown | Comment | Image | CommandComment;
+export type SequenceItem = Song | Countdown | Comment | Image | CommandComment | PDF;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -28,12 +29,12 @@ export interface ItemPropsBase {
 	selectable: boolean;
 	background_color?: string;
 	background_image?: string;
-	media?: string;
+	media?: string[];
 	template?: Template;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps | CommandCommentProps;
+export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps | CommandCommentProps | PDFProps;
 
 export interface ClientItemSlidesBase {
 	type: string;
@@ -47,7 +48,7 @@ export interface ClientItemSlidesBase {
 	};
 }
 
-export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides | ClientCommandCommentSlides;
+export type ClientItemSlides = ClientSongSlides | ClientCountdownSlides | ClientCommentSlides | ClientImageSlides | ClientCommandCommentSlides | ClientPDFSlides;
 
 export interface FontFormat {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -94,15 +95,15 @@ export abstract class SequenceItemBase {
 		return slide;
 	}
 
-	async get_media_b64(proxy: boolean = false): Promise<string> {
+	async get_media_b64(proxy: boolean = false, media: string = this.media): Promise<string> {
 		let img: sharp.Sharp = undefined;
 
 		// if no background-color is specified, set it to transparent
 		const background_color = this.props.background_color ?? "#00000000";
 		
-		if (this.media !== undefined) {
+		if (media !== undefined) {
 			try {
-				img = sharp(await fs.readFile(this.media));
+				img = sharp(await fs.readFile(media));
 			
 				// if a proxy is requested, downscale teh image
 				if (proxy) {
@@ -160,7 +161,11 @@ export abstract class SequenceItemBase {
 	abstract get props(): ItemProps;
 
 	get media(): string {
-		return this.props.media;
+		if (this.props.media !== undefined) {
+			return this.props.media[this.active_slide];
+		} else {
+			return undefined;
+		}
 	}
 
 	protected resolve_image_path(img_path: string): string {

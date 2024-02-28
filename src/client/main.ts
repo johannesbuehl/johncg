@@ -1,15 +1,10 @@
 import MessageLog from "./message_box.js";
 
 import { ItemPartClient } from "../server/SequenceItems/SongFile";
-import { ClientItemSlides } from "../server/SequenceItems/SequenceItem";
 
 import * as JGCPSend from "../server/JGCPSendMessages";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
 import { ActiveItemSlide } from "../server/Sequence.js";
-import { ClientSongSlides } from "../server/SequenceItems/Song.js";
-import { ClientCountdownSlides } from "../server/SequenceItems/Countdown.js";
-import { ClientImageSlides } from "../server/SequenceItems/Image.js";
-import { ClientCommandCommentSlides } from "../server/SequenceItems/CommandComment.js";
 
 const config = {
 	websocket: {
@@ -162,6 +157,9 @@ function display_item_slides(data: JGCPSend.ItemSlides) {
 		case "CommandComment":
 			part_arrays = create_template_slides(data as JGCPSend.ItemSlides);
 			break;
+		case "PDF":
+			part_arrays = create_pdf_slides(data as JGCPSend.PDFSlides);
+			break;
 		default:
 			console.error(`'${data["type"]}' is not supported`);
 	}
@@ -214,7 +212,7 @@ function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 		const object_iter_array = object_iter_array_proto.map((ii) => { 
 			return {
 				index: ii,
-				slide: create_slide_object(data, slides_start + ii)
+				slide: create_template_object(data, slides_start + ii)
 			};
 		});
 
@@ -245,9 +243,36 @@ function create_image_countdown_slides(data: JGCPSend.CountdownSlides | JGCPSend
 
 	div_slide_part_header.innerText = data.title;
 
-	const obj = create_slide_object(data, 0);
+	const obj = create_template_object(data, 0);
 
 	div_slides_view.append(obj);
+
+	return [div_slide_part];
+}
+
+function create_pdf_slides(data: JGCPSend.PDFSlides): HTMLDivElement[] {
+	// create the container for the part
+	const div_slide_part = document.createElement("div");
+	div_slide_part.classList.add("slide_part");
+
+	// create the header of the part and append it to the part-container
+	const div_slide_part_header = document.createElement("div");
+	div_slide_part_header.classList.add("header");
+	div_slide_part.append(div_slide_part_header);
+
+	// create the slides-view and append it to the part container
+	const div_slides_view = document.createElement("div");
+	div_slides_view.classList.add("slides_view");
+	div_slide_part.append(div_slides_view);
+
+	div_slide_part_header.innerText = data.title;
+
+	data.slides.forEach((slide, index) => {
+		const obj = create_media_object(data, index);
+
+		div_slides_view.append(obj);
+	});
+
 
 	return [div_slide_part];
 }
@@ -269,14 +294,14 @@ function create_template_slides(data: JGCPSend.ItemSlides): HTMLDivElement[] {
 
 	div_slide_part_header.innerText = data.title;
 
-	const obj = create_slide_object(data, 0);
+	const obj = create_template_object(data, 0);
 
 	div_slides_view.append(obj);
 
 	return [div_slide_part];
 }
 
-function create_slide_object(data: JGCPSend.ItemSlides, number: number) {
+function create_template_object(data: JGCPSend.ItemSlides, number: number): HTMLDivElement {
 	const div_slide_container = document.createElement("div");
 	div_slide_container.classList.add("slide_container");
 	
@@ -317,6 +342,38 @@ function create_slide_object(data: JGCPSend.ItemSlides, number: number) {
 		}
 
 		slide_object.contentWindow?.play();
+	});
+
+	const catcher = document.createElement("div");
+	catcher.classList.add("slide");
+	catcher.dataset.slide_number = number.toString();
+
+	div_slide_container.append(catcher);
+	
+	return div_slide_container;
+}
+
+function create_media_object(data: JGCPSend.PDFSlides, number: number): HTMLDivElement {
+	const div_slide_container = document.createElement("div");
+	div_slide_container.classList.add("slide_container");
+	
+	const img_media = document.createElement("img");
+	img_media.src = data.slides[number] ?? "";
+
+	// add an error listener, to set the opacity to zero (avoids error symbol)
+	img_media.addEventListener("error", () => {
+		img_media.style.opacity = "0";
+	});
+
+	img_media.style.aspectRatio = (data.resolution.width / data.resolution.height).toString();
+	div_slide_container.append(img_media);
+	
+	// register click event
+	div_slide_container.addEventListener("click", () => {
+		request_item_slide_select(
+			Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
+			number
+		);
 	});
 
 	const catcher = document.createElement("div");

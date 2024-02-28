@@ -15,6 +15,7 @@ import Image, { ImageProps } from "./SequenceItems/Image";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import CommandComment, { CommandCommentProps } from "./SequenceItems/CommandComment";
 import { CasparCGConnection } from "./control";
+import PDF, { PDFProps } from "./SequenceItems/PDF";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
@@ -182,6 +183,9 @@ class Sequence {
 					break;
 				case "Image":
 					this.sequence_items.push(new Image(item_data as ImageProps));
+					break;
+				case "PDF":
+					this.sequence_items.push(new PDF(item_data as PDFProps));
 					break;
 				default:
 					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
@@ -360,7 +364,7 @@ class Sequence {
 	}
 
 	private casparcg_load_media(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
-		let media = this.active_sequence_item.props.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
+		let media = this.active_sequence_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
 
 		// if a media-file is defined, load it
 		if (media) {
@@ -454,6 +458,11 @@ class Sequence {
 
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
+			// if the item has multiple media-files, load the new one
+			if (this.active_sequence_item.props.media.length > 1) {
+				void this.casparcg_load_media(casparcg_connection);
+			}
+
 			// jump to the slide-number in casparcg
 			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
@@ -572,19 +581,24 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			// split csv-line into an array
 			return_props["VerseOrder"] = value.split(",") as SongElement[];
 			break;
-		case "FileName":
-			// assume the type from the file-extension
-			if (path.extname(value) === ".sng") {
-				return_props.type = "Song";
-			} else {
-				const mime_type = mime.lookup(value);
-
-				if (mime_type ? mime_type.split("/", 1)[0] === "image" : false) {
+		case "FileName": {
+			// assume the type from the mime-type
+			const mime_type = mime.lookup(value);
+			switch (true) {
+				case mime_type ? mime_type.split("/", 1)[0] === "image" : false:
 					return_props.type = "Image";
-				}
+					break;
+				case mime_type === "application/pdf":
+					return_props.type  = "PDF";
+					break;
+				case !mime_type:
+					if (path.extname(value) === ".sng") {
+						return_props.type = "Song";
+					}
+					break;
 			}
 			return_props[key] = value;
-			break;
+		} break;
 		case "Color":
 			if (value.substring(0, 2) === "cl") {
 				return_props[key] = convert_color_to_hex(value);

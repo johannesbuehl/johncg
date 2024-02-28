@@ -3,6 +3,7 @@ import { ClientCommandCommentSlides } from "./SequenceItems/CommandComment";
 import { ClientCommentSlides } from "./SequenceItems/Comment";
 import { ClientCountdownSlides } from "./SequenceItems/Countdown";
 import { ClientImageSlides } from "./SequenceItems/Image";
+import { ClientPDFSlides } from "./SequenceItems/PDF";
 import { ClientSongSlides } from "./SequenceItems/Song";
 
 /**
@@ -48,8 +49,9 @@ export type CountdownSlides = ClientCountdownSlides & ItemSlidesBase;
 export type ImageSlides = ClientImageSlides & ItemSlidesBase;
 export type CommandCommentSlides = ClientCommandCommentSlides & ItemSlidesBase;
 export type CommentSlides = ClientCommentSlides & ItemSlidesBase;
+export type PDFSlides = ClientPDFSlides & ItemSlidesBase;
 
-export type ItemSlides = SongSlides | CountdownSlides | ImageSlides | CommandCommentSlides | CommentSlides;
+export type ItemSlides = SongSlides | CountdownSlides | ImageSlides | CommandCommentSlides | CommentSlides | PDFSlides;
 
 export interface Clear extends Base {
 	command: "clear";

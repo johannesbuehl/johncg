@@ -16,7 +16,7 @@ export interface SongProps extends ItemPropsBase {
 	VerseOrder?: string[];
 	Language?: number;
 	PrimaryLanguage?: number;
-	media?: string;
+	media?: string[];
 	template?: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
@@ -103,7 +103,7 @@ export default class Song extends SequenceItemBase {
 		}
 
 		// store the media
-		this.item_props.media = this.get_background_image(this.song_file.metadata.BackgroundImage);
+		this.item_props.media = [this.get_background_image(this.song_file.metadata.BackgroundImage)];
 
 		// create the template data
 		this.item_props.template = {
@@ -246,6 +246,10 @@ export default class Song extends SequenceItemBase {
 		template.data.slide = this.active_slide;
 
 		return template;
+	}
+
+	get media(): string {
+		return this.props.media[0];
 	}
 }
 

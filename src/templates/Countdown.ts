@@ -21,7 +21,16 @@ function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
 	
-	data = JSON.parse(str_args) as CountdownTemplateData & { mute_transition: boolean };
+	try {
+		data = JSON.parse(str_args) as CountdownTemplateData & { mute_transition: boolean };
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			throw error;
+		} else {
+			return;
+		}
+	}
+
 	
 	// if requested, diable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");

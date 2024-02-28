@@ -172,6 +172,11 @@ div.button, div.button > * {
 	cursor: pointer;
 }
 
+.sequence_item_container:not(.selectable) {
+	color: rgb(154, 153, 150);
+	font-style: italic;
+}
+
 .sequence_item_container:first-of-type {
 	margin-top: 0.125rem;
 }
@@ -192,11 +197,6 @@ div.button, div.button > * {
 	flex: 1;
 
 	text-wrap: nowrap;
-}
-
-.sequence_item.Comment {
-	color: rgb(154, 153, 150);
-	font-style: italic;
 }
 
 .sequence_item_container.selectable:hover > .sequence_item {

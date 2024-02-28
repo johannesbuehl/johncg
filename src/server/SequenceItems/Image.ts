@@ -6,7 +6,7 @@ export interface ImageProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	type: "Image";
 	FileName: string;
-	media: string;
+	media: string[];
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -26,7 +26,7 @@ export default class Image extends SequenceItemBase {
 
 		this.item_props = props;
 
-		this.item_props.media = get_song_path(this.props.FileName);
+		this.item_props.media = [get_song_path(this.props.FileName)];
 	}
 
 	set_active_slide(slide?: number): number {

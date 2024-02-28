@@ -94,7 +94,7 @@ export default class Countdown extends SequenceItemBase {
 			}
 		};
 
-		this.item_props.media = this.get_background_image(this.props.background_image);
+		this.item_props.media = [this.get_background_image(this.props.background_image)];
 	}
 
 	navigate_slide(steps: number): number {

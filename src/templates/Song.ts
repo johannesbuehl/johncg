@@ -9,7 +9,15 @@ let slide_count = 0;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
-	data = JSON.parse(s_data) as SongTemplateData & { mute_transition: boolean };
+	try {
+		data = JSON.parse(s_data) as SongTemplateData & { mute_transition: boolean };
+	} catch (error) {
+		if (!(error instanceof SyntaxError)) {
+			throw error;
+		} else {
+			return;
+		}
+	}
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");
