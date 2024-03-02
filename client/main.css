@@ -139,13 +139,14 @@ div.button, div.button > * {
 
 	font-weight: bold;
 
-
 	border-radius: inherit;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
 
 	padding: 0.5rem;
 	padding-left: 0.75rem;
+
+	cursor: pointer;
 }
 
 #sequence > .header {
@@ -229,6 +230,12 @@ div.button, div.button > * {
 
 .slide_part {
 	border-radius: inherit;
+
+	display: inline-block;
+
+	margin-inline-end: 0.5rem;
+
+	overflow: visible;
 }
 
 .slides_view {
@@ -237,21 +244,24 @@ div.button, div.button > * {
 
 	align-items: center;
 
-	padding: 0.5rem;
+	overflow: visible;
+
+	padding-top: 0.5rem;
+	padding-bottom: 1rem;
 }
 
 .slide_container {
-	margin: 0.25rem;
-
 	overflow: visible; /* show the overflow, because the hover effects use thicker borders wich overflow (intended) */
 
 	position: relative;
+
+	margin: 0.0625rem;
 }
 
 .slide_container > img {
 	display: block;
 
-	height: 9rem;
+	height: 12rem;
 }
 
 .slide_container > object {
@@ -279,29 +289,33 @@ div.button, div.button > * {
 }
 
 .slide {
-	border: 1px solid white;
+	border: 0.0625rem solid white;
 
 	border-radius: 0.125rem;
 }
 
 .slide:hover {
-	border-width: 2px;
+	border-width: 0.125rem;
 	
-	margin: -2px; /* difference in border width between selected and non-selected */
+	margin: -0.125rem; /* difference in border width between selected and non-selected */
+
+	z-index: 20;
 }
 
 .slide.active {
 	border-color: red;
-	border-width: 2px;
+	border-width: 0.125rem;
 
-	margin: -2px; /* difference in border width between selected and non-selected */
+	z-index: 10;
+
+	margin: -0.125rem; /* difference in border width between selected and non-selected */
 }
 
 .slide.active:hover {
 	border-color: red;
-	border-width: 4px;
+	border-width: 0.25rem;
 
-	margin: -4px; /* difference in border width between selected and non-selected */
+	margin: -0.25rem; /* difference in border width between selected and non-selected */
 }
 
 .lyric_line {

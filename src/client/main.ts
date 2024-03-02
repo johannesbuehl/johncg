@@ -210,6 +210,11 @@ function create_song_slides(data: JGCPSend.SongSlides): HTMLDivElement[] {
 		// create the header of the part and append it to the part-container
 		const div_slide_part_header = document.createElement("div");
 		div_slide_part_header.classList.add("header");
+
+		div_slide_part_header.addEventListener("click", () => {
+			request_item_slide_select(selected_item_number, slides_start);
+		});
+
 		div_slide_part.append(div_slide_part_header);
 
 		// create the slides-view and append it to the part container
@@ -417,6 +422,9 @@ function select_item(item: number) {
 	// add the selected class to the current item
 	const selected_sequence_item = document.querySelector(`[data-item_number='${selected_item_number}']`);
 	selected_sequence_item?.classList.add("selected");
+
+	// scroll it into view
+	selected_sequence_item.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function request_item_slide_select(item: number, slide: number) {

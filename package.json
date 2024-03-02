@@ -1,6 +1,6 @@
 {
   "name": "johncg",
-  "version": "ALPHA-1.4.1",
+  "version": "ALPHA-1.4.2",
   "bin": "out/main.js",
   "main": "server/src/main.ts",
   "license": "MIT",
