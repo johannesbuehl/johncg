@@ -181,6 +181,14 @@ div.button, div.button > * {
 	margin-top: 0.125rem;
 }
 
+.sequence_item_container.dragged_placeholder {
+	opacity: 0;
+}
+
+.sequence_item_container.dragged {
+	opacity: 1 !important;
+}
+
 .item_color_indicator {
 	height: auto;
 	width: 1.5rem;

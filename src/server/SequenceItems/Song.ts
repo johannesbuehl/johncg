@@ -207,7 +207,6 @@ export default class Song extends SequenceItemBase {
 		const return_item: ClientSongSlides = {
 			type: "Song",
 			title: this.item_props.Caption,
-			item: this.props.item,
 			slides: [
 				this.song_file.get_title_client()
 			],

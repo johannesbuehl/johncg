@@ -128,7 +128,6 @@ export default class Countdown extends SequenceItemBase {
 		return {
 			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
 			type: this.props.type,
-			item: this.props.item,
 			slides: [{
 				mode: this.template.data.mode,
 				time: this.props.Time

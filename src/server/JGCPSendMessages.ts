@@ -27,6 +27,7 @@ export interface Response {
  */
 export interface Sequence extends Base, SequenceClass.ClientSequenceItems {
 	command: "sequence_items";
+	new_item_order: number[];
 }
 
 /**
@@ -40,6 +41,7 @@ export interface State extends Base {
 
 interface ItemSlidesBase extends Base{
 	client_id: string;
+	item: number;
 	command: "item_slides";
 	resolution: SequenceClass.CasparCGResolution;
 }

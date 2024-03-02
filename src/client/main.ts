@@ -5,6 +5,7 @@ import { ItemPartClient } from "../server/SequenceItems/SongFile";
 import * as JGCPSend from "../server/JGCPSendMessages";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
 import { ActiveItemSlide } from "../server/Sequence.js";
+import Sortable from "sortablejs";
 
 const config = {
 	websocket: {
@@ -63,13 +64,17 @@ document.querySelector("#show_error_log")?.addEventListener("click", () => msg_l
 function display_items(data: JGCPSend.Sequence) {
 	const div_sequence_items = document.querySelector("#sequence_items");
 
-	// initialize
-	init();
+	// store the new selected-item-number
+	const new_selected_item_number = data.new_item_order[Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number)];
 
-	data.sequence_items.forEach((item) => {
+	// initialize
+	init(false);
+
+	data.sequence_items.forEach((item, index) => {
 		const div_sequence_item_container = document.createElement("div");
 		div_sequence_item_container.classList.add("sequence_item_container");
-		div_sequence_item_container.dataset.item_number = item.item.toString();
+		// div_sequence_item_container.dataset.item_number = item.item.toString();
+		div_sequence_item_container.dataset.item_number = index.toString();
 
 		// if the item is selectable, give it the class and add the onclick-event
 		if (item.selectable) {
@@ -108,6 +113,20 @@ function display_items(data: JGCPSend.Sequence) {
 		div_sequence_items?.append(div_sequence_item_container);
 	});
 
+	// update the sortable-instance
+	create_sortable_sequence_items();
+
+	// if an item was previously selected, select it again
+	if (new_selected_item_number) {
+		select_item(new_selected_item_number);
+
+		// send a "null"-clientid, to prevent jumping, eventough we send the request
+		set_active_item_slide(data.active_item_slide, null);
+	} else {
+		// request the slides for the active-item
+		request_item_slides(data.active_item_slide.item);
+	}
+
 	// display the visibility state
 	display_visibility_state(data.metadata.visibility);
 }
@@ -128,7 +147,7 @@ function request_item_slides(item: number) {
 		const command: JGCPRecv.RequestItemSlides = {
 			command: "request_item_slides",
 			item: item,
-			client_id: client_id
+			client_id
 		};
 
 		ws.send(JSON.stringify(command));
@@ -405,7 +424,7 @@ function request_item_slide_select(item: number, slide: number) {
 		command: "select_item_slide",
 		item: item,
 		slide: slide,
-		client_id: client_id
+		client_id
 	};
 
 	ws.send(JSON.stringify(message));
@@ -447,11 +466,10 @@ function set_active_slide(scroll: boolean = false) {
 }
 
 function set_active_item_slide(data: ActiveItemSlide, message_client_id: string) {
-	// store the data
-	active_item_slide = data;
-
-	// decide wether to jump there
+	// decide wether to jump there (we send the request, or there is no client_id)
 	const jump = message_client_id === client_id || message_client_id === undefined;
+	
+	active_item_slide = data;
 
 	// remove the "active" class from the previous sequence-item and add it to the new one
 	const prev_selected_item = document.querySelector(".sequence_item_container.active");
@@ -505,7 +523,7 @@ function blank_screen(state: boolean) {
 	}
 }
 
-function init() {
+function init(reset_slides_view: boolean = true) {
 	selected_item_number = null;
 
 	// remove all sequence_items
@@ -514,10 +532,12 @@ function init() {
 		sequence_items.innerHTML = "";
 	}
 
-	// remove all item-slides
-	const slides_view_container = document.querySelector("#slides_view_container");
-	if (slides_view_container !== null) {
-		slides_view_container.innerHTML = "";
+	if (reset_slides_view) {
+		// remove all item-slides
+		const slides_view_container = document.querySelector("#slides_view_container");
+		if (slides_view_container !== null) {
+			slides_view_container.innerHTML = "";
+		}
 	}
 
 	// remove the visibility-selection
@@ -541,6 +561,8 @@ function ws_connect() {
 	
 	ws.addEventListener("message", (event: MessageEvent) => {
 		const data: JGCPSend.Message = JSON.parse(event.data as string) as JGCPSend.Message;
+		
+		console.debug(data);
 
 		const command_parser_map = {
 			sequence_items: display_items,
@@ -587,7 +609,10 @@ function ws_connect() {
 let ws: WebSocket;
 ws_connect();
 
-let active_item_slide = {
+let active_item_slide: {
+	item: number;
+	slide: number;
+} = {
 	item: 0,
 	slide: 0
 };
@@ -614,10 +639,43 @@ document.addEventListener("keydown", (event) => {
 			case "ArrowDown":
 				navigate("item", 1);
 				break;
-			default:
-				console.debug(event.code);
-				break;
 		}
 	}
 });
 
+function create_sortable_sequence_items() {
+	sortabel_sequence_items?.destroy();
+
+	sortabel_sequence_items = Sortable.create(document.querySelector("#sequence_items"), {
+		group: "sequence_items",
+		animation: 150,  // ms, animation speed moving items when sorting, `0` — without animation
+		easing: "cubic-bezier(1, 0, 0, 1)", // Easing for animation. Defaults to null. See https://easings.net/ for examples.
+	
+		dataIdAttr: 'data-item_number', // HTML attribute that is used by the `toArray()` method
+	
+		ghostClass: "dragged_placeholder",  // Class name for the drop placeholder
+		chosenClass: "dragged2",  // Class name for the chosen item
+	
+		forceFallback: true,  // ignore the HTML5 DnD behaviour and force the fallback to kick in
+	
+		fallbackClass: "dragged",  // Class name for the cloned DOM Element when using forceFallback
+	
+		// Element dragging ended
+		onEnd: function (/**Event*/evt) {
+			// send only, if the index has changed
+			if (evt.oldIndex !== evt.newIndex) {
+				const message: JGCPRecv.MoveSequenceItem = {
+					command: "move_sequence_item",
+					from: evt.oldIndex,
+					to: evt.newIndex,
+					client_id
+				};
+				
+				ws.send(JSON.stringify(message));
+			}
+		},
+	});
+}
+
+let sortabel_sequence_items: Sortable;
+create_sortable_sequence_items();

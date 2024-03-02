@@ -25,7 +25,6 @@ export interface ItemPropsBase {
 	Caption: string;
 	slide_count: number;
 	Color: string;
-	item: number;
 	selectable: boolean;
 	background_color?: string;
 	background_image?: string;
@@ -39,7 +38,7 @@ export type ItemProps = SongProps | CountdownProps | CommentProps | ImageProps |
 export interface ClientItemSlidesBase {
 	type: string;
 	title: string;
-	item: number;
+	// item: number;
 	slides: Array<unknown>;
 	media_b64?: string;
 	template?: {

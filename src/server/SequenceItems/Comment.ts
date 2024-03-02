@@ -26,7 +26,6 @@ export default class Comment extends SequenceItemBase {
 		return Promise.resolve({
 			type: "Comment",
 			title: this.props.Caption,
-			item: this.props.item,
 			slides: []
 		});
 	}

@@ -19,8 +19,8 @@ import PDF, { PDFProps } from "./SequenceItems/PDF";
 
 interface ClientSequenceItems {
 	sequence_items: ItemProps[];
+	active_item_slide: ActiveItemSlide;
 	metadata: {
-		item: number;
 		visibility: boolean;
 	}
 }
@@ -148,7 +148,7 @@ class Sequence {
 				Caption: "",
 				Color: "",
 				slide_count: 0,
-				item: this.sequence_items.length,
+				// item: this.sequence_items.length,
 				selectable: true
 				/* eslint-enable @typescript-eslint/naming-convention */
 			};
@@ -223,8 +223,8 @@ class Sequence {
 	create_client_object_sequence(): ClientSequenceItems {
 		const return_sequence: ClientSequenceItems = {
 			sequence_items: this.sequence_items.map((item) => item.props),
+			active_item_slide: this.active_item_slide,
 			metadata: {
-				item: this.active_item_number,
 				visibility: this.visibility
 			}
 		};
@@ -313,6 +313,32 @@ class Sequence {
 		}
 
 		return item_steps !== 0;
+	}
+
+	move_sequence_item(from: number, to: number) {
+		from = this.validate_item_number(from);
+		to = this.validate_item_number(to);
+
+		if (this.active_item === from) {
+			this.active_item_number = to;
+
+		// if one of the move-positions lays before and the other after the active-item, adjust the active-item-number
+		} else if (this.active_item < from !== this.active_item < to) {
+			// if the moved item is the active one, set it accordingly
+			if (this.active_item < from) {
+				// if the item gets moved from before the active-item to after, increase the active-item-number
+				this.active_item_number++;
+			} else {
+				// else decrease it
+				this.active_item_number--;
+			}
+		}
+
+		const new_item_order: number[] = Array.from(Array(this.sequence_items.length).keys());
+		new_item_order.splice(from, 0, new_item_order.splice(to, 1)[0]);
+		this.sequence_items.splice(to, 0, this.sequence_items.splice(from, 1)[0]);
+
+		return new_item_order;
 	}
 
 	private validate_item_number(item: number): number {
@@ -787,6 +813,5 @@ function convert_color_to_hex(color: string): string | undefined {
 	}
 }
 
-// export { NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides, ActiveItemSlide };
 export { ClientSequenceItems, ActiveItemSlide, convert_color_to_hex };
 export default Sequence;

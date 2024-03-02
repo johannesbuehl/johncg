@@ -39,7 +39,6 @@ export default class CommandComment extends SequenceItemBase {
 		return Promise.resolve({
 			type: "CommandComment",
 			title,
-			item: this.props.item,
 			slides: [],
 			template
 		});

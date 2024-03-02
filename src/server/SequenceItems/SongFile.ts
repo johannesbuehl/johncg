@@ -91,7 +91,7 @@ class SongFile {
 	song_file_path: string;
 
 	// private variables
-	private text: Record<string, string[][][]> = {};
+	private text_parts: Record<string, string[][][]> = {};
 
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -204,7 +204,7 @@ class SongFile {
 				lines.splice(0, 1);
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
-				this.text[key] = [];
+				this.text_parts[key] = [];
 			}
 
 			// pad the text with empty lines so that every language has an equal amount of lines
@@ -219,7 +219,9 @@ class SongFile {
 				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
 			});
 
-			this.text[key].push(slide);
+			if (this.text_parts[key] !== undefined) {
+				this.text_parts[key].push(slide);
+			}
 		}
 	}
 
@@ -245,7 +247,7 @@ class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text[part]
+			slides: this.text_parts[part]
 		};
 	}
 
@@ -266,7 +268,7 @@ class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text[part].length
+			slides: this.text_parts[part].length
 		};
 	}
 
@@ -278,11 +280,15 @@ class SongFile {
 	 * all the parts of the song in the order they are defined
 	 */
 	get avaliable_parts(): string[] {
-		return Object.keys(this.text);
+		return Object.keys(this.text_parts);
 	}
 
 	get languages(): number {
 		return this.metadata.LangCount;
+	}
+
+	get text(): Record<string, string[][][]> {
+		return this.text_parts;
 	}
 }
 

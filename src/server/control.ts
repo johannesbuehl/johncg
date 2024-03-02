@@ -6,7 +6,7 @@ import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } fr
 
 import * as JGCPSend from "./JGCPSendMessages";
 import * as JGCPRecv from "./JGCPReceiveMessages";
-import { CasparCG, ClipInfo } from "casparcg-connection";
+import { CasparCG, ClipInfo, InfoConfig } from "casparcg-connection";
 import Config, { CasparCGConnectionSettings } from "./config";
 import { XMLParser } from "fast-xml-parser";
 
@@ -64,7 +64,8 @@ class Control {
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
 		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
-		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.client_id, ws)
+		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.client_id, ws),
+		move_sequence_item: (msg: JGCPRecv.MoveSequenceItem, ws: WebSocket) => this.move_sequence_item(msg.from, msg.to, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -93,7 +94,14 @@ class Control {
 				autoConnect: true
 			});
 
-			const casparcg_config = (await (await connection.infoConfig()).request).data;
+			let casparcg_config: InfoConfig;
+			try {
+				casparcg_config = (await (await connection.infoConfig()).request).data;
+			} catch (e) {
+				if (e instanceof TypeError) {
+					return;
+				}
+			}
 
 			let resolution: CasparCGResolution;
 			let framerate: number;
@@ -151,18 +159,32 @@ class Control {
 
 		this.sequence = new Sequence(sequence, this.casparcg_connections);
 
-		// send the sequence to all clients
-		const response_sequence_items: JGCPSend.Sequence = {
-			command: "sequence_items",
-			...this.sequence.create_client_object_sequence()
-		};
-
-		this.send_all_clients(response_sequence_items);
+		// sent the sequence to all clients
+		this.send_sequence();
 		
 		// send the current state to all clients
 		this.send_all_clients(this.sequence.state);
 
 		ws_send_response("sequence has been opened", true, ws);
+	}
+
+	private send_sequence(
+		new_item_order: number[] = Array.from(Array(this.sequence.sequence_items.length).keys()),
+		client_id?: string,
+		ws?: WebSocket
+	) {
+		const response_sequence_items: JGCPSend.Sequence = {
+			command: "sequence_items",
+			new_item_order,
+			...this.sequence.create_client_object_sequence(),
+			client_id
+		};
+
+		if (ws) {
+			ws.send(JSON.stringify(response_sequence_items));
+		} else {
+			this.send_all_clients(response_sequence_items);
+		}
 	}
 
 	/**
@@ -176,6 +198,7 @@ class Control {
 		if (typeof item === "number") {
 			const message: JGCPSend.ItemSlides = {
 				command: "item_slides",
+				item,
 				client_id,
 				resolution: this.sequence.casparcg_connections[0].resolution,
 				...await this.sequence.create_client_object_item_slides(item)
@@ -289,6 +312,27 @@ class Control {
 		}
 	}
 
+	private move_sequence_item(from: number, to: number, ws?: WebSocket) {
+		if (typeof from !== "number") {
+			ws_send_response("'from' has to be of type number", false, ws);
+			return;
+		}
+
+		if (typeof to != "number") {
+			ws_send_response("'to' has to be of type number", false, ws);
+			return;
+		}
+
+		const new_item_order = this.sequence?.move_sequence_item(from, to);
+
+		this.send_sequence(new_item_order);
+		
+		// // send the current state to all clients
+		// this.send_all_clients(this.sequence.state);
+
+		ws_send_response("sequence-item has been moved", true, ws);
+	}
+
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
 		let visibility_feedback = false;
 
@@ -324,11 +368,7 @@ class Control {
 		// if there is already a sequence loaded, send it to the connected client
 		if (this.sequence !== undefined) {
 			// send the sequence
-			const respone_sequence: JGCPSend.Sequence = {
-				command: "sequence_items",
-				...this.sequence.create_client_object_sequence()
-			};
-			ws.send(JSON.stringify(respone_sequence));
+			this.send_sequence(undefined, undefined, ws);
 
 			// send the selected item-slide
 			ws.send(JSON.stringify(this.sequence.state));
