@@ -59,7 +59,7 @@ copy_release_file(path.join(build_dir, "main.js"));
 copy_release_dir("casparcg-templates", undefined, { filter: (src) => {
 	switch (true) {
 		case path.basename(src) === ".eslintrc":
-		case [".js", ".map"].includes(path.extname(src)):
+		case [".map"].includes(path.extname(src)):
 			return false;
 		default:
 			return true;
@@ -68,13 +68,15 @@ copy_release_dir("casparcg-templates", undefined, { filter: (src) => {
 copy_release_dir("client", undefined, { filter: (src) => {
 	switch (true) {
 		case [".eslintrc", "bahnschrift.ttf"].includes(path.basename(src)):
-		case [".js", ".map"].includes(path.extname(src)):
+		case [".map"].includes(path.extname(src)):
 			return false;
 		default:
 			return true;
 	}
 } });
-copy_release_dir("node_modules/@img", path.join(release_dir, "node_modules/@img/"));
+copy_release_dir("node_modules/@img", "node_modules/@img");
+copy_release_dir("node_modules/canvas", "node_modules/canvas");
+copy_release_dir("node_modules/pdfjs-dist", "node_modules/pdfjs-dist");
 
 // temporary method until there is a solution for packaging sharp
 // create a batch file, that start node with the main.js
