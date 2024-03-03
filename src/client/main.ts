@@ -440,7 +440,7 @@ function set_active_slide(scroll: boolean = false) {
 			
 			// if we requested this, scroll there
 			if (scroll) {
-				selected_item_slide?.parentElement?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+				selected_item_slide?.parentElement?.scrollIntoView({ behavior: "smooth", block: "center" });
 			}
 		}
 	}

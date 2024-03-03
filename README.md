@@ -28,3 +28,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - fix "Buffer() is deprecated"
 - catch songfile not found
 - catch casparcg not running
+- create sequence-summarys or lyrics-sheets through pandoc

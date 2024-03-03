@@ -459,7 +459,7 @@ class Sequence {
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// if the item has multiple media-files, load the new one
-			if (this.active_sequence_item.props.media.length > 1) {
+			if (this.active_sequence_item.props.media?.length > 1) {
 				void this.casparcg_load_media(casparcg_connection);
 			}
 
@@ -557,9 +557,9 @@ class Sequence {
 // parse an individual sequence-item-value
 function parse_item_value_string(key: string, value: string): { [P in keyof ItemProps]?: ItemProps[P]; } {
 	// remove line-breaks
-	value = value.replace(/'\s\+\s+'/gm, "");
+	value = value.replace(/'?\s\+\s+'?/gm, "");
 	// un-escape escaped characters
-	value = value.replace(/'((?:#(?:\d+))+)'/gm, (match, group: string) => {
+	value = value.replace(/'?((?:#(?:\d+))+)'?/gm, (match, group: string) => {
 		const chars = group.split("#").slice(1);
 
 		let return_string = "";

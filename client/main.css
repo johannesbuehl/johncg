@@ -221,6 +221,13 @@ div.button, div.button > * {
 
 .slide_part {
 	border-radius: inherit;
+	border-color: transparent;
+
+	display: inline-block;
+
+	margin-inline-end: 0.5rem;
+
+	overflow: visible;
 }
 
 .slides_view {
@@ -229,7 +236,12 @@ div.button, div.button > * {
 
 	align-items: center;
 
-	padding: 0.5rem;
+	overflow: visible;
+
+	padding-top: 0.5rem;
+	padding-bottom: 1rem;
+	
+	padding-left: 0.1875rem;
 }
 
 .slide_container {
@@ -240,10 +252,19 @@ div.button, div.button > * {
 	position: relative;
 }
 
+.slide_container > img,div {
+	border: 0.0625rem solid transparent;
+	border-radius: 0.125rem;
+}
+
 .slide_container > img {
 	display: block;
 
-	height: 9rem;
+	height: 12rem;
+
+	border-width: inherit;
+	border-color: transparent;
+	border-style: solid;
 }
 
 .slide_container > object {
@@ -271,29 +292,34 @@ div.button, div.button > * {
 }
 
 .slide {
-	border: 1px solid white;
-
-	border-radius: 0.125rem;
+	border-color: white;
 }
 
 .slide:hover {
-	border-width: 2px;
+	border-width: 0.125rem;
+	border-radius: 0.1875rem;
 	
-	margin: -2px; /* difference in border width between selected and non-selected */
+	margin: -0.0625rem; /* difference in border width between selected and non-selected */
+
+	z-index: 20;
 }
 
 .slide.active {
 	border-color: red;
-	border-width: 2px;
+	border-width: 0.125rem;
+	border-radius: 0.1875rem;
 
-	margin: -2px; /* difference in border width between selected and non-selected */
+	z-index: 10;
+
+	margin: -0.0625rem; /* difference in border width between selected and non-selected */
 }
 
 .slide.active:hover {
 	border-color: red;
-	border-width: 4px;
+	border-width: 0.25rem;
+	border-radius: 0.3125rem;
 
-	margin: -4px; /* difference in border width between selected and non-selected */
+	margin: -0.1875rem; /* difference in border width between selected and non-selected */
 }
 
 .lyric_line {
