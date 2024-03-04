@@ -61,6 +61,23 @@ document.querySelector("#set_visibility_show")?.addEventListener("click", () => 
 
 document.querySelector("#show_error_log")?.addEventListener("click", () => msg_log.error("foobar"));
 
+function add_song(visibility: boolean) {
+	const song_selector = document.querySelector<HTMLDivElement>("div#song_selector");
+
+	if (visibility) {
+		song_selector.classList.add("visible");
+		setTimeout(() => {
+			song_selector.classList.add("blur_background");
+		}, 50);
+	} else {
+		song_selector.classList.remove("blur_background");
+		song_selector.classList.remove("visible");
+	}
+}
+document.querySelector("#add_song")?.addEventListener("click", () => { add_song(true); });
+document.querySelector("#song_selector_close")?.addEventListener("click", () => { add_song(false); });
+add_song(true);
+
 function display_items(data: JGCPSend.Sequence) {
 	const div_sequence_items = document.querySelector("#sequence_items");
 

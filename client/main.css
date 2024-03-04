@@ -7,6 +7,10 @@
 	overflow: hidden;
 }
 
+input[type="button"] {
+	cursor: pointer;
+}
+
 body {
 	background-color: rgb(31, 33, 42);
 
@@ -38,7 +42,9 @@ div.button {
 	flex-direction: column;
 
 	padding: 0.5rem;
+}
 
+div.button.square {
 	aspect-ratio: 1;
 	max-height: 100%;
 }
@@ -401,4 +407,131 @@ div.button, div.button > * {
 .message_box > .time {
 	margin-left: auto;
 	margin-right: 0.5rem;
+}
+
+
+/* Windows */
+.window > .header {
+	display: flex;
+
+	background-color: rgb(40, 76, 184);
+
+	font-weight: bold;
+
+	border-radius: inherit;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+
+	padding: 0.5rem;
+	padding-left: 0.75rem;
+}
+
+div.window_button {
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+
+	/* padding: 0.125rem; */
+
+	overflow: visible;
+
+	display: inline-block;
+
+	aspect-ratio: 1;
+	max-height: 100%;
+}
+
+div.window_button:hover {
+	background-color: rgb(79, 83, 94);
+}
+
+div.window_button.active {
+	background-color: rgb(40, 76, 184);
+}
+
+div.window_button.active:hover {
+	background-color: rgb(54, 92, 192);
+}
+
+div.window_button {
+	cursor: pointer;
+}
+
+div.window_button > * {
+	overflow: visible;
+}
+
+div.window_button.close {
+	margin-left: auto;
+}
+
+/* add_song */
+#song_selector {
+	cursor: not-allowed;
+
+	display: none;
+
+	position: fixed;
+	height: 100%;
+	width: 100%;
+	top: 0;
+	left: 0;
+}
+
+#song_selector.visible {
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#song_selector.visible.blur_background {
+	transition: backdrop-filter, background-color 0.2s ease-out;
+	backdrop-filter: blur(0.5rem);
+
+	background-color: rgb(31, 33, 42, 0.75);
+}
+
+#song_selector_container {
+	cursor: auto;
+
+	display: flex;
+	flex-direction: column;
+
+	width: 50%;
+	height: 50%;
+
+	background-color: rgb(43, 46, 56);
+
+	border-radius: 0.25rem;
+}
+
+#song_selector_container > .content {
+	padding: 0.5rem;
+
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+#add_song_content {
+	display: flex;
+	flex: 1;
+}
+
+#add_song_results {
+	width: 30%;
+	flex: 1;
+}
+
+#add_song_preview {
+	flex: 1;
+}
+
+#add_song_buttons {
+	display: flex;
+}
+
+#add_song_buttons > * {
+	margin: 0.25rem;
 }
