@@ -1,0 +1,95 @@
+:root {
+	--vt-c-white: white;
+	--vt-c-gray: rgb(154, 153, 150);
+
+	--vt-c-black: black;
+
+	--vt-c-divider-dark: black;
+
+	--vt-c-container-background: rgb(43, 46, 56);
+
+	--vt-c-page-background: rgb(31, 33, 42);
+
+	--vt-c-item: rgb(60, 64, 75);
+	--vt-c-item-hover: rgb(79, 83, 94);
+	--vt-c-active: rgb(40, 76, 184);
+	--vt-c-active-hover: rgb(54, 92, 192);
+}
+
+/* @media (prefers-color-scheme: dark) { */
+	:root {
+		--color-text: var(--vt-c-white);
+		--color-text-disabled: var(--vt-c-gray);
+
+		--color-container: var(--vt-c-container-background);
+
+		--color-page-background: var(--vt-c-page-background);
+
+		--color-divider-dark: var(--vt-c-black);
+
+		--color-border: var(--vt-c-divider-dark-2);
+
+		--color-item: var(--vt-c-item);
+		--color-item-hover: var(--vt-c-item-hover);
+		--color-active: var(--vt-c-active);
+		--color-active-hover: var(--vt-c-active-hover);
+	}
+/* } */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	font-weight: normal;
+}
+
+* {
+	overflow: hidden;
+}
+
+*::-webkit-scrollbar {
+	width: calc(1rem + 0.25rem);
+}
+
+*::-webkit-scrollbar-thumb {
+	background-color: var(--color-item);
+
+	border-radius: 0.5rem;
+
+	border: 0.25rem solid transparent;
+	background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background-color: var(--color-item-hover);
+}
+
+*::-webkit-scrollbar-track {
+	background-color: var(--color-container);
+}
+
+*::-webkit-scrollbar-button {
+	height: 0;
+}
+
+body {
+	background-color: var(--color-page-background);
+
+	font-family: Bahnschrift;
+	color: var(--color-text);
+
+	margin: 0;
+
+	cursor: default;
+	user-select: none;
+	/* min-height: 100vh;
+	color: var(--color-text);
+	transition:
+		color 0.5s,
+		background-color 0.5s;
+	line-height: 1.6; */
+	/* text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale; */
+}

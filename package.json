@@ -14,6 +14,7 @@
     "pdfjs-dist": "^4.0.379",
     "sharp": "^0.33.2",
     "tmp": "^0.2.1",
+    "vue": "^3.4.21",
     "ws": "^8.16.0"
   },
   "devDependencies": {
@@ -34,7 +35,7 @@
   },
   "scripts": {
     "lint": "eslint src/**/*.ts",
-	"build-release": "esbuild build/scripts/build.ts --outfile=build/scripts/build.js --tsconfig=build/scripts/tsconfig.json --platform=node --bundle && node build/scripts/build.js",
+    "build-release": "esbuild build/scripts/build.ts --outfile=build/scripts/build.js --tsconfig=build/scripts/tsconfig.json --platform=node --bundle && node build/scripts/build.js",
     "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle --external:pdfjs-dist --external:canvas",
     "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
     "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",

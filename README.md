@@ -29,3 +29,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - catch songfile not found
 - catch casparcg not running
 - create sequence-summarys or lyrics-sheets through pandoc
+- serve everything for the client, including html templates

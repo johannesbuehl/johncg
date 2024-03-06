@@ -60,4 +60,4 @@ export interface Clear extends Base {
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = Sequence | State;
+export type Message = Sequence | State | ItemSlides;

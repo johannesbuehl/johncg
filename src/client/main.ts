@@ -1,8 +1,8 @@
 import MessageLog from "./message_box.js";
 
-import { ItemPartClient } from "../server/SequenceItems/SongFile";
+import { ItemPartClient } from "../server/SequenceItems/SongFile.js";
 
-import * as JGCPSend from "../server/JGCPSendMessages";
+import * as JGCPSend from "../server/JGCPSendMessages.js";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
 import { ActiveItemSlide } from "../server/Sequence.js";
 

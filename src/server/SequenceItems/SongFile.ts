@@ -70,15 +70,18 @@ interface LyricPart {
 
 type ItemPart = TitlePart | LyricPart;
 
-interface TitlePartClient {
-	type: "title";
+interface BasePartClient {
+	type: string;
+	part: string;
 	slides: number;
 }
 
-interface LyricPartClient {
+interface TitlePartClient extends BasePartClient {
+	type: "title";
+}
+
+interface LyricPartClient extends BasePartClient {
 	type: "lyric";
-	part: SongElement;
-	slides: number;
 }
 
 type ItemPartClient = TitlePartClient | LyricPartClient;
@@ -249,9 +252,14 @@ class SongFile {
 		};
 	}
 
-	get_title_client(): TitlePartClient {
+	get_title_client(language: number): TitlePartClient {
+		if (language < 0 || language >= this.languages) {
+			throw new RangeError("language-index is out of range");
+		}
+
 		const response: TitlePartClient = {
 			type: "title",
+			part: this.metadata.Title[language],
 			slides: 1 // static, since there is always only one title-slide
 		};
 

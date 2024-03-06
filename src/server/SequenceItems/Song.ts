@@ -37,9 +37,11 @@ export interface SongTemplateData {
 	slide: number;
 }
 
+export type SongPartClient = ItemPartClient & { start_index: number; };
+
 export interface ClientSongSlides extends ClientItemSlidesBase {
 	type: "Song"
-	slides: ItemPartClient[];
+	slides: SongPartClient[];
 	media_b64: string;
 	template: SongTemplate;
 }
@@ -208,12 +210,15 @@ export default class Song extends SequenceItemBase {
 			type: "Song",
 			title: this.item_props.Caption,
 			item: this.props.item,
-			slides: [
-				this.song_file.get_title_client()
-			],
+			slides: [{
+					start_index: 0,
+					...this.song_file.get_title_client(this.languages[0]),
+				}],
 			media_b64: await this.get_media_b64(true),
 			template: this.props.template
 		};
+
+		let slide_counter: number = 1;
 
 		for (const part_name of this.get_verse_order()) {
 			let part: LyricPartClient | undefined = undefined;
@@ -228,7 +233,12 @@ export default class Song extends SequenceItemBase {
 
 			// if a part is not available, skip it
 			if (part !== undefined){
-				return_item.slides.push(part);
+				return_item.slides.push({
+					...part,
+					start_index: slide_counter
+				});
+
+				slide_counter += part.slides;
 			}
 		}
 
