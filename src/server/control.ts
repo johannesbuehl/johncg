@@ -76,7 +76,7 @@ class Control {
 	private readonly ws_message_handler: WebsocketMessageHandler = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		JGCP: {
-			connection: (ws: WebSocket) => this.ws_on_connection(ws),
+			open: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
 		}
 	};

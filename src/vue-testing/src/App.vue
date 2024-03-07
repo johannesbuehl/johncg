@@ -3,6 +3,7 @@
  * MISSING
  * sortableJS
  * error-log
+ * favicon
  */
 import { ref, watch } from "vue";
 import ControlWindow from './ControlWindow/ControlWindow.vue';

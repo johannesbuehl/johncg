@@ -53,7 +53,7 @@ enum TransitionType {
 
 export default class Playlist {
 	// store the individual items of the playlist
-	playlist_items: PlaylistItem[] = [];
+	private playlist_items: PlaylistItem[] = [];
 
 	private active_item_number: number = 0;
 
@@ -641,8 +641,9 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 				return_props.StreamClass = value;
 			}
 			break;
-		default:
+		case "Caption":
 			return_props[key] = value;
+			break;
 	}
 
 	return return_props;

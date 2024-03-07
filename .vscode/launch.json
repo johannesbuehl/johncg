@@ -13,7 +13,7 @@
 			],
 			"program": "${workspaceFolder}\\src\\server\\main.ts",
 			// "preLaunchTask": "tsc: build - server",
-			"preLaunchTask": "esbuild-server-sourcemap",
+			"preLaunchTask": "type-check and esbuild-server-sourcemap",
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],

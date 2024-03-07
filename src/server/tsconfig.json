@@ -8,5 +8,6 @@
 		"noImplicitAny": true,
 		"noImplicitThis": true,
 		// "strict": true,
+		"noEmit": true
 	}
 }

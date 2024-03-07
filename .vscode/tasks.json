@@ -38,6 +38,14 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "esbuild-server-sourcemap"
+		},
+		{
+			"label": "type-check and esbuild-server-sourcemap",
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"tsc: build - server",
+				"esbuild-server-sourcemap"
+			]
 		}
 	]
 }

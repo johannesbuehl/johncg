@@ -31,3 +31,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - create playlist-summarys or lyrics-sheets through pandoc
 - serve everything for the client, including html templates
 - load files from disc always at item selection to stay up to date
+- add functions to Config.ts (get_song_path, get_template_path, ...)

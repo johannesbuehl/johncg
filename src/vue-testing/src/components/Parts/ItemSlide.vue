@@ -23,7 +23,6 @@ onMounted(() => {
 
 function scroll_into_view() {
 	if (props.active && props.scroll) {
-		console.log("scrolling");
 		slide.value?.scrollIntoView({ behavior: "smooth", block: 'center' })
 	}
 }
