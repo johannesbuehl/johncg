@@ -6,8 +6,7 @@
 		"sourceMap": true,
 		"removeComments": true,
 		"noImplicitAny": true,
-		"noImplicitThis": true
+		"noImplicitThis": true,
 		// "strict": true,
-		// // "verbatimModuleSyntax": true,
 	}
 }

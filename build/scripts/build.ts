@@ -74,7 +74,13 @@ copy_release_dir("client", undefined, { filter: (src) => {
 			return true;
 	}
 } });
-copy_release_dir("node_modules/@img", path.join(release_dir, "node_modules/@img/"));
+const copy_module = (name: string) => {
+	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
+
+};
+copy_module("@img");
+copy_module("canvas");
+copy_module("pdfjs-dist");
 
 // temporary method until there is a solution for packaging sharp
 // create a batch file, that start node with the main.js
