@@ -5,3 +5,4 @@ casparcg-templates
 client
 license-generator.ts
 license-reporter.config.ts
+build-scripts/*.js

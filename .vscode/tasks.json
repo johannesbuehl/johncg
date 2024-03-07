@@ -10,17 +10,10 @@
 		},
 		{
 			"type": "npm",
-			"script": "watch-client",
+			"script": "templates-watch",
 			"group": "build",
 			"problemMatcher": [],
-			"label": "watch-client"
-		},
-		{
-			"type": "npm",
-			"script": "watch-templates",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "watch-templates"
+			"label": "templates-watch"
 		},
 		{
 			"type": "typescript",
@@ -32,20 +25,19 @@
 			"label": "tsc: build - server"
 		},
 		{
-			"type": "shell",
-			"command": "node",
-			"args": ["esbuild.config.js"],
-			"group": "build",
-			"problemMatcher": [],
-			"label": "esbuild-server-sourcemap"
-		},
-		{
 			"label": "type-check and esbuild-server-sourcemap",
 			"dependsOrder": "sequence",
 			"dependsOn": [
 				"tsc: build - server",
 				"esbuild-server-sourcemap"
 			]
+		},
+		{
+			"type": "npm",
+			"script": "server-debug-",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "esbuild-server-sourcemap"
 		}
 	]
 }

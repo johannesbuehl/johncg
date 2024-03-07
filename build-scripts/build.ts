@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import tar from "tar";
 
-import type { ConfigJSON } from "../../src/server/config.ts";
+import type { ConfigJSON } from "../src/server/config.ts";
 
 // load the package.json
 const package_json = JSON.parse(fs.readFileSync("package.json", "utf-8")) as { version: string; dependencies: string[] };
@@ -26,9 +26,9 @@ const copy_release_file = (file: string, dest?: string) => fs.copyFileSync(file,
 const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(release_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
 
 // bundle the different scripts
-execSync("npm run build-server");
-execSync("npm run build-client");
-execSync("npm run build-templates");
+execSync("npm run server-build");
+// execSync("npm run client-build");
+execSync("npm run templates-build");
 
 // temporary method until there is a solution for packaging sharp
 // // create sea-prep.blob
@@ -87,14 +87,14 @@ copy_module("pdfjs-dist");
 fs.writeFileSync(path.join(release_dir, build_name + ".bat"), `${exec_name} main.js\npause`);
 
 // create and copy the licenses
-// void lr.cli(["--config=build/scripts/license-reporter.config.ts"]);
+// void lr.cli(["--config=build-scripts/license-reporter.config.ts"]);
 try {
-	execSync("npx license-reporter --config build/scripts/license-reporter.config.ts");
+	execSync("npx license-reporter --config build-scripts/license-reporter.config.ts");
 } catch (e) { /* empty */ }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 interface License { name: string; licenseText: string }
-const licenses_orig = JSON.parse(fs.readFileSync("build/scripts/3rdpartylicenses.json", "utf-8")) as License[];
+const licenses_orig = JSON.parse(fs.readFileSync("build-scripts/3rdpartylicenses.json", "utf-8")) as License[];
 
 const licenses: Record<string, License> = {};
 

@@ -9,7 +9,7 @@
 			"src/server/tsconfig.json",
 			"src/client/tsconfig.json",
 			"src/templates/tsconfig.json",
-			"build/scripts/tsconfig.json"
+			"build-scripts/tsconfig.json"
 		]
 	},
 	"extends": [

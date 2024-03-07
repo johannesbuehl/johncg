@@ -35,11 +35,12 @@
   },
   "scripts": {
     "lint": "eslint src/**/*.ts",
-    "build-release": "esbuild build/scripts/build.ts --outfile=build/scripts/build.js --tsconfig=build/scripts/tsconfig.json --platform=node --bundle && node build/scripts/build.js",
-    "build-server": "esbuild src/server/main.ts --outfile=dist/build/main.js --tsconfig=src/server/tsconfig.json --platform=node --minify --bundle --external:pdfjs-dist --external:canvas",
+    "build-release": "node build-scripts/build-build.js && node build-scripts/build.js",
+    "server-build": "node build-scripts/server-release.js",
+	"server-debug": "node build-scripts/server-debug.js",
     "build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
     "watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",
-    "build-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome117 --minify",
-    "watch-templates": "esbuild src/templates/*.ts --outdir=casparcg-templates/JohnCG/ --tsconfig=src/templates/tsconfig.json --target=chrome117 --sourcemap --watch"
+    "templates-build": "node build-scripts/templates-build.js",
+    "templates-watch": "node build-scripts/templates-watch.js"
   }
 }
