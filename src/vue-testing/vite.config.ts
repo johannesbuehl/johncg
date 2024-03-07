@@ -15,7 +15,8 @@ export default defineConfig({
 				main: path.resolve(__dirname, "main.html")
 			}
 		},
-		outDir: "../../dist/build/client"
+		outDir: "../../dist/build/client",
+		emptyOutDir: true
 	},
 	resolve: {
 		alias: {

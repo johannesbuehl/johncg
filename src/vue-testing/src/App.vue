@@ -2,7 +2,6 @@
 /**
  * MISSING
  * sortableJS
- * auto-reconnect
  * error-log
  */
 import { ref, watch } from "vue";
@@ -11,12 +10,26 @@ import ControlWindow from './ControlWindow/ControlWindow.vue';
 import * as JGCPSend from "../../server/JGCPSendMessages";
 import * as JGCPRecv from "../../server/JGCPReceiveMessages";
 
-const ws = new WebSocket("ws://127.0.0.1:8765", "JGCP");
+const Config = {
+	client_server: {
+		websocket: {
+			port: "8765"
+		}
+	}
+};
+
+const enum ServerConnection {
+	disconnected = 0,
+	connected = 1,
+}
 
 const server_state = ref<JGCPSend.State>({ command: "state" });
 const playlist_items = ref<JGCPSend.Playlist>();
 const item_slides = ref<JGCPSend.ItemSlides>();
 const selected_item = ref<number>(-1);
+const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
+let ws: WebSocket | undefined;
+ws_connect();
 
 watch(selected_item, (new_selection) => {
 	const message: JGCPRecv.RequestItemSlides = {
@@ -25,8 +38,15 @@ watch(selected_item, (new_selection) => {
 		client_id
 	};
 	
-	ws.send(JSON.stringify(message));
+	ws?.send(JSON.stringify(message));
 });
+
+function init() {
+	server_state.value = { command: "state" };
+	playlist_items.value = undefined;
+	item_slides.value = undefined;
+	selected_item.value = -1;
+}
 
 function select_item(item: number) {
 	if (playlist_items.value?.playlist_items[item].selectable) {
@@ -34,33 +54,66 @@ function select_item(item: number) {
 	}
 }
 
-ws.addEventListener("message", (event: MessageEvent) => {
-	let data: JGCPSend.Message;
+function ws_connect() {
+	const url = new URL(document.URL);
 
-	try {
-		data = JSON.parse(event.data as string);
-	} catch (e) {
-		if (e instanceof SyntaxError) {
-			console.error("received invalid JSON");
-			return;
-		} else {
-			throw e;
+	const ws_url: string = `ws://${url.hostname}:${Config.client_server.websocket.port}`;
+
+	ws = new WebSocket(ws_url, "JGCP");
+	
+	ws.addEventListener("open", () => {
+			server_connection.value = ServerConnection.connected;
+	});
+		
+	ws.addEventListener("message", (event: MessageEvent) => {
+		let data: JGCPSend.Message;
+
+		try {
+			data = JSON.parse(event.data as string);
+		} catch (e) {
+			if (e instanceof SyntaxError) {
+				console.error("received invalid JSON");
+				return;
+			} else {
+				throw e;
+			}
 		}
-	}
 
-	const command_parser_map = {
-		playlist_items: load_playlist_items,
-		state: parse_state,
-		item_slides: load_item_slides,
-		response: handle_ws_response
-	};
+		const command_parser_map = {
+			playlist_items: load_playlist_items,
+			state: parse_state,
+			item_slides: load_item_slides,
+			response: handle_ws_response
+		};
 
-	command_parser_map[data.command ?? ""](data as never);
-});
+		command_parser_map[data.command ?? ""](data as never);
+	});
+		
+	ws.addEventListener("ping", () => {
+	});
+	
+	ws.addEventListener("error", (event: Event) => {
+		console.error(`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`);
+	
+		ws?.close();
+	});
+	
+	ws.addEventListener("close", () => {
+		console.log("No connection to server. Retrying in 1s");
+
+		// delete the playlist and slides
+		init();
+
+		server_connection.value = ServerConnection.disconnected;
+	
+		setTimeout(() => {
+			ws_connect();
+			
+		}, 1000);
+	});
+}
 
 function load_playlist_items(data: JGCPSend.Playlist) {
-	// if (if data.metada)
-
 	playlist_items.value = data;
 }
 
@@ -101,7 +154,7 @@ function set_active_slide(slide: number) {
 		client_id: client_id
 	}
 
-	ws.send(JSON.stringify(message));
+	ws?.send(JSON.stringify(message));
 }
 
 function handle_ws_response(response: JGCPSend.Response) {
@@ -123,7 +176,8 @@ const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${rando
 <template>
 	<div id="main_window">
 		<ControlWindow
-			:ws="ws"
+			v-if="server_connection === ServerConnection.connected"
+			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"
 			:playlist="playlist_items"
