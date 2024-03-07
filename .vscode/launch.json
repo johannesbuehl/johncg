@@ -12,7 +12,8 @@
 				"<node_internals>/**"
 			],
 			"program": "${workspaceFolder}\\src\\server\\main.ts",
-			"preLaunchTask": "tsc: build - server",
+			// "preLaunchTask": "tsc: build - server",
+			"preLaunchTask": "esbuild-server-sourcemap",
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
