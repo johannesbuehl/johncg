@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import SequenceItemsList from '@/components/SequenceItemsList.vue';
+import PlaylistItemsList from '@/components/PlaylistItemsList.vue';
 import SlidesView from "@/components/SlidesView.vue";
 import MenuBar from "@/components/MenuBar.vue";
 
 import * as JGCPSend from "../../../server/JGCPSendMessages";
 import * as JGCPRecv from "../../../server/JGCPReceiveMessages";
-import type { ActiveItemSlide } from '../../../server/Sequence';
+import type { ActiveItemSlide } from '../../../server/Playlist';
 
 const props = defineProps<{
 	ws: WebSocket;
 	client_id: string;
 	server_state: JGCPSend.State;
-	sequence?: JGCPSend.Sequence;
+	playlist?: JGCPSend.Playlist;
 	slides?: JGCPSend.ItemSlides;
 	active_item_slide?: ActiveItemSlide;
 	selected: number;
@@ -49,9 +49,9 @@ function visibility(state: boolean) {
 <template>
 	<MenuBar class="menu_bar" :ws="ws" @navigate="navigate" @set_visibility="visibility" :visibility="server_state?.visibility ?? false" />
 	<div id="MenuBar_wrapper">
-		<SequenceItemsList
-			v-if="sequence !== undefined"
-			:sequence="sequence"
+		<PlaylistItemsList
+			v-if="playlist !== undefined"
+			:playlist="playlist"
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"

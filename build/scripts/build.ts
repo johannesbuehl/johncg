@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import tar from "tar";
 
-import { ConfigJSON } from "../../src/server/config";
+import type { ConfigJSON } from "../../src/server/config.ts";
 
 // load the package.json
 const package_json = JSON.parse(fs.readFileSync("package.json", "utf-8")) as { version: string; dependencies: string[] };

@@ -1,4 +1,4 @@
-import { CountdownTemplateData } from "../server/SequenceItems/Countdown";
+import { CountdownTemplateData } from "../server/PlaylistItems/Countdown";
 
 let update_interval: NodeJS.Timeout;
 const spans: {

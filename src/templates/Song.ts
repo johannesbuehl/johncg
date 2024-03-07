@@ -1,4 +1,4 @@
-import { ItemSlide, SongTemplateData } from "../server/SequenceItems/Song";
+import { ItemSlide, SongTemplateData } from "../server/PlaylistItems/Song";
 
 let data: SongTemplateData & { mute_transition: boolean };
 

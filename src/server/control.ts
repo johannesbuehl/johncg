@@ -1,13 +1,19 @@
-import WebSocket, { RawData } from "ws";
+import type WebSocket from "ws";
+import type { RawData } from "ws";
 
-import Sequence, { CasparCGResolution } from "./Sequence";
-import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
-import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
+import Playlist from "./Playlist";
+import type { CasparCGResolution } from "./Playlist";
+import OSCServer from "./servers/osc-server";
+import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
+import WebsocketServer from "./servers/websocket-server";
+import type { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
 
 import * as JGCPSend from "./JGCPSendMessages";
 import * as JGCPRecv from "./JGCPReceiveMessages";
-import { CasparCG, ClipInfo } from "casparcg-connection";
-import Config, { CasparCGConnectionSettings } from "./config";
+import { CasparCG } from "casparcg-connection";
+import type { ClipInfo } from "casparcg-connection";
+import Config from "./config";
+import type { CasparCGConnectionSettings } from "./config";
 import { XMLParser } from "fast-xml-parser";
 
 interface CasparCGPathsSettings {
@@ -30,7 +36,7 @@ export interface CasparCGConnection {
 }
 
 class Control {
-	private sequence: Sequence;
+	private playlist?: Playlist;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
 
@@ -39,7 +45,7 @@ class Control {
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
 		control: {
-			sequence_item: {
+			playlist_item: {
 				navigate: {
 					direction: (value: number) => this.navigate("item", value)
 				}
@@ -60,7 +66,7 @@ class Control {
 
 	// mapping of the websocket-messages to the functions
 	private readonly ws_function_map = {
-		open_sequence: (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
+		open_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) => this.open_playlist(msg?.playlist, ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
 		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
@@ -93,37 +99,47 @@ class Control {
 				autoConnect: true
 			});
 
-			const casparcg_config = (await (await connection.infoConfig()).request).data;
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			const casparcg_config = (await (await connection.infoConfig()).request)?.data;
 
-			let resolution: CasparCGResolution;
-			let framerate: number;
+			let resolution: CasparCGResolution = {
+				height: 1920,
+				width: 1080
+			};
+			let framerate: number = 25;
 
-			const video_mode_regex_results = casparcg_config.channels[connection_setting.channel - 1].videoMode.match(/(?:(?<dci>dci)?(?<width>\d+)(?:x(?<height>\d+))?[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/);
+			let video_mode_regex_results: RegExpMatchArray | undefined | null;
 
-			// if the resolution is given as PAL or NTSC, convert it
-			if (video_mode_regex_results.groups.mode) {
-				switch (video_mode_regex_results.groups.mode) {
-					case "PAL":
-						resolution = {
-							width: 720,
-							height: 576
-						};
-						framerate = 25;
-						break;
-					case "NTSC":
-						resolution = {
-							width: 720,
-							height: 480
-						};
-						framerate = 29.97;
-						break;
+			if (casparcg_config?.channels !== undefined) {
+				video_mode_regex_results = casparcg_config?.channels[connection_setting.channel - 1].videoMode?.match(/(?:(?<dci>dci)?(?<width>\d+)(?:x(?<height>\d+))?[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/);
+			}
+			
+			if (video_mode_regex_results?.groups !== undefined) {
+				// if the resolution is given as PAL or NTSC, convert it
+				if (video_mode_regex_results.groups.mode) {
+					switch (video_mode_regex_results.groups.mode) {
+						case "PAL":
+							resolution = {
+								width: 720,
+								height: 576
+							};
+							framerate = 25;
+							break;
+						case "NTSC":
+							resolution = {
+								width: 720,
+								height: 480
+							};
+							framerate = 29.97;
+							break;
+					}
+				} else {
+					resolution = {
+						width: Number(video_mode_regex_results.groups.width),
+						height: Number(video_mode_regex_results.groups.height ?? Number(video_mode_regex_results.groups.width) / 16 * 9)
+					};
+					framerate = Number(video_mode_regex_results.groups.framerate) / 100;
 				}
-			} else {
-				resolution = {
-					width: Number(video_mode_regex_results.groups.width),
-					height: Number(video_mode_regex_results.groups.height ?? Number(video_mode_regex_results.groups.width) / 16 * 9)
-				};
-				framerate = Number(video_mode_regex_results.groups.framerate) / 100;
 			}
 
 			const casparcg_connection: CasparCGConnection = {
@@ -142,27 +158,27 @@ class Control {
 	}
 
 	/**
-	 * open and load a sequence-file and send it to clients and renderers
-	 * @param sequence sequence-file content
+	 * open and load a playlist-file and send it to clients and renderers
+	 * @param playlist playlist-file content
 	 */
-	private open_sequence(sequence: string, ws?: WebSocket) {
-		// if there was already a sequence open, call it's destroy function
-		this.sequence?.destroy();
+	private open_playlist(playlist: string, ws?: WebSocket) {
+		// if there was already a playlist open, call it's destroy function
+		this.playlist?.destroy();
 
-		this.sequence = new Sequence(sequence, this.casparcg_connections);
+		this.playlist = new Playlist(playlist, this.casparcg_connections);
 
-		// send the sequence to all clients
-		const response_sequence_items: JGCPSend.Sequence = {
-			command: "sequence_items",
-			...this.sequence.create_client_object_sequence()
+		// send the playlist to all clients
+		const response_playlist_items: JGCPSend.Playlist = {
+			command: "playlist_items",
+			...this.playlist.create_client_object_playlist()
 		};
 
-		this.send_all_clients(response_sequence_items);
+		this.send_all_clients(response_playlist_items);
 		
 		// send the current state to all clients
-		this.send_all_clients(this.sequence.state);
+		this.send_all_clients(this.playlist.state);
 
-		ws_send_response("sequence has been opened", true, ws);
+		ws_send_response("playlist has been opened", true, ws);
 	}
 
 	/**
@@ -174,16 +190,24 @@ class Control {
 	private async get_item_slides(item: number, client_id?: string, ws?: WebSocket) {
 		// type-check the item
 		if (typeof item === "number") {
-			const message: JGCPSend.ItemSlides = {
-				command: "item_slides",
-				client_id,
-				resolution: this.sequence.casparcg_connections[0].resolution,
-				...await this.sequence.create_client_object_item_slides(item)
-			};
+			if (this.check_playlist_loaded(ws)) {
+				if (this.playlist?.casparcg_connections[0].resolution !== undefined) {
+					const message: JGCPSend.ItemSlides = {
+						command: "item_slides",
+						client_id,
+						resolution: this.playlist?.casparcg_connections[0].resolution,
+						...await this.playlist?.create_client_object_item_slides(item)
+					};
 
-			ws?.send(JSON.stringify(message));
-
-			ws_send_response("slides have been sent", true, ws);
+					ws?.send(JSON.stringify(message));
+		
+					ws_send_response("slides have been sent", true, ws);
+				} else {
+					ws_send_response("no active CasparCG-connections", false, ws);
+				}
+			} else {
+				return;
+			}
 		} else {
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			ws_send_response(`'${item}' is not of type 'number'`, false, ws);
@@ -191,6 +215,9 @@ class Control {
 	}
 
 	private select_item_slide(item: number, slide: number, client_id?: string, ws?: WebSocket) {
+		// if there is no playlist loaded, send an error
+
+
 		if (typeof item !== "number") {
 			ws_send_response("'item' is not of type number", false, ws);
 		}
@@ -202,10 +229,10 @@ class Control {
 		// try to execute the item and slide change
 		try {
 			// if the current item is the same as the requested one, only execute an slide change
-			if (item === this.sequence?.active_item) {
-				this.sequence?.set_active_slide(slide);
+			if (item === this.playlist?.active_item) {
+				this.playlist?.set_active_slide(slide);
 			} else {
-				this.sequence?.set_active_item(item, slide);
+				this.playlist?.set_active_item(item, slide);
 			}
 		} catch (e) {
 			// catch invalid item or slide numbers
@@ -219,7 +246,7 @@ class Control {
 
 		this.send_all_clients({
 			command: "state",
-			active_item_slide: this.sequence.active_item_slide,
+			active_item_slide: this.playlist?.active_item_slide,
 			client_id: client_id
 		});
 
@@ -233,9 +260,8 @@ class Control {
 	 * @param client_id 
 	 */
 	private navigate(type: JGCPRecv.NavigateType, steps: number, client_id?: string, ws?: WebSocket) {
-		// if there is no sequence loaded, send a negative response back and exit
-		if (this.sequence === undefined) {
-			ws_send_response("no schedule loaded", false, ws);
+		// if there is no playlist loaded, send a negative response back and exit
+		if (!this.check_playlist_loaded(ws)) {
 			return;
 		}
 
@@ -249,15 +275,15 @@ class Control {
 
 		switch (type) {
 			case "item":
-				this.sequence.navigate_item(steps);
+				this.playlist?.navigate_item(steps);
 				break;
 			case "slide":
-				this.sequence.navigate_slide(steps);
+				this.playlist?.navigate_slide(steps);
 		}
 		
 		this.send_all_clients({
 			command: "state",
-			active_item_slide: this.sequence.active_item_slide,
+			active_item_slide: this.playlist?.active_item_slide,
 			client_id: client_id
 		});
 
@@ -265,22 +291,22 @@ class Control {
 	}
 
 	/**
-	 * set the visibility of the sequence in the renderer
+	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
 	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): Promise<void> {
-		// if there is no sequence loaded, send a negative response back and exit
-		if (this.sequence === undefined) {
+		// if there is no playlist loaded, send a negative response back and exit
+		if (this.playlist === undefined) {
 			ws_send_response("no schedule loaded", false, ws);
 			return;
 		}
 
 		if (typeof visibility === "boolean") {
-			await this.sequence.set_visibility(visibility);
+			await this.playlist.set_visibility(visibility);
 
 			this.send_all_clients({
 				command: "state",
-				visibility: this.sequence.visibility
+				visibility: this.playlist.visibility
 			});
 
 			ws_send_response("visibility has been set", true, ws);
@@ -292,9 +318,9 @@ class Control {
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
 		let visibility_feedback = false;
 
-		// if a sequence is loaded, get it's visibility
-		if (this.sequence !== undefined) {
-			visibility_feedback = await this.sequence.toggle_visibility();
+		// if a playlist is loaded, get it's visibility
+		if (this.playlist !== undefined) {
+			visibility_feedback = await this.playlist.toggle_visibility();
 		}
 
 		// if a feedback-path is given, write the feedback to it
@@ -321,17 +347,17 @@ class Control {
 	 * @param ws 
 	 */
 	private ws_on_connection(ws: WebSocket) {
-		// if there is already a sequence loaded, send it to the connected client
-		if (this.sequence !== undefined) {
-			// send the sequence
-			const respone_sequence: JGCPSend.Sequence = {
-				command: "sequence_items",
-				...this.sequence.create_client_object_sequence()
+		// if there is already a playlist loaded, send it to the connected client
+		if (this.playlist !== undefined) {
+			// send the playlist
+			const respone_playlist: JGCPSend.Playlist = {
+				command: "playlist_items",
+				...this.playlist.create_client_object_playlist()
 			};
-			ws.send(JSON.stringify(respone_sequence));
+			ws.send(JSON.stringify(respone_playlist));
 
 			// send the selected item-slide
-			ws.send(JSON.stringify(this.sequence.state));
+			ws.send(JSON.stringify(this.playlist.state));
 		} else {
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
 			const clear_message: JGCPSend.Clear = {
@@ -371,6 +397,16 @@ class Control {
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
 			void this.ws_function_map[data.command](data as never, ws);
+		}
+	}
+
+	private check_playlist_loaded(ws?: WebSocket): boolean {
+		if (this.playlist) {
+			return true;
+		} else {
+			ws_send_response("no schedule loaded", false, ws);
+
+			return false;
 		}
 	}
 }

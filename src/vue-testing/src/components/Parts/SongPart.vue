@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ItemSlide from "./ItemSlide.vue";
 
-import type { ActiveItemSlide } from "../../../../server/Sequence";
-import type { SongPartClient } from '../../../../server/SequenceItems/Song';
-import type { Template } from '../../../../server/SequenceItems/SequenceItem';
+import type { ActiveItemSlide } from "../../../../server/Playlist";
+import type { SongPartClient } from '../../../../server/PlaylistItems/Song';
+import type { Template } from '../../../../server/PlaylistItems/PlaylistItem';
 
 const props = defineProps<{
 	slide?: SongPartClient;
@@ -88,7 +88,7 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 
 	align-items: center;
 
-	padding: 0.5rem;
-	gap: 0.25rem;
+	/* padding: 0.125rem;
+	gap: 0.25rem; */
 }
 </style>

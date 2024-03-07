@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ItemSlide from "./ItemSlide.vue";
 
-import type { ActiveItemSlide } from "../../../../server/Sequence";
-import type { Template } from '../../../../server/SequenceItems/SequenceItem';
-import type { ClientPDFSlides } from "../../../../server/SequenceItems/PDF";
+import type { ActiveItemSlide } from "../../../../server/Playlist";
+import type { Template } from '../../../../server/PlaylistItems/PlaylistItem';
+import type { ClientPDFSlides } from "../../../../server/PlaylistItems/PDF";
 
 const props = defineProps<{
 	slide?: ClientPDFSlides;

@@ -1,17 +1,24 @@
 import { promises as fs } from "fs";
 import mime from "mime-types";
-import sharp, { AvifOptions, FormatEnum, GifOptions, HeifOptions, Jp2Options, JpegOptions, JxlOptions, OutputOptions, PngOptions, TiffOptions, WebpOptions } from "sharp";
-
-import Song, { ClientSongSlides, SongProps, SongTemplate } from "./Song";
-import Countdown, { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown";
-import Comment, { ClientCommentSlides, CommentProps } from "./Comment";
-import Image, { ClientImageSlides, ImageProps } from "./Image";
-import CommandComment, { ClientCommandCommentSlides, CommandCommentProps, CommandCommentTemplate } from "./CommandComment";
-import Config from "../config";
+import sharp from "sharp"; 
+import type { AvifOptions, FormatEnum, GifOptions, HeifOptions, Jp2Options, JpegOptions, JxlOptions, OutputOptions, PngOptions, TiffOptions, WebpOptions } from "sharp";
 import path from "path";
-import PDF, { ClientPDFSlides, PDFProps } from "./PDF";
 
-export type SequenceItem = Song | Countdown | Comment | Image | CommandComment | PDF;
+import type Song from "./Song";
+import type { ClientSongSlides, SongProps, SongTemplate } from "./Song";
+import type Countdown from "./Countdown";
+import type { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown";
+import type { ClientCommentSlides, CommentProps } from "./Comment";
+import type Image from "./Image";
+import type { ClientImageSlides, ImageProps } from "./Image";
+import type CommandComment from "./CommandComment";
+import type { ClientCommandCommentSlides, CommandCommentProps, CommandCommentTemplate } from "./CommandComment";
+import type PDF from "./PDF";
+import type { ClientPDFSlides, PDFProps } from "./PDF";
+import Config from "../config";
+import type Comment from "./Comment";
+
+export type PlaylistItem = Song | Countdown | Comment | Image | CommandComment | PDF;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -23,8 +30,16 @@ export interface ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	type: string;
 	Caption: string;
-	slide_count: number;
 	Color: string;
+	VerseOrder?: string[];
+	FileName?: string;
+	Language?: number;
+	PrimaryLanguage?: number;
+	Time?: string;
+	StreamClass?: string;
+
+	slide_count: number;
+	Data?: string;
 	item: number;
 	selectable: boolean;
 	background_color?: string;
@@ -44,7 +59,7 @@ export interface ClientItemSlidesBase {
 	media_b64?: string;
 	template?: {
 		template: string;
-		data: object;
+		data?: object;
 	};
 }
 
@@ -61,7 +76,7 @@ export interface FontFormat {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export abstract class SequenceItemBase {
+export abstract class PlaylistItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
 
@@ -95,8 +110,8 @@ export abstract class SequenceItemBase {
 		return slide;
 	}
 
-	async get_media_b64(proxy: boolean = false, media: string = this.media): Promise<string> {
-		let img: sharp.Sharp = undefined;
+	async get_media_b64(proxy: boolean = false, media: string | undefined = this.media): Promise<string> {
+		let img: sharp.Sharp | undefined;
 
 		// if no background-color is specified, set it to transparent
 		const background_color = this.props.background_color ?? "#00000000";
@@ -127,32 +142,42 @@ export abstract class SequenceItemBase {
 			}).png();
 		}
 
-		const pack_b64_string = async (img: sharp.Sharp, path: string = this.props.background_image) => `data:${mime.lookup(path)};base64,` + (await img.toBuffer()).toString("base64");
+		const pack_b64_string = async (img: sharp.Sharp, path: string = this.props.background_image ?? "") => `data:${mime.lookup(path)};base64,` + (await img.toBuffer()).toString("base64");
 
 		let ret_string: string = await pack_b64_string(img);
 
-		const sharp_formats: [keyof FormatEnum,
-		options?:
-			| OutputOptions
-			| JpegOptions
-			| PngOptions
-			| WebpOptions
-			| AvifOptions
-			| HeifOptions
-			| JxlOptions
-			| GifOptions
-			| Jp2Options
-			| TiffOptions
-		][]
+		type SharpFormats = [keyof FormatEnum,
+			options?:
+				| OutputOptions
+				| JpegOptions
+				| PngOptions
+				| WebpOptions
+				| AvifOptions
+				| HeifOptions
+				| JxlOptions
+				| GifOptions
+				| Jp2Options
+				| TiffOptions
+		];
+
+		const sharp_formats: SharpFormats[]
 		= [
 			["webp", { lossless: true }],
 			["jpg", { quality: 100 }]
 		];
 
 		while (ret_string.length > 2097152) {
-			const [format, options] = sharp_formats.shift();
+			if (sharp_formats.length !== 0) {
+				const packed_format = sharp_formats.shift();
 
-			ret_string = await pack_b64_string(img.toFormat(format, options), `.${format}`);
+				if (packed_format !== undefined) {
+					const [format, options] = packed_format;
+					
+					ret_string = await pack_b64_string(img.toFormat(format, options), `.${format}`);
+				}
+			} else {
+				return "";
+			}
 		}
 		
 		return ret_string;
@@ -160,7 +185,7 @@ export abstract class SequenceItemBase {
 
 	abstract get props(): ItemProps;
 
-	get media(): string {
+	get media(): string | undefined {
 		if (this.props.media !== undefined) {
 			return this.props.media[this.active_slide];
 		} else {
@@ -174,7 +199,7 @@ export abstract class SequenceItemBase {
 		return return_path.replaceAll("\\", "/");
 	}
 
-	protected get_background_image(img_path: string = this.props.background_image): string {
+	protected get_background_image(img_path: string | undefined = this.props.background_image): string {
 		// if it is not defined, return the backgroundcolor instead
 		if (img_path === undefined) {
 			// if the background-color too isn't defined, return transparency
@@ -184,5 +209,5 @@ export abstract class SequenceItemBase {
 		}
 	}
 
-	abstract get template(): Template;
+	abstract get template(): Template | undefined;
 }

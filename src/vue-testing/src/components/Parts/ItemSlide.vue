@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watch, ref, onMounted } from 'vue';
 
-import type { Template } from '../../../../server/SequenceItems/SequenceItem';
+import type { Template } from '../../../../server/PlaylistItems/PlaylistItem';
 
 const props = defineProps<{
 	media?: string;
@@ -49,6 +49,8 @@ defineEmits<{
 	border-radius: 0.125rem;
 
 	overflow: visible;
+
+	margin: 0.0625rem;
 }
 
 .media {

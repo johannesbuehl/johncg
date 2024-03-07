@@ -28,7 +28,7 @@ const verse_types = [
 	"unbenannt"
 ] as const;
 
-type SongElement = (typeof verse_types)[number];
+export type SongElement = (typeof verse_types)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const is_song_element = (x: any): x is SongElement => {
 	if (typeof x !== "string") {
@@ -41,7 +41,7 @@ const is_song_element = (x: any): x is SongElement => {
 };
 
 // metadata of the songfile
-interface SongFileMetadata {
+export interface SongFileMetadata {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	Title: string[];
 	ChurchSongID?: string;
@@ -56,19 +56,19 @@ interface SongFileMetadata {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-interface TitlePart {
+export interface TitlePart {
 	type: "title";
 	title: string[];
 	church_song_id?: string;
 }
 
-interface LyricPart {
+export interface LyricPart {
 	type: "lyric";
 	part: SongElement;
 	slides: string[][][];
 }
 
-type ItemPart = TitlePart | LyricPart;
+export type ItemPart = TitlePart | LyricPart;
 
 interface BasePartClient {
 	type: string;
@@ -76,22 +76,22 @@ interface BasePartClient {
 	slides: number;
 }
 
-interface TitlePartClient extends BasePartClient {
+export interface TitlePartClient extends BasePartClient {
 	type: "title";
 }
 
-interface LyricPartClient extends BasePartClient {
+export interface LyricPartClient extends BasePartClient {
 	type: "lyric";
 }
 
-type ItemPartClient = TitlePartClient | LyricPartClient;
+export type ItemPartClient = TitlePartClient | LyricPartClient;
 
 /**
  * processes and saves song-files (*.sng)
  * They should be compatible with those created by songbeamer (no guarantee given)
  */
-class SongFile {
-	song_file_path: string;
+export default class SongFile {
+	private song_file_path?: string;
 
 	// private variables
 	private text: Record<string, string[][][]> = {};
@@ -103,14 +103,12 @@ class SongFile {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(path: string) {
-		if (path === undefined) {
-			throw new ReferenceError();
-		} else {
-			this.song_file_path = path;
-		}
+	constructor(path?: string) {
+		this.song_file_path = path;
 
-		this.parse_song_text();
+		if (path !== undefined) {
+			this.parse_song_text();
+		}
 	}
 
 	/**
@@ -160,6 +158,10 @@ class SongFile {
 
 	// parse the text-content
 	private parse_song_text() {
+		if (!this.song_file_path) {
+			return;
+		}
+
 		// read the song-file in a byte-array
 		const raw_data_buffer = fs.readFileSync(this.song_file_path);
 		// utf-8-BOM
@@ -293,6 +295,3 @@ class SongFile {
 		return this.metadata.LangCount;
 	}
 }
-
-export default SongFile;
-export { SongFileMetadata, SongElement, ItemPart, LyricPart, TitlePart, ItemPartClient, LyricPartClient, TitlePartClient };

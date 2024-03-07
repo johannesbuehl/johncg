@@ -4,7 +4,7 @@ import CountdownPart from "./Parts/CountdownPart.vue";
 import ImagePart from "./Parts/ImagePart.vue";
 
 import * as JGCPSend from "../../../server/JGCPSendMessages";
-import type { ActiveItemSlide } from "../../../server/Sequence";
+import type { ActiveItemSlide } from "../../../server/Playlist";
 import CommandCommentPart from "./Parts/CommandCommentPart.vue";
 import PDFPart from "./Parts/PDFPart.vue";
 
@@ -77,11 +77,11 @@ const aspect_ratio: string = ((props.slides?.resolution.width ?? 1920) / (props.
 
 	overflow: auto;
 
-	/* display: flex; */
-	/* flex-wrap: wrap; */
-	/* align-content: flex-start; */
 	flex: 1;
-
-	/* gap: 0.5rem;; */
+	
+	/* display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: 0.5rem; */
 }
 </style>./Parts/SongPart.vue./Parts/ImagePart.vue./Parts/CountdownPart.vue

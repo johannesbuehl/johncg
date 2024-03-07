@@ -1,5 +1,7 @@
-import { ClientItemSlidesBase, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
-import SongFile, { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import SongFile from "./SongFile";
+import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile";
 import path from "path";
 
 import Config from "../config";
@@ -17,7 +19,7 @@ export interface SongProps extends ItemPropsBase {
 	Language?: number;
 	PrimaryLanguage?: number;
 	media?: string[];
-	template?: SongTemplate;
+	template: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -46,7 +48,7 @@ export interface ClientSongSlides extends ClientItemSlidesBase {
 	template: SongTemplate;
 }
 
-export default class Song extends SequenceItemBase {
+export default class Song extends PlaylistItemBase {
 	protected item_props: SongProps;
 
 	// amount of slides this element has
@@ -54,9 +56,9 @@ export default class Song extends SequenceItemBase {
 	// currently active slide-number
 	private active_slide_number: number = 0;
 
-	private languages: number[];
+	private languages: number[] = [];
 
-	private song_file: SongFile;
+	private song_file: SongFile = new SongFile();
 
 	constructor(props: SongProps) {
 		super();
@@ -65,12 +67,13 @@ export default class Song extends SequenceItemBase {
 
 		try {
 			this.song_file = new SongFile(get_song_path(props.FileName));
-		} catch (e: unknown) {
+		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				console.debug(`song '${props.FileName}' does not exist`);
 
 				this.item_props.selectable = false;
+
 				return;
 			} else {
 				throw e;
@@ -119,7 +122,7 @@ export default class Song extends SequenceItemBase {
 	get_verse_order(): string[] {
 		if (this.item_props.VerseOrder !== undefined) {
 			return this.item_props.VerseOrder;
-		} else if (this.song_file.metadata.VerseOrder !== undefined) {
+		} else if (this.song_file?.metadata.VerseOrder !== undefined) {
 			return this.song_file.metadata.VerseOrder;
 		} else {
 			return [];
@@ -154,7 +157,7 @@ export default class Song extends SequenceItemBase {
 				part.slides.forEach((slide) => {
 
 					const slide_obj: LyricSlide = {
-						type: part.type,
+						type: "lyric",
 						data: slide
 					};
 					
@@ -260,8 +263,8 @@ export default class Song extends SequenceItemBase {
 		return template;
 	}
 
-	get media(): string {
-		return this.props.media[0];
+	get media(): string | undefined {
+		return this.props.media !== undefined ? this.props.media[0] : undefined;
 	}
 }
 

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ClientItemSlidesBase, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
 import { get_song_path } from "./Song";
 
 export interface ImageProps extends ItemPropsBase {
@@ -16,7 +17,7 @@ export interface ClientImageSlides extends ClientItemSlidesBase {
 	template?: undefined;
 }
 
-export default class Image extends SequenceItemBase {
+export default class Image extends PlaylistItemBase {
 	protected item_props: ImageProps;
 
 	protected slide_count: number = 1;

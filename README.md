@@ -8,7 +8,7 @@ Generate lyric-graphics and play them out through CasparCG.
 - move the file `song.html` into your CasparCG template directory
 
 ## roadmap
-- implement other sequence-items than song (Missing: Video, Bible, Psalm, PowerPoint, PDF, Diashow / Multi-Image, Music)
+- implement other playlist-items than song (Missing: Video, Bible, Psalm, PowerPoint, PDF, Diashow / Multi-Image, Music)
 - client: information about connection (active / reconnecting / ...)
 - companion integration (buttons for song parts -> send name to casparcg)
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
@@ -18,8 +18,8 @@ Generate lyric-graphics and play them out through CasparCG.
 - client communication with osc over websocket?
 - add support for NodeCG
 - add CLI output to server
-- create dummy-sequence-items for unsupported ones
-- disable buttons, when no sequence is loaded
+- create dummy-playlist-items for unsupported ones
+- disable buttons, when no playlist is loaded
 - implement all countdown modes
 - countdown: save in server wether it is finished
 - client-messages: create message-log, group same
@@ -28,5 +28,6 @@ Generate lyric-graphics and play them out through CasparCG.
 - fix "Buffer() is deprecated"
 - catch songfile not found
 - catch casparcg not running
-- create sequence-summarys or lyrics-sheets through pandoc
+- create playlist-summarys or lyrics-sheets through pandoc
 - serve everything for the client, including html templates
+- load files from disc always at item selection to stay up to date

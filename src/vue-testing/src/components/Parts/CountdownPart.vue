@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ItemSlide from "./ItemSlide.vue";
 
-import type { ActiveItemSlide } from '../../../../server/Sequence';
+import type { ActiveItemSlide } from '../../../../server/Playlist';
 import type { CountdownSlides } from "../../../../server/JGCPSendMessages";
 
 const props = defineProps<{
@@ -80,4 +80,4 @@ function template_loaded(template_object: HTMLObjectElement) {
 	padding: 0.5rem;
 	gap: 0.25rem;
 }
-</style>../../../../server/Sequence../../../../server/JGCPSendMessages./ItemSlide.vue
+</style>../../../../server/Playlist../../../../server/JGCPSendMessages./ItemSlide.vue

@@ -28,7 +28,7 @@ function scroll_into_view() {
 </script>
 
 <template>
-	<div ref="item" class="sequence_item_wrapper"
+	<div ref="item" class="playlist_item_wrapper"
 		:class="{
 			selectable,
 			selected,
@@ -36,12 +36,12 @@ function scroll_into_view() {
 		}">
 		<div class="item_color_indicator"
 			:style='{ "background-color": color }'></div>
-		<div class="sequence_item">{{ caption }}</div>
+		<div class="playlist_item">{{ caption }}</div>
 	</div>
 </template>
 
 <style scoped>
-.sequence_item_wrapper {
+.playlist_item_wrapper {
 	margin: 0.0625rem;
 	margin-inline: 0.125rem;
 	
@@ -53,16 +53,16 @@ function scroll_into_view() {
 	align-items: stretch;
 }
 
-.sequence_item_wrapper.selectable {
+.playlist_item_wrapper.selectable {
 	cursor: pointer;
 }
 
-.sequence_item_wrapper:not(.selectable) {
+.playlist_item_wrapper:not(.selectable) {
 	color: var(--color-text-disabled);
 	font-style: italic;
 }
 
-.sequence_item_wrapper:first-of-type {
+.playlist_item_wrapper:first-of-type {
 	margin-top: 0.125rem;
 }
 
@@ -71,7 +71,7 @@ function scroll_into_view() {
 	width: 1.5rem;
 }
 
-.sequence_item {
+.playlist_item {
 	background-color: var(--color-item);
 	
 	cursor: inherit;
@@ -84,19 +84,19 @@ function scroll_into_view() {
 	text-wrap: nowrap;
 }
 
-.sequence_item_wrapper.selectable:hover > .sequence_item {
+.playlist_item_wrapper.selectable:hover > .playlist_item {
 	background-color: var(--color-item-hover)
 }
 
-.sequence_item_wrapper.active > .sequence_item {
+.playlist_item_wrapper.active > .playlist_item {
 	background-color: var(--color-active);
 }
 
-.sequence_item_wrapper.selectable.active:hover > .sequence_item {
+.playlist_item_wrapper.selectable.active:hover > .playlist_item {
 	background-color: var(--color-active-hover);
 }
 
-.sequence_item_wrapper.selected {
+.playlist_item_wrapper.selected {
 	border-color: white;
 }
 

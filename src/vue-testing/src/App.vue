@@ -14,7 +14,7 @@ import * as JGCPRecv from "../../server/JGCPReceiveMessages";
 const ws = new WebSocket("ws://127.0.0.1:8765", "JGCP");
 
 const server_state = ref<JGCPSend.State>({ command: "state" });
-const sequence_items = ref<JGCPSend.Sequence>();
+const playlist_items = ref<JGCPSend.Playlist>();
 const item_slides = ref<JGCPSend.ItemSlides>();
 const selected_item = ref<number>(-1);
 
@@ -29,7 +29,7 @@ watch(selected_item, (new_selection) => {
 });
 
 function select_item(item: number) {
-	if (sequence_items.value?.sequence_items[item].selectable) {
+	if (playlist_items.value?.playlist_items[item].selectable) {
 		selected_item.value = item;
 	}
 }
@@ -49,7 +49,7 @@ ws.addEventListener("message", (event: MessageEvent) => {
 	}
 
 	const command_parser_map = {
-		sequence_items: load_sequence_items,
+		playlist_items: load_playlist_items,
 		state: parse_state,
 		item_slides: load_item_slides,
 		response: handle_ws_response
@@ -58,16 +58,16 @@ ws.addEventListener("message", (event: MessageEvent) => {
 	command_parser_map[data.command ?? ""](data as never);
 });
 
-function load_sequence_items(data: JGCPSend.Sequence) {
+function load_playlist_items(data: JGCPSend.Playlist) {
 	// if (if data.metada)
 
-	sequence_items.value = data;
+	playlist_items.value = data;
 }
 
 function parse_state(data: JGCPSend.State) {
 	if (typeof data.active_item_slide === "object") {
-		if ((typeof data.active_item_slide?.item ?? 0) !== "number"
-			|| (typeof data.active_item_slide?.slide ?? 0) !== "number"
+		if ((typeof data.active_item_slide?.item) !== "number"
+			|| (typeof data.active_item_slide?.slide) !== "number"
 		) {
 			throw new TypeError("'active_item_slide' is not of type '{item: number; slide: number}'");
 		}
@@ -126,7 +126,7 @@ const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${rando
 			:ws="ws"
 			:client_id="client_id"
 			:server_state="server_state"
-			:sequence="sequence_items"
+			:playlist="playlist_items"
 			:slides="item_slides"
 			:active_item_slide="server_state.active_item_slide"
 			:selected="selected_item"
@@ -165,4 +165,4 @@ const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${rando
 		flex-wrap: wrap;
 	}
 } */
-</style>./views/ControlWindow.vue
+</style>

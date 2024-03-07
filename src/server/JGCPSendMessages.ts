@@ -1,10 +1,10 @@
-import * as SequenceClass from "../server/Sequence";
-import { ClientCommandCommentSlides } from "./SequenceItems/CommandComment";
-import { ClientCommentSlides } from "./SequenceItems/Comment";
-import { ClientCountdownSlides } from "./SequenceItems/Countdown";
-import { ClientImageSlides } from "./SequenceItems/Image";
-import { ClientPDFSlides } from "./SequenceItems/PDF";
-import { ClientSongSlides } from "./SequenceItems/Song";
+import * as PlaylistClass from "../server/Playlist";
+import type { ClientCommandCommentSlides } from "./PlaylistItems/CommandComment";
+import type { ClientCommentSlides } from "./PlaylistItems/Comment";
+import type { ClientCountdownSlides } from "./PlaylistItems/Countdown";
+import type { ClientImageSlides } from "./PlaylistItems/Image";
+import type { ClientPDFSlides } from "./PlaylistItems/PDF";
+import type { ClientSongSlides } from "./PlaylistItems/Song";
 
 /**
  * Base interface for sent JGCP-messages
@@ -23,10 +23,10 @@ export interface Response {
 }
 
 /**
- * JGCP-messages with the sequence_items
+ * JGCP-messages with the playlist_items
  */
-export interface Sequence extends Base, SequenceClass.ClientSequenceItems {
-	command: "sequence_items";
+export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
+	command: "playlist_items";
 }
 
 /**
@@ -34,14 +34,14 @@ export interface Sequence extends Base, SequenceClass.ClientSequenceItems {
  */
 export interface State extends Base {
 	command: "state";
-	active_item_slide?: SequenceClass.ActiveItemSlide,
+	active_item_slide?: PlaylistClass.ActiveItemSlide,
 	visibility?: boolean;
 }
 
 interface ItemSlidesBase extends Base{
-	client_id: string;
+	client_id?: string;
 	command: "item_slides";
-	resolution: SequenceClass.CasparCGResolution;
+	resolution: PlaylistClass.CasparCGResolution;
 }
 
 export type SongSlides = ClientSongSlides & ItemSlidesBase;
@@ -60,4 +60,4 @@ export interface Clear extends Base {
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = Sequence | State | ItemSlides;
+export type Message = Playlist | State | ItemSlides;

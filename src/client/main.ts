@@ -1,10 +1,10 @@
 import MessageLog from "./message_box.js";
 
-import { ItemPartClient } from "../server/SequenceItems/SongFile.js";
+import { ItemPartClient } from "../server/PlaylistItems/SongFile.js";
 
 import * as JGCPSend from "../server/JGCPSendMessages.js";
 import * as JGCPRecv from "../server/JGCPReceiveMessages.js";
-import { ActiveItemSlide } from "../server/Sequence.js";
+import { ActiveItemSlide } from "../server/Playlist.js";
 
 const config = {
 	websocket: {
@@ -14,14 +14,14 @@ const config = {
 
 const msg_log = new MessageLog(document.querySelector("#error_container"));
 
-function open_sequence(e: Event) {
+function open_playlist(e: Event) {
 	const file = (<HTMLInputElement>e.target).files[0];
 	const reader = new FileReader();
 
 	reader.onload = function(e) {
-		const message: JGCPRecv.OpenSequence = {
-			command: "open_sequence",
-			sequence: e.target?.result as string
+		const message: JGCPRecv.OpenPlaylist = {
+			command: "open_playlist",
+			playlist: e.target?.result as string
 		};
 
 		ws.send(JSON.stringify(message));
@@ -29,7 +29,7 @@ function open_sequence(e: Event) {
 
 	reader.readAsText(file);
 }
-document.querySelector("#input_open_sequence")?.addEventListener("change", open_sequence);
+document.querySelector("#input_open_playlist")?.addEventListener("change", open_playlist);
 
 function navigate(type: JGCPRecv.NavigateType, steps: -1 | 1) {
 	const command: JGCPRecv.Navigate = {
@@ -60,35 +60,35 @@ document.querySelector("#set_visibility_show")?.addEventListener("click", () => 
 
 document.querySelector("#show_error_log")?.addEventListener("click", () => msg_log.error("foobar"));
 
-function display_items(data: JGCPSend.Sequence) {
-	const div_sequence_items = document.querySelector("#sequence_items");
+function display_items(data: JGCPSend.Playlist) {
+	const div_playlist_items = document.querySelector("#playlist_items");
 
 	// initialize
 	init();
 
-	data.sequence_items.forEach((item) => {
-		const div_sequence_item_container = document.createElement("div");
-		div_sequence_item_container.classList.add("sequence_item_container");
-		div_sequence_item_container.dataset.item_number = item.item.toString();
+	data.playlist_items.forEach((item) => {
+		const div_playlist_item_container = document.createElement("div");
+		div_playlist_item_container.classList.add("playlist_item_container");
+		div_playlist_item_container.dataset.item_number = item.item.toString();
 
 		// if the item is selectable, give it the class and add the onclick-event
 		if (item.selectable) {
-			div_sequence_item_container.classList.add("selectable");
+			div_playlist_item_container.classList.add("selectable");
 			
-			div_sequence_item_container.addEventListener("click", function() {
+			div_playlist_item_container.addEventListener("click", function() {
 				request_item_slides(Number(this.dataset.item_number));
 			});
 		}
 
-		const div_sequence_item_color_indicator = document.createElement("div");
-		div_sequence_item_color_indicator.classList.add("item_color_indicator");
-		div_sequence_item_color_indicator.style.backgroundColor = item.Color;
+		const div_playlist_item_color_indicator = document.createElement("div");
+		div_playlist_item_color_indicator.classList.add("item_color_indicator");
+		div_playlist_item_color_indicator.style.backgroundColor = item.Color;
 
-		div_sequence_item_container.append(div_sequence_item_color_indicator);
+		div_playlist_item_container.append(div_playlist_item_color_indicator);
 
-		const div_sequence_item = document.createElement("div");
-		div_sequence_item.classList.add("sequence_item");
-		div_sequence_item.classList.add(item.type);
+		const div_playlist_item = document.createElement("div");
+		div_playlist_item.classList.add("playlist_item");
+		div_playlist_item.classList.add(item.type);
 		
 		// if it's a  Countdown-Object, insert the time
 		if (item.type === "Countdown") {
@@ -99,13 +99,13 @@ function display_items(data: JGCPSend.Sequence) {
 				end_time: "Countdown (end time)"
 			};
 
-			div_sequence_item.innerText = item.Caption.replace("%s", item.Time);
+			div_playlist_item.innerText = item.Caption.replace("%s", item.Time);
 		} else {
-			div_sequence_item.innerText = item.Caption;
+			div_playlist_item.innerText = item.Caption;
 		}
 
-		div_sequence_item_container.append(div_sequence_item);
-		div_sequence_items?.append(div_sequence_item_container);
+		div_playlist_item_container.append(div_playlist_item);
+		div_playlist_items?.append(div_playlist_item_container);
 	});
 
 	// display the visibility state
@@ -123,7 +123,7 @@ function request_item_slides(item: number) {
 		}
 
 		// clear the selected item
-		document.querySelector(".sequence_item_container.selected")?.classList.remove("selected");
+		document.querySelector(".playlist_item_container.selected")?.classList.remove("selected");
 	
 		const command: JGCPRecv.RequestItemSlides = {
 			command: "request_item_slides",
@@ -138,7 +138,7 @@ function request_item_slides(item: number) {
 function display_item_slides(data: JGCPSend.ItemSlides) {
 	const div_slides_view_container = document.querySelector("#slides_view_container");
 
-	// select the sequence-item
+	// select the playlist-item
 	select_item(data.item);
 
 	// create the individual arrays for parallel processing
@@ -327,7 +327,7 @@ function create_template_object(data: JGCPSend.ItemSlides, number: number): HTML
 	// register click event
 	div_slide_container.addEventListener("click", () => {
 		request_item_slide_select(
-			Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
+			Number(document.querySelector<HTMLDivElement>("div.playlist_item_container.selected")?.dataset.item_number),
 			number
 		);
 	});
@@ -371,7 +371,7 @@ function create_media_object(data: JGCPSend.PDFSlides, number: number): HTMLDivE
 	// register click event
 	div_slide_container.addEventListener("click", () => {
 		request_item_slide_select(
-			Number(document.querySelector<HTMLDivElement>("div.sequence_item_container.selected")?.dataset.item_number),
+			Number(document.querySelector<HTMLDivElement>("div.playlist_item_container.selected")?.dataset.item_number),
 			number
 		);
 	});
@@ -390,14 +390,14 @@ function select_item(item: number) {
 	selected_item_number = item;
 
 	// remove the selected class from the previous item
-	const prev_selected_sequence_item = document.querySelector(".sequence_item_container.selected");
-	if (prev_selected_sequence_item !== null) {
-		prev_selected_sequence_item.classList.remove("selected");
+	const prev_selected_playlist_item = document.querySelector(".playlist_item_container.selected");
+	if (prev_selected_playlist_item !== null) {
+		prev_selected_playlist_item.classList.remove("selected");
 	}
 
 	// add the selected class to the current item
-	const selected_sequence_item = document.querySelector(`[data-item_number='${selected_item_number}']`);
-	selected_sequence_item?.classList.add("selected");
+	const selected_playlist_item = document.querySelector(`[data-item_number='${selected_item_number}']`);
+	selected_playlist_item?.classList.add("selected");
 }
 
 function request_item_slide_select(item: number, slide: number) {
@@ -422,9 +422,9 @@ function set_active_slide(scroll: boolean = false) {
 		selected_header.classList.remove("active");
 	}
 
-	const selected_item = document.querySelector<HTMLDivElement>("div.sequence_item_container.selected");
+	const selected_item = document.querySelector<HTMLDivElement>("div.playlist_item_container.selected");
 	if (selected_item !== null) {
-		// if the currently displayed and selected sequence item is the active one, select the active slide
+		// if the currently displayed and selected playlist item is the active one, select the active slide
 		if (Number(selected_item.dataset.item_number) === active_item_slide.item) {
 			// remove the selected class from the previous item
 			const prev_selected_item_slide = document.querySelector(".slide.active");
@@ -453,12 +453,12 @@ function set_active_item_slide(data: ActiveItemSlide, message_client_id: string)
 	// decide wether to jump there
 	const jump = message_client_id === client_id || message_client_id === undefined;
 
-	// remove the "active" class from the previous sequence-item and add it to the new one
-	const prev_selected_item = document.querySelector(".sequence_item_container.active");
+	// remove the "active" class from the previous playlist-item and add it to the new one
+	const prev_selected_item = document.querySelector(".playlist_item_container.active");
 	if (prev_selected_item !== null) {
 		prev_selected_item.classList.remove("active");
 	}
-	document.querySelector<HTMLDivElement>(`div.sequence_item_container[data-item_number='${active_item_slide.item}']`)?.classList.add("active");
+	document.querySelector<HTMLDivElement>(`div.playlist_item_container[data-item_number='${active_item_slide.item}']`)?.classList.add("active");
 
 	if (jump && active_item_slide.item !== selected_item_number) {
 		request_item_slides(active_item_slide.item);
@@ -508,10 +508,10 @@ function blank_screen(state: boolean) {
 function init() {
 	selected_item_number = null;
 
-	// remove all sequence_items
-	const sequence_items = document.querySelector("#sequence_items");
-	if (sequence_items !== null) {
-		sequence_items.innerHTML = "";
+	// remove all playlist_items
+	const playlist_items = document.querySelector("#playlist_items");
+	if (playlist_items !== null) {
+		playlist_items.innerHTML = "";
 	}
 
 	// remove all item-slides
@@ -543,7 +543,7 @@ function ws_connect() {
 		const data: JGCPSend.Message = JSON.parse(event.data as string) as JGCPSend.Message;
 
 		const command_parser_map = {
-			sequence_items: display_items,
+			playlist_items: display_items,
 			item_slides: display_item_slides,
 			state: display_state_change,
 			clear: init,

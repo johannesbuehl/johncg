@@ -1,8 +1,10 @@
 import sharp from "sharp";
-import { ClientItemSlidesBase, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
-import { get_song_path } from "./Song";
 import Canvas from "canvas";
 import tmp from "tmp";
+
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { get_song_path } from "./Song";
 
 export interface PDFProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -18,7 +20,7 @@ export interface ClientPDFSlides extends ClientItemSlidesBase {
 	template?: undefined;
 }
 
-export default class PDF extends SequenceItemBase {
+export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
 	protected slide_count: number = 0;
@@ -29,11 +31,10 @@ export default class PDF extends SequenceItemBase {
 		super();
 
 		this.item_props = props;
+		this.item_props.media = [];
 
 		void (async () => {
 			const pdfjs = await import("pdfjs-dist");
-
-			this.item_props.media = [];
 
 			const pth = get_song_path(this.props.FileName).replaceAll("/", "\\");
 

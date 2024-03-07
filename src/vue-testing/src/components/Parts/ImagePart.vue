@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ItemSlide from "./ItemSlide.vue";
 
-import type { ActiveItemSlide } from '../../../../server/Sequence';
+import type { ActiveItemSlide } from '../../../../server/Playlist';
 import type { ImageSlides } from "../../../../server/JGCPSendMessages";
 
 defineProps<{
@@ -64,4 +64,4 @@ defineEmits<{
 	padding: 0.5rem;
 	gap: 0.25rem;
 }
-</style>../../../../server/Sequence../../../../server/JGCPSendMessages./ItemSlide.vue
+</style>../../../../server/Playlist../../../../server/JGCPSendMessages./ItemSlide.vue

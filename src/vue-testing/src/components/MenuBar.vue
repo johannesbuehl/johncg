@@ -1,5 +1,17 @@
 <script setup lang="ts">
 import { ref, toRef } from "vue";
+import { library } from '@fortawesome/fontawesome-svg-core'
+import * as fas from '@fortawesome/free-solid-svg-icons'
+library.add(
+	fas.faFolderOpen,
+	fas.faBackwardStep,
+	fas.faForwardStep,
+	fas.faAngleLeft,
+	fas.faAngleRight,
+	fas.faEyeSlash,
+	fas.faEye,
+	fas.faTriangleExclamation
+);
 
 import MenuButton from "./MenuButton.vue";
 import MenuDivider from "./MenuDivider.vue";
@@ -19,10 +31,10 @@ defineEmits<{
 }>()
 
 // reference for the file-input
-const open_sequence_input = ref<HTMLInputElement>();
+const open_playlist_input = ref<HTMLInputElement>();
 
-// read the content of the sequence-file and send it to the server
-function open_sequence_file(e: Event) {
+// read the content of the playlist-file and send it to the server
+function open_playlist_file(e: Event) {
 	const input_event = e.target as HTMLInputElement
 
 	// only continue, if there is a file 
@@ -30,9 +42,9 @@ function open_sequence_file(e: Event) {
 		const reader = new FileReader();
 
 		reader.addEventListener("load", (e) => {
-			const message: JGCPRecv.OpenSequence = {
-				command: "open_sequence",
-				sequence: e.target?.result as string
+			const message: JGCPRecv.OpenPlaylist = {
+				command: "open_playlist",
+				playlist: e.target?.result as string
 			}
 
 			props.ws.send(JSON.stringify(message));
@@ -45,12 +57,12 @@ function open_sequence_file(e: Event) {
 
 <template>
 	<div class="menubar">
-		<MenuButton icon="folder-open" @click="open_sequence_input?.click()"/>
+		<MenuButton icon="folder-open" @click="open_playlist_input?.click()"/>
 		<input type="file"
-			ref="open_sequence_input"
+			ref="open_playlist_input"
 			:accept="'.col'"
-			@click="open_sequence_input ? open_sequence_input.value = '' : null"
-			@change="open_sequence_file"
+			@click="open_playlist_input ? open_playlist_input.value = '' : null"
+			@change="open_playlist_file"
 			style="display: none" />
 		<MenuDivider />
 		<MenuButton icon="backward-step" @click="$emit('navigate', 'item', -1)" />

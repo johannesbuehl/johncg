@@ -1,4 +1,5 @@
-import { ClientItemSlidesBase, ItemProps, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, ItemProps, ItemPropsBase } from "./PlaylistItem";
 
 export interface CommentProps extends ItemPropsBase {
 	type: "Comment";
@@ -9,7 +10,7 @@ export interface ClientCommentSlides extends ClientItemSlidesBase {
 	type: "Comment";
 }
 
-export default class Comment extends SequenceItemBase {
+export default class Comment extends PlaylistItemBase {
 	protected item_props: CommentProps;
 
 	protected slide_count: number = 0;

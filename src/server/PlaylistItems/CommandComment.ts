@@ -1,4 +1,5 @@
-import { ClientItemSlidesBase, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
 
 export interface CommandCommentTemplate {
 	template: string;
@@ -16,7 +17,7 @@ export interface ClientCommandCommentSlides extends ClientItemSlidesBase {
 	template: CommandCommentTemplate;
 }
 
-export default class CommandComment extends SequenceItemBase {
+export default class CommandComment extends PlaylistItemBase {
 	protected item_props: CommandCommentProps;
 
 	protected slide_count: number = 0;

@@ -12,9 +12,9 @@
 	<body id="body">
 		<div id="main">
 			<div id="menubar" class="container">
-				<div class="button" onclick="document.getElementById('input_open_sequence').click()">
+				<div class="button" onclick="document.getElementById('input_open_playlist').click()">
 					<i class="fa-solid fa-folder-open"></i>
-					<input type="file" id="input_open_sequence" accept=".col" onclick="this.value=null;" style="display: none;"/>
+					<input type="file" id="input_open_playlist" accept=".col" onclick="this.value=null;" style="display: none;"/>
 				</div>
 				<div class="seperator-v"></div>
 				<div id="navigate_item_prev" class="button">
@@ -42,9 +42,9 @@
 				</div>
 			</div>
 			<div id="main_view" class="flex_container">
-				<div id="sequence" class="container scroll">
-					<div class="header">Sequence</div>
-					<div id="sequence_items"></div>
+				<div id="playlist" class="container scroll">
+					<div class="header">playlist</div>
+					<div id="playlist_items"></div>
 				</div>
 				<div id="slides_view_container" class="container scroll"></div>
 			</div>

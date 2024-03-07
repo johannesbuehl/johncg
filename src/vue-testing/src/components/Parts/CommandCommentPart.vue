@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { CommandCommentSlides } from '../../../../server/JGCPSendMessages';
-import type { ActiveItemSlide } from '../../../../server/Sequence';
+import type { ActiveItemSlide } from '../../../../server/Playlist';
 import ItemSlide from './ItemSlide.vue';
 
 const props = defineProps<{
@@ -81,4 +81,4 @@ console.log(props.slide?.template.template);
 	padding: 0.5rem;
 	gap: 0.25rem;
 }
-</style>../../../../server/Sequence../../../../server/JGCPSendMessages./ItemSlide.vue
+</style>../../../../server/Playlist../../../../server/JGCPSendMessages./ItemSlide.vue

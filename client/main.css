@@ -130,7 +130,7 @@ div.button, div.button > * {
 	display: flex;
 }
 
-#sequence {
+#playlist {
 	width: 24rem;
 }
 
@@ -148,7 +148,7 @@ div.button, div.button > * {
 	padding-left: 0.75rem;
 }
 
-#sequence > .header {
+#playlist > .header {
 	text-align: center;
 }
 
@@ -156,7 +156,7 @@ div.button, div.button > * {
 	background-color: rgb(40, 76, 184);
 }
 
-.sequence_item_container {
+.playlist_item_container {
 	margin: 0.0625rem;
 	margin-inline: 0.125rem;
 	
@@ -168,16 +168,16 @@ div.button, div.button > * {
 	align-items: stretch;
 }
 
-.sequence_item_container.selectable {
+.playlist_item_container.selectable {
 	cursor: pointer;
 }
 
-.sequence_item_container:not(.selectable) {
+.playlist_item_container:not(.selectable) {
 	color: rgb(154, 153, 150);
 	font-style: italic;
 }
 
-.sequence_item_container:first-of-type {
+.playlist_item_container:first-of-type {
 	margin-top: 0.125rem;
 }
 
@@ -186,7 +186,7 @@ div.button, div.button > * {
 	width: 1.5rem;
 }
 
-.sequence_item {
+.playlist_item {
 	background-color: rgb(60, 64, 75);
 	
 	cursor: inherit;
@@ -199,19 +199,19 @@ div.button, div.button > * {
 	text-wrap: nowrap;
 }
 
-.sequence_item_container.selectable:hover > .sequence_item {
+.playlist_item_container.selectable:hover > .playlist_item {
 	background-color: rgb(79, 83, 94);
 }
 
-.sequence_item_container.active > .sequence_item {
+.playlist_item_container.active > .playlist_item {
 	background-color: rgb(40, 76, 184);
 }
 
-.sequence_item_container.selectable.active:hover > .sequence_item {
+.playlist_item_container.selectable.active:hover > .playlist_item {
 	background-color: rgb(54, 92, 192);
 }
 
-.sequence_item_container.selected {
+.playlist_item_container.selected {
 	border-color: white;
 }
 

@@ -1,12 +1,13 @@
-import { convert_color_to_hex } from "../Sequence";
-import { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase, SequenceItemBase } from "./SequenceItem";
+import { convert_color_to_hex } from "../Playlist";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase } from "./PlaylistItem";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
 
 interface CountdownPosition { x: number, y: number }
 
-interface CountdownSequenceItemProps extends ItemPropsBase {
+interface CountdownPlaylistItemProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	type: "Countdown";
 	Time: string;
@@ -19,7 +20,7 @@ export interface CountdownTemplate {
 	data: CountdownTemplateData;
 }
 
-export interface CountdownProps extends CountdownSequenceItemProps {
+export interface CountdownProps extends CountdownPlaylistItemProps {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	fileName?: string;
 	background_color?: string;
@@ -64,12 +65,12 @@ interface CountdownData {
 	background_color?: string;
 }
 
-export default class Countdown extends SequenceItemBase {
+export default class Countdown extends PlaylistItemBase {
 	protected item_props: CountdownProps;
 	
 	protected slide_count: number = 1;
 
-	constructor(props: CountdownSequenceItemProps) {
+	constructor(props: CountdownPlaylistItemProps) {
 		super();
 
 		const hex_data = parse_hex_data(props.Data);
@@ -118,7 +119,7 @@ export default class Countdown extends SequenceItemBase {
 	}
 	
 	async create_client_object_item_slides(): Promise<ClientCountdownSlides> {
-		const title_map = {
+		const title_map: Record<CountdownMode, string> = {
 			clock: "Clock",
 			stopwatch: "Stopwatch",
 			duration: "Countdown (duration)",
@@ -184,7 +185,9 @@ function parse_hex_data(data_hex: string): CountdownData {
 	// regex match the data
 	for (const res of data_hex.matchAll(regex_curse)) {
 		// parse the results and add them to the results-object
-		Object.entries(res.groups).forEach(([key, val]) => {
+		Object.entries(res.groups ?? {}).forEach(([key, val]) => {
+			data.font_format ??= {};
+			
 			if (val !== undefined) {
 				switch (key) {
 					case "mode":

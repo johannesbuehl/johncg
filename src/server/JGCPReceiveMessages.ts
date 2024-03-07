@@ -6,11 +6,11 @@ interface Base {
 }
 
 /**
- * sequence-file to be loaded
+ * playlist-file to be loaded
  */
-export interface OpenSequence extends Base {
-	command: "open_sequence";
-	sequence: string;
+export interface OpenPlaylist extends Base {
+	command: "open_playlist";
+	playlist: string;
 }
 
 /**
@@ -52,4 +52,4 @@ export interface SelectItemSlide extends Base {
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = RequestItemSlides | SetVisibility | OpenSequence | Navigate | SelectItemSlide;
+export type Message = RequestItemSlides | SetVisibility | OpenPlaylist | Navigate | SelectItemSlide;

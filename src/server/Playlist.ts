@@ -1,31 +1,36 @@
 import path from "path";
-import { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
+import type { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
 import mime from "mime-types";
 
-import { SongElement } from "./SequenceItems/SongFile";
-import { ClientItemSlides, ItemProps, ItemPropsBase, SequenceItem } from "./SequenceItems/SequenceItem";
-import Song, { SongProps } from "./SequenceItems/Song";
+import type { SongElement } from "./PlaylistItems/SongFile";
+import type { ClientItemSlides, ItemProps, ItemPropsBase, PlaylistItem } from "./PlaylistItems/PlaylistItem";
+import Song from "./PlaylistItems/Song";
+import type { SongProps } from "./PlaylistItems/Song";
 
 import * as JGCPSend from "./JGCPSendMessages";
 
 import Config from "./config";
-import Countdown, { CountdownProps } from "./SequenceItems/Countdown";
-import Comment, { CommentProps } from "./SequenceItems/Comment";
-import Image, { ImageProps } from "./SequenceItems/Image";
-import { TransitionType } from "casparcg-connection/dist/enums";
-import CommandComment, { CommandCommentProps } from "./SequenceItems/CommandComment";
-import { CasparCGConnection } from "./control";
-import PDF, { PDFProps } from "./SequenceItems/PDF";
+import Countdown from "./PlaylistItems/Countdown";
+import type { CountdownProps } from "./PlaylistItems/Countdown";
+import Comment from "./PlaylistItems/Comment";
+import type { CommentProps } from "./PlaylistItems/Comment";
+import Image from "./PlaylistItems/Image";
+import type { ImageProps } from "./PlaylistItems/Image";
+import CommandComment from "./PlaylistItems/CommandComment";
+import type { CommandCommentProps } from "./PlaylistItems/CommandComment";
+import type { CasparCGConnection } from "./control";
+import PDF from "./PlaylistItems/PDF";
+import type { PDFProps } from "./PlaylistItems/PDF";
 
-interface ClientSequenceItems {
-	sequence_items: ItemProps[];
+export interface ClientPlaylistItems {
+	playlist_items: ItemProps[];
 	metadata: {
 		item: number;
 		visibility: boolean;
 	}
 }
 
-interface ActiveItemSlide {
+export interface ActiveItemSlide {
 	item: number,
 	slide: number
 }
@@ -35,9 +40,20 @@ export interface CasparCGResolution {
 	height: number;
 }
 
-class Sequence {
-	// store the individual items of the sequence
-	sequence_items: SequenceItem[] = [];
+/* eslint-disable @typescript-eslint/naming-convention */
+enum TransitionType {
+    Cut = "CUT",
+    Mix = "MIX",
+    Push = "PUSH",
+    Wipe = "WIPE",
+    Slide = "SLIDE",
+    Sting = "STING"
+}
+/* eslint-enable @typescript-eslint/naming-convention */
+
+export default class Playlist {
+	// store the individual items of the playlist
+	playlist_items: PlaylistItem[] = [];
 
 	private active_item_number: number = 0;
 
@@ -52,8 +68,8 @@ class Sequence {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(sequence: string, casparcg_connections: CasparCGConnection[]) {
-		this.parse_sequence(sequence);
+	constructor(playlist: string, casparcg_connections: CasparCGConnection[]) {
+		this.parse_playlist(playlist);
 
 		this.casparcg_connections = casparcg_connections;	
 
@@ -108,35 +124,35 @@ class Sequence {
 		}
 	}
 
-	parse_sequence(sequence: string): void {
+	parse_playlist(playlist: string): void {
 		// check, wether the file starts like a songbeamer schedule
-		if (sequence.startsWith("object AblaufPlanItems: TAblaufPlanItems")) {
-			this.parse_songbeamer_sequence(sequence);
+		if (playlist.startsWith("object AblaufPlanItems: TAblaufPlanItems")) {
+			this.parse_songbeamer_playlist(playlist);
 		}
 	}
 
-	parse_songbeamer_sequence(sequence: string) {
-		// regex to split a sequence-file into individual items
-		const re_scan_sequence_file = /item\r?\n(\r?\n|.)+?end/gm;
-		// regex to extract information from an individual sequence-item
-		const re_scan_sequence_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
+	parse_songbeamer_playlist(playlist: string) {
+		// regex to split a playlist-file into individual items
+		const re_scan_playlist_file = /item\r?\n(\r?\n|.)+?end/gm;
+		// regex to extract information from an individual playlist-item
+		const re_scan_playlist_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
 
-		// split the sequence into the individual items
-		const re_results = sequence.match(re_scan_sequence_file);
+		// split the playlist into the individual items
+		const re_results = playlist.match(re_scan_playlist_file);
 
 		if (!re_results) {
-			// if there were no results, check wether the sequence is empty
-			if (/items\s*=\s*<\s*>/.test(sequence)) {
-				throw new SyntaxError("sequence is empty");	
+			// if there were no results, check wether the playlist is empty
+			if (/items\s*=\s*<\s*>/.test(playlist)) {
+				throw new SyntaxError("playlist is empty");	
 			}
 
-			throw new SyntaxError("unable to parse sequence");
+			throw new SyntaxError("unable to parse playlist");
 		}
 
 		// process every element individually
-		re_results.forEach((sequence_item) => {
+		re_results.forEach((playlist_item) => {
 			// reset the regex
-			re_scan_sequence_item.lastIndex = 0;
+			re_scan_playlist_item.lastIndex = 0;
 
 			// store the regex results
 			let re_results_item: RegExpExecArray | null;
@@ -148,14 +164,14 @@ class Sequence {
 				Caption: "",
 				Color: "",
 				slide_count: 0,
-				item: this.sequence_items.length,
+				item: this.playlist_items.length,
 				selectable: true
 				/* eslint-enable @typescript-eslint/naming-convention */
 			};
 
 			// exec the item-regex until there are no more results
 			do {
-				re_results_item = re_scan_sequence_item.exec(sequence_item);
+				re_results_item = re_scan_playlist_item.exec(playlist_item);
 				
 				// if there was a result, process it
 				if (re_results_item !== null) {
@@ -173,19 +189,19 @@ class Sequence {
 
 			} while (re_results_item !== null);
 
-			// store the sequence-item
+			// store the playlist-item
 			switch (item_data.type) {
 				case "Song":
-					this.sequence_items.push(new Song(item_data as SongProps));
+					this.playlist_items.push(new Song(item_data as SongProps));
 					break;
 				case "Countdown":
-					this.sequence_items.push(new Countdown(item_data as CountdownProps));
+					this.playlist_items.push(new Countdown(item_data as CountdownProps));
 					break;
 				case "Image":
-					this.sequence_items.push(new Image(item_data as ImageProps));
+					this.playlist_items.push(new Image(item_data as ImageProps));
 					break;
 				case "PDF":
-					this.sequence_items.push(new PDF(item_data as PDFProps));
+					this.playlist_items.push(new PDF(item_data as PDFProps));
 					break;
 				default:
 					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
@@ -203,7 +219,7 @@ class Sequence {
 	
 								props.type = "CommandComment";
 
-								this.sequence_items.push(new CommandComment(props));
+								this.playlist_items.push(new CommandComment(props));
 							} else {
 								throw new SyntaxError();
 							}
@@ -211,7 +227,7 @@ class Sequence {
 							if (e instanceof SyntaxError) {
 								item_data.type = "Comment";
 
-								this.sequence_items.push(new Comment(item_data as CommentProps));
+								this.playlist_items.push(new Comment(item_data as CommentProps));
 							}
 						}
 					}
@@ -220,20 +236,20 @@ class Sequence {
 		});
 	}
 	
-	create_client_object_sequence(): ClientSequenceItems {
-		const return_sequence: ClientSequenceItems = {
-			sequence_items: this.sequence_items.map((item) => item.props),
+	create_client_object_playlist(): ClientPlaylistItems {
+		const return_playlist: ClientPlaylistItems = {
+			playlist_items: this.playlist_items.map((item) => item.props),
 			metadata: {
 				item: this.active_item_number,
 				visibility: this.visibility
 			}
 		};
 
-		return return_sequence;
+		return return_playlist;
 	}
 
 	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
-		return this.sequence_items[item].create_client_object_item_slides();
+		return this.playlist_items[item].create_client_object_item_slides();
 	}
 
 	set_active_item(item: number, slide: number = 0): ActiveItemSlide {
@@ -241,7 +257,7 @@ class Sequence {
 
 		this.active_item_number = item;
 
-		this.active_sequence_item.set_active_slide(slide);
+		this.active_playlist_item.set_active_slide(slide);
 
 		this.casparcg_load_item();
 
@@ -249,7 +265,7 @@ class Sequence {
 	}
 
 	set_active_slide(slide: number): number {
-		const response = this.active_sequence_item.set_active_slide(slide);
+		const response = this.active_playlist_item.set_active_slide(slide);
 		
 		this.casparcg_select_slide(this.active_slide);
 		
@@ -284,13 +300,13 @@ class Sequence {
 
 			// sanitize the item-number
 			new_active_item_number = this.sanitize_item_number(new_active_item_number);
-		} while (!this.sequence_items[new_active_item_number].props.selectable);
+		} while (!this.playlist_items[new_active_item_number].props.selectable);
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
-			new_active_item_number = this.sequence_items.length - 1;
+			new_active_item_number = this.playlist_items.length - 1;
 		// index is bigger than the slide-count -> roll over to zero
-		} else if (new_active_item_number > this.sequence_items.length - 1) {
+		} else if (new_active_item_number > this.playlist_items.length - 1) {
 			new_active_item_number = 0;
 		}
 
@@ -303,22 +319,22 @@ class Sequence {
 	 * @returns wether the slide has been changed
 	 */
 	navigate_slide(steps: number): boolean {
-		const item_steps = this.active_sequence_item.navigate_slide(steps);
+		const item_steps = this.active_playlist_item.navigate_slide(steps);
 
 		if (item_steps !== 0) {
 			// if the item_steps is forwards, navigate to the first slide; if it is backwards navigate to the last one
 			this.navigate_item(steps, steps > 0 ? 0 : -1);
 		} else {
-			this.casparcg_select_slide(this.active_sequence_item.active_slide);
+			this.casparcg_select_slide(this.active_playlist_item.active_slide);
 		}
 
 		return item_steps !== 0;
 	}
 
 	private validate_item_number(item: number): number {
-		const item_count = this.sequence_items.length;
+		const item_count = this.playlist_items.length;
 
-		if (item < -item_count || item >= this.sequence_items.length) {
+		if (item < -item_count || item >= this.playlist_items.length) {
 			throw new RangeError(`item-number is out of range (${-item_count}-${item_count - 1})`);
 		}
 
@@ -340,11 +356,11 @@ class Sequence {
 		}
 
 		// clamp the range
-		item = item % this.sequence_items.length;
+		item = item % this.playlist_items.length;
 
 		// if it is negative, roll over
 		if (item < 0) {
-			item += this.sequence_items.length;
+			item += this.playlist_items.length;
 		}
 
 		return item;
@@ -364,7 +380,7 @@ class Sequence {
 	}
 
 	private casparcg_load_media(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
-		let media = this.active_sequence_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
+		let media = this.active_playlist_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
 
 		// if a media-file is defined, load it
 		if (media) {
@@ -373,7 +389,7 @@ class Sequence {
 
 			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
 			if (test_rgb_string) {
-				media = `#${test_rgb_string.groups.alpha ?? ""}${test_rgb_string.groups.rgb}`;
+				media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 			} else {
 				// make it all uppercase and remove the extension to match casparcg-clips
 				const req_name = media.replace(/\.[^(\\.]+$/, "").toUpperCase();
@@ -425,16 +441,16 @@ class Sequence {
 
 	private casparcg_load_template(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
 		// if a template was specified, load it
-		if (this.active_sequence_item.template !== undefined) {
+		if (this.active_playlist_item.template !== undefined) {
 			return casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[1],
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
-				template: this.active_sequence_item.template.template,
+				template: this.active_playlist_item.template.template,
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-				data: JSON.stringify(JSON.stringify(this.active_sequence_item.template.data, (_key, val: unknown) => {
+				data: JSON.stringify(JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
 					if (typeof val === "string") {
 						return val.replace("\"", "\\u0022");
 					} else {
@@ -459,7 +475,7 @@ class Sequence {
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// if the item has multiple media-files, load the new one
-			if (this.active_sequence_item.props.media?.length > 1) {
+			if (this.active_playlist_item.props.media?.length ?? 0 > 1) {
 				void this.casparcg_load_media(casparcg_connection);
 			}
 
@@ -526,18 +542,18 @@ class Sequence {
 		return this.active_item_number;
 	}
 
-	get active_sequence_item(): SequenceItem {
-		return this.sequence_items[this.active_item];
+	get active_playlist_item(): PlaylistItem {
+		return this.playlist_items[this.active_item];
 	}
 
 	get active_slide(): number {
-		return this.active_sequence_item.active_slide;
+		return this.active_playlist_item.active_slide;
 	}
 
 	get active_item_slide(): ActiveItemSlide {
 		return {
 			item: this.active_item_number,
-			slide: this.active_sequence_item.active_slide
+			slide: this.active_playlist_item.active_slide
 		};
 	}
 
@@ -554,7 +570,7 @@ class Sequence {
 	}
 }
 
-// parse an individual sequence-item-value
+// parse an individual playlist-item-value
 function parse_item_value_string(key: string, value: string): { [P in keyof ItemProps]?: ItemProps[P]; } {
 	// remove line-breaks
 	value = value.replace(/'?\s\+\s+'?/gm, "");
@@ -575,11 +591,11 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 	switch (key) {
 		case "Data":
 			// remove whitespace and linebreaks
-			return_props[key] = value.replace(/\s+/gm, "");
+			return_props.Data = value.replace(/\s+/gm, "");
 			break;
 		case "VerseOrder":
 			// split csv-line into an array
-			return_props["VerseOrder"] = value.split(",") as SongElement[];
+			return_props.VerseOrder = value.split(",") as SongElement[];
 			break;
 		case "FileName": {
 			// assume the type from the mime-type
@@ -597,7 +613,7 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 					}
 					break;
 			}
-			return_props[key] = value;
+			return_props.FileName = value;
 		} break;
 		case "Color":
 			if (value.substring(0, 2) === "cl") {
@@ -616,25 +632,24 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			return_props[key] = Number(value) - 1; // subtract 1, because Songbeamer start counting at 1
 			break;
 		case "CaptionFmtValue":
-			return_props["Time"] = value;
+			return_props.Time = value;
 			break;
 		case "StreamClass":
 			if (value === "TPresentationObjectTimer") {
 				return_props.type = "Countdown";
 			} else {
-				return_props[key] = value;
+				return_props.StreamClass = value;
 			}
 			break;
 		default:
 			return_props[key] = value;
-			break;
 	}
 
 	return return_props;
 }
 
-function convert_color_to_hex(color: string): string | undefined {
-	const colours = {
+function convert_color_to_hex(color: string): string {
+	const colours: Record<string, string> = {
 		claliceblue: "#f0f8ff",
 		clantiquewhite: "#faebd7",
 		claqua: "#00ffff",
@@ -778,15 +793,7 @@ function convert_color_to_hex(color: string): string | undefined {
 		clyellowgreen: "#9acd32"
 	};
 	
-	const return_value: unknown = colours[color.toLowerCase()];
-
-	if (typeof return_value !== "string") {
-		return "";
-	} else {
-		return return_value;
-	}
+	return colours[color.toLowerCase()] ?? "";
 }
 
-// export { NavigateType, isItemNavigateType, ClientSequenceItems, ClientItemSlides, ActiveItemSlide };
-export { ClientSequenceItems, ActiveItemSlide, convert_color_to_hex };
-export default Sequence;
+export { convert_color_to_hex };
