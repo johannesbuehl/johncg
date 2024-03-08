@@ -11,8 +11,6 @@
 		"build-release": "node build-scripts/build-build.js && node build-scripts/build.js",
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
-		"build-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --minify",
-		"watch-client": "esbuild src/client/main.ts --outfile=client/main.js --tsconfig=src/client/tsconfig.json --bundle --sourcemap --watch",
 		"templates-build": "node build-scripts/templates-build.js",
 		"templates-watch": "node build-scripts/templates-watch.js",
 		"client-dev": "vite -c src/client/vite.config.ts",

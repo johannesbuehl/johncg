@@ -45,7 +45,7 @@ defineEmits<{
 		<object
 			v-if="template"
 			class="template"
-			:data="template?.template + '.html'"
+			:data="`Templates/${template?.template}.html`"
 			@load="$emit('template_load', $event.target as HTMLObjectElement)"
 		/>
 		<div class="slide" :class="{ active }" />

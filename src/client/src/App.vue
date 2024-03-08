@@ -3,7 +3,7 @@
  * MISSING
  * sortableJS
  * error-log
- * favicon
+ * header: blue-color if active
  */
 import { ref, watch } from "vue";
 import ControlWindow from "./ControlWindow/ControlWindow.vue";

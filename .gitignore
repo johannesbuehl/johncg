@@ -2,7 +2,7 @@ node_modules
 out
 dist
 client/*.js
-casparcg-templates/JohnCG/*.js
+casparcg/Templates/JohnCG/*.js
 *.map
 client/webfonts/bahnschrift.ttf
 build-scripts/build.js

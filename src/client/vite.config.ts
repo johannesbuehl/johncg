@@ -15,7 +15,7 @@ export default defineConfig(({ command }) => ({
 		outDir: "../../dist/build/client",
 		emptyOutDir: true
 	},
-	publicDir: command === "build" ? false : "../../casparcg-templates",
+	publicDir: command === "build" ? false : "../../casparcg",
 	root: "src/client",
 	resolve: {
 		alias: {

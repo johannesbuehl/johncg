@@ -27,7 +27,7 @@ const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions)
 
 // bundle the different scripts
 execSync("npm run server-build");
-// execSync("npm run client-build");
+execSync("npm run client-build");
 execSync("npm run templates-build");
 
 // temporary method until there is a solution for packaging sharp
@@ -56,7 +56,7 @@ fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_fi
 copy_release_file(path.join(build_dir, exec_name));
 copy_release_file(path.join(build_dir, "main.js"));
 
-copy_release_dir("casparcg-templates", undefined, { filter: (src) => {
+copy_release_dir("casparcg/Templates", undefined, { filter: (src) => {
 	switch (true) {
 		case path.basename(src) === ".eslintrc":
 		case [".js", ".map"].includes(path.extname(src)):
@@ -65,15 +65,7 @@ copy_release_dir("casparcg-templates", undefined, { filter: (src) => {
 			return true;
 	}
 } });
-copy_release_dir("client", undefined, { filter: (src) => {
-	switch (true) {
-		case [".eslintrc", "bahnschrift.ttf"].includes(path.basename(src)):
-		case [".js", ".map"].includes(path.extname(src)):
-			return false;
-		default:
-			return true;
-	}
-} });
+copy_release_dir(path.join(build_dir, "client"));
 const copy_module = (name: string) => {
 	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
 
