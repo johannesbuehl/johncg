@@ -6,7 +6,8 @@
 	"license": "MIT",
 	"scripts": {
 		"lint": "eslint .",
-		"format": "prettier --write src/",
+		"format-check": "prettier --check src/",
+		"format-write": "prettier --write src/",
 		"build-release": "node build-scripts/build-build.js && node build-scripts/build.js",
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
