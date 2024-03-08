@@ -1,5 +1,5 @@
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface CommandCommentTemplate {
 	template: string;
@@ -33,7 +33,7 @@ export default class CommandComment extends PlaylistItemBase {
 			this.item_props.Caption += ` (${JSON.stringify(this.props.template.data, undefined, " ").slice(3, -2)})`;
 		}
 	}
-	
+
 	create_client_object_item_slides(): Promise<ClientCommandCommentSlides> {
 		const { Caption: title, template } = this.props;
 
@@ -45,16 +45,16 @@ export default class CommandComment extends PlaylistItemBase {
 			template
 		});
 	}
-	
+
 	navigate_slide(steps: number): number {
 		// return the steps, since there are no slides to navigate
 		return steps;
 	}
-	
+
 	set_active_slide(): number {
 		return 0;
 	}
-	
+
 	get active_slide(): number {
 		return 0;
 	}

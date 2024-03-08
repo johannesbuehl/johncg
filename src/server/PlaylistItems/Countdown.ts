@@ -1,11 +1,19 @@
-import { convert_color_to_hex } from "../Playlist";
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, DeepPartial, FontFormat, ItemPropsBase } from "./PlaylistItem";
+import { convert_color_to_hex } from "../Playlist.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type {
+	ClientItemSlidesBase,
+	DeepPartial,
+	FontFormat,
+	ItemPropsBase
+} from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
 
-interface CountdownPosition { x: number, y: number }
+interface CountdownPosition {
+	x: number;
+	y: number;
+}
 
 interface CountdownPlaylistItemProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -29,10 +37,12 @@ export interface CountdownProps extends CountdownPlaylistItemProps {
 
 export interface ClientCountdownSlides extends ClientItemSlidesBase {
 	type: "Countdown";
-	slides: [{
-		time: string;
-		mode: CountdownMode;
-	}],
+	slides: [
+		{
+			time: string;
+			mode: CountdownMode;
+		}
+	];
 	media_b64: string;
 	template: CountdownTemplate;
 }
@@ -57,7 +67,7 @@ interface CountdownData {
 		fontStyle?: "italic";
 		textDecoration?: "underline";
 		/* eslint-enable @typescript-eslint/naming-convention */
-	}
+	};
 	x: number;
 	y: number;
 	show_seconds: boolean;
@@ -67,14 +77,14 @@ interface CountdownData {
 
 export default class Countdown extends PlaylistItemBase {
 	protected item_props: CountdownProps;
-	
+
 	protected slide_count: number = 1;
 
 	constructor(props: CountdownPlaylistItemProps) {
 		super();
 
 		const hex_data = parse_hex_data(props.Data);
-		
+
 		this.item_props = {
 			...props,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -117,7 +127,7 @@ export default class Countdown extends PlaylistItemBase {
 
 		return slide;
 	}
-	
+
 	async create_client_object_item_slides(): Promise<ClientCountdownSlides> {
 		const title_map: Record<CountdownMode, string> = {
 			clock: "Clock",
@@ -125,15 +135,17 @@ export default class Countdown extends PlaylistItemBase {
 			duration: "Countdown (duration)",
 			end_time: "Countdown (end time)"
 		};
-		
+
 		return {
 			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
 			type: this.props.type,
 			item: this.props.item,
-			slides: [{
-				mode: this.template.data.mode,
-				time: this.props.Time
-			}],
+			slides: [
+				{
+					mode: this.template.data.mode,
+					time: this.props.Time
+				}
+			],
 			media_b64: await this.get_media_b64(true),
 			template: this.props.template
 		};
@@ -154,8 +166,8 @@ export default class Countdown extends PlaylistItemBase {
 }
 
 function parse_hex_data(data_hex: string): CountdownData {
-	const regex_curse = /(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D65(?:0[A-F0-9])+(?<font_family>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
-
+	const regex_curse =
+		/(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D65(?:0[A-F0-9])+(?<font_family>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
 
 	const data: DeepPartial<CountdownData> = {
 		font_format: {
@@ -168,7 +180,7 @@ function parse_hex_data(data_hex: string): CountdownData {
 		y: undefined,
 		show_seconds: true
 	};
-	
+
 	const to_string = (raw: string): string => Buffer.from(raw, "hex").toString();
 
 	const to_int = (r: string): number => parseInt(r, 16);
@@ -187,7 +199,7 @@ function parse_hex_data(data_hex: string): CountdownData {
 		// parse the results and add them to the results-object
 		Object.entries(res.groups ?? {}).forEach(([key, val]) => {
 			data.font_format ??= {};
-			
+
 			if (val !== undefined) {
 				switch (key) {
 					case "mode":

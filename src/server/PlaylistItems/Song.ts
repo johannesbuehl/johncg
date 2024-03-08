@@ -1,10 +1,11 @@
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
-import SongFile from "./SongFile";
-import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile";
 import path from "path";
 
-import Config from "../config";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import SongFile from "./SongFile.ts";
+import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile.ts";
+
+import Config from "../config.ts";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -23,8 +24,7 @@ export interface SongProps extends ItemPropsBase {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export interface TitleSlide extends TitlePart {
-}
+export interface TitleSlide extends TitlePart {}
 
 export interface LyricSlide {
 	type: "lyric";
@@ -39,10 +39,10 @@ export interface SongTemplateData {
 	slide: number;
 }
 
-export type SongPartClient = ItemPartClient & { start_index: number; };
+export type SongPartClient = ItemPartClient & { start_index: number };
 
 export interface ClientSongSlides extends ClientItemSlidesBase {
-	type: "Song"
+	type: "Song";
 	slides: SongPartClient[];
 	media_b64: string;
 	template: SongTemplate;
@@ -96,7 +96,7 @@ export default class Song extends PlaylistItemBase {
 
 		// add the title-slide to the counter
 		this.slide_count++;
-		
+
 		// count the slides
 		for (const part of this.get_verse_order()) {
 			// check wether the part is actually defined in the songfile
@@ -134,12 +134,10 @@ export default class Song extends PlaylistItemBase {
 
 		const return_object: SongTemplateData = {
 			slide,
-			slides: [
-				this.song_file.part_title
-			],
+			slides: [this.song_file.part_title],
 			languages: this.languages
 		};
-		
+
 		// add the individual parts to the output-object
 		for (const part_name of this.get_verse_order()) {
 			let part: LyricPart | undefined = undefined;
@@ -152,15 +150,14 @@ export default class Song extends PlaylistItemBase {
 			}
 
 			// if a part is not available, skip it
-			if (part !== undefined){
+			if (part !== undefined) {
 				// add the individual slides of the part to the output object
 				part.slides.forEach((slide) => {
-
 					const slide_obj: LyricSlide = {
 						type: "lyric",
 						data: slide
 					};
-					
+
 					return_object.slides.push(slide_obj);
 				});
 			}
@@ -171,13 +168,13 @@ export default class Song extends PlaylistItemBase {
 
 	/**
 	 * set the slide-number as active
-	 * @param slide 
+	 * @param slide
 	 */
 	set_active_slide(slide: number): number {
 		slide = this.validate_slide_number(slide);
 
 		this.active_slide_number = slide;
-		
+
 		return this.active_slide_number;
 	}
 
@@ -198,7 +195,7 @@ export default class Song extends PlaylistItemBase {
 		if (new_active_slide_number < 0) {
 			slide_steps = -1;
 
-		// index is bigger than the slide-count -> roll over to zero
+			// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_slide_number >= this.slide_count) {
 			slide_steps = 1;
 		} else {
@@ -213,10 +210,12 @@ export default class Song extends PlaylistItemBase {
 			type: "Song",
 			title: this.item_props.Caption,
 			item: this.props.item,
-			slides: [{
+			slides: [
+				{
 					start_index: 0,
-					...this.song_file.get_title_client(this.languages[0]),
-				}],
+					...this.song_file.get_title_client(this.languages[0])
+				}
+			],
 			media_b64: await this.get_media_b64(true),
 			template: this.props.template
 		};
@@ -235,7 +234,7 @@ export default class Song extends PlaylistItemBase {
 			}
 
 			// if a part is not available, skip it
-			if (part !== undefined){
+			if (part !== undefined) {
 				return_item.slides.push({
 					...part,
 					start_index: slide_counter
@@ -269,7 +268,9 @@ export default class Song extends PlaylistItemBase {
 }
 
 export function get_song_path(song_path: string): string {
-	const return_path = path.isAbsolute(song_path) ? song_path : path.resolve(Config.path.song, song_path);
+	const return_path = path.isAbsolute(song_path)
+		? song_path
+		: path.resolve(Config.path.song, song_path);
 
 	return return_path.replaceAll("\\", "/");
 }

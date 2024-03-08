@@ -34,7 +34,7 @@ const is_song_element = (x: any): x is SongElement => {
 	if (typeof x !== "string") {
 		return false;
 	}
-	
+
 	const stem = x.split(" ", 1)[0];
 
 	return verse_types.includes(stem.toLowerCase() as SongElement);
@@ -172,7 +172,7 @@ export default class SongFile {
 		// check wether the song-file starts with the utf-8-BOM
 		if (raw_data_buffer.subarray(0, 3).compare(bom) === 0) {
 			encoding = "utf8";
-		// no utf-8-BOM -> encoding is cp1252
+			// no utf-8-BOM -> encoding is cp1252
 		} else {
 			encoding = "cp1252";
 		}
@@ -199,7 +199,7 @@ export default class SongFile {
 
 			// check if the first row describes the part
 			if (
-				is_song_element(first_line_items[0].toLowerCase()) && 
+				is_song_element(first_line_items[0].toLowerCase()) &&
 				first_line_items.length <= 2 &&
 				first_line_items.length > 0
 			) {
@@ -217,7 +217,10 @@ export default class SongFile {
 				lines.push("");
 			}
 
-			const slide: string[][] = Array.from(Array(Math.ceil(lines.length / this.metadata.LangCount)), (): string[] => []);
+			const slide: string[][] = Array.from(
+				Array(Math.ceil(lines.length / this.metadata.LangCount)),
+				(): string[] => []
+			);
 
 			// split the lines into the different languages
 			lines.forEach((vv, ii) => {

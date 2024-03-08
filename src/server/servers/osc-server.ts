@@ -7,7 +7,13 @@ export interface OSCServerArguments {
 	port_send: number;
 }
 
-export type OSCFunctionMap = { [key: string]: OSCFunctionMap | ((value: boolean) => void | Promise<void> ) | ((value: number) => void | Promise<void> ) | ((value: string) => void | Promise<void> ) };
+export type OSCFunctionMap = {
+	[key: string]:
+		| OSCFunctionMap
+		| ((value: boolean) => void | Promise<void>)
+		| ((value: number) => void | Promise<void>)
+		| ((value: string) => void | Promise<void>);
+};
 
 export default class OSCServer {
 	// private osc_server: osc.UDPPort;
@@ -28,7 +34,7 @@ export default class OSCServer {
 
 			// remove the first empty elementn from the leading slash
 			parts.shift();
-			
+
 			// execute the command map
 			this.execute_command(parts, this.function_map, osc_msg[1]);
 		});
@@ -47,7 +53,7 @@ export default class OSCServer {
 			}
 		} else {
 			const command = command_tree[path[0]];
-			
+
 			if (typeof command === "function") {
 				void command(value as never);
 			}
@@ -69,7 +75,7 @@ export default class OSCServer {
 				type = "s";
 				break;
 		}
-		
+
 		// if the type is undefined, the type is not supported -> exit
 		if (type === undefined) {
 			return;

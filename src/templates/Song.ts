@@ -10,7 +10,9 @@ let slide_count = 0;
 function update(s_data: string) {
 	// parse the transferred data into json
 	try {
-		data = JSON.parse(s_data) as SongTemplateData & { mute_transition: boolean };
+		data = JSON.parse(s_data) as SongTemplateData & {
+			mute_transition: boolean;
+		};
 	} catch (error) {
 		if (!(error instanceof SyntaxError)) {
 			throw error;
@@ -58,7 +60,7 @@ function update(s_data: string) {
 
 	// display the first slide
 	jump(active_slide);
-	
+
 	// resize all the slides (has to be done after displayin the first slide)
 	resize_slides();
 }
@@ -98,7 +100,9 @@ function jump(counter_raw: number) {
 	main_div.innerHTML = "";
 
 	// clone the slide and change its id, so the id stays unique
-	const div_slide = document.querySelector<HTMLDivElement>(`div[data-slide='${counter}']`)?.cloneNode(true) as HTMLDivElement;
+	const div_slide = document
+		.querySelector<HTMLDivElement>(`div[data-slide='${counter}']`)
+		?.cloneNode(true) as HTMLDivElement;
 
 	if (div_slide === undefined) return;
 
@@ -113,7 +117,7 @@ function jump(counter_raw: number) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stop() {
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");
-	
+
 	if (main_div === null) return;
 
 	main_div.style.opacity = "0";
@@ -139,7 +143,7 @@ function resize_slides() {
 function get_max_width() {
 	let max_width = 0;
 
-	// get the width of the individual slides and store the biggest one 
+	// get the width of the individual slides and store the biggest one
 	for (let ii = 0; ii < slide_count; ii++) {
 		const slide = document.querySelector<HTMLDivElement>(`div#storage [data-slide='${ii}']`);
 
@@ -161,50 +165,54 @@ function create_slide(slide_data: ItemSlide, languages: number[]) {
 	div_slide.append(div_content);
 
 	switch (slide_data.type) {
-		case "title": {
-			div_content.classList.add("title");
-			const title_container = document.createElement("div");
-			title_container.classList.add("title_container");
-			div_content.append(title_container);
+		case "title":
+			{
+				div_content.classList.add("title");
+				const title_container = document.createElement("div");
+				title_container.classList.add("title_container");
+				div_content.append(title_container);
 
-			// create the titles for the individual languages
-			languages.forEach((language, index) => {
-				const div_title = document.createElement("div");
-				div_title.classList.add(`language_${index}`);
-				div_title.innerText = slide_data.title[language] ?? "";
-				title_container.append(div_title);
-			});
-
-			const div_church_song_id = document.createElement("div");
-			div_church_song_id.classList.add("song_id");
-
-			if (slide_data.church_song_id !== undefined) {
-				div_church_song_id.innerText = slide_data.church_song_id;
-			}
-
-			div_content.append(div_church_song_id);
-		} break;
-		case "lyric": {
-			div_content.classList.add("lyric");
-
-			// add the individual text-lines
-			for (const line_package of slide_data.data) {
-				// create a template for the line
-				const line_template = document.createElement("div");
-				line_template.classList.add("text_line");
-
-				// add the individual languages
+				// create the titles for the individual languages
 				languages.forEach((language, index) => {
-					const line = line_template.cloneNode(true) as HTMLDivElement;
-					line.classList.add(`language_${index}`);
-					line.innerText = line_package[language];
-
-					div_content.append(line);
+					const div_title = document.createElement("div");
+					div_title.classList.add(`language_${index}`);
+					div_title.innerText = slide_data.title[language] ?? "";
+					title_container.append(div_title);
 				});
+
+				const div_church_song_id = document.createElement("div");
+				div_church_song_id.classList.add("song_id");
+
+				if (slide_data.church_song_id !== undefined) {
+					div_church_song_id.innerText = slide_data.church_song_id;
+				}
+
+				div_content.append(div_church_song_id);
 			}
-		} break;
+			break;
+		case "lyric":
+			{
+				div_content.classList.add("lyric");
+
+				// add the individual text-lines
+				for (const line_package of slide_data.data) {
+					// create a template for the line
+					const line_template = document.createElement("div");
+					line_template.classList.add("text_line");
+
+					// add the individual languages
+					languages.forEach((language, index) => {
+						const line = line_template.cloneNode(true) as HTMLDivElement;
+						line.classList.add(`language_${index}`);
+						line.innerText = line_package[language];
+
+						div_content.append(line);
+					});
+				}
+			}
+			break;
 	}
-			
+
 	return div_slide;
 }
 

@@ -2,9 +2,9 @@ import sharp from "sharp";
 import Canvas from "canvas";
 import tmp from "tmp";
 
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
-import { get_song_path } from "./Song";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { get_song_path } from "./Song.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -48,13 +48,13 @@ export default class PDF extends PlaylistItemBase {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					const viewport = page.getViewport({ scale: 1 });
 					const canvas = Canvas.createCanvas(viewport.width, viewport.height);
-						
+
 					await page.render({
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
 						viewport
 					}).promise;
-	
+
 					const image_buffer = canvas.toBuffer();
 
 					// save the image into a temporary file
@@ -67,8 +67,7 @@ export default class PDF extends PlaylistItemBase {
 					this.slide_count++;
 				});
 			} catch (e) {
-				if (e instanceof pdfjs.MissingPDFException)
-				{
+				if (e instanceof pdfjs.MissingPDFException) {
 					// set the item as not selectable
 					this.props.selectable = false;
 
@@ -91,7 +90,9 @@ export default class PDF extends PlaylistItemBase {
 			title: this.props.FileName,
 			type: "PDF",
 			item: this.props.item,
-			slides: await Promise.all(this.props.media.map(async (m) => await this.get_media_b64(true, m)))
+			slides: await Promise.all(
+				this.props.media.map(async (m) => await this.get_media_b64(true, m))
+			)
 		});
 	}
 
@@ -112,7 +113,7 @@ export default class PDF extends PlaylistItemBase {
 		if (new_active_slide_number < 0) {
 			slide_steps = -1;
 
-		// index is bigger than the slide-count -> roll over to zero
+			// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_slide_number >= this.slide_count) {
 			slide_steps = 1;
 		} else {

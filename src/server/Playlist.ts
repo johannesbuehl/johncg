@@ -2,37 +2,42 @@ import path from "path";
 import type { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
 import mime from "mime-types";
 
-import type { SongElement } from "./PlaylistItems/SongFile";
-import type { ClientItemSlides, ItemProps, ItemPropsBase, PlaylistItem } from "./PlaylistItems/PlaylistItem";
-import Song from "./PlaylistItems/Song";
-import type { SongProps } from "./PlaylistItems/Song";
+import type { SongElement } from "./PlaylistItems/SongFile.ts";
+import type {
+	ClientItemSlides,
+	ItemProps,
+	ItemPropsBase,
+	PlaylistItem
+} from "./PlaylistItems/PlaylistItem.ts";
+import Song from "./PlaylistItems/Song.ts";
+import type { SongProps } from "./PlaylistItems/Song.ts";
 
-import * as JGCPSend from "./JGCPSendMessages";
+import * as JGCPSend from "./JGCPSendMessages.ts";
 
-import Config from "./config";
-import Countdown from "./PlaylistItems/Countdown";
-import type { CountdownProps } from "./PlaylistItems/Countdown";
-import Comment from "./PlaylistItems/Comment";
-import type { CommentProps } from "./PlaylistItems/Comment";
-import Image from "./PlaylistItems/Image";
-import type { ImageProps } from "./PlaylistItems/Image";
-import CommandComment from "./PlaylistItems/CommandComment";
-import type { CommandCommentProps } from "./PlaylistItems/CommandComment";
-import type { CasparCGConnection } from "./control";
-import PDF from "./PlaylistItems/PDF";
-import type { PDFProps } from "./PlaylistItems/PDF";
+import Config from "./config.ts";
+import Countdown from "./PlaylistItems/Countdown.ts";
+import type { CountdownProps } from "./PlaylistItems/Countdown.ts";
+import Comment from "./PlaylistItems/Comment.ts";
+import type { CommentProps } from "./PlaylistItems/Comment.ts";
+import Image from "./PlaylistItems/Image.ts";
+import type { ImageProps } from "./PlaylistItems/Image.ts";
+import CommandComment from "./PlaylistItems/CommandComment.ts";
+import type { CommandCommentProps } from "./PlaylistItems/CommandComment.ts";
+import type { CasparCGConnection } from "./control.ts";
+import PDF from "./PlaylistItems/PDF.ts";
+import type { PDFProps } from "./PlaylistItems/PDF.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: ItemProps[];
 	metadata: {
 		item: number;
 		visibility: boolean;
-	}
+	};
 }
 
 export interface ActiveItemSlide {
-	item: number,
-	slide: number
+	item: number;
+	slide: number;
 }
 
 export interface CasparCGResolution {
@@ -42,12 +47,12 @@ export interface CasparCGResolution {
 
 /* eslint-disable @typescript-eslint/naming-convention */
 enum TransitionType {
-    Cut = "CUT",
-    Mix = "MIX",
-    Push = "PUSH",
-    Wipe = "WIPE",
-    Slide = "SLIDE",
-    Sting = "STING"
+	Cut = "CUT",
+	Mix = "MIX",
+	Push = "PUSH",
+	Wipe = "WIPE",
+	Slide = "SLIDE",
+	Sting = "STING"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -71,7 +76,7 @@ export default class Playlist {
 	constructor(playlist: string, casparcg_connections: CasparCGConnection[]) {
 		this.parse_playlist(playlist);
 
-		this.casparcg_connections = casparcg_connections;	
+		this.casparcg_connections = casparcg_connections;
 
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// add a listener to send send the current-slide on connection
@@ -79,10 +84,10 @@ export default class Playlist {
 				// load the active-item
 				this.casparcg_load_item(casparcg_connection);
 			});
-			
+
 			// clear the previous casparcg-output on the layers
 			this.casparcg_clear_layers(casparcg_connection);
-			
+
 			// load the first slide
 			this.casparcg_load_item(casparcg_connection);
 		});
@@ -135,7 +140,8 @@ export default class Playlist {
 		// regex to split a playlist-file into individual items
 		const re_scan_playlist_file = /item\r?\n(\r?\n|.)+?end/gm;
 		// regex to extract information from an individual playlist-item
-		const re_scan_playlist_item = /(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
+		const re_scan_playlist_item =
+			/(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
 
 		// split the playlist into the individual items
 		const re_results = playlist.match(re_scan_playlist_file);
@@ -143,7 +149,7 @@ export default class Playlist {
 		if (!re_results) {
 			// if there were no results, check wether the playlist is empty
 			if (/items\s*=\s*<\s*>/.test(playlist)) {
-				throw new SyntaxError("playlist is empty");	
+				throw new SyntaxError("playlist is empty");
 			}
 
 			throw new SyntaxError("unable to parse playlist");
@@ -172,21 +178,25 @@ export default class Playlist {
 			// exec the item-regex until there are no more results
 			do {
 				re_results_item = re_scan_playlist_item.exec(playlist_item);
-				
+
 				// if there was a result, process it
 				if (re_results_item !== null) {
 					const results = re_results_item.groups;
 
 					// only proceeds, when there are results
-					if (results !== undefined) {	
+					if (results !== undefined) {
 						// remove all undefined values
-						Object.keys(results).forEach(key => results[key] === undefined && delete results[key]);
-						
+						Object.keys(results).forEach(
+							(key) => results[key] === undefined && delete results[key]
+						);
+
 						// parse all remaining values
-						item_data = { ...item_data, ...parse_item_value_string(...Object.entries(results)[0]) };
+						item_data = {
+							...item_data,
+							...parse_item_value_string(...Object.entries(results)[0])
+						};
 					}
 				}
-
 			} while (re_results_item !== null);
 
 			// store the playlist-item
@@ -214,9 +224,9 @@ export default class Playlist {
 								const props: CommandCommentProps = {
 									...item_data,
 									type: "CommandComment",
-									template: caption_json as { template: string, data: object }
+									template: caption_json as { template: string; data: object }
 								};
-	
+
 								props.type = "CommandComment";
 
 								this.playlist_items.push(new CommandComment(props));
@@ -235,7 +245,7 @@ export default class Playlist {
 			}
 		});
 	}
-	
+
 	create_client_object_playlist(): ClientPlaylistItems {
 		const return_playlist: ClientPlaylistItems = {
 			playlist_items: this.playlist_items.map((item) => item.props),
@@ -266,9 +276,9 @@ export default class Playlist {
 
 	set_active_slide(slide: number): number {
 		const response = this.active_playlist_item.set_active_slide(slide);
-		
+
 		this.casparcg_select_slide(this.active_slide);
-		
+
 		return response;
 	}
 
@@ -282,7 +292,7 @@ export default class Playlist {
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
 		}
-		
+
 		if (![-1, 1].includes(steps)) {
 			throw new RangeError(`steps must be -1 or 1, but is ${steps}`);
 		}
@@ -305,7 +315,7 @@ export default class Playlist {
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
 			new_active_item_number = this.playlist_items.length - 1;
-		// index is bigger than the slide-count -> roll over to zero
+			// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_item_number > this.playlist_items.length - 1) {
 			new_active_item_number = 0;
 		}
@@ -379,13 +389,17 @@ export default class Playlist {
 		});
 	}
 
-	private casparcg_load_media(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
+	private casparcg_load_media(
+		casparcg_connection: CasparCGConnection
+	): Promise<APIRequest<Commands.CgAdd>> {
 		let media = this.active_playlist_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
 
 		// if a media-file is defined, load it
 		if (media) {
 			// test wether it is a color-string
-			const test_rgb_string = media.match(/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/);
+			const test_rgb_string = media.match(
+				/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
+			);
 
 			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
 			if (test_rgb_string) {
@@ -409,8 +423,8 @@ export default class Playlist {
 			if (this.visibility) {
 				return casparcg_connection.connection.play({
 					/* eslint-disable @typescript-eslint/naming-convention */
-					channel:  casparcg_connection.settings.channel,
-					layer:  casparcg_connection.settings.layers[0],
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers[0],
 					clip: media,
 					transition: this.casparcg_transition
 					/* eslint-enable @typescript-eslint/naming-convention */
@@ -419,8 +433,8 @@ export default class Playlist {
 				//  if the current stat is invisible, only load it in the background
 				return casparcg_connection.connection.loadbg({
 					/* eslint-disable @typescript-eslint/naming-convention */
-					channel:  casparcg_connection.settings.channel,
-					layer:  casparcg_connection.settings.layers[0],
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers[0],
 					clip: media,
 					transition: this.casparcg_transition
 					/* eslint-enable @typescript-eslint/naming-convention */
@@ -430,8 +444,8 @@ export default class Playlist {
 			// no media-file selected -> clear the media-output
 			return casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
-				channel:  casparcg_connection.settings.channel,
-				layer:  casparcg_connection.settings.layers[0],
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers[0],
 				clip: "EMPTY",
 				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -439,7 +453,9 @@ export default class Playlist {
 		}
 	}
 
-	private casparcg_load_template(casparcg_connection: CasparCGConnection): Promise<APIRequest<Commands.CgAdd>> {
+	private casparcg_load_template(
+		casparcg_connection: CasparCGConnection
+	): Promise<APIRequest<Commands.CgAdd>> {
 		// if a template was specified, load it
 		if (this.active_playlist_item.template !== undefined) {
 			return casparcg_connection.connection.cgAdd({
@@ -450,21 +466,23 @@ export default class Playlist {
 				playOnLoad: this.casparcg_visibility,
 				template: this.active_playlist_item.template.template,
 				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
-				data: JSON.stringify(JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
-					if (typeof val === "string") {
-						return val.replace("\"", "\\u0022");
-					} else {
-						return val;
-					}
-				}))
+				data: JSON.stringify(
+					JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
+						if (typeof val === "string") {
+							return val.replace('"', "\\u0022");
+						} else {
+							return val;
+						}
+					})
+				)
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		} else {
 			// if not, clear the previous template
 			return casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
-				channel:  casparcg_connection.settings.channel,
-				layer:  casparcg_connection.settings.layers[1],
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers[1],
 				clip: "EMPTY",
 				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -500,30 +518,29 @@ export default class Playlist {
 				this.casparcg_load_item(casparcg_connection, true);
 
 				await casparcg_connection.connection.cgPlay({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[1],
-						cgLayer: 0
-						/* eslint-enable @typescript-eslint/naming-convention */
-					});
-
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers[1],
+					cgLayer: 0
+					/* eslint-enable @typescript-eslint/naming-convention */
+				});
 			} else {
 				await Promise.allSettled([
 					// fade-out the media
 					casparcg_connection.connection.play({
 						/* eslint-disable @typescript-eslint/naming-convention */
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[0],
+						channel: casparcg_connection.settings.channel,
+						layer: casparcg_connection.settings.layers[0],
 						clip: "EMPTY",
 						transition: this.casparcg_transition
 						/* eslint-enable @typescript-eslint/naming-convention */
 					}),
-	
+
 					// stop the template-layer
 					casparcg_connection.connection.cgStop({
 						/* eslint-disable @typescript-eslint/naming-convention */
-						channel:  casparcg_connection.settings.channel,
-						layer:  casparcg_connection.settings.layers[1],
+						channel: casparcg_connection.settings.channel,
+						layer: casparcg_connection.settings.layers[1],
 						cgLayer: 0
 						/* eslint-enable @typescript-eslint/naming-convention */
 					})
@@ -571,7 +588,10 @@ export default class Playlist {
 }
 
 // parse an individual playlist-item-value
-function parse_item_value_string(key: string, value: string): { [P in keyof ItemProps]?: ItemProps[P]; } {
+function parse_item_value_string(
+	key: string,
+	value: string
+): { [P in keyof ItemProps]?: ItemProps[P] } {
 	// remove line-breaks
 	value = value.replace(/'?\s\+\s+'?/gm, "");
 	// un-escape escaped characters
@@ -580,13 +600,13 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 
 		let return_string = "";
 
-		chars.forEach((char) => return_string += String.fromCharCode(Number(char)));
-		
+		chars.forEach((char) => (return_string += String.fromCharCode(Number(char))));
+
 		return return_string;
 	});
-	
-	const return_props: { [P in keyof ItemProps]?: ItemProps[P]; } = {};
-	
+
+	const return_props: { [P in keyof ItemProps]?: ItemProps[P] } = {};
+
 	// do value-type specific stuff
 	switch (key) {
 		case "Data":
@@ -597,31 +617,34 @@ function parse_item_value_string(key: string, value: string): { [P in keyof Item
 			// split csv-line into an array
 			return_props.VerseOrder = value.split(",") as SongElement[];
 			break;
-		case "FileName": {
-			// assume the type from the mime-type
-			const mime_type = mime.lookup(value);
-			switch (true) {
-				case mime_type ? mime_type.split("/", 1)[0] === "image" : false:
-					return_props.type = "Image";
-					break;
-				case mime_type === "application/pdf":
-					return_props.type  = "PDF";
-					break;
-				case !mime_type:
-					if (path.extname(value) === ".sng") {
-						return_props.type = "Song";
-					}
-					break;
+		case "FileName":
+			{
+				// assume the type from the mime-type
+				const mime_type = mime.lookup(value);
+				switch (true) {
+					case mime_type ? mime_type.split("/", 1)[0] === "image" : false:
+						return_props.type = "Image";
+						break;
+					case mime_type === "application/pdf":
+						return_props.type = "PDF";
+						break;
+					case !mime_type:
+						if (path.extname(value) === ".sng") {
+							return_props.type = "Song";
+						}
+						break;
+				}
+				return_props.FileName = value;
 			}
-			return_props.FileName = value;
-		} break;
+			break;
 		case "Color":
 			if (value.substring(0, 2) === "cl") {
 				return_props[key] = convert_color_to_hex(value);
 			} else {
 				const color_int = Number(value);
 
-				const color = (color_int & 0x0000ff) << 16 | (color_int & 0x00ff00) | (color_int & 0xff0000) >> 16;
+				const color =
+					((color_int & 0x0000ff) << 16) | (color_int & 0x00ff00) | ((color_int & 0xff0000) >> 16);
 
 				const color_string = color.toString(16);
 				return_props[key] = "#" + color_string.padStart(6, "0");
@@ -793,7 +816,7 @@ function convert_color_to_hex(color: string): string {
 		clyellow: "#ffff00",
 		clyellowgreen: "#9acd32"
 	};
-	
+
 	return colours[color.toLowerCase()] ?? "";
 }
 

@@ -6,3 +6,5 @@ client
 license-generator.ts
 license-reporter.config.ts
 build-scripts/*.js
+
+src/client_old

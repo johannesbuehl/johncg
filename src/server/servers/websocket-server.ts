@@ -35,8 +35,7 @@ export default class WebsocketServer {
 
 	connections: Record<string, WebSocket[]> = {};
 
-	constructor(args: WebsocketServerArguments, 
-		message_handlers: WebsocketMessageHandler) {
+	constructor(args: WebsocketServerArguments, message_handlers: WebsocketMessageHandler) {
 		this.message_handlers = message_handlers;
 
 		this.ws_server = new WebSocketServer({ port: args.port });
@@ -72,11 +71,13 @@ export default class WebsocketServer {
 			// reject connection
 			ws.send("Protocol not supported");
 
-			ws.send(JSON.stringify({
-				command: "response",
-				message: `protocol '${ws.protocol}' is not supported`,
-				code: 400
-			}));
+			ws.send(
+				JSON.stringify({
+					command: "response",
+					message: `protocol '${ws.protocol}' is not supported`,
+					code: 400
+				})
+			);
 			ws.close();
 		}
 

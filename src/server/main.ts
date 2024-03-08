@@ -1,8 +1,8 @@
-import HTTPServer from "./servers/http-server";
+import HTTPServer from "./servers/http-server.ts";
 
-import Control from "./control";
+import Control from "./control.ts";
 
-import Config from "./config";
+import Config from "./config.ts";
 
 // http-server
 new HTTPServer(Config.client_server.http.port);

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
-import { get_song_path } from "./Song";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { get_song_path } from "./Song.ts";
 
 export interface ImageProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */

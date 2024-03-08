@@ -16,13 +16,10 @@
 		"eslint:recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
 		"plugin:@typescript-eslint/recommended",
-		"plugin:@typescript-eslint/recommended-type-checked"
+		"plugin:@typescript-eslint/recommended-type-checked",
+		"prettier"
 	],
 	"rules": {
-		"semi": ["error", "always"],
-		"object-curly-spacing": ["error", "always"],
-		"quotes": ["error"],
-		"quote-props": ["error", "as-needed"],
 		"@typescript-eslint/naming-convention": [
 			"error",
 			{

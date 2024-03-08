@@ -1,5 +1,5 @@
-import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemSlidesBase, ItemProps, ItemPropsBase } from "./PlaylistItem";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemProps, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface CommentProps extends ItemPropsBase {
 	type: "Comment";
@@ -22,7 +22,7 @@ export default class Comment extends PlaylistItemBase {
 
 		this.item_props.selectable = false;
 	}
-	
+
 	create_client_object_item_slides(): Promise<ClientCommentSlides> {
 		return Promise.resolve({
 			type: "Comment",
@@ -31,16 +31,16 @@ export default class Comment extends PlaylistItemBase {
 			slides: []
 		});
 	}
-	
+
 	navigate_slide(steps: number): number {
 		// return the steps, since there are no slides to navigate
 		return steps;
 	}
-	
+
 	set_active_slide(): number {
 		return 0;
 	}
-	
+
 	get active_slide(): number {
 		return -1;
 	}
