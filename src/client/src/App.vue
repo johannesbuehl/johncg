@@ -3,7 +3,8 @@
  * MISSING
  * sortableJS
  * error-log
- * header: blue-color if active
+ * add keyboard-control
+ * create css-files for duplicate css in Parts
  */
 import { ref, watch } from "vue";
 import ControlWindow from "./ControlWindow/ControlWindow.vue";

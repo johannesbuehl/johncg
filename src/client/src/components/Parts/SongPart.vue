@@ -40,7 +40,15 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 
 <template>
 	<div class="slide_part">
-		<div class="header" @click="$emit('select_slide', slide?.start_index ?? 0)">
+		<div
+			class="header"
+			:class="{
+				active:
+					(active_item_slide?.slide ?? 0) >= (slide?.start_index ?? 0) &&
+					(active_item_slide?.slide ?? 0) < (slide?.start_index ?? 0) + (slide?.slides ?? 0)
+			}"
+			@click="$emit('select_slide', slide?.start_index ?? 0)"
+		>
 			{{ slide?.part }}
 		</div>
 		<div class="slides_wrapper">
@@ -82,6 +90,10 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 }
 
 .header:hover {
+	background-color: var(--color-item-hover);
+}
+
+.header.active {
 	background-color: var(--color-active);
 }
 

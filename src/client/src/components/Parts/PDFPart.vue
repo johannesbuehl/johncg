@@ -40,7 +40,13 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 
 <template>
 	<div class="slide_part">
-		<div class="header">{{ slide?.title }}</div>
+		<div
+			class="header"
+			:class="{ active: 0 === active_item_slide?.slide }"
+			@click="$emit('select_slide', 0)"
+		>
+			{{ slide?.title }}
+		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
 				v-for="(_media, index) in slide?.slides"
@@ -79,6 +85,10 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 }
 
 .header:hover {
+	background-color: var(--color-item-hover);
+}
+
+.header.active {
 	background-color: var(--color-active);
 }
 

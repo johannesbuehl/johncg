@@ -17,7 +17,13 @@ defineEmits<{
 
 <template>
 	<div class="slide_part">
-		<div class="header" @click="$emit('select_slide', 0)">{{ slide?.title }}</div>
+		<div
+			class="header"
+			:class="{ active: 0 === active_item_slide?.slide }"
+			@click="$emit('select_slide', 0)"
+		>
+			{{ slide?.title }}
+		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
 				:media="slide?.media_b64"
@@ -52,6 +58,10 @@ defineEmits<{
 }
 
 .header:hover {
+	background-color: var(--color-item-hover);
+}
+
+.header.active {
 	background-color: var(--color-active);
 }
 
