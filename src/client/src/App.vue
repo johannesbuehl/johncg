@@ -3,7 +3,6 @@
  * MISSING
  * sortableJS
  * error-log
- * add keyboard-control
  * create css-files for duplicate css in Parts
  */
 import { ref, watch } from "vue";

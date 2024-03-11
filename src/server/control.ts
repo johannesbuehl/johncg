@@ -114,8 +114,8 @@ class Control {
 			const casparcg_config = (await (await connection.infoConfig()).request)?.data;
 
 			let resolution: CasparCGResolution = {
-				height: 1920,
-				width: 1080
+				height: 1080,
+				width: 1920
 			};
 			let framerate: number = 25;
 

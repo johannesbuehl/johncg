@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PlaylistItemsList from "@/components/PlaylistItemsList.vue";
+import PlaylistItemsList, { type DragEndEvent } from "@/components/PlaylistItemsList.vue";
 import SlidesView from "@/components/SlidesView.vue";
 import MenuBar from "@/components/MenuBar.vue";
 
@@ -21,6 +21,35 @@ defineEmits<{
 	select_item: [item: number];
 	select_slide: [slide: number];
 }>();
+
+document.addEventListener("keydown", (event) => {
+	// exit on composing
+	if (event.isComposing || event.keyCode === 229) {
+		return;
+	}
+
+	if (!event.repeat) {
+		switch (event.code) {
+			case "PageUp":
+			case "ArrowLeft":
+				navigate("slide", -1);
+				break;
+			case "PageDown":
+			case "ArrowRight":
+				navigate("slide", 1);
+				break;
+			case "ArrowUp":
+				navigate("item", -1);
+				break;
+			case "ArrowDown":
+				navigate("item", 1);
+				break;
+			default:
+				console.debug(event.code);
+				break;
+		}
+	}
+});
 
 // send navigate-request over teh websocket
 function navigate(type: JGCPRecv.NavigateType, steps: number) {
@@ -44,6 +73,17 @@ function visibility(state: boolean) {
 
 	props.ws.send(JSON.stringify(message));
 }
+
+function dragged(from: number, to: number) {
+	const message: JGCPRecv.MovePlaylistItem = {
+		command: "move_sequence_item",
+		from,
+		to,
+		client_id: props.client_id
+	};
+
+	props.ws.send(JSON.stringify(message));
+}
 </script>
 
 <template>
@@ -62,6 +102,7 @@ function visibility(state: boolean) {
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
 			@selection="$emit('select_item', $event)"
+			@dragged="dragged"
 		/>
 		<SlidesView
 			v-if="slides !== undefined"

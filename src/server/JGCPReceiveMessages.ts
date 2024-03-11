@@ -49,6 +49,12 @@ export interface SelectItemSlide extends Base {
 	slide: number;
 }
 
+export interface MovePlaylistItem extends Base {
+	command: "move_sequence_item";
+	from: number;
+	to: number;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */

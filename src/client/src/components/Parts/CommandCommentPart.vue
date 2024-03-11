@@ -26,8 +26,6 @@ function template_loaded(template_object: HTMLObjectElement) {
 	contentWindows.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
 	contentWindows.play();
 }
-
-console.log(props.slide?.template.template);
 </script>
 
 <template>

@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import draggable from "vuedraggable";
+
 import PlaylistItem from "./PlaylistItem.vue";
 
 import * as JGCPSend from "../../../server/JGCPSendMessages";
 import type { ActiveItemSlide } from "../../../server/Playlist";
+
+export interface DragEndEvent {
+	oldIndex: number;
+	newIndex: number;
+}
 
 const props = defineProps<{
 	playlist?: JGCPSend.Playlist;
@@ -13,27 +20,43 @@ const props = defineProps<{
 
 const emit = defineEmits<{
 	selection: [item: number];
+	dragged: [from: number, to: number];
 }>();
 
 emit("selection", props.playlist?.metadata.item ?? 0);
+
+function onDragEnd(evt: DragEndEvent) {
+	// send only, if the index has changed
+	if (evt.oldIndex !== evt.newIndex) {
+		emit("dragged", evt.oldIndex, evt.newIndex);
+	}
+}
 </script>
 
 <template>
 	<div class="wrapper">
 		<div class="header">Playlist</div>
-		<div>
-			<PlaylistItem
-				v-for="(playlist_item, index) in playlist?.playlist_items"
-				:key="index"
-				:caption="playlist_item.Caption"
-				:color="playlist_item.Color"
-				:selectable="playlist_item.selectable"
-				:selected="selected === index"
-				:active="active_item_slide?.item === index"
-				:scroll="scroll"
-				@click="$emit('selection', index)"
-			/>
-		</div>
+		<draggable
+			:list="playlist?.playlist_items"
+			item-key="item"
+			animation="150"
+			easing="cubic-bezier(1, 0, 0, 1)"
+			ghostClass="dragged_ghost"
+			fallbackClass="dragged"
+			@end="onDragEnd"
+		>
+			<template #item="{ element, index }">
+				<PlaylistItem
+					:caption="element.Caption"
+					:color="element.Color"
+					:selectable="element.selectable"
+					:selected="selected === index"
+					:active="active_item_slide?.item === index"
+					:scroll="scroll"
+					@click="$emit('selection', index)"
+				/>
+			</template>
+		</draggable>
 	</div>
 </template>
 
@@ -62,5 +85,13 @@ emit("selection", props.playlist?.metadata.item ?? 0);
 
 	padding: 0.5rem;
 	padding-left: 0.75rem;
+}
+
+.dragged_ghost {
+	opacity: 0;
+}
+
+.dragged {
+	opacity: 1 !important;
 }
 </style>
