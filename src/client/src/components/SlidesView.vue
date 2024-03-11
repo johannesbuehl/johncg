@@ -7,6 +7,7 @@ import * as JGCPSend from "../../../server/JGCPSendMessages";
 import type { ActiveItemSlide } from "../../../server/Playlist";
 import CommandCommentPart from "./Parts/CommandCommentPart.vue";
 import PDFPart from "./Parts/PDFPart.vue";
+import { watch } from "vue";
 
 const props = defineProps<{
 	slides?: JGCPSend.ItemSlides;

@@ -58,7 +58,7 @@ enum TransitionType {
 
 export default class Playlist {
 	// store the individual items of the playlist
-	private playlist_items: PlaylistItem[] = [];
+	playlist_items: PlaylistItem[] = [];
 
 	private active_item_number: number = 0;
 
@@ -170,7 +170,6 @@ export default class Playlist {
 				Caption: "",
 				Color: "",
 				slide_count: 0,
-				item: this.playlist_items.length,
 				selectable: true
 				/* eslint-enable @typescript-eslint/naming-convention */
 			};
@@ -339,6 +338,32 @@ export default class Playlist {
 		}
 
 		return item_steps !== 0;
+	}
+
+	move_playlist_item(from: number, to: number) {
+		from = this.validate_item_number(from);
+		to = this.validate_item_number(to);
+
+		if (this.active_item === from) {
+			this.active_item_number = to;
+
+			// if one of the move-positions lays before and the other after the active-item, adjust the active-item-number
+		} else if (this.active_item < from !== this.active_item < to) {
+			// if the moved item is the active one, set it accordingly
+			if (this.active_item < from) {
+				// if the item gets moved from before the active-item to after, increase the active-item-number
+				this.active_item_number++;
+			} else {
+				// else decrease it
+				this.active_item_number--;
+			}
+		}
+
+		const new_item_order: number[] = Array.from(Array(this.playlist_items.length).keys());
+		new_item_order.splice(from, 0, new_item_order.splice(to, 1)[0]);
+		this.playlist_items.splice(to, 0, this.playlist_items.splice(from, 1)[0]);
+
+		return new_item_order;
 	}
 
 	private validate_item_number(item: number): number {
@@ -672,7 +697,7 @@ function parse_item_value_string(
 	return return_props;
 }
 
-function convert_color_to_hex(color: string): string {
+export function convert_color_to_hex(color: string): string {
 	const colours: Record<string, string> = {
 		claliceblue: "#f0f8ff",
 		clantiquewhite: "#faebd7",
@@ -819,5 +844,3 @@ function convert_color_to_hex(color: string): string {
 
 	return colours[color.toLowerCase()] ?? "";
 }
-
-export { convert_color_to_hex };

@@ -89,7 +89,6 @@ export default class PDF extends PlaylistItemBase {
 		return Promise.resolve({
 			title: this.props.FileName,
 			type: "PDF",
-			item: this.props.item,
 			slides: await Promise.all(
 				this.props.media.map(async (m) => await this.get_media_b64(true, m))
 			)

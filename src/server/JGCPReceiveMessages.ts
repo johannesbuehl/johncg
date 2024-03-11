@@ -50,7 +50,7 @@ export interface SelectItemSlide extends Base {
 }
 
 export interface MovePlaylistItem extends Base {
-	command: "move_sequence_item";
+	command: "move_playlist_item";
 	from: number;
 	to: number;
 }

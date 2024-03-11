@@ -70,7 +70,7 @@ export default class Song extends PlaylistItemBase {
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.debug(`song '${props.FileName}' does not exist`);
+				console.error(`song '${props.FileName}' does not exist`);
 
 				this.item_props.selectable = false;
 
@@ -209,7 +209,6 @@ export default class Song extends PlaylistItemBase {
 		const return_item: ClientSongSlides = {
 			type: "Song",
 			title: this.item_props.Caption,
-			item: this.props.item,
 			slides: [
 				{
 					start_index: 0,

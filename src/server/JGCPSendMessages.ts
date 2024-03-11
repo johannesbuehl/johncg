@@ -27,6 +27,7 @@ export interface Response {
  */
 export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 	command: "playlist_items";
+	new_item_order: number[];
 }
 
 /**
@@ -39,7 +40,8 @@ export interface State extends Base {
 }
 
 interface ItemSlidesBase extends Base {
-	client_id?: string;
+	client_id: string;
+	item: number;
 	command: "item_slides";
 	resolution: PlaylistClass.CasparCGResolution;
 }

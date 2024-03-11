@@ -40,7 +40,6 @@ export default class Image extends PlaylistItemBase {
 		return {
 			title: this.props.FileName,
 			type: "Image",
-			item: this.props.item,
 			slides: [],
 			media_b64: await this.get_media_b64(true)
 		};

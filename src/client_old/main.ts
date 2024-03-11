@@ -81,7 +81,7 @@ function display_items(data: JGCPSend.Playlist) {
 	data.playlist_items.forEach((item) => {
 		const div_playlist_item_container = document.createElement("div");
 		div_playlist_item_container.classList.add("playlist_item_container");
-		div_playlist_item_container.dataset.item_number = item.item.toString();
+		// div_playlist_item_container.dataset.item_number = item.item.toString();
 
 		// if the item is selectable, give it the class and add the onclick-event
 		if (item.selectable) {

@@ -139,7 +139,6 @@ export default class Countdown extends PlaylistItemBase {
 		return {
 			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
 			type: this.props.type,
-			item: this.props.item,
 			slides: [
 				{
 					mode: this.template.data.mode,

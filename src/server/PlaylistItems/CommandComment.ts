@@ -40,7 +40,6 @@ export default class CommandComment extends PlaylistItemBase {
 		return Promise.resolve({
 			type: "CommandComment",
 			title,
-			item: this.props.item,
 			slides: [],
 			template
 		});

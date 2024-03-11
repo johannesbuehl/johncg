@@ -44,9 +44,6 @@ document.addEventListener("keydown", (event) => {
 			case "ArrowDown":
 				navigate("item", 1);
 				break;
-			default:
-				console.debug(event.code);
-				break;
 		}
 	}
 });
@@ -76,7 +73,7 @@ function visibility(state: boolean) {
 
 function dragged(from: number, to: number) {
 	const message: JGCPRecv.MovePlaylistItem = {
-		command: "move_sequence_item",
+		command: "move_playlist_item",
 		from,
 		to,
 		client_id: props.client_id

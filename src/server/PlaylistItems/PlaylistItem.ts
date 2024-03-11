@@ -56,7 +56,6 @@ export interface ItemPropsBase {
 
 	slide_count: number;
 	Data?: string;
-	item: number;
 	selectable: boolean;
 	background_color?: string;
 	background_image?: string;
@@ -76,7 +75,6 @@ export type ItemProps =
 export interface ClientItemSlidesBase {
 	type: string;
 	title: string;
-	item: number;
 	slides: Array<unknown>;
 	media_b64?: string;
 	template?: {

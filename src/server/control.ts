@@ -1,7 +1,6 @@
-import type WebSocket from "ws";
-import type { RawData } from "ws";
-import { CasparCG } from "casparcg-connection";
-import type { ClipInfo } from "casparcg-connection";
+import WebSocket, { RawData } from "ws";
+
+import { CasparCG, ClipInfo, InfoConfig } from "casparcg-connection";
 import { XMLParser } from "fast-xml-parser";
 
 import Playlist from "./Playlist.ts";
@@ -78,7 +77,9 @@ class Control {
 		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) =>
 			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
 		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) =>
-			this.set_visibility(msg.visibility, msg.client_id, ws)
+			this.set_visibility(msg.visibility, msg.client_id, ws),
+		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
+			this.move_playlist_item(msg.from, msg.to, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -110,8 +111,14 @@ class Control {
 				autoConnect: true
 			});
 
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			const casparcg_config = (await (await connection.infoConfig()).request)?.data;
+			let casparcg_config: InfoConfig;
+			try {
+				casparcg_config = (await (await connection.infoConfig()).request).data;
+			} catch (e) {
+				if (e instanceof TypeError) {
+					return;
+				}
+			}
 
 			let resolution: CasparCGResolution = {
 				height: 1080,
@@ -192,6 +199,7 @@ class Control {
 		// send the playlist to all clients
 		const response_playlist_items: JGCPSend.Playlist = {
 			command: "playlist_items",
+			new_item_order: Array.from(Array(this.playlist.playlist_items.length).keys()),
 			...this.playlist.create_client_object_playlist()
 		};
 
@@ -201,6 +209,25 @@ class Control {
 		this.send_all_clients(this.playlist.state);
 
 		ws_send_response("playlist has been opened", true, ws);
+	}
+
+	private send_playlist(
+		new_item_order: number[] = Array.from(Array(this.playlist.playlist_items.length).keys()),
+		client_id?: string,
+		ws?: WebSocket
+	) {
+		const response_playlist_items: JGCPSend.Playlist = {
+			command: "playlist_items",
+			new_item_order,
+			...this.playlist.create_client_object_playlist(),
+			client_id
+		};
+
+		if (ws) {
+			ws.send(JSON.stringify(response_playlist_items));
+		} else {
+			this.send_all_clients(response_playlist_items);
+		}
 	}
 
 	/**
@@ -216,6 +243,7 @@ class Control {
 				if (this.playlist?.casparcg_connections[0].resolution !== undefined) {
 					const message: JGCPSend.ItemSlides = {
 						command: "item_slides",
+						item,
 						client_id,
 						resolution: this.playlist?.casparcg_connections[0].resolution,
 						...(await this.playlist?.create_client_object_item_slides(item))
@@ -344,6 +372,27 @@ class Control {
 		}
 	}
 
+	private move_playlist_item(from: number, to: number, ws?: WebSocket) {
+		if (typeof from !== "number") {
+			ws_send_response("'from' has to be of type number", false, ws);
+			return;
+		}
+
+		if (typeof to != "number") {
+			ws_send_response("'to' has to be of type number", false, ws);
+			return;
+		}
+
+		const new_item_order: number[] = this.playlist?.move_playlist_item(from, to);
+
+		this.send_playlist(new_item_order);
+
+		// // send the current state to all clients
+		// this.send_all_clients(this.playlist.state);
+
+		ws_send_response("playlist-item has been moved", true, ws);
+	}
+
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
 		let visibility_feedback = false;
 
@@ -381,6 +430,7 @@ class Control {
 			// send the playlist
 			const respone_playlist: JGCPSend.Playlist = {
 				command: "playlist_items",
+				new_item_order: Array.from(Array(this.playlist.playlist_items.length).keys()),
 				...this.playlist.create_client_object_playlist()
 			};
 			ws.send(JSON.stringify(respone_playlist));

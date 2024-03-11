@@ -43,9 +43,10 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 		<div
 			class="header"
 			:class="{
-				active:
-					(active_item_slide?.slide ?? 0) >= (slide?.start_index ?? 0) &&
-					(active_item_slide?.slide ?? 0) < (slide?.start_index ?? 0) + (slide?.slides ?? 0)
+				active: active_item_slide
+					? (active_item_slide?.slide ?? 0) >= (slide?.start_index ?? 0) &&
+						(active_item_slide?.slide ?? 0) < (slide?.start_index ?? 0) + (slide?.slides ?? 0)
+					: false
 			}"
 			@click="$emit('select_slide', slide?.start_index ?? 0)"
 		>
