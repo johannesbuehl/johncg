@@ -42,7 +42,7 @@ function template_loaded(template_object: HTMLObjectElement, index: number) {
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: 0 === active_item_slide?.slide }"
+			:class="{ active: active_item_slide?.item }"
 			@click="$emit('select_slide', 0)"
 		>
 			{{ slide?.title }}

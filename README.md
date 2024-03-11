@@ -24,11 +24,9 @@ Generate lyric-graphics and play them out through CasparCG.
 - countdown: save in server wether it is finished
 - client-messages: create message-log, group same
 - build-script in node / integrate with license-generator
-- command-comment: define commands / names which get loaded straigth from the start and can be shown anytime
+- command-comment: define commands / names which get loaded straight from the start and can be shown anytime
 - fix "Buffer() is deprecated"
-- catch songfile not found
 - catch casparcg not running
 - create playlist-summarys or lyrics-sheets through pandoc
-- serve everything for the client, including html templates
 - load files from disc always at item selection to stay up to date
 - add functions to Config.ts (get_song_path, get_template_path, ...)

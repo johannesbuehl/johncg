@@ -34,7 +34,7 @@ export default class PDF extends PlaylistItemBase {
 		this.item_props.media = [];
 
 		void (async () => {
-			const pdfjs = await import("pdfjs-dist");
+			const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
 			const pth = get_song_path(this.props.FileName).replaceAll("/", "\\");
 

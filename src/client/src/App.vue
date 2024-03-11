@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /**
  * MISSING
- * sortableJS
  * error-log
  * create css-files for duplicate css in Parts
  */
