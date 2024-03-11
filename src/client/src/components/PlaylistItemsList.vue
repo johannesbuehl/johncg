@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import draggable from "vuedraggable";
+	import draggable from "vuedraggable";
 
-import PlaylistItem from "./PlaylistItem.vue";
+	import PlaylistItem from "./PlaylistItem.vue";
 
-import * as JGCPSend from "../../../server/JGCPSendMessages";
-import type { ActiveItemSlide } from "../../../server/Playlist";
+	import * as JGCPSend from "../../../server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "../../../server/Playlist";
 
-export interface DragEndEvent {
-	oldIndex: number;
-	newIndex: number;
-}
-
-const props = defineProps<{
-	playlist?: JGCPSend.Playlist;
-	selected?: number;
-	active_item_slide?: ActiveItemSlide;
-	scroll?: boolean;
-}>();
-
-const emit = defineEmits<{
-	selection: [item: number];
-	dragged: [from: number, to: number];
-}>();
-
-emit("selection", props.playlist?.metadata.item ?? 0);
-
-function onDragEnd(evt: DragEndEvent) {
-	// send only, if the index has changed
-	if (evt.oldIndex !== evt.newIndex) {
-		emit("dragged", evt.oldIndex, evt.newIndex);
+	export interface DragEndEvent {
+		oldIndex: number;
+		newIndex: number;
 	}
-}
+
+	const props = defineProps<{
+		playlist?: JGCPSend.Playlist;
+		selected?: number;
+		active_item_slide?: ActiveItemSlide;
+		scroll?: boolean;
+	}>();
+
+	const emit = defineEmits<{
+		selection: [item: number];
+		dragged: [from: number, to: number];
+	}>();
+
+	emit("selection", props.playlist?.metadata.item ?? 0);
+
+	function onDragEnd(evt: DragEndEvent) {
+		// send only, if the index has changed
+		if (evt.oldIndex !== evt.newIndex) {
+			emit("dragged", evt.oldIndex, evt.newIndex);
+		}
+	}
 </script>
 
 <template>
@@ -61,37 +61,37 @@ function onDragEnd(evt: DragEndEvent) {
 </template>
 
 <style scoped>
-.wrapper {
-	width: 24rem;
+	.wrapper {
+		width: 24rem;
 
-	border-radius: 0.25rem;
+		border-radius: 0.25rem;
 
-	overflow: auto;
+		overflow: auto;
 
-	background-color: var(--color-container);
-}
+		background-color: var(--color-container);
+	}
 
-.header {
-	text-align: center;
+	.header {
+		text-align: center;
 
-	background-color: var(--color-item);
+		background-color: var(--color-item);
 
-	font-weight: bold;
+		font-weight: bold;
 
-	border-radius: inherit;
+		border-radius: inherit;
 
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 
-	padding: 0.5rem;
-	padding-left: 0.75rem;
-}
+		padding: 0.5rem;
+		padding-left: 0.75rem;
+	}
 
-.dragged_ghost {
-	opacity: 0;
-}
+	.dragged_ghost {
+		opacity: 0;
+	}
 
-.dragged {
-	opacity: 1 !important;
-}
+	.dragged {
+		opacity: 1 !important;
+	}
 </style>

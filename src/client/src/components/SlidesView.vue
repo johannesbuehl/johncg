@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import SongPart from "./Parts/SongPart.vue";
-import CountdownPart from "./Parts/CountdownPart.vue";
-import ImagePart from "./Parts/ImagePart.vue";
+	import SongPart from "./Parts/SongPart.vue";
+	import CountdownPart from "./Parts/CountdownPart.vue";
+	import ImagePart from "./Parts/ImagePart.vue";
 
-import * as JGCPSend from "../../../server/JGCPSendMessages";
-import type { ActiveItemSlide } from "../../../server/Playlist";
-import CommandCommentPart from "./Parts/CommandCommentPart.vue";
-import PDFPart from "./Parts/PDFPart.vue";
-import { watch } from "vue";
+	import * as JGCPSend from "../../../server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "../../../server/Playlist";
+	import CommandCommentPart from "./Parts/CommandCommentPart.vue";
+	import PDFPart from "./Parts/PDFPart.vue";
+	import { watch } from "vue";
 
-const props = defineProps<{
-	slides?: JGCPSend.ItemSlides;
-	active_item_slide?: ActiveItemSlide;
-	scroll?: boolean;
-}>();
+	const props = defineProps<{
+		slides?: JGCPSend.ItemSlides;
+		active_item_slide?: ActiveItemSlide;
+		scroll?: boolean;
+	}>();
 
-defineEmits<{
-	select_slide: [slide: number];
-}>();
+	defineEmits<{
+		select_slide: [slide: number];
+	}>();
 
-const aspect_ratio: string = (
-	(props.slides?.resolution.width ?? 1920) / (props.slides?.resolution.height ?? 1080)
-).toString();
+	const aspect_ratio: string = (
+		(props.slides?.resolution.width ?? 1920) / (props.slides?.resolution.height ?? 1080)
+	).toString();
 </script>
 
 <template>
@@ -73,19 +73,19 @@ const aspect_ratio: string = (
 </template>
 
 <style scoped>
-.slides_view_container {
-	background-color: var(--color-container);
+	.slides_view_container {
+		background-color: var(--color-container);
 
-	border-radius: 0.25rem;
+		border-radius: 0.25rem;
 
-	overflow: auto;
+		overflow: auto;
 
-	flex: 1;
+		flex: 1;
 
-	/* display: flex;
+		/* display: flex;
 	flex-wrap: wrap;
 	align-content: flex-start;
 	gap: 0.5rem; */
-}
+	}
 </style>
 ./Parts/SongPart.vue./Parts/ImagePart.vue./Parts/CountdownPart.vue

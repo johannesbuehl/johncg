@@ -1,32 +1,32 @@
 <script setup lang="ts">
-import ItemSlide from "./ItemSlide.vue";
+	import ItemSlide from "./ItemSlide.vue";
 
-import type { ActiveItemSlide } from "../../../../server/Playlist";
-import type { CountdownSlides } from "../../../../server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "../../../../server/Playlist";
+	import type { CountdownSlides } from "../../../../server/JGCPSendMessages";
 
-const props = defineProps<{
-	slide?: CountdownSlides;
-	aspect_ratio: string;
-	active_item_slide?: ActiveItemSlide;
-}>();
+	const props = defineProps<{
+		slide?: CountdownSlides;
+		aspect_ratio: string;
+		active_item_slide?: ActiveItemSlide;
+	}>();
 
-defineEmits<{
-	select_slide: [slide: number];
-}>();
+	defineEmits<{
+		select_slide: [slide: number];
+	}>();
 
-interface CasparCGTemplate extends Window {
-	update: (data_string: string) => void;
-	play: () => void;
-	stop: () => void;
-	next: () => void;
-}
+	interface CasparCGTemplate extends Window {
+		update: (data_string: string) => void;
+		play: () => void;
+		stop: () => void;
+		next: () => void;
+	}
 
-function template_loaded(template_object: HTMLObjectElement) {
-	const contentWindows: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
+	function template_loaded(template_object: HTMLObjectElement) {
+		const contentWindows: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
 
-	contentWindows.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
-	contentWindows.play();
-}
+		contentWindows.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
+		contentWindows.play();
+	}
 </script>
 
 <template>
@@ -52,42 +52,42 @@ function template_loaded(template_object: HTMLObjectElement) {
 </template>
 
 <style scoped>
-.slide_part {
-	border-radius: inherit;
-	overflow: visible;
+	.slide_part {
+		border-radius: inherit;
+		overflow: visible;
 
-	display: inline-block;
-}
+		display: inline-block;
+	}
 
-.header {
-	background-color: var(--color-item);
-	font-weight: bold;
+	.header {
+		background-color: var(--color-item);
+		font-weight: bold;
 
-	border-radius: inherit;
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
+		border-radius: inherit;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 
-	padding: 0.5rem;
-	padding-left: 0.75rem;
+		padding: 0.5rem;
+		padding-left: 0.75rem;
 
-	cursor: pointer;
-}
+		cursor: pointer;
+	}
 
-.header:hover {
-	background-color: var(--color-item-hover);
-}
+	.header:hover {
+		background-color: var(--color-item-hover);
+	}
 
-.header.active {
-	background-color: var(--color-active);
-}
+	.header.active {
+		background-color: var(--color-active);
+	}
 
-.slides_wrapper {
-	display: flex;
-	flex-wrap: wrap;
+	.slides_wrapper {
+		display: flex;
+		flex-wrap: wrap;
 
-	align-items: center;
+		align-items: center;
 
-	padding: 0.5rem;
-	gap: 0.25rem;
-}
+		padding: 0.5rem;
+		gap: 0.25rem;
+	}
 </style>

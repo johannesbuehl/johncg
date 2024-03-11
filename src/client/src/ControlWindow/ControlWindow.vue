@@ -1,86 +1,86 @@
 <script setup lang="ts">
-import PlaylistItemsList, { type DragEndEvent } from "@/components/PlaylistItemsList.vue";
-import SlidesView from "@/components/SlidesView.vue";
-import MenuBar from "@/components/MenuBar.vue";
+	import PlaylistItemsList, { type DragEndEvent } from "@/components/PlaylistItemsList.vue";
+	import SlidesView from "@/components/SlidesView.vue";
+	import MenuBar from "@/components/MenuBar.vue";
 
-import * as JGCPSend from "../../../server/JGCPSendMessages";
-import * as JGCPRecv from "../../../server/JGCPReceiveMessages";
-import type { ActiveItemSlide } from "../../../server/Playlist";
+	import * as JGCPSend from "../../../server/JGCPSendMessages";
+	import * as JGCPRecv from "../../../server/JGCPReceiveMessages";
+	import type { ActiveItemSlide } from "../../../server/Playlist";
 
-const props = defineProps<{
-	ws: WebSocket;
-	client_id: string;
-	server_state: JGCPSend.State;
-	playlist?: JGCPSend.Playlist;
-	slides?: JGCPSend.ItemSlides;
-	active_item_slide?: ActiveItemSlide;
-	selected: number;
-}>();
+	const props = defineProps<{
+		ws: WebSocket;
+		client_id: string;
+		server_state: JGCPSend.State;
+		playlist?: JGCPSend.Playlist;
+		slides?: JGCPSend.ItemSlides;
+		active_item_slide?: ActiveItemSlide;
+		selected: number;
+	}>();
 
-defineEmits<{
-	select_item: [item: number];
-	select_slide: [slide: number];
-}>();
+	defineEmits<{
+		select_item: [item: number];
+		select_slide: [slide: number];
+	}>();
 
-document.addEventListener("keydown", (event) => {
-	// exit on composing
-	if (event.isComposing || event.keyCode === 229) {
-		return;
-	}
-
-	if (!event.repeat) {
-		switch (event.code) {
-			case "PageUp":
-			case "ArrowLeft":
-				navigate("slide", -1);
-				break;
-			case "PageDown":
-			case "ArrowRight":
-				navigate("slide", 1);
-				break;
-			case "ArrowUp":
-				navigate("item", -1);
-				break;
-			case "ArrowDown":
-				navigate("item", 1);
-				break;
+	document.addEventListener("keydown", (event) => {
+		// exit on composing
+		if (event.isComposing || event.keyCode === 229) {
+			return;
 		}
+
+		if (!event.repeat) {
+			switch (event.code) {
+				case "PageUp":
+				case "ArrowLeft":
+					navigate("slide", -1);
+					break;
+				case "PageDown":
+				case "ArrowRight":
+					navigate("slide", 1);
+					break;
+				case "ArrowUp":
+					navigate("item", -1);
+					break;
+				case "ArrowDown":
+					navigate("item", 1);
+					break;
+			}
+		}
+	});
+
+	// send navigate-request over teh websocket
+	function navigate(type: JGCPRecv.NavigateType, steps: number) {
+		const message: JGCPRecv.Navigate = {
+			command: "navigate",
+			type,
+			steps,
+			client_id: props.client_id
+		};
+
+		props.ws.send(JSON.stringify(message));
 	}
-});
 
-// send navigate-request over teh websocket
-function navigate(type: JGCPRecv.NavigateType, steps: number) {
-	const message: JGCPRecv.Navigate = {
-		command: "navigate",
-		type,
-		steps,
-		client_id: props.client_id
-	};
+	// send visibility changes over the websocket
+	function visibility(state: boolean) {
+		const message: JGCPRecv.SetVisibility = {
+			command: "set_visibility",
+			visibility: state,
+			client_id: props.client_id
+		};
 
-	props.ws.send(JSON.stringify(message));
-}
+		props.ws.send(JSON.stringify(message));
+	}
 
-// send visibility changes over the websocket
-function visibility(state: boolean) {
-	const message: JGCPRecv.SetVisibility = {
-		command: "set_visibility",
-		visibility: state,
-		client_id: props.client_id
-	};
+	function dragged(from: number, to: number) {
+		const message: JGCPRecv.MovePlaylistItem = {
+			command: "move_playlist_item",
+			from,
+			to,
+			client_id: props.client_id
+		};
 
-	props.ws.send(JSON.stringify(message));
-}
-
-function dragged(from: number, to: number) {
-	const message: JGCPRecv.MovePlaylistItem = {
-		command: "move_playlist_item",
-		from,
-		to,
-		client_id: props.client_id
-	};
-
-	props.ws.send(JSON.stringify(message));
-}
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
@@ -112,10 +112,10 @@ function dragged(from: number, to: number) {
 </template>
 
 <style scoped>
-#MenuBar_wrapper {
-	display: flex;
-	flex: 1;
+	#MenuBar_wrapper {
+		display: flex;
+		flex: 1;
 
-	column-gap: 0.25rem;
-}
+		column-gap: 0.25rem;
+	}
 </style>

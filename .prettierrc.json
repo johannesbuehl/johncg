@@ -7,5 +7,6 @@
   "trailingComma": "none",
   "bracketSpacing": true,
   "quoteProps": "as-needed",
-  "vueIndentScriptAndStyle": true
+  "vueIndentScriptAndStyle": true,
+  "endOfLine": "auto"
 }

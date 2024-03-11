@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-defineProps<{
-	icon: string;
-	active?: boolean;
-}>();
+	defineProps<{
+		icon: string;
+		active?: boolean;
+	}>();
 </script>
 
 <template>
@@ -14,38 +14,38 @@ defineProps<{
 </template>
 
 <style scoped>
-div.button {
-	background-color: rgb(60, 64, 75);
+	div.button {
+		background-color: rgb(60, 64, 75);
 
-	border-radius: 0.25rem;
+		border-radius: 0.25rem;
 
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex-direction: column;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
 
-	padding: 0.5rem;
+		padding: 0.5rem;
 
-	aspect-ratio: 1;
-	height: 2em;
+		aspect-ratio: 1;
+		height: 2em;
 
-	margin: 0.25rem;
-}
+		margin: 0.25rem;
+	}
 
-div.button:hover {
-	background-color: rgb(79, 83, 94);
-}
+	div.button:hover {
+		background-color: rgb(79, 83, 94);
+	}
 
-div.button.active {
-	background-color: rgb(40, 76, 184);
-}
+	div.button.active {
+		background-color: rgb(40, 76, 184);
+	}
 
-div.button.active:hover {
-	background-color: rgb(54, 92, 192);
-}
+	div.button.active:hover {
+		background-color: rgb(54, 92, 192);
+	}
 
-div.button,
-div.button > * {
-	cursor: pointer;
-}
+	div.button,
+	div.button > * {
+		cursor: pointer;
+	}
 </style>

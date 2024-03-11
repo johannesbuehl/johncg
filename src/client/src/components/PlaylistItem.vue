@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+	import { ref, watch, onMounted } from "vue";
 
-const props = defineProps<{
-	caption: string;
-	color: string;
-	selectable?: boolean;
-	selected?: boolean;
-	active?: boolean;
-	scroll?: boolean;
-}>();
+	const props = defineProps<{
+		caption: string;
+		color: string;
+		selectable?: boolean;
+		selected?: boolean;
+		active?: boolean;
+		scroll?: boolean;
+	}>();
 
-const item = ref<HTMLDivElement>();
+	const item = ref<HTMLDivElement>();
 
-watch(
-	() => [props.selected, props.scroll],
-	() => {
+	watch(
+		() => [props.selected, props.scroll],
+		() => {
+			scroll_into_view();
+		}
+	);
+
+	onMounted(() => {
 		scroll_into_view();
-	}
-);
+	});
 
-onMounted(() => {
-	scroll_into_view();
-});
-
-function scroll_into_view() {
-	if (props.selected && props.scroll) {
-		item.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+	function scroll_into_view() {
+		if (props.selected && props.scroll) {
+			item.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+		}
 	}
-}
 </script>
 
 <template>
@@ -46,67 +46,67 @@ function scroll_into_view() {
 </template>
 
 <style scoped>
-.playlist_item_wrapper {
-	margin: 0.0625rem;
-	margin-inline: 0.125rem;
+	.playlist_item_wrapper {
+		margin: 0.0625rem;
+		margin-inline: 0.125rem;
 
-	border: 0.125rem solid transparent;
+		border: 0.125rem solid transparent;
 
-	border-radius: 0.25rem;
+		border-radius: 0.25rem;
 
-	display: flex;
-	align-items: stretch;
-}
+		display: flex;
+		align-items: stretch;
+	}
 
-.playlist_item_wrapper.selectable {
-	cursor: pointer;
-}
+	.playlist_item_wrapper.selectable {
+		cursor: pointer;
+	}
 
-.playlist_item_wrapper:not(.selectable) {
-	color: var(--color-text-disabled);
-	font-style: italic;
-}
+	.playlist_item_wrapper:not(.selectable) {
+		color: var(--color-text-disabled);
+		font-style: italic;
+	}
 
-.playlist_item_wrapper:first-of-type {
-	margin-top: 0.125rem;
-}
+	.playlist_item_wrapper:first-of-type {
+		margin-top: 0.125rem;
+	}
 
-.item_color_indicator {
-	height: auto;
-	width: 1.5rem;
-}
+	.item_color_indicator {
+		height: auto;
+		width: 1.5rem;
+	}
 
-.playlist_item {
-	background-color: var(--color-item);
+	.playlist_item {
+		background-color: var(--color-item);
 
-	cursor: inherit;
+		cursor: inherit;
 
-	padding: 0.375rem;
-	padding-left: 0.5rem;
+		padding: 0.375rem;
+		padding-left: 0.5rem;
 
-	flex: 1;
+		flex: 1;
 
-	text-wrap: nowrap;
-}
+		text-wrap: nowrap;
+	}
 
-.playlist_item_wrapper.selectable:hover > .playlist_item {
-	background-color: var(--color-item-hover);
-}
+	.playlist_item_wrapper.selectable:hover > .playlist_item {
+		background-color: var(--color-item-hover);
+	}
 
-.playlist_item_wrapper.active > .playlist_item {
-	background-color: var(--color-active);
-}
+	.playlist_item_wrapper.active > .playlist_item {
+		background-color: var(--color-active);
+	}
 
-.playlist_item_wrapper.selectable.active:hover > .playlist_item {
-	background-color: var(--color-active-hover);
-}
+	.playlist_item_wrapper.selectable.active:hover > .playlist_item {
+		background-color: var(--color-active-hover);
+	}
 
-.playlist_item_wrapper.selected {
-	border-color: white;
-}
+	.playlist_item_wrapper.selected {
+		border-color: white;
+	}
 
-.item_color_indicator {
-	height: auto;
-	width: 1.5rem;
-}
+	.item_color_indicator {
+		height: auto;
+		width: 1.5rem;
+	}
 </style>
