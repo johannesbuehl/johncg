@@ -5,6 +5,7 @@ import type { ClientCountdownSlides } from "./PlaylistItems/Countdown.ts";
 import type { ClientImageSlides } from "./PlaylistItems/Image.ts";
 import type { ClientPDFSlides } from "./PlaylistItems/PDF.ts";
 import type { ClientSongSlides } from "./PlaylistItems/Song.ts";
+import { SongResult } from "./search_part.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -65,7 +66,17 @@ export interface Clear extends Base {
 	command: "clear";
 }
 
+interface SearchResultsBase extends Base {
+	command: "search_results";
+}
+export interface SongSearchResults extends SearchResultsBase {
+	type: "song";
+	result: SongResult[];
+}
+
+export type SearchResults = SongSearchResults;
+
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = Playlist | State | ItemSlides;
+export type Message = Playlist | State | ItemSlides | Clear | SearchResults;

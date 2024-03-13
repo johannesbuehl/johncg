@@ -1,9 +1,9 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "../../../../server/Playlist";
-	import type { SongPartClient } from "../../../../server/PlaylistItems/Song";
-	import type { Template } from "../../../../server/PlaylistItems/PlaylistItem";
+	import type { ActiveItemSlide } from "@server/Playlist";
+	import type { SongPartClient } from "@server/PlaylistItems/Song";
+	import type { Template } from "@server/PlaylistItems/PlaylistItem";
 
 	const props = defineProps<{
 		slide?: SongPartClient;
@@ -78,7 +78,6 @@
 
 	.header {
 		background-color: var(--color-item);
-		font-weight: bold;
 
 		border-radius: inherit;
 		border-bottom-left-radius: 0;

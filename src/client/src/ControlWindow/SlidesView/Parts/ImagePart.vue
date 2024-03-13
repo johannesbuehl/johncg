@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "../../../../server/Playlist";
-	import type { ImageSlides } from "../../../../server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
+	import type { ImageSlides } from "@server/JGCPSendMessages";
 
 	defineProps<{
 		slide?: ImageSlides;
@@ -45,7 +45,6 @@
 
 	.header {
 		background-color: var(--color-item);
-		font-weight: bold;
 
 		border-radius: inherit;
 		border-bottom-left-radius: 0;

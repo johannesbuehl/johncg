@@ -3,20 +3,24 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	library.add(
+		fas.faFile,
 		fas.faFolderOpen,
+		fas.faFloppyDisk,
 		fas.faBackwardStep,
 		fas.faForwardStep,
 		fas.faAngleLeft,
 		fas.faAngleRight,
 		fas.faEyeSlash,
 		fas.faEye,
-		fas.faTriangleExclamation
+		fas.faList,
+		fas.faPlus
 	);
 
+	import { ControlWindowState } from "../ControlWindowState";
 	import MenuButton from "./MenuButton.vue";
 	import MenuDivider from "./MenuDivider.vue";
 
-	import * as JGCPRecv from "../../../server/JGCPReceiveMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -29,6 +33,11 @@
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
 		set_visibility: [state: boolean];
 	}>();
+
+	const control_window_state = defineModel<ControlWindowState>({
+		required: false,
+		default: ControlWindowState.Playlist
+	});
 
 	// reference for the file-input
 	const open_playlist_input = ref<HTMLInputElement>();
@@ -57,7 +66,9 @@
 
 <template>
 	<div class="menubar">
+		<MenuButton icon="file" />
 		<MenuButton icon="folder-open" @click="open_playlist_input?.click()" />
+		<MenuButton icon="floppy-disk" />
 		<input
 			type="file"
 			ref="open_playlist_input"
@@ -65,6 +76,17 @@
 			@click="open_playlist_input ? (open_playlist_input.value = '') : null"
 			@change="open_playlist_file"
 			style="display: none"
+		/>
+		<MenuDivider />
+		<MenuButton
+			icon="fa-plus"
+			@click="control_window_state = ControlWindowState.Add"
+			:active="control_window_state === ControlWindowState.Add"
+		/>
+		<MenuButton
+			icon="fa-list"
+			@click="control_window_state = ControlWindowState.Playlist"
+			:active="control_window_state === ControlWindowState.Playlist"
 		/>
 		<MenuDivider />
 		<MenuButton icon="backward-step" @click="$emit('navigate', 'item', -1)" />
@@ -78,8 +100,6 @@
 			:active="!visibility_ref"
 		/>
 		<MenuButton icon="eye" @click="$emit('set_visibility', true)" :active="visibility_ref" />
-		<MenuDivider />
-		<MenuButton icon="triangle-exclamation" />
 	</div>
 </template>
 

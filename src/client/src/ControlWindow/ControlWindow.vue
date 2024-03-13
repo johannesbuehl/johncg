@@ -1,11 +1,13 @@
 <script setup lang="ts">
-	import PlaylistItemsList, { type DragEndEvent } from "@/components/PlaylistItemsList.vue";
-	import SlidesView from "@/components/SlidesView.vue";
-	import MenuBar from "@/components/MenuBar.vue";
+	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
+	import SlidesView from "./SlidesView/SlidesView.vue";
+	import MenuBar from "./MenuBar/MenuBar.vue";
+	import { ControlWindowState } from "./ControlWindowState";
+	import AddPart from "./AddPart/AddPart.vue";
 
-	import * as JGCPSend from "../../../server/JGCPSendMessages";
-	import * as JGCPRecv from "../../../server/JGCPReceiveMessages";
-	import type { ActiveItemSlide } from "../../../server/Playlist";
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -14,13 +16,19 @@
 		playlist?: JGCPSend.Playlist;
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
-		selected: number;
+		search_results?: JGCPSend.SearchResults;
 	}>();
 
 	defineEmits<{
 		select_item: [item: number];
-		select_slide: [slide: number];
+		select_slide: [item: number, slide: number];
 	}>();
+
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: false,
+		default: ControlWindowState.Add
+	});
+	const selected = defineModel<number>("selected", { required: true });
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
@@ -28,7 +36,12 @@
 			return;
 		}
 
-		if (!event.repeat) {
+		let prevent_default = false;
+
+		// execute the navigation-keys only if the slides are visible
+		if (control_window_state.value === ControlWindowState.Playlist && !event.repeat) {
+			prevent_default = true;
+
 			switch (event.code) {
 				case "PageUp":
 				case "ArrowLeft":
@@ -38,13 +51,14 @@
 				case "ArrowRight":
 					navigate("slide", 1);
 					break;
-				case "ArrowUp":
-					navigate("item", -1);
-					break;
-				case "ArrowDown":
-					navigate("item", 1);
+				default:
+					prevent_default = false;
 					break;
 			}
+		}
+
+		if (prevent_default) {
+			event.preventDefault();
 		}
 	});
 
@@ -81,32 +95,54 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
+
+	function delete_item(item: number) {
+		const message: JGCPRecv.DeleteItem = {
+			command: "delete_item",
+			position: item
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
 	<MenuBar
 		class="menu_bar"
 		:ws="ws"
+		:visibility="server_state?.visibility ?? false"
+		v-model="control_window_state"
 		@navigate="navigate"
 		@set_visibility="visibility"
-		:visibility="server_state?.visibility ?? false"
 	/>
-	<div id="MenuBar_wrapper">
+	<div
+		id="MenuBar_wrapper"
+		v-if="
+			control_window_state === ControlWindowState.Playlist ||
+			control_window_state === ControlWindowState.Add
+		"
+	>
 		<PlaylistItemsList
-			v-if="playlist !== undefined"
 			:playlist="playlist"
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
 			@selection="$emit('select_item', $event)"
 			@dragged="dragged"
+			@set_active="$emit('select_slide', $event, 0)"
+			@delete="delete_item"
 		/>
 		<SlidesView
-			v-if="slides !== undefined"
+			v-if="slides !== undefined && control_window_state === ControlWindowState.Playlist"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="$emit('select_slide', slides.item, $event)"
+		/>
+		<AddPart
+			v-if="control_window_state === ControlWindowState.Add"
+			:ws="ws"
+			:search_results="search_results"
 		/>
 	</div>
 </template>

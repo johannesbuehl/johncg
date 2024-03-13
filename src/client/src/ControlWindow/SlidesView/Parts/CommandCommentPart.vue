@@ -1,17 +1,13 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "../../../../server/Playlist";
-	import type { Template } from "../../../../server/PlaylistItems/PlaylistItem";
-	import type { ClientPDFSlides } from "../../../../server/PlaylistItems/PDF";
+	import type { CommandCommentSlides } from "@server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
-		slide?: ClientPDFSlides;
-		media?: string;
-		template?: Template;
+		slide?: CommandCommentSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
-		scroll?: boolean;
 	}>();
 
 	defineEmits<{
@@ -25,15 +21,10 @@
 		next: () => void;
 	}
 
-	interface JohnCGSongTemplate extends CasparCGTemplate {
-		jump: (slide: number) => void;
-	}
+	function template_loaded(template_object: HTMLObjectElement) {
+		const contentWindows: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
 
-	function template_loaded(template_object: HTMLObjectElement, index: number) {
-		const contentWindows: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
-
-		contentWindows.update(JSON.stringify({ ...props.template?.data, mute_transition: true }));
-		contentWindows.jump(index); // add slide_index
+		contentWindows.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
 		contentWindows.play();
 	}
 </script>
@@ -42,21 +33,19 @@
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: active_item_slide?.item }"
+			:class="{ active: 0 === active_item_slide?.slide }"
 			@click="$emit('select_slide', 0)"
 		>
 			{{ slide?.title }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				v-for="(_media, index) in slide?.slides"
-				:key="index"
-				:media="_media"
+				:media="slide?.media_b64"
+				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
-				:active="index === active_item_slide?.slide"
-				:scroll="scroll"
-				@template_load="template_loaded($event, index)"
-				@click="$emit('select_slide', index)"
+				:active="0 === active_item_slide?.slide"
+				@template_load="template_loaded"
+				@click="$emit('select_slide', 0)"
 			/>
 		</div>
 	</div>
@@ -72,7 +61,6 @@
 
 	.header {
 		background-color: var(--color-item);
-		font-weight: bold;
 
 		border-radius: inherit;
 		border-bottom-left-radius: 0;

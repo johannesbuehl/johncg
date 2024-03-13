@@ -44,7 +44,7 @@ export type Template = CountdownTemplate | SongTemplate | CommandCommentTemplate
 
 export interface ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
-	type: string;
+	type?: string;
 	Caption: string;
 	Color: string;
 	VerseOrder?: string[];
@@ -54,7 +54,7 @@ export interface ItemPropsBase {
 	Time?: string;
 	StreamClass?: string;
 
-	slide_count: number;
+	slide_count?: number;
 	Data?: string;
 	selectable: boolean;
 	background_color?: string;

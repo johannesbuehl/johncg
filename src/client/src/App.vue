@@ -5,10 +5,10 @@
 	 * create css-files for duplicate css in Parts
 	 */
 	import { ref, watch } from "vue";
-	import ControlWindow from "./ControlWindow/ControlWindow.vue";
+	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 
-	import * as JGCPSend from "../../server/JGCPSendMessages";
-	import * as JGCPRecv from "../../server/JGCPReceiveMessages";
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const Config = {
 		client_server: {
@@ -28,6 +28,7 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
+	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 	let ws: WebSocket | undefined;
 	ws_connect();
 
@@ -83,7 +84,9 @@
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
-				response: handle_ws_response
+				response: handle_ws_response,
+				clear: init,
+				search_results: handle_search_results
 			};
 
 			command_parser_map[data.command ?? ""](data as never);
@@ -147,10 +150,14 @@
 		item_slides.value = data;
 	}
 
-	function set_active_slide(slide: number) {
+	function handle_search_results(data: JGCPSend.SearchResults) {
+		search_results.value = data;
+	}
+
+	function set_active_slide(item: number, slide: number) {
 		const message: JGCPRecv.SelectItemSlide = {
 			command: "select_item_slide",
-			item: selected_item.value,
+			item: item,
 			slide,
 			client_id: client_id
 		};
@@ -187,6 +194,7 @@
 			:playlist="playlist_items"
 			:slides="item_slides"
 			:active_item_slide="server_state.active_item_slide"
+			:search_results="search_results"
 			:selected="selected_item"
 			@select_item="select_item"
 			@select_slide="set_active_slide"

@@ -13,6 +13,7 @@ import Song from "./PlaylistItems/Song.ts";
 import type { SongProps } from "./PlaylistItems/Song.ts";
 
 import * as JGCPSend from "./JGCPSendMessages.ts";
+import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 
 import Config from "./config.ts";
 import Countdown from "./PlaylistItems/Countdown.ts";
@@ -29,10 +30,6 @@ import type { PDFProps } from "./PlaylistItems/PDF.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: ItemProps[];
-	metadata: {
-		item: number;
-		visibility: boolean;
-	};
 }
 
 export interface ActiveItemSlide {
@@ -73,26 +70,12 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(playlist: string, casparcg_connections: CasparCGConnection[]) {
-		this.parse_playlist(playlist);
+	constructor(playlist?: string) {
+		if (typeof playlist === "string") {
+			this.parse_playlist(playlist);
 
-		this.casparcg_connections = casparcg_connections;
-
-		this.casparcg_connections.forEach((casparcg_connection) => {
-			// add a listener to send send the current-slide on connection
-			casparcg_connection.connection.addListener("connect", () => {
-				// load the active-item
-				this.casparcg_load_item(casparcg_connection);
-			});
-
-			// clear the previous casparcg-output on the layers
-			this.casparcg_clear_layers(casparcg_connection);
-
-			// load the first slide
-			this.casparcg_load_item(casparcg_connection);
-		});
-
-		this.set_active_item(0, 0);
+			this.set_active_item(0, 0);
+		}
 	}
 
 	destroy() {
@@ -103,6 +86,22 @@ export default class Playlist {
 
 			casparcg_connection.connection.removeListener("connect");
 		});
+	}
+
+	add_casparcg_connection(casparcg_connection: CasparCGConnection) {
+		this.casparcg_connections.push(casparcg_connection);
+
+		// add a listener to send send the current-slide on connection
+		casparcg_connection.connection.addListener("connect", () => {
+			// load the active-item
+			this.casparcg_load_item(casparcg_connection);
+		});
+
+		// clear the previous casparcg-output on the layers
+		this.casparcg_clear_layers(casparcg_connection);
+
+		// load the first slide
+		this.casparcg_load_item(casparcg_connection);
 	}
 
 	/**
@@ -126,6 +125,50 @@ export default class Playlist {
 		} else {
 			// clear the layers on all connnections
 			this.casparcg_connections.forEach(clear_layers);
+		}
+	}
+
+	add_item(type: JGCPRecv.AddItem["type"], data: JGCPRecv.AddItem["data"]): boolean {
+		switch (type) {
+			case "song": {
+				const song_props: SongProps = {
+					/* eslint-disable @typescript-eslint/naming-convention */
+					Caption: path.basename(data.path).replace(/\.[^(\\.]+$/, ""),
+					Color: "#0000FF",
+					FileName: data.path,
+					selectable: true
+					/* eslint-enable @typescript-eslint/naming-convention */
+				};
+
+				this.playlist_items.push(new Song(song_props));
+				break;
+			}
+			default:
+				return false;
+		}
+
+		this.set_active_item(-1, 0);
+
+		return true;
+	}
+
+	delete_item(position: number): boolean {
+		position = this.validate_item_number(position);
+
+		this.playlist_items.splice(position, 1);
+
+		// if the deleted item came before the ative-item, adjust the index of the active-item
+		if (this.active_item > position) {
+			this.active_item_number--;
+
+			return true;
+		} else {
+			// if the deleted item was the active one, load the new-active-item into casparcg
+			if (this.active_item === position) {
+				this.casparcg_load_item();
+			}
+
+			return false;
 		}
 	}
 
@@ -247,11 +290,7 @@ export default class Playlist {
 
 	create_client_object_playlist(): ClientPlaylistItems {
 		const return_playlist: ClientPlaylistItems = {
-			playlist_items: this.playlist_items.map((item) => item.props),
-			metadata: {
-				item: this.active_item_number,
-				visibility: this.visibility
-			}
+			playlist_items: this.playlist_items.map((item) => item.props)
 		};
 
 		return return_playlist;
@@ -296,13 +335,13 @@ export default class Playlist {
 			throw new RangeError(`steps must be -1 or 1, but is ${steps}`);
 		}
 
-		let new_active_item_number = this.active_item_number;
+		let new_active_item_number = this.active_item;
 		// steps until there is a selectable item
 		do {
 			new_active_item_number += steps;
 
 			// if the new_active_item_number is back at the start, break, since there are no selectable items
-			if (new_active_item_number === this.active_item_number) {
+			if (new_active_item_number === this.active_item) {
 				console.error("loop around");
 				return;
 			}
@@ -417,7 +456,7 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
-		let media = this.active_playlist_item.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
+		let media = this.active_playlist_item?.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
 
 		// if a media-file is defined, load it
 		if (media) {
@@ -482,7 +521,7 @@ export default class Playlist {
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
 		// if a template was specified, load it
-		if (this.active_playlist_item.template !== undefined) {
+		if (this.active_playlist_item?.template !== undefined) {
 			return casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
@@ -584,7 +623,7 @@ export default class Playlist {
 		return this.active_item_number;
 	}
 
-	get active_playlist_item(): PlaylistItem {
+	get active_playlist_item(): PlaylistItem | undefined {
 		return this.playlist_items[this.active_item];
 	}
 
@@ -594,8 +633,8 @@ export default class Playlist {
 
 	get active_item_slide(): ActiveItemSlide {
 		return {
-			item: this.active_item_number,
-			slide: this.active_playlist_item.active_slide
+			item: this.active_item,
+			slide: (this.active_playlist_item ?? { active_slide: 0 }).active_slide
 		};
 	}
 

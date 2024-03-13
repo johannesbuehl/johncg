@@ -55,7 +55,50 @@ export interface MovePlaylistItem extends Base {
 	to: number;
 }
 
+export interface RenewSearchIndex extends Base {
+	command: "renew_search_index";
+	type: "song" | "psalm" | "bible" | "text" | "image" | "template" | "pdf" | "countdown";
+}
+
+export interface SearchItem extends Base {
+	command: "search_item";
+	type: "song";
+	search: {
+		title?: string;
+		id?: string;
+		text?: string;
+	};
+}
+
+interface AddItembase extends Base {
+	command: "add_item";
+}
+
+export interface AddSong extends AddItembase {
+	type: "song";
+	data: {
+		path: string;
+	};
+}
+
+export type AddItem = AddSong;
+
+export interface DeleteItem {
+	command: "delete_item";
+	position: number;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = RequestItemSlides | SetVisibility | OpenPlaylist | Navigate | SelectItemSlide;
+export type Message =
+	| RequestItemSlides
+	| SetVisibility
+	| OpenPlaylist
+	| Navigate
+	| SelectItemSlide
+	| MovePlaylistItem
+	| RenewSearchIndex
+	| SearchItem
+	| AddItem
+	| DeleteItem;

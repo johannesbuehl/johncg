@@ -14,13 +14,13 @@ export interface SongTemplate {
 
 export interface SongProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
-	type: "Song";
+	type?: "Song";
 	FileName: string;
 	VerseOrder?: string[];
 	Language?: number;
 	PrimaryLanguage?: number;
 	media?: string[];
-	template: SongTemplate;
+	template?: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 

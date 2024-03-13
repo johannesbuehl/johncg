@@ -18,8 +18,9 @@ export default defineConfig(({ command }) => ({
 	publicDir: command === "build" ? false : "../../casparcg",
 	root: "src/client",
 	resolve: {
-		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url))
-		}
+		alias: [
+			{ find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
+			{ find: "@server", replacement: fileURLToPath(new URL("../server", import.meta.url)) }
+		]
 	}
 }));

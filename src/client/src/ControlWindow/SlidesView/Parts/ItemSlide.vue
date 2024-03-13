@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { watch, ref, onMounted } from "vue";
 
-	import type { Template } from "../../../../server/PlaylistItems/PlaylistItem";
+	import type { Template } from "@server/PlaylistItems/PlaylistItem";
 
 	const props = defineProps<{
 		media?: string;

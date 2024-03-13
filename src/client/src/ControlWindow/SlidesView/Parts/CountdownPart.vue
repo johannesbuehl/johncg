@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "../../../../server/Playlist";
-	import type { CountdownSlides } from "../../../../server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
+	import type { CountdownSlides } from "@server/JGCPSendMessages";
 
 	const props = defineProps<{
 		slide?: CountdownSlides;
@@ -61,7 +61,6 @@
 
 	.header {
 		background-color: var(--color-item);
-		font-weight: bold;
 
 		border-radius: inherit;
 		border-bottom-left-radius: 0;

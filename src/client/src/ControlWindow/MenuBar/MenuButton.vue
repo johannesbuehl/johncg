@@ -3,13 +3,20 @@
 
 	defineProps<{
 		icon: string;
+		text?: string;
 		active?: boolean;
 	}>();
 </script>
 
 <template>
-	<div class="button" :class="{ active }">
+	<div
+		class="button"
+		:class="{ active, square: text === undefined }"
+		tabindex="0"
+		@keydown.enter="($event.target as HTMLDivElement)?.click()"
+	>
 		<FontAwesomeIcon :icon="['fas', icon]" />
+		{{ text ?? "" }}
 	</div>
 </template>
 
@@ -22,14 +29,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex-direction: column;
+		/* flex-direction: column; */
 
 		padding: 0.5rem;
 
-		aspect-ratio: 1;
 		height: 2em;
 
 		margin: 0.25rem;
+	}
+
+	div.button.square {
+		aspect-ratio: 1;
 	}
 
 	div.button:hover {

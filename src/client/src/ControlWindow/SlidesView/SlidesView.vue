@@ -1,13 +1,12 @@
 <script setup lang="ts">
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
+
 	import SongPart from "./Parts/SongPart.vue";
 	import CountdownPart from "./Parts/CountdownPart.vue";
 	import ImagePart from "./Parts/ImagePart.vue";
-
-	import * as JGCPSend from "../../../server/JGCPSendMessages";
-	import type { ActiveItemSlide } from "../../../server/Playlist";
-	import CommandCommentPart from "./Parts/CommandCommentPart.vue";
 	import PDFPart from "./Parts/PDFPart.vue";
-	import { watch } from "vue";
+	import CommandCommentPart from "./Parts/CommandCommentPart.vue";
 
 	const props = defineProps<{
 		slides?: JGCPSend.ItemSlides;
@@ -89,3 +88,4 @@
 	}
 </style>
 ./Parts/SongPart.vue./Parts/ImagePart.vue./Parts/CountdownPart.vue
+../../../../server/JGCPSendMessages../../../../server/Playlist

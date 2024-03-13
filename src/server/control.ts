@@ -17,6 +17,7 @@ import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 import type { CasparCGConnectionSettings } from "./config.ts";
 
 import Config from "./config.ts";
+import SearchPart from "./search_part.ts";
 
 interface CasparCGPathsSettings {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -38,9 +39,10 @@ export interface CasparCGConnection {
 }
 
 class Control {
-	private playlist?: Playlist;
+	private playlist: Playlist;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
+	private search_part: SearchPart;
 
 	readonly casparcg_connections: CasparCGConnection[] = [];
 
@@ -67,7 +69,8 @@ class Control {
 	};
 
 	// mapping of the websocket-messages to the functions
-	private readonly ws_function_map = {
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	private readonly ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
 		open_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.open_playlist(msg?.playlist, ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) =>
@@ -79,7 +82,13 @@ class Control {
 		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) =>
 			this.set_visibility(msg.visibility, msg.client_id, ws),
 		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
-			this.move_playlist_item(msg.from, msg.to, ws)
+			this.move_playlist_item(msg.from, msg.to, ws),
+		renew_search_index: (msg: JGCPRecv.RenewSearchIndex, ws: WebSocket) =>
+			this.renew_search_index(msg.type, ws),
+		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
+			this.search_item(msg.type, msg.search, ws),
+		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.type, msg.data, ws),
+		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -101,6 +110,8 @@ class Control {
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
 		const xml_parser = new XMLParser();
+
+		this.playlist = new Playlist();
 
 		// create the casparcg-connections
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -183,7 +194,10 @@ class Control {
 
 			// add the connection to the stored connections
 			this.casparcg_connections.push(casparcg_connection);
+			this.playlist.add_casparcg_connection(casparcg_connection);
 		});
+
+		this.search_part = new SearchPart();
 	}
 
 	/**
@@ -194,19 +208,17 @@ class Control {
 		// if there was already a playlist open, call it's destroy function
 		this.playlist?.destroy();
 
-		this.playlist = new Playlist(playlist, this.casparcg_connections);
+		this.playlist = new Playlist(playlist);
+
+		this.casparcg_connections.forEach((casparcg_connection) =>
+			this.playlist.add_casparcg_connection(casparcg_connection)
+		);
 
 		// send the playlist to all clients
-		const response_playlist_items: JGCPSend.Playlist = {
-			command: "playlist_items",
-			new_item_order: Array.from(Array(this.playlist.playlist_items.length).keys()),
-			...this.playlist.create_client_object_playlist()
-		};
-
-		this.send_all_clients(response_playlist_items);
+		this.send_playlist(Array.from(Array(this.playlist.playlist_items.length).keys()));
 
 		// send the current state to all clients
-		this.send_all_clients(this.playlist.state);
+		this.send_state();
 
 		ws_send_response("playlist has been opened", true, ws);
 	}
@@ -227,6 +239,16 @@ class Control {
 			ws.send(JSON.stringify(response_playlist_items));
 		} else {
 			this.send_all_clients(response_playlist_items);
+		}
+	}
+
+	private send_state(client_id?: string, ws?: WebSocket) {
+		const message = { ...this.playlist.state, client_id };
+
+		if (ws) {
+			ws.send(JSON.stringify(message));
+		} else {
+			this.send_all_clients(message);
 		}
 	}
 
@@ -388,9 +410,86 @@ class Control {
 		this.send_playlist(new_item_order);
 
 		// // send the current state to all clients
-		// this.send_all_clients(this.playlist.state);
+		this.send_state();
 
 		ws_send_response("playlist-item has been moved", true, ws);
+	}
+
+	private renew_search_index(type: JGCPRecv.RenewSearchIndex["type"], ws: WebSocket) {
+		if (typeof type !== "string") {
+			ws_send_response("type is invalid", false, ws);
+		}
+		if (!this.search_part.renew_search_index(type)) {
+			ws_send_response("type is invalid", false, ws);
+		}
+
+		ws_send_response(`search-index for type '${type}' has been renewed`, true, ws);
+	}
+
+	private search_item(
+		type: JGCPRecv.SearchItem["type"],
+		search_query: JGCPRecv.SearchItem["search"],
+		ws: WebSocket
+	) {
+		if (typeof search_query !== "object") {
+			ws_send_response("invalid search_query", false, ws);
+		}
+
+		let result;
+
+		switch (type) {
+			case "song":
+				result = this.search_part.search_song(search_query);
+				break;
+			default:
+				ws_send_response("invalid type", false, ws);
+				return;
+		}
+
+		const message: JGCPSend.SongSearchResults = {
+			command: "search_results",
+			type: type,
+			result
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private add_item(type: JGCPRecv.AddItem["type"], data: JGCPRecv.AddItem["data"], ws: WebSocket) {
+		const result = this.playlist.add_item(type, data);
+
+		if (result) {
+			this.send_playlist();
+
+			this.send_state();
+
+			ws_send_response("added item to playlist", true, ws);
+		} else {
+			ws_send_response("could not add item to playlist", false, ws);
+		}
+	}
+
+	private delete_item(position: number, ws: WebSocket) {
+		let state_change: boolean;
+
+		try {
+			state_change = this.playlist.delete_item(position);
+		} catch (e) {
+			if (e instanceof RangeError) {
+				ws_send_response("position is out of range", false, ws);
+				return;
+			} else {
+				throw e;
+			}
+		}
+
+		this.send_playlist();
+
+		if (state_change) {
+			this.send_state();
+		}
+
+		ws_send_response("delete item from playlist", true, ws);
 	}
 
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
@@ -428,15 +527,10 @@ class Control {
 		// if there is already a playlist loaded, send it to the connected client
 		if (this.playlist !== undefined) {
 			// send the playlist
-			const respone_playlist: JGCPSend.Playlist = {
-				command: "playlist_items",
-				new_item_order: Array.from(Array(this.playlist.playlist_items.length).keys()),
-				...this.playlist.create_client_object_playlist()
-			};
-			ws.send(JSON.stringify(respone_playlist));
+			this.send_playlist(undefined, undefined, ws);
 
 			// send the selected item-slide
-			ws.send(JSON.stringify(this.playlist.state));
+			this.send_state(undefined, ws);
 		} else {
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
 			const clear_message: JGCPSend.Clear = {

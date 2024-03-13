@@ -3,8 +3,8 @@
 
 	import PlaylistItem from "./PlaylistItem.vue";
 
-	import * as JGCPSend from "../../../server/JGCPSendMessages";
-	import type { ActiveItemSlide } from "../../../server/Playlist";
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
 
 	export interface DragEndEvent {
 		oldIndex: number;
@@ -21,14 +21,36 @@
 	const emit = defineEmits<{
 		selection: [item: number];
 		dragged: [from: number, to: number];
+		set_active: [item: number];
+		delete: [item: number];
 	}>();
-
-	emit("selection", props.playlist?.metadata.item ?? 0);
 
 	function onDragEnd(evt: DragEndEvent) {
 		// send only, if the index has changed
 		if (evt.oldIndex !== evt.newIndex) {
 			emit("dragged", evt.oldIndex, evt.newIndex);
+		}
+	}
+
+	function navigate_selection(target: EventTarget, origin: number, steps: number) {
+		console.debug(origin);
+
+		let new_selection = origin + steps;
+
+		while (new_selection < 0) {
+			new_selection += props.playlist?.playlist_items.length ?? 1;
+		}
+
+		while (new_selection >= (props.playlist?.playlist_items.length ?? 1)) {
+			new_selection -= props.playlist?.playlist_items.length ?? 1;
+		}
+
+		emit("selection", new_selection);
+
+		if (steps === 1) {
+			((target as HTMLDivElement)?.nextSibling as HTMLDivElement)?.focus();
+		} else {
+			((target as HTMLDivElement)?.previousSibling as HTMLDivElement)?.focus();
 		}
 	}
 </script>
@@ -54,6 +76,11 @@
 					:active="active_item_slide?.item === index"
 					:scroll="scroll"
 					@click="$emit('selection', index)"
+					@dblclick="$emit('set_active', index)"
+					@set_active="$emit('set_active', index)"
+					@keydown.up="navigate_selection($event.target, index, -1)"
+					@keydown.down="navigate_selection($event.target, index, 1)"
+					@keydown.delete="$emit('delete', index)"
 				/>
 			</template>
 		</draggable>
@@ -75,8 +102,6 @@
 		text-align: center;
 
 		background-color: var(--color-item);
-
-		font-weight: bold;
 
 		border-radius: inherit;
 

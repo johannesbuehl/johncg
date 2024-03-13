@@ -10,6 +10,10 @@
 		scroll?: boolean;
 	}>();
 
+	defineEmits<{
+		set_active: [];
+	}>();
+
 	const item = ref<HTMLDivElement>();
 
 	watch(
@@ -39,6 +43,8 @@
 			selected,
 			active
 		}"
+		tabindex="0"
+		@keydown.enter="$emit('set_active')"
 	>
 		<div class="item_color_indicator" :style="{ 'background-color': color }"></div>
 		<div class="playlist_item">{{ caption }}</div>
@@ -52,7 +58,7 @@
 
 		border: 0.125rem solid transparent;
 
-		border-radius: 0.25rem;
+		border-radius: 0.125rem;
 
 		display: flex;
 		align-items: stretch;
@@ -102,7 +108,7 @@
 	}
 
 	.playlist_item_wrapper.selected {
-		border-color: white;
+		border-color: var(--color-text);
 	}
 
 	.item_color_indicator {
