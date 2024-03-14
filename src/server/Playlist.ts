@@ -72,22 +72,14 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(playlist?: string) {
+	constructor(casparcg_connections?: CasparCGConnection[], playlist?: string) {
+		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
+
 		if (typeof playlist === "string") {
 			this.parse_playlist(playlist);
 
 			this.set_active_item(0, 0);
 		}
-	}
-
-	destroy() {
-		this.casparcg_clear_layers();
-
-		this.casparcg_connections.forEach((casparcg_connection) => {
-			// casparcg_connection.connection.removeAllListeners();
-
-			casparcg_connection.connection.removeListener("connect");
-		});
 	}
 
 	add_casparcg_connection(casparcg_connection: CasparCGConnection) {
@@ -104,6 +96,16 @@ export default class Playlist {
 
 		// load the first slide
 		this.casparcg_load_item(casparcg_connection);
+	}
+
+	destroy() {
+		this.casparcg_clear_layers();
+
+		this.casparcg_connections.forEach((casparcg_connection) => {
+			// casparcg_connection.connection.removeAllListeners();
+
+			casparcg_connection.connection.removeListener("connect");
+		});
 	}
 
 	/**

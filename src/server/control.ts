@@ -221,7 +221,7 @@ class Control {
 		// if there was already a playlist open, call it's destroy function
 		this.playlist?.destroy();
 
-		this.playlist = new Playlist(playlist);
+		this.playlist = new Playlist(this.casparcg_connections, playlist);
 
 		this.casparcg_connections.forEach((casparcg_connection) =>
 			this.playlist.add_casparcg_connection(casparcg_connection)
