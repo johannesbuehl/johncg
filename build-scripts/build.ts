@@ -46,8 +46,9 @@ copy_build_file(process.execPath, exec_name);
 // load the config-file, censor the file-paths and store it for the relase
 const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
 config_file.path = {
-	background_image: "C:/path/to/image/directory",
-	song: "D:/path/to/song/directory"
+	song: "C:/path/to/song/directory",
+	pdf: "D:/path/to/pdf/directory",
+	psalm: "E:/path/to/psalm/directory"
 };
 config_file.casparcg.templates = "e:/path/to/the/casparcg/templates/directory";
 fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));

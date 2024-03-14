@@ -89,9 +89,8 @@ export default class PDF extends PlaylistItemBase {
 		return Promise.resolve({
 			title: this.props.FileName,
 			type: "PDF",
-			slides: await Promise.all(
-				this.props.media.map(async (m) => await this.get_media_b64(true, m))
-			)
+			slides: await Promise.all(this.props.media.map(async (m) => await this.create_thumbnail(m))),
+			media: []
 		});
 	}
 
@@ -120,6 +119,13 @@ export default class PDF extends PlaylistItemBase {
 		}
 
 		return slide_steps;
+	}
+
+	async create_thumbnail(media: string): Promise<string> {
+		const img = sharp(media);
+		img.resize(240);
+
+		return (await img.toBuffer()).toString("base64");
 	}
 
 	get active_slide(): number {

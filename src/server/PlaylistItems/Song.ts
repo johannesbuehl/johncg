@@ -6,6 +6,7 @@ import SongFile from "./SongFile.ts";
 import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile.ts";
 
 import Config from "../config.ts";
+import { ClipInfo } from "casparcg-connection";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -19,7 +20,6 @@ export interface SongProps extends ItemPropsBase {
 	VerseOrder?: string[];
 	Language?: number;
 	PrimaryLanguage?: number;
-	media?: string[];
 	template?: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
@@ -44,7 +44,6 @@ export type SongPartClient = ItemPartClient & { start_index: number };
 export interface ClientSongSlides extends ClientItemSlidesBase {
 	type: "Song";
 	slides: SongPartClient[];
-	media_b64: string;
 	template: SongTemplate;
 }
 
@@ -60,7 +59,7 @@ export default class Song extends PlaylistItemBase {
 
 	private song_file: SongFile = new SongFile();
 
-	constructor(props: SongProps) {
+	constructor(props: SongProps, casparcg_media_list: ClipInfo[]) {
 		super();
 
 		this.item_props = props;
@@ -110,7 +109,12 @@ export default class Song extends PlaylistItemBase {
 		}
 
 		// store the media
-		this.item_props.media = [this.get_background_image(this.song_file.metadata.BackgroundImage)];
+		this.item_props.media = [
+			path_to_casparcg_media(
+				this.song_file.metadata.BackgroundImage ?? "#00000000",
+				casparcg_media_list
+			)
+		];
 
 		// create the template data
 		this.item_props.template = {
@@ -205,7 +209,7 @@ export default class Song extends PlaylistItemBase {
 		return slide_steps;
 	}
 
-	async create_client_object_item_slides(): Promise<ClientSongSlides> {
+	create_client_object_item_slides(): Promise<ClientSongSlides> {
 		const return_item: ClientSongSlides = {
 			type: "Song",
 			title: this.item_props.Caption,
@@ -215,7 +219,7 @@ export default class Song extends PlaylistItemBase {
 					...this.song_file.get_title_client(this.languages[0])
 				}
 			],
-			media_b64: await this.get_media_b64(true),
+			media: this.props.media,
 			template: this.props.template
 		};
 
@@ -243,7 +247,7 @@ export default class Song extends PlaylistItemBase {
 			}
 		}
 
-		return return_item;
+		return Promise.resolve(return_item);
 	}
 
 	get props(): SongProps {
@@ -272,4 +276,31 @@ export function get_song_path(song_path: string): string {
 		: path.resolve(Config.path.song, song_path);
 
 	return return_path.replaceAll("\\", "/");
+}
+
+function path_to_casparcg_media(media: string, casparcg_media_list: ClipInfo[]): string {
+	// test wether it is a color-string
+	const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
+
+	// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+	if (test_rgb_string) {
+		return media;
+	}
+
+	// make it all uppercase and remove the extension to match casparcg-clips
+	const req_name = media
+		.replace(/\.[^(\\.]+$/, "")
+		.replaceAll("\\", "/")
+		.toUpperCase();
+
+	// check all the casparcg-files, wether they contain a media-file that matches the path
+	for (const m of casparcg_media_list) {
+		const media_file = m.clip.toUpperCase().replace(/\\/, "/");
+
+		if (req_name.endsWith(media_file)) {
+			return m.clip;
+		}
+	}
+
+	return "#00000000";
 }

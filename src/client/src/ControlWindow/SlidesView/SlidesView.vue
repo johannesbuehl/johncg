@@ -29,7 +29,7 @@
 			v-for="slide of slides?.slides"
 			:key="`${slides.item}-${slide.start_index}`"
 			:slide="slide"
-			:media="slides.media_b64"
+			:media="slides.media[0]"
 			:template="slides.template"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"

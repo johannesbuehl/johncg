@@ -40,7 +40,7 @@
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				:media="slide?.media_b64"
+				:media="slide?.media[0]"
 				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"

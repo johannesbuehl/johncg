@@ -10,8 +10,9 @@ export interface ConfigJSON {
 		show_on_load: boolean;
 	};
 	path: {
-		background_image: string;
 		song: string;
+		psalm: string;
+		pdf: string;
 	};
 	casparcg: {
 		templates: string;

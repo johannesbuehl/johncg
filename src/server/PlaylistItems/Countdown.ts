@@ -43,7 +43,6 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 			mode: CountdownMode;
 		}
 	];
-	media_b64: string;
 	template: CountdownTemplate;
 }
 
@@ -88,7 +87,7 @@ export default class Countdown extends PlaylistItemBase {
 		this.item_props = {
 			...props,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			background_image: hex_data.background_image,
+			media: [hex_data.background_image ?? hex_data.background_color ?? "#00000000"],
 			background_color: hex_data.background_color,
 			template: {
 				template: "JohnCG/Countdown",
@@ -104,8 +103,6 @@ export default class Countdown extends PlaylistItemBase {
 				}
 			}
 		};
-
-		this.item_props.media = [this.get_background_image(this.props.background_image)];
 	}
 
 	navigate_slide(steps: number): number {
@@ -128,7 +125,7 @@ export default class Countdown extends PlaylistItemBase {
 		return slide;
 	}
 
-	async create_client_object_item_slides(): Promise<ClientCountdownSlides> {
+	create_client_object_item_slides(): Promise<ClientCountdownSlides> {
 		const title_map: Record<CountdownMode, string> = {
 			clock: "Clock",
 			stopwatch: "Stopwatch",
@@ -136,7 +133,7 @@ export default class Countdown extends PlaylistItemBase {
 			end_time: "Countdown (end time)"
 		};
 
-		return {
+		return Promise.resolve({
 			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
 			type: this.props.type,
 			slides: [
@@ -145,9 +142,9 @@ export default class Countdown extends PlaylistItemBase {
 					time: this.props.Time
 				}
 			],
-			media_b64: await this.get_media_b64(true),
+			media: this.props.media,
 			template: this.props.template
-		};
+		});
 	}
 
 	get active_slide(): number {

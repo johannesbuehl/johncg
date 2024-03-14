@@ -13,6 +13,8 @@
 
 	const slide = ref<HTMLDivElement>();
 
+	const is_color = props.media?.match(/^#(?:(?:[\dA-Fa-f]{2}){3,4})$/);
+
 	watch(
 		() => [props.active, props.scroll],
 		() => {
@@ -40,7 +42,12 @@
 		<img
 			class="media"
 			:src="media"
-			:style="{ 'aspect-ratio': aspect_ratio, opacity: media ? 'unset' : '0' }"
+			:style="{
+				aspectRatio: aspect_ratio,
+				opacity: is_color ? '0' : 'unset',
+				backgroundColor: is_color ? media : 'transparent'
+			}"
+			@error="($event.target as HTMLDivElement).style.opacity = '0'"
 		/>
 		<object
 			v-if="template"

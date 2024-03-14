@@ -5,12 +5,20 @@ interface Base {
 	client_id?: string;
 }
 
+export interface NewPlaylist extends Base {
+	command: "new_playlist";
+}
+
 /**
  * playlist-file to be loaded
  */
 export interface OpenPlaylist extends Base {
 	command: "open_playlist";
 	playlist: string;
+}
+
+export interface SavePlaylist extends Base {
+	command: "save_playlist";
 }
 
 /**
@@ -101,4 +109,6 @@ export type Message =
 	| RenewSearchIndex
 	| SearchItem
 	| AddItem
-	| DeleteItem;
+	| DeleteItem
+	| NewPlaylist
+	| SavePlaylist;

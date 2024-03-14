@@ -9,7 +9,7 @@ import Config from "../config.ts";
 class HTTPServer {
 	private port: number;
 
-	server: http.Server;
+	private server: http.Server;
 
 	constructor(port: number) {
 		this.port = port;
@@ -39,11 +39,6 @@ class HTTPServer {
 							// if it doesn't exist, add an html-extension
 							request.url += ".html";
 						}
-						break;
-					// serve the background-images
-					case /^\/BackgroundImage\//.test(request.url):
-						resource_dir = Config.path.background_image;
-						request.url = request.url.replace(/\/BackgroundImage\//, "");
 						break;
 				}
 

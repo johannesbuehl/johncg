@@ -13,7 +13,6 @@ export interface ImageProps extends ItemPropsBase {
 
 export interface ClientImageSlides extends ClientItemSlidesBase {
 	type: "Image";
-	media_b64: string;
 	template?: undefined;
 }
 
@@ -36,13 +35,13 @@ export default class Image extends PlaylistItemBase {
 		return slide;
 	}
 
-	async create_client_object_item_slides(): Promise<ClientImageSlides> {
-		return {
+	create_client_object_item_slides(): Promise<ClientImageSlides> {
+		return Promise.resolve({
 			title: this.props.FileName,
 			type: "Image",
 			slides: [],
-			media_b64: await this.get_media_b64(true)
-		};
+			media: this.props.media
+		});
 	}
 
 	navigate_slide(steps: number): number {

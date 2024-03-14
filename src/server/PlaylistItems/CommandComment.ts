@@ -13,7 +13,6 @@ export interface CommandCommentProps extends ItemPropsBase {
 
 export interface ClientCommandCommentSlides extends ClientItemSlidesBase {
 	type: "CommandComment";
-	media_b64?: undefined;
 	template: CommandCommentTemplate;
 }
 
@@ -41,6 +40,7 @@ export default class CommandComment extends PlaylistItemBase {
 			type: "CommandComment",
 			title,
 			slides: [],
+			media: [],
 			template
 		});
 	}

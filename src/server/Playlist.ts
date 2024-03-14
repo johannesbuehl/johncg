@@ -57,6 +57,8 @@ export default class Playlist {
 	// store the individual items of the playlist
 	playlist_items: PlaylistItem[] = [];
 
+	private changes: boolean = false;
+
 	private active_item_number: number = 0;
 
 	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
@@ -136,11 +138,12 @@ export default class Playlist {
 					Caption: path.basename(data.path).replace(/\.[^(\\.]+$/, ""),
 					Color: "#0000FF",
 					FileName: data.path,
-					selectable: true
+					selectable: true,
+					media: [""]
 					/* eslint-enable @typescript-eslint/naming-convention */
 				};
 
-				this.playlist_items.push(new Song(song_props));
+				this.playlist_items.push(new Song(song_props, this.casparcg_connections[0].media));
 				break;
 			}
 			default:
@@ -149,6 +152,7 @@ export default class Playlist {
 
 		this.set_active_item(-1, 0);
 
+		this.changes = true;
 		return true;
 	}
 
@@ -156,6 +160,7 @@ export default class Playlist {
 		position = this.validate_item_number(position);
 
 		this.playlist_items.splice(position, 1);
+		this.changes = true;
 
 		// if the deleted item came before the ative-item, adjust the index of the active-item
 		if (this.active_item > position) {
@@ -177,6 +182,14 @@ export default class Playlist {
 		if (playlist.startsWith("object AblaufPlanItems: TAblaufPlanItems")) {
 			this.parse_songbeamer_playlist(playlist);
 		}
+	}
+
+	save(save_path?: string): string | boolean {
+		console.error("saving is not implemented yet. Doing a fake save now");
+
+		this.changes = false;
+
+		return save_path;
 	}
 
 	parse_songbeamer_playlist(playlist: string) {
@@ -213,7 +226,8 @@ export default class Playlist {
 				Caption: "",
 				Color: "",
 				slide_count: 0,
-				selectable: true
+				selectable: true,
+				media: ["#00000000"]
 				/* eslint-enable @typescript-eslint/naming-convention */
 			};
 
@@ -244,7 +258,9 @@ export default class Playlist {
 			// store the playlist-item
 			switch (item_data.type) {
 				case "Song":
-					this.playlist_items.push(new Song(item_data as SongProps));
+					this.playlist_items.push(
+						new Song(item_data as SongProps, this.casparcg_connections[0].media)
+					);
 					break;
 				case "Countdown":
 					this.playlist_items.push(new Countdown(item_data as CountdownProps));
@@ -297,7 +313,46 @@ export default class Playlist {
 	}
 
 	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
-		return this.playlist_items[item].create_client_object_item_slides();
+		const client_object = await this.playlist_items[item].create_client_object_item_slides();
+
+		const promises: Promise<string>[] = client_object.media.map(async (media) => {
+			// check wether it is a color string
+			const test_rgb_string = media.match(
+				/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
+			);
+
+			if (!test_rgb_string) {
+				let thumbnails: string[] = (
+					await (
+						await this.casparcg_connections[0].connection.thumbnailRetrieve({
+							filename: '"' + media + '"'
+						})
+					).request
+				).data as string[];
+
+				if (thumbnails === undefined) {
+					await this.casparcg_connections[0].connection.thumbnailGenerate({
+						filename: '"' + media + '"'
+					});
+
+					thumbnails = (
+						await (
+							await this.casparcg_connections[0].connection.thumbnailRetrieve({
+								filename: '"' + media + '"'
+							})
+						).request
+					).data as string[];
+				}
+
+				return "data:image/png;base64," + thumbnails[0];
+			} else {
+				return `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
+			}
+		});
+
+		client_object.media = await Promise.all(promises);
+
+		return client_object;
 	}
 
 	set_active_item(item: number, slide: number = 0): ActiveItemSlide {
@@ -402,6 +457,8 @@ export default class Playlist {
 		new_item_order.splice(from, 0, new_item_order.splice(to, 1)[0]);
 		this.playlist_items.splice(to, 0, this.playlist_items.splice(from, 1)[0]);
 
+		this.changes = true;
+
 		return new_item_order;
 	}
 
@@ -456,61 +513,25 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
-		let media = this.active_playlist_item?.media?.replace(/^(?<drive>\w:)\//, "$<drive>//");
+		const media = this.active_playlist_item?.media;
 
-		// if a media-file is defined, load it
-		if (media) {
-			// test wether it is a color-string
-			const test_rgb_string = media.match(
-				/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
-			);
-
-			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
-			if (test_rgb_string) {
-				media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
-			} else {
-				// make it all uppercase and remove the extension to match casparcg-clips
-				const req_name = media.replace(/\.[^(\\.]+$/, "").toUpperCase();
-
-				// check all the casparcg-files, wether they contain a media-file that matches the path
-				for (const m of casparcg_connection.media) {
-					const media_file = m.clip.toUpperCase().replace(/\\/, "/");
-
-					if (req_name.endsWith(media_file)) {
-						media = m.clip;
-						break;
-					}
-				}
-			}
-
-			// if the state is "visible", play it directly
-			if (this.visibility) {
-				return casparcg_connection.connection.play({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers[0],
-					clip: media,
-					transition: this.casparcg_transition
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			} else {
-				//  if the current stat is invisible, only load it in the background
-				return casparcg_connection.connection.loadbg({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers[0],
-					clip: media,
-					transition: this.casparcg_transition
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			}
-		} else {
-			// no media-file selected -> clear the media-output
+		// if the state is "visible", play it directly
+		if (this.visibility) {
 			return casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0],
-				clip: "EMPTY",
+				clip: media,
+				transition: this.casparcg_transition
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		} else {
+			//  if the current stat is invisible, only load it in the background
+			return casparcg_connection.connection.loadbg({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers[0],
+				clip: media,
 				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
@@ -648,6 +669,10 @@ export default class Playlist {
 			active_item_slide: this.active_item_slide,
 			visibility: this.visibility
 		};
+	}
+
+	get unsaved_changes(): boolean {
+		return this.changes;
 	}
 }
 

@@ -71,8 +71,10 @@ class Control {
 	// mapping of the websocket-messages to the functions
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	private readonly ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
+		new_playlist: (msg: JGCPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		open_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.open_playlist(msg?.playlist, ws),
+		save_playlist: (msg: JGCPRecv.SavePlaylist, ws: WebSocket) => this.save_playlist(ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) =>
 			this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) =>
@@ -200,11 +202,22 @@ class Control {
 		this.search_part = new SearchPart();
 	}
 
+	private new_playlist(ws: WebSocket) {
+		if (!this.playlist.unsaved_changes) {
+			this.playlist = new Playlist();
+			this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
+
+			ws_send_response("new playlist has been created", true, ws);
+		} else {
+			ws_send_response("can't create new playlist, there are unsaved changes", false, ws);
+		}
+	}
+
 	/**
 	 * open and load a playlist-file and send it to clients and renderers
 	 * @param playlist playlist-file content
 	 */
-	private open_playlist(playlist: string, ws?: WebSocket) {
+	private open_playlist(playlist: string, ws: WebSocket) {
 		// if there was already a playlist open, call it's destroy function
 		this.playlist?.destroy();
 
@@ -221,6 +234,12 @@ class Control {
 		this.send_state();
 
 		ws_send_response("playlist has been opened", true, ws);
+	}
+
+	private save_playlist(ws: WebSocket) {
+		const save_path = this.playlist.save();
+
+		ws_send_response(`playlist has been saved to '${save_path}'`, true, ws);
 	}
 
 	private send_playlist(
@@ -394,7 +413,7 @@ class Control {
 		}
 	}
 
-	private move_playlist_item(from: number, to: number, ws?: WebSocket) {
+	private move_playlist_item(from: number, to: number, ws: WebSocket) {
 		if (typeof from !== "number") {
 			ws_send_response("'from' has to be of type number", false, ws);
 			return;
@@ -573,7 +592,7 @@ class Control {
 		}
 	}
 
-	private check_playlist_loaded(ws?: WebSocket): boolean {
+	private check_playlist_loaded(ws: WebSocket): boolean {
 		if (this.playlist) {
 			return true;
 		} else {

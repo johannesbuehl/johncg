@@ -188,8 +188,6 @@
 	}
 
 	.search_box {
-		/* flex: 1; */
-
 		font-size: 1.5rem;
 
 		padding: 0.25rem;
@@ -284,7 +282,7 @@
 		font-style: italic;
 	}
 
-	.result_title > span:nth-of-type(2)::before {
+	.result_title > span:not(:first-child)::before {
 		content: " ";
 	}
 
