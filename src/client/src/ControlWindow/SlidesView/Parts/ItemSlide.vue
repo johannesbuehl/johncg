@@ -44,7 +44,7 @@
 			:src="media"
 			:style="{
 				aspectRatio: aspect_ratio,
-				opacity: is_color ? '0' : 'unset',
+				opacity: is_color || media === undefined ? '0' : 'unset',
 				backgroundColor: is_color ? media : 'transparent'
 			}"
 			@error="($event.target as HTMLDivElement).style.opacity = '0'"

@@ -9,6 +9,7 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import { type Files } from "./ControlWindow/FileDialogue/FileDialogue.vue";
 
 	const Config = {
 		client_server: {
@@ -28,7 +29,10 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
+	const media_tree = ref<Files>({});
+	const templates_tree = ref<Files>({});
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
+
 	let ws: WebSocket | undefined;
 	ws_connect();
 
@@ -80,16 +84,19 @@
 				}
 			}
 
-			const command_parser_map = {
+			const command_parser_map: { [key in JGCPSend.Message["command"]]: (...args: any) => void } = {
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
 				response: handle_ws_response,
 				clear: init,
-				search_results: handle_search_results
+				search_results: handle_search_results,
+				playlist_save: save_playlist_file,
+				media_tree: parse_media_tree,
+				template_tree: parse_template_tree
 			};
 
-			command_parser_map[data.command ?? ""](data as never);
+			command_parser_map[data.command](data as never);
 		});
 
 		ws.addEventListener("ping", () => {});
@@ -165,6 +172,65 @@
 		ws?.send(JSON.stringify(message));
 	}
 
+	function save_playlist_file(data: JGCPSend.PlaylistSave) {
+		const json_string = JSON.stringify(data.playlist, null, "\t");
+
+		const blob = new Blob([json_string], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `${data.playlist.caption}a.jcg`;
+
+		link.click();
+
+		URL.revokeObjectURL(url);
+	}
+
+	function parse_media_tree(data: JGCPSend.MediaTree) {
+		media_tree.value = build_file_tree(data.media.map((m) => m.clip.split("/")));
+	}
+
+	function parse_template_tree(data: JGCPSend.TemplateTree) {
+		templates_tree.value = build_file_tree(data.templates.map((m) => m.split("/")));
+	}
+
+	function build_file_tree(media_array: (string | string[])[]): Files {
+		const media_object: Files = {};
+
+		const temp_object: Record<string, (string | string[])[] | string> = {};
+
+		media_array.forEach((m) => {
+			if (typeof m === "string") {
+				temp_object[m] = m;
+			} else {
+				const key = m.shift();
+
+				if (key !== undefined) {
+					if (m.length === 0) {
+						temp_object[key] = key;
+					} else {
+						if (temp_object[key] === undefined) {
+							temp_object[key] = [];
+						}
+
+						(temp_object[key] as string[][]).push(m);
+					}
+				}
+			}
+		});
+
+		Object.entries(temp_object).forEach(([key, files]) => {
+			if (typeof files === "string") {
+				media_object[key] = files;
+			} else {
+				media_object[key] = build_file_tree(files);
+			}
+		});
+
+		return media_object;
+	}
+
 	function handle_ws_response(response: JGCPSend.Response) {
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
@@ -196,10 +262,14 @@
 			:active_item_slide="server_state.active_item_slide"
 			:search_results="search_results"
 			:selected="selected_item"
+			:media_tree="media_tree"
+			:templates_tree="templates_tree"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>
 	</div>
+
+	<!-- <FileSelector /> -->
 </template>
 
 <style scoped>

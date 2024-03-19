@@ -70,11 +70,14 @@
 
 	function add_song() {
 		if (selection.value?.path !== undefined) {
-			const message: JGCPRecv.AddSong = {
+			const message: JGCPRecv.AddItem = {
 				command: "add_item",
-				type: "song",
-				data: {
-					path: selection.value?.path
+				props: {
+					type: "song",
+					caption: (selection.value?.title ?? [])[0] ?? "[song-title missing]",
+					color: "#0000ff",
+					file: selection.value?.path,
+					languages: [0]
 				}
 			};
 

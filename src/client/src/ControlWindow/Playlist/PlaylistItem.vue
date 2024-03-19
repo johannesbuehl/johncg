@@ -58,7 +58,7 @@
 
 		border: 0.125rem solid transparent;
 
-		border-radius: 0.125rem;
+		border-radius: 0.375rem;
 
 		display: flex;
 		align-items: stretch;
@@ -80,6 +80,9 @@
 	.item_color_indicator {
 		height: auto;
 		width: 1.5rem;
+
+		border-top-left-radius: 0.25rem;
+		border-bottom-left-radius: 0.25rem;
 	}
 
 	.playlist_item {
@@ -93,6 +96,9 @@
 		flex: 1;
 
 		text-wrap: nowrap;
+
+		border-top-right-radius: 0.25rem;
+		border-bottom-right-radius: 0.25rem;
 	}
 
 	.playlist_item_wrapper.selectable:hover > .playlist_item {

@@ -2,10 +2,10 @@
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { ImageSlides } from "@server/JGCPSendMessages";
+	import type { MediaSlides } from "@server/JGCPSendMessages";
 
 	defineProps<{
-		slide?: ImageSlides;
+		slide?: MediaSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 	}>();
@@ -22,11 +22,11 @@
 			:class="{ active: 0 === active_item_slide?.slide }"
 			@click="$emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slide?.caption }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				:media="slide?.media[0]"
+				:media="slide?.media"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
 				@click="$emit('select_slide', 0)"

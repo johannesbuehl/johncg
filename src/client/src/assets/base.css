@@ -46,13 +46,10 @@
 	box-sizing: border-box;
 	margin: 0;
 	font-weight: normal;
-}
 
-* {
 	overflow: hidden;
 
 	font-family: Bahnschrift;
-	color: var(--color-text);
 }
 
 *:focus {
@@ -67,19 +64,19 @@
 	content: "";
 	position: absolute;
 
-	border-radius: 0.125rem; /*1*/
-	border: 0.125rem solid transparent; /*2*/
+	border-radius: 0.375rem;
+	border: 0.125rem solid transparent;
 	background: linear-gradient(
 			135deg,
 			var(--color-text-disabled) 0%,
 			var(--color-text-disabled) 25%,
 			transparent 100%
 		)
-		border-box; /*3*/
-	mask: /*4*/
+		border-box;
+	mask:
 		linear-gradient(#fff 0 0) padding-box,
 		linear-gradient(#fff 0 0);
-	mask-composite: exclude; /*5*/
+	mask-composite: exclude;
 
 	inset: -0.125rem;
 
@@ -118,6 +115,8 @@ body {
 
 	cursor: default;
 	user-select: none;
+
+	color: var(--color-text);
 	/* min-height: 100vh;
 	color: var(--color-text);
 	transition:

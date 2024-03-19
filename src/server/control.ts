@@ -18,6 +18,8 @@ import type { CasparCGConnectionSettings } from "./config.ts";
 
 import Config from "./config.ts";
 import SearchPart from "./search_part.ts";
+import PlaylistFile from "./PlaylistFile.ts";
+import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 
 interface CasparCGPathsSettings {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -34,6 +36,7 @@ export interface CasparCGConnection {
 	settings: CasparCGConnectionSettings;
 	paths: CasparCGPathsSettings;
 	media: ClipInfo[];
+	templates: string[];
 	resolution: CasparCGResolution;
 	framerate: number;
 }
@@ -89,8 +92,10 @@ class Control {
 			this.renew_search_index(msg.type, ws),
 		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
 			this.search_item(msg.type, msg.search, ws),
-		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.type, msg.data, ws),
-		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws)
+		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, ws),
+		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
+		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
+		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -190,6 +195,7 @@ class Control {
 					) as { paths: object }
 				)?.paths as CasparCGPathsSettings,
 				media: (await (await connection.cls()).request)?.data ?? [],
+				templates: (await (await connection.tls()).request)?.data ?? [],
 				resolution,
 				framerate
 			};
@@ -215,17 +221,35 @@ class Control {
 
 	/**
 	 * open and load a playlist-file and send it to clients and renderers
-	 * @param playlist playlist-file content
+	 * @param playlist_string playlist-file content
 	 */
-	private open_playlist(playlist: string, ws: WebSocket) {
-		// if there was already a playlist open, call it's destroy function
-		this.playlist?.destroy();
+	private open_playlist(playlist_string: string, ws: WebSocket) {
+		let playlist: PlaylistFile;
 
-		this.playlist = new Playlist(this.casparcg_connections, playlist);
+		try {
+			playlist = JSON.parse(playlist_string) as PlaylistFile;
+		} catch (e) {
+			if (e instanceof SyntaxError) {
+				ws_send_response("invalid JSON in playlist-file", false, ws);
+				return;
+			} else {
+				throw e;
+			}
+		}
 
-		this.casparcg_connections.forEach((casparcg_connection) =>
-			this.playlist.add_casparcg_connection(casparcg_connection)
-		);
+		let new_playlist: Playlist;
+
+		try {
+			new_playlist = new Playlist(this.casparcg_connections, playlist);
+		} catch (e) {
+			ws_send_response("invalid playlist-file", false, ws);
+			return;
+		}
+
+		// destroy the previous opened playlist
+		this.playlist.destroy();
+
+		this.playlist = new_playlist;
 
 		// send the playlist to all clients
 		this.send_playlist(Array.from(Array(this.playlist.playlist_items.length).keys()));
@@ -237,9 +261,14 @@ class Control {
 	}
 
 	private save_playlist(ws: WebSocket) {
-		const save_path = this.playlist.save();
+		const message: JGCPSend.PlaylistSave = {
+			command: "playlist_save",
+			playlist: this.playlist.save()
+		};
 
-		ws_send_response(`playlist has been saved to '${save_path}'`, true, ws);
+		ws.send(JSON.stringify(message));
+
+		ws_send_response(`playlist has been send to client`, true, ws);
 	}
 
 	private send_playlist(
@@ -474,18 +503,20 @@ class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private add_item(type: JGCPRecv.AddItem["type"], data: JGCPRecv.AddItem["data"], ws: WebSocket) {
-		const result = this.playlist.add_item(type, data);
-
-		if (result) {
-			this.send_playlist();
-
-			this.send_state();
-
-			ws_send_response("added item to playlist", true, ws);
-		} else {
+	private add_item(props: ItemProps, ws: WebSocket) {
+		try {
+			this.playlist.add_item(props);
+		} catch (e) {
 			ws_send_response("could not add item to playlist", false, ws);
+
+			return;
 		}
+
+		this.send_playlist();
+
+		this.send_state();
+
+		ws_send_response("added item to playlist", true, ws);
 	}
 
 	private delete_item(position: number, ws: WebSocket) {
@@ -509,6 +540,24 @@ class Control {
 		}
 
 		ws_send_response("delete item from playlist", true, ws);
+	}
+
+	private get_media_tree(ws: WebSocket) {
+		const message: JGCPSend.MediaTree = {
+			command: "media_tree",
+			media: this.casparcg_connections[0].media
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private get_template_tree(ws: WebSocket) {
+		const message: JGCPSend.TemplateTree = {
+			command: "template_tree",
+			templates: this.casparcg_connections[0].templates
+		};
+
+		ws.send(JSON.stringify(message));
 	}
 
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {

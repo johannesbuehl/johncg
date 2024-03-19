@@ -8,20 +8,21 @@ import { get_song_path } from "./Song.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
-	type: "PDF";
-	FileName: string;
-	media: string[];
+	type: "pdf";
+	path: string;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
 export interface ClientPDFSlides extends ClientItemSlidesBase {
-	type: "PDF";
+	type: "pdf";
 	slides: string[];
 	template?: undefined;
 }
 
 export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
+
+	private slides: string[];
 
 	protected slide_count: number = 0;
 
@@ -31,12 +32,11 @@ export default class PDF extends PlaylistItemBase {
 		super();
 
 		this.item_props = props;
-		this.item_props.media = [];
 
 		void (async () => {
 			const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-			const pth = get_song_path(this.props.FileName).replaceAll("/", "\\");
+			const pth = get_song_path(this.props.path).replaceAll("/", "\\");
 
 			try {
 				const pdf = await pdfjs.getDocument(pth).promise;
@@ -62,14 +62,13 @@ export default class PDF extends PlaylistItemBase {
 
 					void sharp(image_buffer).png().toFile(tmp_file.name);
 
-					this.item_props.media[index] = tmp_file.name.replaceAll("\\", "/");
+					this.slides[index] = tmp_file.name.replaceAll("\\", "/");
 
 					this.slide_count++;
 				});
 			} catch (e) {
 				if (e instanceof pdfjs.MissingPDFException) {
-					// set the item as not selectable
-					this.props.selectable = false;
+					this.is_selectable = false;
 
 					return;
 				} else {
@@ -87,10 +86,10 @@ export default class PDF extends PlaylistItemBase {
 
 	async create_client_object_item_slides(): Promise<ClientPDFSlides> {
 		return Promise.resolve({
-			title: this.props.FileName,
-			type: "PDF",
-			slides: await Promise.all(this.props.media.map(async (m) => await this.create_thumbnail(m))),
-			media: []
+			caption: this.props.caption,
+			type: "pdf",
+			slides: await Promise.all(this.slides.map(async (m) => await this.create_thumbnail(m))),
+			media: undefined
 		});
 	}
 
@@ -134,6 +133,22 @@ export default class PDF extends PlaylistItemBase {
 
 	get props(): PDFProps {
 		return this.item_props;
+	}
+
+	get playlist_item(): PDFProps & { selectable: boolean } {
+		return { ...this.props, selectable: this.selectable };
+	}
+
+	get media(): string {
+		return this.slides[this.active_slide];
+	}
+
+	get multi_media(): boolean {
+		return true;
+	}
+
+	get loop(): boolean {
+		return false;
 	}
 
 	get template(): undefined {

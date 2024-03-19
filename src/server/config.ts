@@ -10,6 +10,7 @@ export interface ConfigJSON {
 		show_on_load: boolean;
 	};
 	path: {
+		playlist: string;
 		song: string;
 		psalm: string;
 		pdf: string;

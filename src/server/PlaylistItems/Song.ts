@@ -15,12 +15,11 @@ export interface SongTemplate {
 
 export interface SongProps extends ItemPropsBase {
 	/* eslint-disable @typescript-eslint/naming-convention */
-	type?: "Song";
-	FileName: string;
-	VerseOrder?: string[];
-	Language?: number;
-	PrimaryLanguage?: number;
-	template?: SongTemplate;
+	type: "song";
+	file: string;
+	verse_order?: string[];
+	languages?: number[];
+	// template?: SongTemplate;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -35,14 +34,14 @@ export type ItemSlide = LyricSlide | TitleSlide;
 
 export interface SongTemplateData {
 	slides: ItemSlide[];
-	languages: number[];
+	languages?: number[];
 	slide: number;
 }
 
 export type SongPartClient = ItemPartClient & { start_index: number };
 
 export interface ClientSongSlides extends ClientItemSlidesBase {
-	type: "Song";
+	type: "song";
 	slides: SongPartClient[];
 	template: SongTemplate;
 }
@@ -55,23 +54,27 @@ export default class Song extends PlaylistItemBase {
 	// currently active slide-number
 	private active_slide_number: number = 0;
 
-	private languages: number[] = [];
-
 	private song_file: SongFile = new SongFile();
+
+	protected media_casparcg: string;
+
+	private casparcg_media_list: ClipInfo[];
 
 	constructor(props: SongProps, casparcg_media_list: ClipInfo[]) {
 		super();
 
+		this.casparcg_media_list = casparcg_media_list;
+
 		this.item_props = props;
 
 		try {
-			this.song_file = new SongFile(get_song_path(props.FileName));
+			this.song_file = new SongFile(get_song_path(props.file));
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`song '${props.FileName}' does not exist`);
+				console.error(`song '${props.file}' does not exist`);
 
-				this.item_props.selectable = false;
+				this.is_selectable = false;
 
 				return;
 			} else {
@@ -79,18 +82,8 @@ export default class Song extends PlaylistItemBase {
 			}
 		}
 
-		// create the languages-array
-		// initialize the array with all languages
-		this.languages = Array.from(Array(this.song_file.languages).keys());
-
-		// if there is a 'PrimaryLanguage' specified, move it to the first position
-		if (this.item_props.PrimaryLanguage !== undefined) {
-			const temp = this.languages.splice(this.item_props.PrimaryLanguage, 1);
-			this.languages.unshift(...temp);
-		}
-		// if a 'Language' is specified, take only this one
-		if (this.item_props.Language !== undefined) {
-			this.languages = [this.languages[this.item_props.Language]];
+		if (this.props.languages === undefined) {
+			this.item_props.languages = this.song_file.languages;
 		}
 
 		// add the title-slide to the counter
@@ -107,25 +100,11 @@ export default class Song extends PlaylistItemBase {
 				}
 			}
 		}
-
-		// store the media
-		this.item_props.media = [
-			path_to_casparcg_media(
-				this.song_file.metadata.BackgroundImage ?? "#00000000",
-				casparcg_media_list
-			)
-		];
-
-		// create the template data
-		this.item_props.template = {
-			template: "JohnCG/Song",
-			data: this.create_template_data()
-		};
 	}
 
 	get_verse_order(): string[] {
-		if (this.item_props.VerseOrder !== undefined) {
-			return this.item_props.VerseOrder;
+		if (this.item_props.verse_order !== undefined) {
+			return this.item_props.verse_order;
 		} else if (this.song_file?.metadata.VerseOrder !== undefined) {
 			return this.song_file.metadata.VerseOrder;
 		} else {
@@ -133,13 +112,11 @@ export default class Song extends PlaylistItemBase {
 		}
 	}
 
-	create_template_data(slide?: number) {
-		slide = this.active_slide ?? this.validate_slide_number(slide);
-
+	create_template_data() {
 		const return_object: SongTemplateData = {
-			slide,
+			slide: this.active_slide,
 			slides: [this.song_file.part_title],
-			languages: this.languages
+			languages: this.props.languages
 		};
 
 		// add the individual parts to the output-object
@@ -211,16 +188,16 @@ export default class Song extends PlaylistItemBase {
 
 	create_client_object_item_slides(): Promise<ClientSongSlides> {
 		const return_item: ClientSongSlides = {
-			type: "Song",
-			title: this.item_props.Caption,
+			type: "song",
+			caption: this.item_props.caption,
 			slides: [
 				{
 					start_index: 0,
-					...this.song_file.get_title_client(this.languages[0])
+					...this.song_file.get_title_client(this.props.languages[0])
 				}
 			],
-			media: this.props.media,
-			template: this.props.template
+			media: this.media,
+			template: this.template
 		};
 
 		let slide_counter: number = 1;
@@ -258,15 +235,54 @@ export default class Song extends PlaylistItemBase {
 		return this.active_slide_number;
 	}
 
+	get playlist_item(): SongProps & { selectable: boolean } {
+		return { ...this.props, selectable: this.selectable };
+	}
+
+	get media(): string {
+		return this.path_to_casparcg_media(this.song_file.metadata.BackgroundImage);
+	}
+
+	get loop(): boolean {
+		return true;
+	}
+
 	get template(): SongTemplate {
-		const template = structuredClone(this.props.template);
+		const template: SongTemplate = {
+			template: "JohnCG/Song",
+			data: this.create_template_data()
+		};
+
 		template.data.slide = this.active_slide;
 
 		return template;
 	}
 
-	get media(): string | undefined {
-		return this.props.media !== undefined ? this.props.media[0] : undefined;
+	private path_to_casparcg_media(media?: string): string {
+		// test wether it is a color-string
+		const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
+
+		// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+		if (test_rgb_string) {
+			return media;
+		}
+
+		// make it all uppercase and remove the extension to match casparcg-clips
+		const req_name = media
+			.replace(/\.[^(\\.]+$/, "")
+			.replaceAll("\\", "/")
+			.toUpperCase();
+
+		// check all the casparcg-files, wether they contain a media-file that matches the path
+		for (const m of this.casparcg_media_list) {
+			const media_file = m.clip.toUpperCase().replace(/\\/, "/");
+
+			if (req_name.endsWith(media_file)) {
+				return m.clip;
+			}
+		}
+
+		return "#00000000";
 	}
 }
 
@@ -276,31 +292,4 @@ export function get_song_path(song_path: string): string {
 		: path.resolve(Config.path.song, song_path);
 
 	return return_path.replaceAll("\\", "/");
-}
-
-function path_to_casparcg_media(media: string, casparcg_media_list: ClipInfo[]): string {
-	// test wether it is a color-string
-	const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
-
-	// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
-	if (test_rgb_string) {
-		return media;
-	}
-
-	// make it all uppercase and remove the extension to match casparcg-clips
-	const req_name = media
-		.replace(/\.[^(\\.]+$/, "")
-		.replaceAll("\\", "/")
-		.toUpperCase();
-
-	// check all the casparcg-files, wether they contain a media-file that matches the path
-	for (const m of casparcg_media_list) {
-		const media_file = m.clip.toUpperCase().replace(/\\/, "/");
-
-		if (req_name.endsWith(media_file)) {
-			return m.clip;
-		}
-	}
-
-	return "#00000000";
 }

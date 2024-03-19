@@ -1,35 +1,21 @@
-import path from "path";
-import type { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
-import mime from "mime-types";
+import type { APIRequest, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
 
-import type { SongElement } from "./PlaylistItems/SongFile.ts";
-import type {
-	ClientItemSlides,
-	ItemProps,
-	ItemPropsBase,
-	PlaylistItem
-} from "./PlaylistItems/PlaylistItem.ts";
+import type { ClientItemSlides, ItemProps, PlaylistItem } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
-import type { SongProps } from "./PlaylistItems/Song.ts";
 
 import * as JGCPSend from "./JGCPSendMessages.ts";
-import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 
 import Config from "./config.ts";
-import Countdown from "./PlaylistItems/Countdown.ts";
-import type { CountdownProps } from "./PlaylistItems/Countdown.ts";
-import Comment from "./PlaylistItems/Comment.ts";
-import type { CommentProps } from "./PlaylistItems/Comment.ts";
-import Image from "./PlaylistItems/Image.ts";
-import type { ImageProps } from "./PlaylistItems/Image.ts";
-import CommandComment from "./PlaylistItems/CommandComment.ts";
-import type { CommandCommentProps } from "./PlaylistItems/CommandComment.ts";
 import type { CasparCGConnection } from "./control.ts";
+import PlaylistFile from "./PlaylistFile.ts";
+import Comment from "./PlaylistItems/Comment.ts";
+import Countdown from "./PlaylistItems/Countdown.ts";
+import Media from "./PlaylistItems/Media.ts";
 import PDF from "./PlaylistItems/PDF.ts";
-import type { PDFProps } from "./PlaylistItems/PDF.ts";
+import TemplateItem from "./PlaylistItems/Template.ts";
 
 export interface ClientPlaylistItems {
-	playlist_items: ItemProps[];
+	playlist_items: (ItemProps & { selectable: boolean })[];
 }
 
 export interface ActiveItemSlide {
@@ -54,6 +40,8 @@ enum TransitionType {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export default class Playlist {
+	private caption: string = "";
+
 	// store the individual items of the playlist
 	playlist_items: PlaylistItem[] = [];
 
@@ -72,13 +60,23 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(casparcg_connections?: CasparCGConnection[], playlist?: string) {
+	constructor(casparcg_connections?: CasparCGConnection[], playlist?: PlaylistFile) {
 		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
 
-		if (typeof playlist === "string") {
+		if (playlist !== undefined) {
 			this.parse_playlist(playlist);
 
-			this.set_active_item(0, 0);
+			let first_item = 0;
+
+			while (!this.playlist_items[first_item].selectable) {
+				first_item++;
+
+				if (first_item === this.playlist_items.length) {
+					return;
+				}
+			}
+
+			this.set_active_item(first_item, 0);
 		}
 	}
 
@@ -91,16 +89,11 @@ export default class Playlist {
 			this.casparcg_load_item(casparcg_connection);
 		});
 
-		// clear the previous casparcg-output on the layers
-		this.casparcg_clear_layers(casparcg_connection);
-
 		// load the first slide
 		this.casparcg_load_item(casparcg_connection);
 	}
 
 	destroy() {
-		this.casparcg_clear_layers();
-
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// casparcg_connection.connection.removeAllListeners();
 
@@ -108,54 +101,27 @@ export default class Playlist {
 		});
 	}
 
-	/**
-	 * clear the casparcg-layers used
-	 */
-	casparcg_clear_layers(casparcg_connection?: CasparCGConnection) {
-		const clear_layers = (connection: CasparCGConnection) => {
-			void connection.connection.cgClear({
-				channel: connection.settings.channel,
-				layer: connection.settings.layers[0]
-			});
-			void connection.connection.cgClear({
-				channel: connection.settings.channel,
-				layer: connection.settings.layers[1]
-			});
+	add_item(item: ItemProps, set_active: boolean = true) {
+		const item_class_map: {
+			[key in ItemProps["type"]]: new (props: ItemProps, ccg?: ClipInfo[]) => PlaylistItem;
+		} = {
+			song: Song,
+			comment: Comment,
+			countdown: Countdown,
+			media: Media,
+			pdf: PDF,
+			template: TemplateItem
 		};
 
-		// if a conneciton was given as an argument, clear only it's layers
-		if (casparcg_connection !== undefined) {
-			clear_layers(casparcg_connection);
-		} else {
-			// clear the layers on all connnections
-			this.casparcg_connections.forEach(clear_layers);
+		this.playlist_items.push(
+			new item_class_map[item.type](item, this.casparcg_connections[0].media)
+		);
+
+		if (set_active) {
+			this.set_active_item(-1, 0);
 		}
-	}
-
-	add_item(type: JGCPRecv.AddItem["type"], data: JGCPRecv.AddItem["data"]): boolean {
-		switch (type) {
-			case "song": {
-				const song_props: SongProps = {
-					/* eslint-disable @typescript-eslint/naming-convention */
-					Caption: path.basename(data.path).replace(/\.[^(\\.]+$/, ""),
-					Color: "#0000FF",
-					FileName: data.path,
-					selectable: true,
-					media: [""]
-					/* eslint-enable @typescript-eslint/naming-convention */
-				};
-
-				this.playlist_items.push(new Song(song_props, this.casparcg_connections[0].media));
-				break;
-			}
-			default:
-				return false;
-		}
-
-		this.set_active_item(-1, 0);
 
 		this.changes = true;
-		return true;
 	}
 
 	delete_item(position: number): boolean {
@@ -179,182 +145,72 @@ export default class Playlist {
 		}
 	}
 
-	parse_playlist(playlist: string): void {
-		// check, wether the file starts like a songbeamer schedule
-		if (playlist.startsWith("object AblaufPlanItems: TAblaufPlanItems")) {
-			this.parse_songbeamer_playlist(playlist);
-		}
-	}
+	protected parse_playlist(playlist: PlaylistFile): void {
+		this.caption = playlist.caption;
 
-	save(save_path?: string): string | boolean {
-		console.error("saving is not implemented yet. Doing a fake save now");
-
-		this.changes = false;
-
-		return save_path;
-	}
-
-	parse_songbeamer_playlist(playlist: string) {
-		// regex to split a playlist-file into individual items
-		const re_scan_playlist_file = /item\r?\n(\r?\n|.)+?end/gm;
-		// regex to extract information from an individual playlist-item
-		const re_scan_playlist_item =
-			/(\s+(Caption =\s+'(?<Caption>[\s\S]*?)'|CaptionFmtValue =\s+'(?<CaptionFmtValue>[\s\S]*?)'|Color =\s+(?<Color>[\s\S]*?)|FileName =\s+'(?<FileName>[\s\S]*?)'|VerseOrder =\s+'(?<VerseOrder>[\s\S]*?)'|Props =\s+\[(?<Props>)\]|StreamClass =\s+'(?<StreamClass>[\s\S]*?)'|Data =\s*\{\s*(?<Data>[\s\S]+)\s*\}|Lang = \(\s+(?<Language>\d)\)|PrimaryLang = (?<PrimaryLanguage>\d))$)/gm;
-
-		// split the playlist into the individual items
-		const re_results = playlist.match(re_scan_playlist_file);
-
-		if (!re_results) {
-			// if there were no results, check wether the playlist is empty
-			if (/items\s*=\s*<\s*>/.test(playlist)) {
-				throw new SyntaxError("playlist is empty");
-			}
-
-			throw new SyntaxError("unable to parse playlist");
-		}
-
-		// process every element individually
-		re_results.forEach((playlist_item) => {
-			// reset the regex
-			re_scan_playlist_item.lastIndex = 0;
-
-			// store the regex results
-			let re_results_item: RegExpExecArray | null;
-
-			// store the data of the object
-			let item_data: ItemPropsBase = {
-				/* eslint-disable @typescript-eslint/naming-convention */
-				type: "",
-				Caption: "",
-				Color: "",
-				slide_count: 0,
-				selectable: true,
-				media: ["#00000000"]
-				/* eslint-enable @typescript-eslint/naming-convention */
-			};
-
-			// exec the item-regex until there are no more results
-			do {
-				re_results_item = re_scan_playlist_item.exec(playlist_item);
-
-				// if there was a result, process it
-				if (re_results_item !== null) {
-					const results = re_results_item.groups;
-
-					// only proceeds, when there are results
-					if (results !== undefined) {
-						// remove all undefined values
-						Object.keys(results).forEach(
-							(key) => results[key] === undefined && delete results[key]
-						);
-
-						// parse all remaining values
-						item_data = {
-							...item_data,
-							...parse_item_value_string(...Object.entries(results)[0])
-						};
-					}
-				}
-			} while (re_results_item !== null);
-
-			// store the playlist-item
-			switch (item_data.type) {
-				case "Song":
-					this.playlist_items.push(
-						new Song(item_data as SongProps, this.casparcg_connections[0].media)
-					);
-					break;
-				case "Countdown":
-					this.playlist_items.push(new Countdown(item_data as CountdownProps));
-					break;
-				case "Image":
-					this.playlist_items.push(new Image(item_data as ImageProps));
-					break;
-				case "PDF":
-					this.playlist_items.push(new PDF(item_data as PDFProps));
-					break;
-				default:
-					// if it wasn't caught by other cases, it is either a comment or not implemented yet -> if there is no file specified, treat it as comment
-					if (!Object.keys(item_data).includes("FileName")) {
-						// try to parse the caption as an JSON-object for AMCP-Commands
-						try {
-							const caption_json = JSON.parse(item_data.Caption) as unknown;
-
-							if (typeof caption_json === "object") {
-								const props: CommandCommentProps = {
-									...item_data,
-									type: "CommandComment",
-									template: caption_json as { template: string; data: object }
-								};
-
-								props.type = "CommandComment";
-
-								this.playlist_items.push(new CommandComment(props));
-							} else {
-								throw new SyntaxError();
-							}
-						} catch (e) {
-							if (e instanceof SyntaxError) {
-								item_data.type = "Comment";
-
-								this.playlist_items.push(new Comment(item_data as CommentProps));
-							}
-						}
-					}
-					break;
-			}
+		playlist.items.forEach((item) => {
+			this.add_item(item, false);
 		});
+	}
+
+	save(): PlaylistFile {
+		const save_object: PlaylistFile = {
+			caption: this.caption,
+			items: this.playlist_items.map((item) => item.props)
+		};
+
+		return save_object;
 	}
 
 	create_client_object_playlist(): ClientPlaylistItems {
 		const return_playlist: ClientPlaylistItems = {
-			playlist_items: this.playlist_items.map((item) => item.props)
+			playlist_items: this.playlist_items.map((item) => item.playlist_item)
 		};
 
 		return return_playlist;
 	}
 
 	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
-		const client_object = await this.playlist_items[item].create_client_object_item_slides();
+		if (this.playlist_items[item].selectable) {
+			const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
-		const promises: Promise<string>[] = client_object.media.map(async (media) => {
-			// check wether it is a color string
-			const test_rgb_string = media.match(
-				/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
-			);
+			if (client_object.media !== undefined) {
+				// check wether it is a color string
+				const test_rgb_string = client_object.media.match(
+					/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
+				);
 
-			if (!test_rgb_string) {
-				let thumbnails: string[] = (
-					await (
-						await this.casparcg_connections[0].connection.thumbnailRetrieve({
-							filename: '"' + media + '"'
-						})
-					).request
-				).data as string[];
-
-				if (thumbnails === undefined) {
-					await this.casparcg_connections[0].connection.thumbnailGenerate({
-						filename: '"' + media + '"'
-					});
-
-					thumbnails = (
+				if (!test_rgb_string) {
+					let thumbnails: string[] = (
 						await (
 							await this.casparcg_connections[0].connection.thumbnailRetrieve({
-								filename: '"' + media + '"'
+								filename: '"' + client_object.media + '"'
 							})
 						).request
 					).data as string[];
+
+					if (thumbnails === undefined) {
+						await this.casparcg_connections[0].connection.thumbnailGenerate({
+							filename: '"' + client_object.media + '"'
+						});
+
+						thumbnails = (
+							await (
+								await this.casparcg_connections[0].connection.thumbnailRetrieve({
+									filename: '"' + client_object.media + '"'
+								})
+							).request
+						).data as string[];
+					}
+
+					client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";
+				} else {
+					client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 				}
-
-				return "data:image/png;base64," + thumbnails[0];
-			} else {
-				return `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 			}
-		});
 
-		client_object.media = await Promise.all(promises);
-
-		return client_object;
+			return client_object;
+		}
 	}
 
 	set_active_item(item: number, slide: number = 0): ActiveItemSlide {
@@ -405,7 +261,7 @@ export default class Playlist {
 
 			// sanitize the item-number
 			new_active_item_number = this.sanitize_item_number(new_active_item_number);
-		} while (!this.playlist_items[new_active_item_number].props.selectable);
+		} while (!this.playlist_items[new_active_item_number].selectable);
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {
@@ -515,27 +371,25 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
-		const media = this.active_playlist_item?.media;
-
 		// if the state is "visible", play it directly
 		if (this.visibility) {
-			return casparcg_connection.connection.play({
-				/* eslint-disable @typescript-eslint/naming-convention */
+			const message = {
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0],
-				clip: media,
+				clip: this.active_playlist_item?.media ?? "#00000000",
+				loop: this.active_playlist_item?.loop,
 				transition: this.casparcg_transition
-				/* eslint-enable @typescript-eslint/naming-convention */
-			});
+			};
+
+			return casparcg_connection.connection.play(message);
 		} else {
 			//  if the current stat is invisible, only load it in the background
 			return casparcg_connection.connection.loadbg({
-				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0],
-				clip: media,
+				clip: this.active_playlist_item?.media,
+				loop: this.active_playlist_item?.loop,
 				transition: this.casparcg_transition
-				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
 	}
@@ -580,7 +434,7 @@ export default class Playlist {
 	private casparcg_select_slide(slide: number): void {
 		this.casparcg_connections.forEach((casparcg_connection) => {
 			// if the item has multiple media-files, load the new one
-			if (this.active_playlist_item.props.media?.length ?? 0 > 1) {
+			if (this.active_playlist_item.multi_media) {
 				void this.casparcg_load_media(casparcg_connection);
 			}
 
@@ -676,91 +530,6 @@ export default class Playlist {
 	get unsaved_changes(): boolean {
 		return this.changes;
 	}
-}
-
-// parse an individual playlist-item-value
-function parse_item_value_string(
-	key: string,
-	value: string
-): { [P in keyof ItemProps]?: ItemProps[P] } {
-	// remove line-breaks
-	value = value.replace(/'?\s\+\s+'?/gm, "");
-	// un-escape escaped characters
-	value = value.replace(/'?((?:#(?:\d+))+)'?/gm, (match, group: string) => {
-		const chars = group.split("#").slice(1);
-
-		let return_string = "";
-
-		chars.forEach((char) => (return_string += String.fromCharCode(Number(char))));
-
-		return return_string;
-	});
-
-	const return_props: { [P in keyof ItemProps]?: ItemProps[P] } = {};
-
-	// do value-type specific stuff
-	switch (key) {
-		case "Data":
-			// remove whitespace and linebreaks
-			return_props.Data = value.replace(/\s+/gm, "");
-			break;
-		case "VerseOrder":
-			// split csv-line into an array
-			return_props.VerseOrder = value.split(",") as SongElement[];
-			break;
-		case "FileName":
-			{
-				// assume the type from the mime-type
-				const mime_type = mime.lookup(value);
-				switch (true) {
-					case mime_type ? mime_type.split("/", 1)[0] === "image" : false:
-						return_props.type = "Image";
-						break;
-					case mime_type === "application/pdf":
-						return_props.type = "PDF";
-						break;
-					case !mime_type:
-						if (path.extname(value) === ".sng") {
-							return_props.type = "Song";
-						}
-						break;
-				}
-				return_props.FileName = value;
-			}
-			break;
-		case "Color":
-			if (value.substring(0, 2) === "cl") {
-				return_props[key] = convert_color_to_hex(value);
-			} else {
-				const color_int = Number(value);
-
-				const color =
-					((color_int & 0x0000ff) << 16) | (color_int & 0x00ff00) | ((color_int & 0xff0000) >> 16);
-
-				const color_string = color.toString(16);
-				return_props[key] = "#" + color_string.padStart(6, "0");
-			}
-			break;
-		case "PrimaryLanguage":
-		case "Language":
-			return_props[key] = Number(value) - 1; // subtract 1, because Songbeamer start counting at 1
-			break;
-		case "CaptionFmtValue":
-			return_props.Time = value;
-			break;
-		case "StreamClass":
-			if (value === "TPresentationObjectTimer") {
-				return_props.type = "Countdown";
-			} else {
-				return_props.StreamClass = value;
-			}
-			break;
-		case "Caption":
-			return_props[key] = value;
-			break;
-	}
-
-	return return_props;
 }
 
 export function convert_color_to_hex(color: string): string {

@@ -45,7 +45,7 @@
 			:class="{ active: active_item_slide?.item }"
 			@click="$emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slide?.caption }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide

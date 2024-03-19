@@ -3,71 +3,55 @@ import type { ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
 import type Countdown from "./Countdown.ts";
 import type { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown.ts";
 import type { ClientCommentSlides, CommentProps } from "./Comment.ts";
-import type Image from "./Image.ts";
-import type { ClientImageSlides, ImageProps } from "./Image.ts";
-import type CommandComment from "./CommandComment.ts";
-import type {
-	ClientCommandCommentSlides,
-	CommandCommentProps,
-	CommandCommentTemplate
-} from "./CommandComment.ts";
+import type Media from "./Media.ts";
+import type { ClientMediaProps, MediaProps } from "./Media.ts";
+import type TemplateItem from "./Template.ts";
+import type { ClientTemplateSlides, TemplateProps, TemplateTemplate } from "./Template.ts";
 import type PDF from "./PDF.ts";
 import type { ClientPDFSlides, PDFProps } from "./PDF.ts";
 import type Comment from "./Comment.ts";
 
-export type PlaylistItem = Song | Countdown | Comment | Image | CommandComment | PDF;
+export type PlaylistItem = Song | Countdown | Comment | Media | TemplateItem | PDF;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
 };
 
-export type Template = CountdownTemplate | SongTemplate | CommandCommentTemplate;
+export type Template = CountdownTemplate | SongTemplate | TemplateTemplate;
 
 export interface ItemPropsBase {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	type?: string;
-	Caption: string;
-	Color: string;
-	VerseOrder?: string[];
-	FileName?: string;
-	Language?: number;
-	PrimaryLanguage?: number;
-	Time?: string;
-	StreamClass?: string;
-
-	slide_count?: number;
-	Data?: string;
-	selectable: boolean;
-	media: string[];
-	template?: Template;
-	/* eslint-enable @typescript-eslint/naming-convention */
+	type: string;
+	caption: string;
+	color: string;
 }
 
 export type ItemProps =
 	| SongProps
 	| CountdownProps
 	| CommentProps
-	| ImageProps
-	| CommandCommentProps
+	| MediaProps
+	| TemplateProps
 	| PDFProps;
+
+export interface CasparCGTemplate {
+	template: string;
+	data?: object;
+}
 
 export interface ClientItemSlidesBase {
 	type: string;
-	title: string;
+	caption: string;
 	slides: Array<unknown>;
-	media: string[];
-	template?: {
-		template: string;
-		data?: object;
-	};
+	media: string;
+	template?: CasparCGTemplate;
 }
 
 export type ClientItemSlides =
 	| ClientSongSlides
 	| ClientCountdownSlides
 	| ClientCommentSlides
-	| ClientImageSlides
-	| ClientCommandCommentSlides
+	| ClientMediaProps
+	| ClientTemplateSlides
 	| ClientPDFSlides;
 
 export interface FontFormat {
@@ -84,6 +68,8 @@ export interface FontFormat {
 export abstract class PlaylistItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
+
+	protected is_selectable: boolean = true;
 
 	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
@@ -117,13 +103,19 @@ export abstract class PlaylistItemBase {
 
 	abstract get props(): ItemProps;
 
-	get media(): string | undefined {
-		if (this.props.media !== undefined) {
-			return this.props.media[this.active_slide];
-		} else {
-			return undefined;
-		}
+	abstract get playlist_item(): ItemProps & { selectable: boolean };
+
+	abstract get media(): string;
+
+	get multi_media(): boolean {
+		return false;
 	}
 
+	abstract get loop(): boolean;
+
 	abstract get template(): Template | undefined;
+
+	get selectable(): boolean {
+		return this.is_selectable;
+	}
 }

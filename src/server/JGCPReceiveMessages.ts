@@ -1,3 +1,5 @@
+import { ItemProps } from "./PlaylistItems/PlaylistItem";
+
 /**
  * Base interface for Received JGCP-messages
  */
@@ -65,7 +67,7 @@ export interface MovePlaylistItem extends Base {
 
 export interface RenewSearchIndex extends Base {
 	command: "renew_search_index";
-	type: "song" | "psalm" | "bible" | "text" | "image" | "template" | "pdf" | "countdown";
+	type: "song" | "psalm" | "bible" | "text" | "media" | "template" | "pdf" | "countdown";
 }
 
 export interface SearchItem extends Base {
@@ -78,18 +80,18 @@ export interface SearchItem extends Base {
 	};
 }
 
-interface AddItembase extends Base {
+export interface GetMediaTree extends Base {
+	command: "get_media_tree";
+}
+
+export interface GetTemplateTree extends Base {
+	command: "get_template_tree";
+}
+
+export interface AddItem extends Base {
 	command: "add_item";
+	props: ItemProps;
 }
-
-export interface AddSong extends AddItembase {
-	type: "song";
-	data: {
-		path: string;
-	};
-}
-
-export type AddItem = AddSong;
 
 export interface DeleteItem {
 	command: "delete_item";
@@ -111,4 +113,6 @@ export type Message =
 	| AddItem
 	| DeleteItem
 	| NewPlaylist
-	| SavePlaylist;
+	| SavePlaylist
+	| GetMediaTree
+	| GetTemplateTree;

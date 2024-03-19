@@ -1,11 +1,5 @@
-import { convert_color_to_hex } from "../Playlist.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type {
-	ClientItemSlidesBase,
-	DeepPartial,
-	FontFormat,
-	ItemPropsBase
-} from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 type CountdownMode = (typeof countdown_mode_items)[number];
@@ -15,12 +9,9 @@ interface CountdownPosition {
 	y: number;
 }
 
-interface CountdownPlaylistItemProps extends ItemPropsBase {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	type: "Countdown";
-	Time: string;
-	Data: string;
-	/* eslint-enable @typescript-eslint/naming-convention */
+export interface CountdownProps extends ItemPropsBase, CountdownTemplateData {
+	type: "countdown";
+	media: string;
 }
 
 export interface CountdownTemplate {
@@ -28,15 +19,8 @@ export interface CountdownTemplate {
 	data: CountdownTemplateData;
 }
 
-export interface CountdownProps extends CountdownPlaylistItemProps {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	fileName?: string;
-	background_color?: string;
-	template: CountdownTemplate;
-}
-
 export interface ClientCountdownSlides extends ClientItemSlidesBase {
-	type: "Countdown";
+	type: "countdown";
 	slides: [
 		{
 			time: string;
@@ -48,30 +32,10 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 
 export interface CountdownTemplateData {
 	position: CountdownPosition;
-	font_format: FontFormat;
+	font_size: number;
 	time: string;
 	show_seconds: boolean;
 	mode: CountdownMode;
-}
-
-// data from in the hex-string of the countdown, uses CSS-notation for easy translation in the renderer
-interface CountdownData {
-	mode: CountdownMode;
-	font_format: {
-		/* eslint-disable @typescript-eslint/naming-convention */
-		fontFamily?: string;
-		fontSize: number;
-		color: string;
-		fontWeight?: "bold";
-		fontStyle?: "italic";
-		textDecoration?: "underline";
-		/* eslint-enable @typescript-eslint/naming-convention */
-	};
-	x: number;
-	y: number;
-	show_seconds: boolean;
-	background_image?: string;
-	background_color?: string;
 }
 
 export default class Countdown extends PlaylistItemBase {
@@ -79,30 +43,10 @@ export default class Countdown extends PlaylistItemBase {
 
 	protected slide_count: number = 1;
 
-	constructor(props: CountdownPlaylistItemProps) {
+	constructor(props: CountdownProps) {
 		super();
 
-		const hex_data = parse_hex_data(props.Data);
-
-		this.item_props = {
-			...props,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			media: [hex_data.background_image ?? hex_data.background_color ?? "#00000000"],
-			background_color: hex_data.background_color,
-			template: {
-				template: "JohnCG/Countdown",
-				data: {
-					font_format: hex_data.font_format,
-					show_seconds: hex_data.show_seconds,
-					mode: hex_data.mode,
-					position: {
-						x: hex_data.x,
-						y: hex_data.y
-					},
-					time: props.Time
-				}
-			}
-		};
+		this.item_props = props;
 	}
 
 	navigate_slide(steps: number): number {
@@ -134,16 +78,16 @@ export default class Countdown extends PlaylistItemBase {
 		};
 
 		return Promise.resolve({
-			title: `${title_map[this.template.data.mode]}: ${this.props.Time}`,
+			caption: `${title_map[this.template.data.mode]}: ${this.props.time}`,
 			type: this.props.type,
 			slides: [
 				{
 					mode: this.template.data.mode,
-					time: this.props.Time
+					time: this.props.time
 				}
 			],
-			media: this.props.media,
-			template: this.props.template
+			media: this.media,
+			template: this.template
 		});
 	}
 
@@ -156,89 +100,28 @@ export default class Countdown extends PlaylistItemBase {
 		return this.item_props;
 	}
 
+	get playlist_item(): CountdownProps & { selectable: boolean } {
+		return { ...this.props, selectable: this.selectable };
+	}
+
+	get media(): string {
+		return this.props.media;
+	}
+
+	get loop(): boolean {
+		return true;
+	}
+
 	get template(): CountdownTemplate {
-		return this.props.template;
-	}
-}
-
-function parse_hex_data(data_hex: string): CountdownData {
-	const regex_curse =
-		/(?:546578745374796C6573060[1-3](?<bold>42)?(?<italic>49)?(?<underline>55)?|54657874436F6C6F72(?:(?:04|0707)(?<color>[0-9A-F]{6}|(?:[0-9A-F]{2})+?)0)|466F6E744E616D65(?:0[A-F0-9])+(?<font_family>(?:[A-F0-9]{2})+?)09|547970020(?<mode>[0-3])09|506F736974696F6E5802(?<x>[A-F0-9]{2})09|506F736974696F6E5902(?<y>[A-F0-9]{2})08|466F6E7453697A6502(?<font_size>[A-F0-9]{2})0F|4261636B67726F756E64496D616765(?:[A-F0-9]{4}636F6C6F723A2F2F244646(?<background_color>[A-F0-9]{12})|(?:[A-F0-9]{2})*?0[0-F]{3}(?<background_image>(?:[0-9A-F]{2})+?))0|53686F775365636F6E647308(?<show_seconds>.))/g;
-
-	const data: DeepPartial<CountdownData> = {
-		font_format: {
-			color: undefined,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			fontSize: undefined
-		},
-		mode: undefined,
-		x: undefined,
-		y: undefined,
-		show_seconds: true
-	};
-
-	const to_string = (raw: string): string => Buffer.from(raw, "hex").toString();
-
-	const to_int = (r: string): number => parseInt(r, 16);
-
-	const to_rgb = (r: string): string => {
-		// if it is longer than 6 bytes, it is an colorName
-		if (r.length > 6) {
-			return convert_color_to_hex(to_string(r));
-		} else {
-			return `#${r}`;
-		}
-	};
-
-	// regex match the data
-	for (const res of data_hex.matchAll(regex_curse)) {
-		// parse the results and add them to the results-object
-		Object.entries(res.groups ?? {}).forEach(([key, val]) => {
-			data.font_format ??= {};
-
-			if (val !== undefined) {
-				switch (key) {
-					case "mode":
-						data.mode = countdown_mode_items[Number(val)];
-						break;
-					case "color":
-						data.font_format.color = to_rgb(val);
-						break;
-					case "font_size":
-						data.font_format.fontSize = to_int(val);
-						break;
-					case "x":
-					case "y":
-						data[key] = to_int(val);
-						break;
-					case "show_seconds":
-						data.show_seconds = !val;
-						break;
-					case "bold":
-						data.font_format.fontWeight = "bold";
-						break;
-					case "italic":
-						data.font_format.fontStyle = "italic";
-						break;
-					case "underline":
-						data.font_format.textDecoration = "underline";
-						break;
-					case "font_family":
-						data.font_format.fontFamily = to_string(val);
-						break;
-					case "background_image":
-						data.background_image = to_string(val);
-						break;
-					case "background_color":
-						data.background_color = `#${to_string(val)}`;
-						break;
-					default:
-						console.error(`countdown_data['${key}'] is not implemented yet`);
-						break;
-				}
+		return {
+			template: "JohnCG/Countdown",
+			data: {
+				time: this.props.time,
+				mode: this.props.mode,
+				position: this.props.position,
+				font_size: this.props.font_size,
+				show_seconds: this.props.show_seconds
 			}
-		});
+		};
 	}
-
-	return data as CountdownData;
 }

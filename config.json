@@ -3,8 +3,11 @@
 		"show_on_load": true
 	},
 	"path": {
-		"background_image": "g:/Meine Ablage/Streaming/50_CasparCG-Media/",
-		"song": "D:/Coding_z1glr/liedtexte_git/"
+		"playlist": "g:/Meine Ablage/Streaming/12_Abläufe/",
+		"song": "D:/Coding_z1glr/liedtexte_git/Lieder",
+		"psalm": "D:/Coding_z1glr/liedtexte_git/Psalme",
+		"pdf": "g:/Meine Ablage/Streaming/50_CasparCG-Media/"
+
 	},
 	"casparcg": {
 		"templates": "g:/Meine Ablage/Streaming/51_CasparCG-Templates/",

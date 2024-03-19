@@ -92,20 +92,11 @@ function update(str_args: string) {
 		data.position.y = 50;
 	}
 
-	if (data.font_format !== undefined) {
+	if (data.font_size !== undefined) {
 		const this_format = {
-			...data.font_format,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			fontSize: `${data.font_format.fontSize}em`
+			fontSize: `${data.font_size}em`
 		};
-
-		// remove the underline property and show / hide the underline div
-		if (this_format.textDecoration === "underline") {
-			delete this_format.textDecoration;
-			document.querySelector<HTMLDivElement>("#underline").style.display = "";
-		} else {
-			document.querySelector<HTMLDivElement>("#underline").style.display = "none";
-		}
 
 		Object.entries(this_format).forEach(([key, val]) => {
 			time_div.style[key] = val;

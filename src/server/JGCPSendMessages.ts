@@ -1,11 +1,13 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import type { ClientCommandCommentSlides } from "./PlaylistItems/CommandComment.ts";
+import type { ClientTemplateSlides } from "./PlaylistItems/Template.ts";
 import type { ClientCommentSlides } from "./PlaylistItems/Comment.ts";
 import type { ClientCountdownSlides } from "./PlaylistItems/Countdown.ts";
-import type { ClientImageSlides } from "./PlaylistItems/Image.ts";
+import type { ClientMediaProps } from "./PlaylistItems/Media.ts";
 import type { ClientPDFSlides } from "./PlaylistItems/PDF.ts";
 import type { ClientSongSlides } from "./PlaylistItems/Song.ts";
 import { SongResult } from "./search_part.ts";
+import PlaylistFile from "./PlaylistFile.ts";
+import { ClipInfo } from "casparcg-connection";
 
 /**
  * Base interface for sent JGCP-messages
@@ -49,16 +51,16 @@ interface ItemSlidesBase extends Base {
 
 export type SongSlides = ClientSongSlides & ItemSlidesBase;
 export type CountdownSlides = ClientCountdownSlides & ItemSlidesBase;
-export type ImageSlides = ClientImageSlides & ItemSlidesBase;
-export type CommandCommentSlides = ClientCommandCommentSlides & ItemSlidesBase;
+export type MediaSlides = ClientMediaProps & ItemSlidesBase;
+export type TemplateSlides = ClientTemplateSlides & ItemSlidesBase;
 export type CommentSlides = ClientCommentSlides & ItemSlidesBase;
 export type PDFSlides = ClientPDFSlides & ItemSlidesBase;
 
 export type ItemSlides =
 	| SongSlides
 	| CountdownSlides
-	| ImageSlides
-	| CommandCommentSlides
+	| MediaSlides
+	| TemplateSlides
 	| CommentSlides
 	| PDFSlides;
 
@@ -76,7 +78,31 @@ export interface SongSearchResults extends SearchResultsBase {
 
 export type SearchResults = SongSearchResults;
 
+export interface PlaylistSave {
+	command: "playlist_save";
+	playlist: PlaylistFile;
+}
+
+export interface MediaTree {
+	command: "media_tree";
+	media: ClipInfo[];
+}
+
+export interface TemplateTree {
+	command: "template_tree";
+	templates: string[];
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = Playlist | State | ItemSlides | Clear | SearchResults;
+export type Message =
+	| Response
+	| Playlist
+	| State
+	| ItemSlides
+	| Clear
+	| SearchResults
+	| PlaylistSave
+	| MediaTree
+	| TemplateTree;

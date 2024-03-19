@@ -8,6 +8,8 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
+	import PlaylistFile from "./PlaylistFile.vue";
+	import type { Files } from "./FileDialogue/FileDialogue.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -17,6 +19,8 @@
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		search_results?: JGCPSend.SearchResults;
+		media_tree: Files;
+		templates_tree: Files;
 	}>();
 
 	defineEmits<{
@@ -115,14 +119,13 @@
 		@navigate="navigate"
 		@set_visibility="visibility"
 	/>
-	<div
-		id="MenuBar_wrapper"
-		v-if="
-			control_window_state === ControlWindowState.Playlist ||
-			control_window_state === ControlWindowState.Add
-		"
-	>
+	<div id="main_view">
+		<PlaylistFile v-if="control_window_state === ControlWindowState.OpenPlaylist" />
 		<PlaylistItemsList
+			v-if="
+				control_window_state === ControlWindowState.Playlist ||
+				control_window_state === ControlWindowState.Add
+			"
 			:playlist="playlist"
 			:selected="selected"
 			:active_item_slide="active_item_slide"
@@ -143,12 +146,14 @@
 			v-if="control_window_state === ControlWindowState.Add"
 			:ws="ws"
 			:search_results="search_results"
+			:media="media_tree"
+			:templates="templates_tree"
 		/>
 	</div>
 </template>
 
 <style scoped>
-	#MenuBar_wrapper {
+	#main_view {
 		display: flex;
 		flex: 1;
 

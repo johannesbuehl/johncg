@@ -69,8 +69,8 @@
 		>
 			<template #item="{ element, index }">
 				<PlaylistItem
-					:caption="element.Caption"
-					:color="element.Color"
+					:caption="element.caption"
+					:color="element.color"
 					:selectable="element.selectable"
 					:selected="selected === index"
 					:active="active_item_slide?.item === index"

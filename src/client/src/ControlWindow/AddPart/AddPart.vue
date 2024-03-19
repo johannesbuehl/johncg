@@ -6,12 +6,17 @@
 	import AddSong from "./Parts/AddSong.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
+	import AddMedia from "./Parts/AddMedia.vue";
+	import type { Files } from "../FileDialogue/FileDialogue.vue";
+	import AddTemplate from "./Parts/AddTemplate.vue";
 
 	library.add(fas.faMusic, fas.faBookBible, fas.faFont, fas.faImage, fas.faFilePdf, fas.faClock);
 
 	defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
+		media: Files;
+		templates: Files;
 	}>();
 
 	// const emit = defineEmits<{
@@ -25,7 +30,7 @@
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
 		{ text: "Bible", value: "bible", icon: "book-bible" },
 		{ text: "Text", value: "text", icon: "font" },
-		{ text: "Image", value: "image", icon: "image" },
+		{ text: "Media", value: "media", icon: "image" },
 		{ text: "Template", value: "template", icon: "music" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
 		{ text: "Countdown", value: "countdown", icon: "clock" }
@@ -48,6 +53,8 @@
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
 		/>
+		<AddMedia v-if="pick === 'media'" :media="media" :ws="ws" />
+		<AddTemplate v-if="pick === 'template'" :templates="templates" :ws="ws" />
 	</div>
 </template>
 

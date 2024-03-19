@@ -1,32 +1,27 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { get_song_path } from "./Song.ts";
 
-export interface ImageProps extends ItemPropsBase {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	type: "Image";
-	FileName: string;
-	media: string[];
-	/* eslint-enable @typescript-eslint/naming-convention */
+export interface MediaProps extends ItemPropsBase {
+	type: "media";
+	media: string;
+	loop: boolean;
 }
 
-export interface ClientImageSlides extends ClientItemSlidesBase {
-	type: "Image";
+export interface ClientMediaProps extends ClientItemSlidesBase {
+	type: "media";
 	template?: undefined;
 }
 
-export default class Image extends PlaylistItemBase {
-	protected item_props: ImageProps;
+export default class Media extends PlaylistItemBase {
+	protected item_props: MediaProps;
 
 	protected slide_count: number = 1;
 
-	constructor(props: ImageProps) {
+	constructor(props: MediaProps) {
 		super();
 
 		this.item_props = props;
-
-		this.item_props.media = [get_song_path(this.props.FileName)];
 	}
 
 	set_active_slide(slide?: number): number {
@@ -35,12 +30,12 @@ export default class Image extends PlaylistItemBase {
 		return slide;
 	}
 
-	create_client_object_item_slides(): Promise<ClientImageSlides> {
+	create_client_object_item_slides(): Promise<ClientMediaProps> {
 		return Promise.resolve({
-			title: this.props.FileName,
-			type: "Image",
+			caption: this.props.caption,
+			type: "media",
 			slides: [],
-			media: this.props.media
+			media: this.media
 		});
 	}
 
@@ -62,8 +57,20 @@ export default class Image extends PlaylistItemBase {
 		return 0;
 	}
 
-	get props(): ImageProps {
+	get props(): MediaProps {
 		return this.item_props;
+	}
+
+	get playlist_item(): MediaProps & { selectable: boolean } {
+		return { ...this.props, selectable: this.selectable };
+	}
+
+	get media(): string {
+		return this.props.media;
+	}
+
+	get loop(): boolean {
+		return this.props.loop;
 	}
 
 	get template(): undefined {

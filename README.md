@@ -8,7 +8,7 @@ Generate lyric-graphics and play them out through CasparCG.
 - move the file `song.html` into your CasparCG template directory
 
 ## roadmap
-- implement other playlist-items than song (Missing: Video, Bible, Psalm, PowerPoint, PDF, Diashow / Multi-Image, Music)
+- implement other playlist-items than song (Missing: Bible, Psalm, PowerPoint, Diashow / Multi-Image)
 - client: information about connection (active / reconnecting / ...)
 - companion integration (buttons for song parts -> send name to casparcg)
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)

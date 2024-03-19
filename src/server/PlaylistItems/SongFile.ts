@@ -260,7 +260,7 @@ export default class SongFile {
 	}
 
 	get_title_client(language: number): TitlePartClient {
-		if (language < 0 || language >= this.languages) {
+		if (language < 0 || language >= this.language_count) {
 			throw new RangeError("language-index is out of range");
 		}
 
@@ -296,7 +296,11 @@ export default class SongFile {
 		return Object.keys(this.text_parts);
 	}
 
-	get languages(): number {
+	get languages(): number[] {
+		return Array.from(Array(this.metadata.LangCount).keys());
+	}
+
+	get language_count(): number {
 		return this.metadata.LangCount;
 	}
 

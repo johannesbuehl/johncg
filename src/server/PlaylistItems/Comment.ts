@@ -1,13 +1,12 @@
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemProps, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface CommentProps extends ItemPropsBase {
-	type: "Comment";
-	selectable: false;
+	type: "comment";
 }
 
 export interface ClientCommentSlides extends ClientItemSlidesBase {
-	type: "Comment";
+	type: "comment";
 }
 
 export default class Comment extends PlaylistItemBase {
@@ -20,15 +19,15 @@ export default class Comment extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.item_props.selectable = false;
+		this.is_selectable = false;
 	}
 
 	create_client_object_item_slides(): Promise<ClientCommentSlides> {
 		return Promise.resolve({
-			type: "Comment",
-			title: this.props.Caption,
+			type: "comment",
+			caption: this.props.caption,
 			slides: [],
-			media: []
+			media: undefined
 		});
 	}
 
@@ -45,8 +44,20 @@ export default class Comment extends PlaylistItemBase {
 		return -1;
 	}
 
-	get props(): ItemProps {
+	get props(): CommentProps {
 		return this.item_props;
+	}
+
+	get playlist_item(): CommentProps & { selectable: boolean } {
+		return { ...this.props, selectable: this.selectable };
+	}
+
+	get media(): undefined {
+		return undefined;
+	}
+
+	get loop(): undefined {
+		return undefined;
 	}
 
 	get template(): undefined {

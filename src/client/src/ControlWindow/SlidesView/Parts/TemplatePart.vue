@@ -1,11 +1,11 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { CommandCommentSlides } from "@server/JGCPSendMessages";
+	import type { TemplateSlides } from "@server/JGCPSendMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
-		slide?: CommandCommentSlides;
+		slide?: TemplateSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 	}>();
@@ -36,11 +36,11 @@
 			:class="{ active: 0 === active_item_slide?.slide }"
 			@click="$emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slide?.caption }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				:media="slide?.media[0]"
+				:media="slide?.media"
 				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"

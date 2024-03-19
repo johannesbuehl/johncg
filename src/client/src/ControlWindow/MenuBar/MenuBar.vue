@@ -62,17 +62,30 @@
 			reader.readAsText(input_event.files[0]);
 		}
 	}
+
+	function save_playlist() {
+		const message: JGCPRecv.SavePlaylist = {
+			command: "save_playlist"
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
 	<div class="menubar">
 		<MenuButton icon="file" />
-		<MenuButton icon="folder-open" @click="open_playlist_input?.click()" />
-		<MenuButton icon="floppy-disk" />
+		<!-- <MenuButton icon="folder-open" @click="open_playlist_input?.click()" /> -->
+		<MenuButton
+			icon="folder-open"
+			@click="control_window_state = ControlWindowState.OpenPlaylist"
+			:active="control_window_state === ControlWindowState.OpenPlaylist"
+		/>
+		<MenuButton icon="floppy-disk" @click="save_playlist" />
 		<input
 			type="file"
 			ref="open_playlist_input"
-			:accept="'.col'"
+			:accept="'.jcg'"
 			@click="open_playlist_input ? (open_playlist_input.value = '') : null"
 			@change="open_playlist_file"
 			style="display: none"
