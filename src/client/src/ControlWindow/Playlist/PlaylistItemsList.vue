@@ -1,10 +1,12 @@
 <script setup lang="ts">
-	import draggable from "vuedraggable";
+	import Draggable from "vuedraggable";
 
 	import PlaylistItem from "./PlaylistItem.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
+	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
 	export interface DragEndEvent {
 		oldIndex: number;
@@ -12,6 +14,7 @@
 	}
 
 	const props = defineProps<{
+		ws: WebSocket;
 		playlist?: JGCPSend.Playlist;
 		selected?: number;
 		active_item_slide?: ActiveItemSlide;
@@ -25,11 +28,27 @@
 		delete: [item: number];
 	}>();
 
-	function onDragEnd(evt: DragEndEvent) {
+	function on_end(evt: DragEndEvent) {
 		// send only, if the index has changed
 		if (evt.oldIndex !== evt.newIndex) {
 			emit("dragged", evt.oldIndex, evt.newIndex);
 		}
+	}
+
+	function on_change(evt: { added: { element: ItemProps; newIndex: number } }) {
+		Object.entries(evt).forEach(([type, data]) => {
+			if (type === "added") {
+				const message: JGCPRecv.AddItem = {
+					command: "add_item",
+					props: data.element,
+					index: data.newIndex
+				};
+
+				props.ws.send(JSON.stringify(message));
+			}
+		});
+
+		return false;
 	}
 
 	function navigate_selection(target: EventTarget, origin: number, steps: number) {
@@ -58,14 +77,17 @@
 <template>
 	<div class="wrapper">
 		<div class="header">Playlist</div>
-		<draggable
+		<Draggable
+			id="playlist"
 			:list="playlist?.playlist_items"
+			:group="{ name: 'playlist', pull: false, put: true }"
 			item-key="item"
 			animation="150"
 			easing="cubic-bezier(1, 0, 0, 1)"
 			ghostClass="dragged_ghost"
 			fallbackClass="dragged"
-			@end="onDragEnd"
+			@end="on_end"
+			@change="on_change"
 		>
 			<template #item="{ element, index }">
 				<PlaylistItem
@@ -83,7 +105,7 @@
 					@keydown.delete="$emit('delete', index)"
 				/>
 			</template>
-		</draggable>
+		</Draggable>
 	</div>
 </template>
 
@@ -96,6 +118,9 @@
 		overflow: auto;
 
 		background-color: var(--color-container);
+
+		display: flex;
+		flex-direction: column;
 	}
 
 	.header {
@@ -110,6 +135,10 @@
 
 		padding: 0.5rem;
 		padding-left: 0.75rem;
+	}
+
+	#playlist {
+		flex: 1;
 	}
 
 	.dragged_ghost {

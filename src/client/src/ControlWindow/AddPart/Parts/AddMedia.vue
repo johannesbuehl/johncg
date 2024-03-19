@@ -1,16 +1,16 @@
 <script setup lang="ts">
-	import { onMounted, watch } from "vue";
+	import { onMounted } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import FileDialogue, { type Files } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import FileDialogue, { type File } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import type { MediaProps } from "@server/PlaylistItems/Media";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
-		media: Files;
+		media: File[];
 		ws: WebSocket;
 	}>();
 
@@ -26,35 +26,38 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function add_media(file: string, type: "dir" | "file") {
+	function add_media(file: File, type: "dir" | "file") {
 		if (type === "file") {
 			const message: JGCPRecv.AddItem = {
 				command: "add_item",
 				props: {
 					type: "media",
-					caption: file,
+					caption: file.name,
 					color: "#008800",
-					media: file,
+					media: file.path,
 					loop: false
 				}
 			};
 
 			props.ws.send(JSON.stringify(message));
-
-			console.debug(file);
 		}
+	}
+
+	function on_clone(file: File): MediaProps {
+		return {
+			type: "media",
+			caption: file.name,
+			color: "#008800",
+			media: file.path,
+			loop: false
+		};
 	}
 </script>
 
 <template>
 	<div class="add_media_wrapper">
 		<div class="file_view">
-			<FileDialogue
-				v-for="[name, file] in Object.entries(media)"
-				:name="name"
-				:files="file"
-				@selection="add_media"
-			/>
+			<FileDialogue :files="media" :root="true" :clone_callback="on_clone" @selection="add_media" />
 		</div>
 	</div>
 </template>

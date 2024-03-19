@@ -101,7 +101,11 @@ export default class Playlist {
 		});
 	}
 
-	add_item(item: ItemProps, set_active: boolean = true) {
+	add_item(
+		item: ItemProps,
+		set_active: boolean = true,
+		index: number = this.playlist_items.length
+	) {
 		const item_class_map: {
 			[key in ItemProps["type"]]: new (props: ItemProps, ccg?: ClipInfo[]) => PlaylistItem;
 		} = {
@@ -113,12 +117,12 @@ export default class Playlist {
 			template: TemplateItem
 		};
 
-		this.playlist_items.push(
-			new item_class_map[item.type](item, this.casparcg_connections[0].media)
-		);
+		const new_item = new item_class_map[item.type](item, this.casparcg_connections[0].media);
+
+		this.playlist_items.splice(index, 0, new_item);
 
 		if (set_active) {
-			this.set_active_item(-1, 0);
+			this.set_active_item(index, 0);
 		}
 
 		this.changes = true;

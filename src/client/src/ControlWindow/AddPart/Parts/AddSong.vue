@@ -2,33 +2,32 @@
 	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import Draggable from "vuedraggable";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type { SongResult } from "@server/search_part";
+	import type { SongProps } from "@server/PlaylistItems/Song";
+	import MediaItem from "./MediaItem.vue";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
 		ws: WebSocket;
+		search_results?: JGCPSend.SearchResults;
 	}>();
 
-	// const emit = defineEmits<{
-
-	// }>();
-
 	const input_song_title = ref<HTMLInputElement>();
+	const selection = ref<SongResult>();
 
-	const search_results = defineModel<JGCPSend.SongSearchResults>("search_results");
 	const title = defineModel<string>("title", { default: "" });
 	const id = defineModel<string>("id", { default: "" });
 	const text = defineModel<string>("text", { default: "" });
-	const selection = defineModel<SongResult>("selection");
 
 	watch(
-		() => search_results.value?.result,
+		() => props.search_results?.result,
 		(new_search_result) => {
 			if (new_search_result !== undefined) {
 				selection.value = new_search_result[0];
@@ -85,8 +84,20 @@
 		}
 	}
 
+	function set_selection(song: SongResult) {
+		selection.value = song;
+	}
+
+	function on_clone(song: SongResult): SongProps {
+		return {
+			type: "song",
+			caption: (song.title ?? [""])[0],
+			color: "#0000ff",
+			file: song.path
+		};
+	}
+
 	// init
-	search_results.value = undefined;
 	renew_search_index();
 	search_string(undefined, 0);
 </script>
@@ -123,27 +134,25 @@
 		<div class="results_wrapper">
 			<div id="song_results">
 				<div class="header">Songs</div>
-				<div class="results_list">
-					<template v-for="(rr, index) in search_results?.result">
-						<input
-							type="radio"
-							:id="`${rr}_${index}`"
-							:value="rr"
+				<Draggable
+					class="results_list"
+					:list="search_results?.result"
+					:group="{ name: 'playlist', pull: 'clone', put: 'false' }"
+					item-key="path"
+					:clone="on_clone"
+					:sort="false"
+				>
+					<template #item="{ element, index }">
+						<MediaItem
+							:song_result="element"
+							:active="element.path === selection?.path"
 							v-model="selection"
-							style="display: none"
+							:id="`${element.path}_${index}`"
+							@set_selection="set_selection(element)"
+							@add_song="add_song"
 						/>
-						<label
-							class="result_title"
-							:for="`${rr}_${index}`"
-							:class="{ active: rr === selection }"
-							@dblclick="add_song"
-						>
-							<span v-for="title of rr.title">
-								{{ title }}
-							</span>
-						</label>
 					</template>
-				</div>
+				</Draggable>
 				<div class="add_item_buttons">
 					<MenuButton icon="plus" text="" @click="add_song" />
 				</div>
@@ -252,41 +261,6 @@
 
 		padding: 0.25rem;
 		padding-top: 0;
-	}
-
-	.result_title {
-		display: block;
-		overflow: visible;
-
-		background-color: var(--color-item);
-
-		padding-inline: 0.5rem;
-		padding-block: 0.25rem;
-
-		border-radius: 0.25rem;
-
-		cursor: pointer;
-	}
-
-	.result_title:hover {
-		background-color: var(--color-item-hover);
-	}
-
-	.result_title.active {
-		background-color: var(--color-active);
-	}
-
-	.result_title.active:hover {
-		background-color: var(--color-active-hover);
-	}
-
-	.result_title > span:not(:first-child) {
-		color: var(--color-text-disabled);
-		font-style: italic;
-	}
-
-	.result_title > span:not(:first-child)::before {
-		content: " ";
 	}
 
 	#song_results {

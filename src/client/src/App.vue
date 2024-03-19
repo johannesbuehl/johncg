@@ -9,7 +9,8 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { type Files } from "./ControlWindow/FileDialogue/FileDialogue.vue";
+	import { type File } from "./ControlWindow/FileDialogue/FileDialogue.vue";
+	import path from "path";
 
 	const Config = {
 		client_server: {
@@ -29,8 +30,8 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
-	const media_tree = ref<Files>({});
-	const templates_tree = ref<Files>({});
+	const media_tree = ref<File[]>([]);
+	const templates_tree = ref<File[]>([]);
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 
 	let ws: WebSocket | undefined;
@@ -195,10 +196,10 @@
 		templates_tree.value = build_file_tree(data.templates.map((m) => m.split("/")));
 	}
 
-	function build_file_tree(media_array: (string | string[])[]): Files {
-		const media_object: Files = {};
+	function build_file_tree(media_array: string[][], root?: string): File[] {
+		const media_object: File[] = [];
 
-		const temp_object: Record<string, (string | string[])[] | string> = {};
+		const temp_object: Record<string, string[][]> = {};
 
 		media_array.forEach((m) => {
 			if (typeof m === "string") {
@@ -207,13 +208,11 @@
 				const key = m.shift();
 
 				if (key !== undefined) {
-					if (m.length === 0) {
-						temp_object[key] = key;
-					} else {
-						if (temp_object[key] === undefined) {
-							temp_object[key] = [];
-						}
+					if (temp_object[key] === undefined) {
+						temp_object[key] = [];
+					}
 
+					if (m.length !== 0) {
 						(temp_object[key] as string[][]).push(m);
 					}
 				}
@@ -221,11 +220,13 @@
 		});
 
 		Object.entries(temp_object).forEach(([key, files]) => {
-			if (typeof files === "string") {
-				media_object[key] = files;
-			} else {
-				media_object[key] = build_file_tree(files);
-			}
+			const file_path = (root ? root + "/" : "") + key;
+
+			media_object.push({
+				name: key,
+				path: file_path,
+				children: files.length !== 0 ? build_file_tree(files, file_path) : undefined
+			});
 		});
 
 		return media_object;

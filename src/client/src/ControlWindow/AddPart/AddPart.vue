@@ -7,7 +7,7 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import AddMedia from "./Parts/AddMedia.vue";
-	import type { Files } from "../FileDialogue/FileDialogue.vue";
+	import type { File } from "../FileDialogue/FileDialogue.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
 
 	library.add(fas.faMusic, fas.faBookBible, fas.faFont, fas.faImage, fas.faFilePdf, fas.faClock);
@@ -15,8 +15,8 @@
 	defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
-		media: Files;
-		templates: Files;
+		media: File[];
+		templates: File[];
 	}>();
 
 	// const emit = defineEmits<{

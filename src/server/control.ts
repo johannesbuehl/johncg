@@ -92,7 +92,7 @@ class Control {
 			this.renew_search_index(msg.type, ws),
 		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
 			this.search_item(msg.type, msg.search, ws),
-		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, ws),
+		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, msg.index, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
 		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws)
@@ -503,9 +503,9 @@ class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private add_item(props: ItemProps, ws: WebSocket) {
+	private add_item(props: ItemProps, index: number, ws: WebSocket) {
 		try {
-			this.playlist.add_item(props);
+			this.playlist.add_item(props, true, index);
 		} catch (e) {
 			ws_send_response("could not add item to playlist", false, ws);
 

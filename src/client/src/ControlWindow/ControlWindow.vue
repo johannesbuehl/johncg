@@ -9,7 +9,7 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
-	import type { Files } from "./FileDialogue/FileDialogue.vue";
+	import type { File } from "./FileDialogue/FileDialogue.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -19,8 +19,8 @@
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		search_results?: JGCPSend.SearchResults;
-		media_tree: Files;
-		templates_tree: Files;
+		media_tree: File[];
+		templates_tree: File[];
 	}>();
 
 	defineEmits<{
@@ -130,6 +130,7 @@
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
+			:ws="ws"
 			@selection="$emit('select_item', $event)"
 			@dragged="dragged"
 			@set_active="$emit('select_slide', $event, 0)"

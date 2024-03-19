@@ -91,6 +91,7 @@ export interface GetTemplateTree extends Base {
 export interface AddItem extends Base {
 	command: "add_item";
 	props: ItemProps;
+	index?: number;
 }
 
 export interface DeleteItem {

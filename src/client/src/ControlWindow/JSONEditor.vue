@@ -25,7 +25,6 @@
 				navigationBar: false
 			}
 		});
-		console.log("create editor", editor);
 	});
 
 	watch(props, (new_props) => {

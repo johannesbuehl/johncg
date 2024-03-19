@@ -4,14 +4,15 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import FileDialogue, { type Files } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import FileDialogue, { type File } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 	import type { Content, JSONContent } from "vanilla-jsoneditor";
+	import type { TemplateProps } from "@server/PlaylistItems/Template";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
-		templates: Files;
+		templates: File[];
 		ws: WebSocket;
 	}>();
 
@@ -25,16 +26,16 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function add_template(file: string, type: "dir" | "file") {
+	function add_template(file: File, type: "dir" | "file") {
 		if (type === "file") {
 			const message: JGCPRecv.AddItem = {
 				command: "add_item",
 				props: {
 					type: "template",
-					caption: file,
+					caption: file.name,
 					color: "#008800",
 					template: {
-						template: file,
+						template: file.path,
 						data: template_data.value.json as object
 					}
 				}
@@ -43,15 +44,27 @@
 			props.ws.send(JSON.stringify(message));
 		}
 	}
+
+	function on_clone(file: File): TemplateProps {
+		return {
+			type: "template",
+			caption: file.name,
+			color: "#008800",
+			template: {
+				template: file.path,
+				data: template_data
+			}
+		};
+	}
 </script>
 
 <template>
 	<div class="add_media_wrapper">
 		<div class="file_view">
 			<FileDialogue
-				v-for="[name, file] in Object.entries(templates)"
-				:name="name"
-				:files="file"
+				:files="templates"
+				:root="true"
+				:clone_callback="on_clone"
 				@selection="add_template"
 			/>
 		</div>
