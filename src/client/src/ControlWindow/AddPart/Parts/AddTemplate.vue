@@ -1,18 +1,21 @@
 <script setup lang="ts">
-	import { onMounted, watch } from "vue";
+	import { onMounted } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import type { JSONContent } from "vanilla-jsoneditor";
+
+	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import FileDialogue, { type File } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
-	import type { Content, JSONContent } from "vanilla-jsoneditor";
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type { File } from "@server/JGCPSendMessages";
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
+	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
-		templates: File[];
+		templates: JGCPSend.File[];
 		ws: WebSocket;
 	}>();
 

@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 
 import * as JGCPRecv from "./JGCPReceiveMessages";
+import * as JGCPSend from "./JGCPSendMessages";
 
 import Config from "./config";
 import SongFile from "./PlaylistItems/SongFile";
@@ -25,6 +26,8 @@ interface SongIndexData {
 
 export default class SearchPart {
 	private song_index: SongIndexData[] = [];
+
+	private playlist_index: JGCPSend.File[] = [];
 
 	renew_search_index(type: JGCPRecv.RenewSearchIndex["type"]): boolean {
 		switch (type) {
@@ -107,5 +110,31 @@ export default class SearchPart {
 		});
 
 		return results;
+	}
+
+	find_jcg_files(pth: string = Config.path.playlist): JGCPSend.File[] {
+		const files = fs.readdirSync(pth);
+
+		const song_files: JGCPSend.File[] = [];
+
+		const check_jcg_file = /(?<name>.+)\.jcg$/;
+
+		files.forEach((f) => {
+			const file_regex = check_jcg_file.exec(f);
+
+			if (file_regex) {
+				const ff = path.join(pth, f);
+
+				const stat = fs.statSync(ff);
+
+				song_files.push({
+					name: file_regex?.groups["name"],
+					path: ff,
+					children: stat.isDirectory() ? this.find_jcg_files(ff) : undefined
+				});
+			}
+		});
+
+		return song_files;
 	}
 }

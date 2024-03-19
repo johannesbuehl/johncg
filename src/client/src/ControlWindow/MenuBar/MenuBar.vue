@@ -34,10 +34,7 @@
 		set_visibility: [state: boolean];
 	}>();
 
-	const control_window_state = defineModel<ControlWindowState>({
-		required: false,
-		default: ControlWindowState.Playlist
-	});
+	const control_window_state = defineModel<ControlWindowState>();
 
 	// reference for the file-input
 	const open_playlist_input = ref<HTMLInputElement>();

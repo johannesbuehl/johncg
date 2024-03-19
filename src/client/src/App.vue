@@ -9,8 +9,7 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { type File } from "./ControlWindow/FileDialogue/FileDialogue.vue";
-	import path from "path";
+	import { ControlWindowState } from "./ControlWindow/ControlWindowState";
 
 	const Config = {
 		client_server: {
@@ -30,9 +29,13 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
-	const media_tree = ref<File[]>([]);
-	const templates_tree = ref<File[]>([]);
+	const media_tree = ref<JGCPSend.File[]>([]);
+	const templates_tree = ref<JGCPSend.File[]>([]);
+	const playlist_tree = ref<JGCPSend.File[]>([]);
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		default: ControlWindowState.Add
+	});
 
 	let ws: WebSocket | undefined;
 	ws_connect();
@@ -94,7 +97,8 @@
 				search_results: handle_search_results,
 				playlist_save: save_playlist_file,
 				media_tree: parse_media_tree,
-				template_tree: parse_template_tree
+				template_tree: parse_template_tree,
+				playlist_tree: parse_playlist_tree
 			};
 
 			command_parser_map[data.command](data as never);
@@ -126,6 +130,8 @@
 
 	function load_playlist_items(data: JGCPSend.Playlist) {
 		playlist_items.value = data;
+
+		control_window_state.value = ControlWindowState.Playlist;
 	}
 
 	function parse_state(data: JGCPSend.State) {
@@ -181,7 +187,7 @@
 
 		const link = document.createElement("a");
 		link.href = url;
-		link.download = `${data.playlist.caption}a.jcg`;
+		link.download = "playlist.jcg";
 
 		link.click();
 
@@ -189,47 +195,17 @@
 	}
 
 	function parse_media_tree(data: JGCPSend.MediaTree) {
-		media_tree.value = build_file_tree(data.media.map((m) => m.clip.split("/")));
+		media_tree.value = data.media;
+
+		console.debug(data.media);
 	}
 
 	function parse_template_tree(data: JGCPSend.TemplateTree) {
-		templates_tree.value = build_file_tree(data.templates.map((m) => m.split("/")));
+		templates_tree.value = data.templates;
 	}
 
-	function build_file_tree(media_array: string[][], root?: string): File[] {
-		const media_object: File[] = [];
-
-		const temp_object: Record<string, string[][]> = {};
-
-		media_array.forEach((m) => {
-			if (typeof m === "string") {
-				temp_object[m] = m;
-			} else {
-				const key = m.shift();
-
-				if (key !== undefined) {
-					if (temp_object[key] === undefined) {
-						temp_object[key] = [];
-					}
-
-					if (m.length !== 0) {
-						(temp_object[key] as string[][]).push(m);
-					}
-				}
-			}
-		});
-
-		Object.entries(temp_object).forEach(([key, files]) => {
-			const file_path = (root ? root + "/" : "") + key;
-
-			media_object.push({
-				name: key,
-				path: file_path,
-				children: files.length !== 0 ? build_file_tree(files, file_path) : undefined
-			});
-		});
-
-		return media_object;
+	function parse_playlist_tree(data: JGCPSend.PlaylistTree) {
+		playlist_tree.value = data.playlists;
 	}
 
 	function handle_ws_response(response: JGCPSend.Response) {
@@ -255,6 +231,7 @@
 	<div id="main_window">
 		<ControlWindow
 			v-if="server_connection === ServerConnection.connected"
+			v-model="control_window_state"
 			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"
@@ -265,12 +242,11 @@
 			:selected="selected_item"
 			:media_tree="media_tree"
 			:templates_tree="templates_tree"
+			:playlist_tree="playlist_tree"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>
 	</div>
-
-	<!-- <FileSelector /> -->
 </template>
 
 <style scoped>

@@ -7,12 +7,13 @@ import * as JGCPSend from "./JGCPSendMessages.ts";
 
 import Config from "./config.ts";
 import type { CasparCGConnection } from "./control.ts";
-import PlaylistFile from "./PlaylistFile.ts";
+import PlaylistObject from "./PlaylistFile.ts";
 import Comment from "./PlaylistItems/Comment.ts";
 import Countdown from "./PlaylistItems/Countdown.ts";
 import Media from "./PlaylistItems/Media.ts";
 import PDF from "./PlaylistItems/PDF.ts";
 import TemplateItem from "./PlaylistItems/Template.ts";
+import * as fs from "fs";
 
 export interface ClientPlaylistItems {
 	playlist_items: (ItemProps & { selectable: boolean })[];
@@ -60,11 +61,11 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(casparcg_connections?: CasparCGConnection[], playlist?: PlaylistFile) {
+	constructor(casparcg_connections?: CasparCGConnection[], playlist?: string) {
 		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
 
 		if (playlist !== undefined) {
-			this.parse_playlist(playlist);
+			this.open_playlist_file(playlist);
 
 			let first_item = 0;
 
@@ -149,7 +150,23 @@ export default class Playlist {
 		}
 	}
 
-	protected parse_playlist(playlist: PlaylistFile): void {
+	protected open_playlist_file(playlist_path: string): void {
+		let playlist_string: string;
+
+		try {
+			playlist_string = fs.readFileSync(playlist_path, "utf-8");
+		} catch (e) {
+			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+				console.error(`playlist '${playlist_path}' does not exist`);
+
+				return;
+			} else {
+				throw e;
+			}
+		}
+
+		const playlist: PlaylistObject = JSON.parse(playlist_string) as PlaylistObject;
+
 		this.caption = playlist.caption;
 
 		playlist.items.forEach((item) => {
@@ -157,8 +174,8 @@ export default class Playlist {
 		});
 	}
 
-	save(): PlaylistFile {
-		const save_object: PlaylistFile = {
+	save(): PlaylistObject {
+		const save_object: PlaylistObject = {
 			caption: this.caption,
 			items: this.playlist_items.map((item) => item.props)
 		};

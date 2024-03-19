@@ -1,35 +1,38 @@
 <script setup lang="ts">
-	import FileDialogue, { type Files } from "./FileDialogue/FileDialogue.vue";
+	import { onMounted } from "vue";
 
-	// const props = defineProps<{
+	import FileDialogue from "./FileDialogue/FileDialogue.vue";
 
-	// }>();
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 
-	// const emit = defineEmits<{
+	const props = defineProps<{
+		ws: WebSocket;
+		files: JGCPSend.File[];
+	}>();
 
-	// }>();
+	onMounted(() => {
+		const message: JGCPRecv.GetPlaylistTree = {
+			command: "get_playlist_tree"
+		};
 
-	const files: Files = {
-		a: "a.jcg",
-		b: "b.jcg",
-		c: "c.jcg",
-		d: {
-			e: "e.jcg",
-			f: {
-				g: "g.jcg"
-			}
-		}
-	};
+		props.ws.send(JSON.stringify(message));
+	});
+
+	function open_schedule(playlist: JGCPSend.File) {
+		const message: JGCPRecv.OpenPlaylist = {
+			command: "open_playlist",
+			playlist: playlist.path
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
 	<div class="playlist_file_wrapper">
 		<div id="file_structure_container">
-			<FileDialogue
-				v-for="[caption, file] in Object.entries(files)"
-				:name="caption"
-				:files="file"
-			/>
+			<FileDialogue :root="true" :files="files" @selection="open_schedule" />
 		</div>
 	</div>
 </template>

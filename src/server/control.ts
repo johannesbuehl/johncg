@@ -18,7 +18,6 @@ import type { CasparCGConnectionSettings } from "./config.ts";
 
 import Config from "./config.ts";
 import SearchPart from "./search_part.ts";
-import PlaylistFile from "./PlaylistFile.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 
 interface CasparCGPathsSettings {
@@ -41,7 +40,7 @@ export interface CasparCGConnection {
 	framerate: number;
 }
 
-class Control {
+export default class Control {
 	private playlist: Playlist;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
@@ -95,7 +94,8 @@ class Control {
 		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, msg.index, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
-		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws)
+		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws),
+		get_playlist_tree: (msg: JGCPRecv.GetPlaylistTree, ws: WebSocket) => this.get_playlist_tree(ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -221,26 +221,13 @@ class Control {
 
 	/**
 	 * open and load a playlist-file and send it to clients and renderers
-	 * @param playlist_string playlist-file content
+	 * @param playlist_path playlist-file content
 	 */
-	private open_playlist(playlist_string: string, ws: WebSocket) {
-		let playlist: PlaylistFile;
-
-		try {
-			playlist = JSON.parse(playlist_string) as PlaylistFile;
-		} catch (e) {
-			if (e instanceof SyntaxError) {
-				ws_send_response("invalid JSON in playlist-file", false, ws);
-				return;
-			} else {
-				throw e;
-			}
-		}
-
+	private open_playlist(playlist_path: string, ws: WebSocket) {
 		let new_playlist: Playlist;
 
 		try {
-			new_playlist = new Playlist(this.casparcg_connections, playlist);
+			new_playlist = new Playlist(this.casparcg_connections, playlist_path);
 		} catch (e) {
 			ws_send_response("invalid playlist-file", false, ws);
 			return;
@@ -545,7 +532,7 @@ class Control {
 	private get_media_tree(ws: WebSocket) {
 		const message: JGCPSend.MediaTree = {
 			command: "media_tree",
-			media: this.casparcg_connections[0].media
+			media: build_file_tree(this.casparcg_connections[0].media.map((m) => m.clip.split("/")))
 		};
 
 		ws.send(JSON.stringify(message));
@@ -554,7 +541,16 @@ class Control {
 	private get_template_tree(ws: WebSocket) {
 		const message: JGCPSend.TemplateTree = {
 			command: "template_tree",
-			templates: this.casparcg_connections[0].templates
+			templates: build_file_tree(this.casparcg_connections[0].templates.map((m) => m.split("/")))
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private get_playlist_tree(ws: WebSocket) {
+		const message: JGCPSend.PlaylistTree = {
+			command: "playlist_tree",
+			playlists: this.search_part.find_jcg_files()
 		};
 
 		ws.send(JSON.stringify(message));
@@ -668,4 +664,38 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	ws?.send(JSON.stringify(response));
 }
 
-export default Control;
+function build_file_tree(media_array: string[][], root?: string): JGCPSend.File[] {
+	const media_object: JGCPSend.File[] = [];
+
+	const temp_object: Record<string, string[][]> = {};
+
+	media_array.forEach((m) => {
+		if (typeof m === "string") {
+			temp_object[m] = m;
+		} else {
+			const key = m.shift();
+
+			if (key !== undefined) {
+				if (temp_object[key] === undefined) {
+					temp_object[key] = [];
+				}
+
+				if (m.length !== 0) {
+					temp_object[key].push(m);
+				}
+			}
+		}
+	});
+
+	Object.entries(temp_object).forEach(([key, files]) => {
+		const file_path = (root ? root + "/" : "") + key;
+
+		media_object.push({
+			name: key,
+			path: file_path,
+			children: files.length !== 0 ? build_file_tree(files, file_path) : undefined
+		});
+	});
+
+	return media_object;
+}

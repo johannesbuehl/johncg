@@ -9,7 +9,6 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
-	import type { File } from "./FileDialogue/FileDialogue.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -19,8 +18,10 @@
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		search_results?: JGCPSend.SearchResults;
-		media_tree: File[];
-		templates_tree: File[];
+		media_tree: JGCPSend.File[];
+		templates_tree: JGCPSend.File[];
+		playlist_tree: JGCPSend.File[];
+		selected: number;
 	}>();
 
 	defineEmits<{
@@ -28,15 +29,13 @@
 		select_slide: [item: number, slide: number];
 	}>();
 
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: false,
-		default: ControlWindowState.Add
+	const control_window_state = defineModel<ControlWindowState>({
+		required: true
 	});
-	const selected = defineModel<number>("selected", { required: true });
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
-		if (event.isComposing || event.keyCode === 229) {
+		if (event.isComposing) {
 			return;
 		}
 
@@ -120,7 +119,11 @@
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<PlaylistFile v-if="control_window_state === ControlWindowState.OpenPlaylist" />
+		<PlaylistFile
+			v-if="control_window_state === ControlWindowState.OpenPlaylist"
+			:files="playlist_tree"
+			:ws="ws"
+		/>
 		<PlaylistItemsList
 			v-if="
 				control_window_state === ControlWindowState.Playlist ||

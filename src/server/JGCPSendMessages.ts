@@ -6,8 +6,7 @@ import type { ClientMediaProps } from "./PlaylistItems/Media.ts";
 import type { ClientPDFSlides } from "./PlaylistItems/PDF.ts";
 import type { ClientSongSlides } from "./PlaylistItems/Song.ts";
 import { SongResult } from "./search_part.ts";
-import PlaylistFile from "./PlaylistFile.ts";
-import { ClipInfo } from "casparcg-connection";
+import PlaylistObject from "./PlaylistFile.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -80,17 +79,28 @@ export type SearchResults = SongSearchResults;
 
 export interface PlaylistSave {
 	command: "playlist_save";
-	playlist: PlaylistFile;
+	playlist: PlaylistObject;
+}
+
+export interface File {
+	name: string;
+	path: string;
+	children?: File[];
 }
 
 export interface MediaTree {
 	command: "media_tree";
-	media: ClipInfo[];
+	media: File[];
 }
 
 export interface TemplateTree {
 	command: "template_tree";
-	templates: string[];
+	templates: File[];
+}
+
+export interface PlaylistTree {
+	command: "playlist_tree";
+	playlists: File[];
 }
 
 /**
@@ -105,4 +115,5 @@ export type Message =
 	| SearchResults
 	| PlaylistSave
 	| MediaTree
-	| TemplateTree;
+	| TemplateTree
+	| PlaylistTree;

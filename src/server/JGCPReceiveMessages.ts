@@ -88,6 +88,10 @@ export interface GetTemplateTree extends Base {
 	command: "get_template_tree";
 }
 
+export interface GetPlaylistTree extends Base {
+	command: "get_playlist_tree";
+}
+
 export interface AddItem extends Base {
 	command: "add_item";
 	props: ItemProps;
@@ -114,6 +118,7 @@ export type Message =
 	| AddItem
 	| DeleteItem
 	| NewPlaylist
+	| GetPlaylistTree
 	| SavePlaylist
 	| GetMediaTree
 	| GetTemplateTree;

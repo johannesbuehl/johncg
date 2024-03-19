@@ -4,39 +4,29 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { ref } from "vue";
 	import Draggable from "vuedraggable";
+
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import * as JGCPSend from "@server/JGCPSendMessages";
 
 	library.add(fas.faPlus, fas.faMinus);
 
-	export interface File {
-		name: string;
-		path: string;
-		children?: File[];
-	}
-
 	const props = defineProps<{
-		name?: string;
+		file?: JGCPSend.File;
 		root?: boolean;
-		files?: File[];
-		clone_callback: (arg: File) => ItemProps;
+		files?: JGCPSend.File[];
+		clone_callback?: (arg: JGCPSend.File) => ItemProps;
 	}>();
 
 	const expanded = ref<boolean>(false);
 
 	const emit = defineEmits<{
-		selection: [file: File, type: "dir" | "file"];
+		selection: [file: JGCPSend.File, type: "dir" | "file"];
 	}>();
 
 	function on_selection(
-		file?: File,
+		file: JGCPSend.File,
 		type: "dir" | "file" = typeof props.files === "object" ? "dir" : "file"
 	) {
-		if (file === undefined) {
-			file = { name: props.name ?? "", path: props.name ?? "" };
-		} else if (props.name !== undefined) {
-			file.path = props.name + "/" + file.path;
-		}
-
 		emit("selection", file, type);
 	}
 </script>
@@ -54,9 +44,9 @@
 				v-if="!root"
 				class="file_content"
 				:class="{ selectable: typeof files !== 'object' }"
-				@dblclick="on_selection()"
+				@dblclick="file ? on_selection(file) : undefined"
 			>
-				{{ name }}
+				{{ file?.name }}
 			</span>
 
 			<Draggable
@@ -68,12 +58,12 @@
 				:sort="false"
 			>
 				<!-- v-for="[name, file] in Object.entries(media)" -->
-				<template #item="{ element: { name, children } }">
+				<template #item="{ element }">
 					<FileDialogue
 						v-if="typeof files === 'object'"
 						v-show="expanded || root"
-						:name="name"
-						:files="children"
+						:file="element"
+						:files="element.children"
 						:clone_callback="clone_callback"
 						@selection="on_selection"
 					/>
@@ -93,7 +83,7 @@
 	}
 
 	.file_item_wrapper.indent {
-		padding-left: 1rem;
+		padding-left: 0.25rem;
 	}
 
 	.file_item {
