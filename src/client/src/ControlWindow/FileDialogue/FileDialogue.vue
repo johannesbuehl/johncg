@@ -45,7 +45,7 @@
 			<div
 				class="file_content"
 				:class="{ selectable: typeof files !== 'object' }"
-				@click="on_selection()"
+				@dblclick="on_selection()"
 			>
 				{{ name }}
 			</div>

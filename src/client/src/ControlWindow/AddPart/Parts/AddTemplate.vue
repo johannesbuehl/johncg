@@ -3,10 +3,10 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { SongResult } from "@server/search_part";
 	import FileDialogue, { type Files } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
+	import type { Content, JSONContent } from "vanilla-jsoneditor";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
 
@@ -15,17 +15,7 @@
 		ws: WebSocket;
 	}>();
 
-	const search_results = defineModel<JGCPSend.SongSearchResults>("search_results");
-	const selection = defineModel<SongResult>("selection");
-
-	watch(
-		() => search_results.value?.result,
-		(new_search_result) => {
-			if (new_search_result !== undefined) {
-				selection.value = new_search_result[0];
-			}
-		}
-	);
+	const template_data = defineModel<JSONContent>({ default: { json: {} } });
 
 	onMounted(() => {
 		const message: JGCPRecv.GetTemplateTree = {
@@ -35,7 +25,7 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function add_media(file: string, type: "dir" | "file") {
+	function add_template(file: string, type: "dir" | "file") {
 		if (type === "file") {
 			const message: JGCPRecv.AddItem = {
 				command: "add_item",
@@ -44,14 +34,13 @@
 					caption: file,
 					color: "#008800",
 					template: {
-						template: file
+						template: file,
+						data: template_data.value.json as object
 					}
 				}
 			};
 
 			props.ws.send(JSON.stringify(message));
-
-			console.debug(file);
 		}
 	}
 </script>
@@ -63,8 +52,11 @@
 				v-for="[name, file] in Object.entries(templates)"
 				:name="name"
 				:files="file"
-				@selection="add_media"
+				@selection="add_template"
 			/>
+		</div>
+		<div class="data_editor">
+			<JSONEditor v-model="template_data" />
 		</div>
 	</div>
 </template>
@@ -72,8 +64,9 @@
 <style scoped>
 	.add_media_wrapper {
 		flex: 1;
-		display: flex;
-		flex-direction: column;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
 
 		gap: inherit;
 	}
@@ -83,7 +76,13 @@
 
 		overflow: auto;
 
-		flex: 1;
+		border-radius: 0.25rem;
+	}
+
+	.data_editor {
+		background-color: var(--color-container);
+
+		display: flex;
 
 		border-radius: 0.25rem;
 	}

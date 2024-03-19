@@ -5,7 +5,6 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { SongResult } from "@server/search_part";
 	import FileDialogue, { type Files } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
 	library.add(fas.faArrowsRotate, fas.faPlus);
@@ -18,18 +17,6 @@
 	// const emit = defineEmits<{
 
 	// }>();
-
-	const search_results = defineModel<JGCPSend.SongSearchResults>("search_results");
-	const selection = defineModel<SongResult>("selection");
-
-	watch(
-		() => search_results.value?.result,
-		(new_search_result) => {
-			if (new_search_result !== undefined) {
-				selection.value = new_search_result[0];
-			}
-		}
-	);
 
 	onMounted(() => {
 		const message: JGCPRecv.GetMediaTree = {
