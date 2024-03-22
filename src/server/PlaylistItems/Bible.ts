@@ -1,4 +1,9 @@
-import { ClientItemSlidesBase, ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
+import {
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	PlaylistItemBase,
+	recurse_check
+} from "./PlaylistItem";
 
 export type BibleFile = Record<string, Book[]>;
 
@@ -41,6 +46,8 @@ export default class Bible extends PlaylistItemBase {
 		super();
 
 		this.item_props = props;
+
+		this.is_selectable = this.validate_props(props);
 	}
 
 	create_client_object_item_slides(): Promise<ClientBibleSlides> {
@@ -59,6 +66,26 @@ export default class Bible extends PlaylistItemBase {
 
 	navigate_slide(steps: number): number {
 		return steps;
+	}
+
+	protected validate_props(props: BibleProps): boolean {
+		const template: BibleProps = {
+			type: "bible",
+			caption: "Template",
+			color: "Template",
+			book_id: "Template",
+			chapters: [
+				{
+					chapter: 0,
+					verses: [0]
+				}
+			]
+		};
+
+		let result = props.type === "bible";
+		result &&= props.chapters.length > 0;
+
+		return result && recurse_check(props, template);
 	}
 
 	get active_slide(): number {

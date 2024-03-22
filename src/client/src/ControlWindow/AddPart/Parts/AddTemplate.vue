@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted } from "vue";
+	import { onMounted, watch } from "vue";
 	import type { JSONContent } from "vanilla-jsoneditor";
 
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
@@ -9,13 +9,15 @@
 	import type { File } from "@server/JGCPSendMessages";
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
 	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	const props = defineProps<{
 		templates: JGCPSend.File[];
 		ws: WebSocket;
 	}>();
 
-	const template_data = defineModel<JSONContent>({ default: { json: {} } });
+	const selection = defineModel<File>("selection");
+	const template_data = defineModel<object>({ default: {} });
 
 	onMounted(() => {
 		const message: JGCPRecv.GetTemplateTree = {
@@ -25,8 +27,8 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function add_template(file: File, type: "dir" | "file") {
-		if (type === "file") {
+	function add_template(file: File | undefined, type: "dir" | "file") {
+		if (file && type === "file") {
 			const message: JGCPRecv.AddItem = {
 				command: "add_item",
 				props: {
@@ -35,7 +37,7 @@
 					color: "#008800",
 					template: {
 						template: file.path,
-						data: template_data.value.json as object
+						data: template_data.value
 					}
 				}
 			};
@@ -51,7 +53,7 @@
 			color: "#008800",
 			template: {
 				template: file.path,
-				data: template_data
+				data: template_data.value
 			}
 		};
 	}
@@ -61,14 +63,21 @@
 	<div class="add_media_wrapper">
 		<div class="file_view">
 			<FileDialogue
+				v-model="selection"
 				:files="templates"
 				:root="true"
 				:clone_callback="on_clone"
-				@selection="add_template"
+				@choose="add_template"
 			/>
 		</div>
 		<div class="data_editor">
 			<JSONEditor v-model="template_data" />
+			<MenuButton
+				class=""
+				icon="plus"
+				text=""
+				@click="add_template(selection, selection?.children ? 'dir' : 'file')"
+			/>
 		</div>
 	</div>
 </template>
@@ -95,6 +104,7 @@
 		background-color: var(--color-container);
 
 		display: flex;
+		flex-direction: column;
 
 		border-radius: 0.25rem;
 	}

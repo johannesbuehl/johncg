@@ -1,6 +1,6 @@
 import path from "path";
 
-import { PlaylistItemBase } from "./PlaylistItem.ts";
+import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile.ts";
@@ -67,36 +67,40 @@ export default class Song extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		try {
-			this.song_file = new SongFile(get_song_path(props.file));
-		} catch (e) {
-			// if the error is because the file doesn't exist, skip the rest of the loop iteration
-			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`song '${props.file}' does not exist`);
+		this.is_selectable = this.validate_props(props);
 
-				this.is_selectable = false;
-
-				return;
-			} else {
-				throw e;
-			}
-		}
-
-		if (this.props.languages === undefined) {
-			this.item_props.languages = this.song_file.languages;
-		}
-
-		// add the title-slide to the counter
-		this.slide_count++;
-
-		// count the slides
-		for (const part of this.get_verse_order()) {
-			// check wether the part is actually defined in the songfile
+		if (this.selectable) {
 			try {
-				this.slide_count += this.song_file.get_part(part).slides.length;
+				this.song_file = new SongFile(get_song_path(props.file));
 			} catch (e) {
-				if (!(e instanceof ReferenceError)) {
+				// if the error is because the file doesn't exist, skip the rest of the loop iteration
+				if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+					console.error(`song '${props.file}' does not exist`);
+
+					this.is_selectable = false;
+
+					return;
+				} else {
 					throw e;
+				}
+			}
+
+			if (this.props.languages === undefined) {
+				this.item_props.languages = this.song_file.languages;
+			}
+
+			// add the title-slide to the counter
+			this.slide_count++;
+
+			// count the slides
+			for (const part of this.get_verse_order()) {
+				// check wether the part is actually defined in the songfile
+				try {
+					this.slide_count += this.song_file.get_part(part).slides.length;
+				} catch (e) {
+					if (!(e instanceof ReferenceError)) {
+						throw e;
+					}
 				}
 			}
 		}
@@ -227,6 +231,39 @@ export default class Song extends PlaylistItemBase {
 		return Promise.resolve(return_item);
 	}
 
+	protected validate_props(props: SongProps): boolean {
+		const template: SongProps = {
+			type: "song",
+			caption: "Template",
+			color: "Template",
+			file: "template"
+		};
+
+		let result = props.type === "song";
+
+		if (props.languages) {
+			result &&= Array.isArray(props.languages);
+
+			if (result) {
+				props.languages.forEach((ele) => {
+					result && typeof ele === "number";
+				});
+			}
+		}
+
+		if (props.verse_order) {
+			result &&= Array.isArray(props.verse_order);
+
+			if (result) {
+				props.verse_order.forEach((ele) => {
+					result &&= typeof ele === "string";
+				});
+			}
+		}
+
+		return result && recurse_check(props, template);
+	}
+
 	get props(): SongProps {
 		return this.item_props;
 	}
@@ -259,26 +296,28 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	private path_to_casparcg_media(media?: string): string {
-		// test wether it is a color-string
-		const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
+		if (media !== undefined) {
+			// test wether it is a color-string
+			const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
 
-		// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
-		if (test_rgb_string) {
-			return media;
-		}
+			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+			if (test_rgb_string) {
+				return media;
+			}
 
-		// make it all uppercase and remove the extension to match casparcg-clips
-		const req_name = media
-			.replace(/\.[^(\\.]+$/, "")
-			.replaceAll("\\", "/")
-			.toUpperCase();
+			// make it all uppercase and remove the extension to match casparcg-clips
+			const req_name = media
+				.replace(/\.[^(\\.]+$/, "")
+				.replaceAll("\\", "/")
+				.toUpperCase();
 
-		// check all the casparcg-files, wether they contain a media-file that matches the path
-		for (const m of this.casparcg_media_list) {
-			const media_file = m.clip.toUpperCase().replace(/\\/, "/");
+			// check all the casparcg-files, wether they contain a media-file that matches the path
+			for (const m of this.casparcg_media_list) {
+				const media_file = m.clip.toUpperCase().replace(/\\/, "/");
 
-			if (req_name.endsWith(media_file)) {
-				return m.clip;
+				if (req_name.endsWith(media_file)) {
+					return m.clip;
+				}
 			}
 		}
 

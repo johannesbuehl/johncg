@@ -105,6 +105,18 @@ export abstract class PlaylistItemBase {
 		return slide;
 	}
 
+	update(new_props: ItemProps): ItemProps {
+		if (this.validate_props(new_props)) {
+			this.item_props = new_props;
+
+			this.is_selectable = true;
+		}
+
+		return this.props;
+	}
+
+	protected abstract validate_props(props: ItemProps): boolean;
+
 	abstract get props(): ItemProps;
 
 	abstract get playlist_item(): ItemProps & { selectable: boolean };
@@ -121,5 +133,49 @@ export abstract class PlaylistItemBase {
 
 	get selectable(): boolean {
 		return this.is_selectable;
+	}
+}
+
+export function recurse_check(obj: unknown, template: unknown): boolean {
+	if (typeof obj === "object" && typeof template === "object") {
+		const results: boolean[] = [];
+
+		if (Array.isArray(obj) && Array.isArray(template)) {
+			results.push(
+				...obj.map((ele): boolean => {
+					return recurse_check(ele, template[0]);
+				})
+			);
+			// check that none of them are arrays
+		} else if (Array.isArray(obj) === Array.isArray(template)) {
+			const obj_keys = Object.keys(obj);
+
+			results.push(
+				...Object.entries(template).map(([key, item]): boolean => {
+					if (obj_keys.includes(key)) {
+						return recurse_check(item, (template as Record<string, unknown>)[key]);
+					} else {
+						return false;
+					}
+				})
+			);
+		} else {
+			return false;
+		}
+
+		for (const res of results) {
+			if (!res) {
+				return false;
+			}
+		}
+
+		return true;
+	} else {
+		// check, wether the object and the template are of the same type
+		if (typeof obj !== typeof template) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }

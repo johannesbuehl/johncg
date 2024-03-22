@@ -1,3 +1,4 @@
+import { ClientPlaylistItem } from "./Playlist";
 import { ItemProps } from "./PlaylistItems/PlaylistItem";
 
 /**
@@ -102,6 +103,12 @@ export interface AddItem extends Base {
 	index?: number;
 }
 
+export interface UpdateItem extends Base {
+	command: "update_item";
+	props: ClientPlaylistItem;
+	index: number;
+}
+
 export interface DeleteItem {
 	command: "delete_item";
 	position: number;
@@ -120,6 +127,7 @@ export type Message =
 	| RenewSearchIndex
 	| SearchItem
 	| AddItem
+	| UpdateItem
 	| DeleteItem
 	| NewPlaylist
 	| GetPlaylistTree

@@ -18,16 +18,21 @@
 	}>();
 
 	const expanded = ref<boolean>(false);
+	const selection = defineModel<JGCPSend.File>();
 
 	const emit = defineEmits<{
-		selection: [file: JGCPSend.File, type: "dir" | "file"];
+		choose: [file: JGCPSend.File, type: "dir" | "file"];
 	}>();
 
-	function on_selection(
+	function on_choose(
 		file: JGCPSend.File,
 		type: "dir" | "file" = typeof props.files === "object" ? "dir" : "file"
 	) {
-		emit("selection", file, type);
+		if (type === "dir") {
+			expanded.value = !expanded.value;
+		} else {
+			emit("choose", file, "file");
+		}
 	}
 </script>
 
@@ -43,8 +48,9 @@
 			<span
 				v-if="!root"
 				class="file_content"
-				:class="{ selectable: typeof files !== 'object' }"
-				@dblclick="file ? on_selection(file) : undefined"
+				:class="{ selectable: typeof files !== 'object', active: selection === file }"
+				@click="typeof files !== 'object' && file !== undefined ? (selection = file) : ''"
+				@dblclick="file ? on_choose(file) : undefined"
 			>
 				{{ file?.name }}
 			</span>
@@ -65,7 +71,8 @@
 						:file="element"
 						:files="element.children"
 						:clone_callback="clone_callback"
-						@selection="on_selection"
+						v-model="selection"
+						@choose="on_choose"
 					/>
 				</template>
 			</Draggable>
@@ -93,18 +100,6 @@
 		gap: 0.125rem;
 	}
 
-	.button {
-		border-radius: 0.25rem;
-
-		cursor: pointer;
-
-		margin-right: 0.25rem;
-	}
-
-	.button:hover {
-		background-color: var(--color-item-hover);
-	}
-
 	.file_content {
 		display: inline-block;
 
@@ -123,5 +118,13 @@
 
 	.file_content.selectable:hover {
 		background-color: var(--color-item-hover);
+	}
+
+	.file_content.selectable.active {
+		background-color: var(--color-active);
+	}
+
+	.file_content.selectable.active:hover {
+		background-color: var(--color-active-hover);
 	}
 </style>

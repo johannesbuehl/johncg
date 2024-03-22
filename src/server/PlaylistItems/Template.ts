@@ -1,4 +1,4 @@
-import { PlaylistItemBase } from "./PlaylistItem.ts";
+import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface TemplateTemplate {
@@ -27,6 +27,8 @@ export default class TemplateItem extends PlaylistItemBase {
 		super();
 
 		this.item_props = props;
+
+		this.is_selectable = this.validate_props(props);
 	}
 
 	create_client_object_item_slides(): Promise<ClientTemplateSlides> {
@@ -46,6 +48,23 @@ export default class TemplateItem extends PlaylistItemBase {
 
 	set_active_slide(): number {
 		return 0;
+	}
+
+	protected validate_props(props: TemplateProps): boolean {
+		const template: TemplateProps = {
+			type: "template",
+			caption: "Template",
+			color: "Template",
+			template: {
+				template: "Template"
+			}
+		};
+
+		let result = props.type === "template";
+
+		result &&= props.template.data ? typeof props.template.data === "object" : true;
+
+		return result && recurse_check(props, template);
 	}
 
 	get active_slide(): number {

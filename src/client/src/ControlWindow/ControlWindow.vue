@@ -100,15 +100,6 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
-
-	function delete_item(item: number) {
-		const message: JGCPRecv.DeleteItem = {
-			command: "delete_item",
-			position: item
-		};
-
-		props.ws.send(JSON.stringify(message));
-	}
 </script>
 
 <template>
@@ -136,10 +127,10 @@
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
 			:ws="ws"
+			v-model="control_window_state"
 			@selection="$emit('select_item', $event)"
 			@dragged="dragged"
 			@set_active="$emit('select_slide', $event, 0)"
-			@delete="delete_item"
 		/>
 		<SlidesView
 			v-if="slides !== undefined && control_window_state === ControlWindowState.Playlist"

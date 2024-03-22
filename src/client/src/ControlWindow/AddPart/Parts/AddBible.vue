@@ -91,7 +91,7 @@
 			props: {
 				type: "bible",
 				caption,
-				color: "#008800",
+				color: "#ff0000",
 				book_id: book_selection.value?.id ?? "",
 				chapters
 			}

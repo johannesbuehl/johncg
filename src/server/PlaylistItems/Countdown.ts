@@ -1,8 +1,8 @@
-import { PlaylistItemBase } from "./PlaylistItem.ts";
+import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
-type CountdownMode = (typeof countdown_mode_items)[number];
+export type CountdownMode = (typeof countdown_mode_items)[number];
 
 interface CountdownPosition {
 	x: number;
@@ -47,6 +47,8 @@ export default class Countdown extends PlaylistItemBase {
 		super();
 
 		this.item_props = props;
+
+		this.is_selectable = this.validate_props(props);
 	}
 
 	navigate_slide(steps: number): number {
@@ -89,6 +91,29 @@ export default class Countdown extends PlaylistItemBase {
 			media: this.media,
 			template: this.template
 		});
+	}
+
+	protected validate_props(props: CountdownProps): boolean {
+		const template: CountdownProps = {
+			type: "countdown",
+			caption: "Template",
+			color: "Template",
+			position: {
+				x: 0,
+				y: 0
+			},
+			font_size: 0,
+			time: "Template",
+			show_seconds: false,
+			mode: "clock",
+			media: "Template"
+		};
+
+		return (
+			props.type === "countdown" &&
+			countdown_mode_items.includes(props.mode) &&
+			recurse_check(props, template)
+		);
 	}
 
 	get active_slide(): number {

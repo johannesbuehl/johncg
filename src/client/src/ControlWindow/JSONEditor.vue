@@ -6,7 +6,7 @@
 
 	const props = defineProps<{}>();
 
-	const content = defineModel<JSONContent>({
+	const content = defineModel<object>({
 		required: true
 	});
 
@@ -18,11 +18,16 @@
 		editor = new JSONEditor({
 			target: editor_ref.value as HTMLDivElement,
 			props: {
-				content: content.value ?? { json: {} },
+				content: { json: content.value ?? {} },
 				indentation: "\t",
 				tabSize: 4,
 				readOnly: false,
-				navigationBar: false
+				navigationBar: false,
+				onChange: (new_content, _, { contentErrors }) => {
+					if (contentErrors === null && "json" in new_content) {
+						content.value = new_content.json as object;
+					}
+				}
 			}
 		});
 	});

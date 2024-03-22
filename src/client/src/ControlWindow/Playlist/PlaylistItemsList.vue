@@ -7,6 +7,7 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import { ControlWindowState } from "../ControlWindowState";
 
 	export interface DragEndEvent {
 		oldIndex: number;
@@ -25,8 +26,9 @@
 		selection: [item: number];
 		dragged: [from: number, to: number];
 		set_active: [item: number];
-		delete: [item: number];
 	}>();
+
+	const control_window_state = defineModel<ControlWindowState>({ required: true });
 
 	function on_end(evt: DragEndEvent) {
 		// send only, if the index has changed
@@ -52,8 +54,6 @@
 	}
 
 	function navigate_selection(target: EventTarget, origin: number, steps: number) {
-		console.debug(origin);
-
 		let new_selection = origin + steps;
 
 		while (new_selection < 0) {
@@ -91,9 +91,9 @@
 		>
 			<template #item="{ element, index }">
 				<PlaylistItem
-					:caption="element.caption"
-					:color="element.color"
-					:selectable="element.selectable"
+					:index="index"
+					:ws="ws"
+					:item_props="element"
 					:selected="selected === index"
 					:active="active_item_slide?.item === index"
 					:scroll="scroll"
@@ -102,7 +102,6 @@
 					@set_active="$emit('set_active', index)"
 					@keydown.up="navigate_selection($event.target, index, -1)"
 					@keydown.down="navigate_selection($event.target, index, 1)"
-					@keydown.delete="$emit('delete', index)"
 				/>
 			</template>
 		</Draggable>
@@ -139,6 +138,12 @@
 
 	#playlist {
 		flex: 1;
+		display: flex;
+		flex-direction: column;
+
+		gap: 0.25rem;
+
+		padding: 0.25rem;
 	}
 
 	.dragged_ghost {

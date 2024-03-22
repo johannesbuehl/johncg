@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { PlaylistItemBase } from "./PlaylistItem.ts";
+import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface MediaProps extends ItemPropsBase {
@@ -22,6 +22,8 @@ export default class Media extends PlaylistItemBase {
 		super();
 
 		this.item_props = props;
+
+		this.is_selectable = this.validate_props(props);
 	}
 
 	set_active_slide(slide?: number): number {
@@ -51,6 +53,18 @@ export default class Media extends PlaylistItemBase {
 
 		// directly return the steps as item-navigation-steps, since this can't be navigated
 		return steps;
+	}
+
+	protected validate_props(props: MediaProps): boolean {
+		const template: MediaProps = {
+			type: "media",
+			caption: "Template",
+			color: "Template",
+			loop: false,
+			media: "Template"
+		};
+
+		return props.type === "media" && recurse_check(props, template);
 	}
 
 	get active_slide(): number {

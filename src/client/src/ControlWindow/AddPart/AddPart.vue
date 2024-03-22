@@ -11,7 +11,15 @@
 	import AddBible from "./Parts/AddBible.vue";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
-	library.add(fas.faMusic, fas.faBookBible, fas.faFont, fas.faImage, fas.faFilePdf, fas.faClock);
+	library.add(
+		fas.faMusic,
+		fas.faBookBible,
+		fas.faFont,
+		fas.faImage,
+		fas.faFilePdf,
+		fas.faClock,
+		fas.faMessage
+	);
 
 	defineProps<{
 		ws: WebSocket;
@@ -20,10 +28,6 @@
 		templates: JGCPSend.File[];
 		bible?: BibleFile;
 	}>();
-
-	// const emit = defineEmits<{
-
-	// }>();
 
 	const pick = defineModel<string>({ default: "song" });
 
@@ -35,7 +39,8 @@
 		{ text: "Media", value: "media", icon: "image" },
 		{ text: "Template", value: "template", icon: "music" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
-		{ text: "Countdown", value: "countdown", icon: "clock" }
+		{ text: "Countdown", value: "countdown", icon: "clock" },
+		{ text: "Comment", value: "comment", icon: "message" }
 	];
 </script>
 

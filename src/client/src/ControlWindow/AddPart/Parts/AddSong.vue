@@ -165,6 +165,9 @@
 					</div>
 				</div>
 			</div>
+			<div id="song_parts_wrapper">
+				<div class="header">Parts</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -227,8 +230,18 @@
 	}
 
 	.results_wrapper {
-		display: flex;
 		flex: 1;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+
+		gap: inherit;
+	}
+
+	.results_wrapper > div {
+		border-radius: 0.25rem;
+
+		background-color: var(--color-container);
 
 		gap: inherit;
 	}
@@ -262,26 +275,13 @@
 	}
 
 	#song_results {
-		width: 50%;
-
 		display: flex;
 		flex-direction: column;
-
-		background-color: var(--color-container);
-
-		border-radius: 0.25rem;
-
-		gap: inherit;
 	}
 
 	#result_text_wrapper {
-		flex: 1;
 		display: flex;
 		flex-direction: column;
-
-		background-color: var(--color-container);
-
-		border-radius: 0.25rem;
 	}
 
 	#result_text {

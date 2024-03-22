@@ -16,7 +16,7 @@
 		@keydown.enter="($event.target as HTMLDivElement)?.click()"
 	>
 		<FontAwesomeIcon :icon="['fas', icon]" />
-		{{ text ?? "" }}
+		<span v-if="text !== undefined" class="button_text">{{ text ?? "" }}</span>
 	</div>
 </template>
 
@@ -29,7 +29,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		/* flex-direction: column; */
 
 		padding: 0.5rem;
 
@@ -57,5 +56,12 @@
 	div.button,
 	div.button > * {
 		cursor: pointer;
+	}
+
+	span.button_text::before {
+		display: inline-block;
+
+		content: "";
+		width: 0.5rem;
 	}
 </style>

@@ -5,7 +5,7 @@ import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 
 import Playlist from "./Playlist.ts";
-import type { CasparCGResolution } from "./Playlist.ts";
+import type { ActiveItemSlide, CasparCGResolution } from "./Playlist.ts";
 import OSCServer from "./servers/osc-server.ts";
 import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
@@ -94,6 +94,8 @@ export default class Control {
 		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
 			this.search_item(msg.type, msg.search, ws),
 		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, msg.index, ws),
+		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
+			this.update_item(msg.index, msg.props, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
 		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws),
@@ -336,12 +338,13 @@ export default class Control {
 		}
 
 		// try to execute the item and slide change
+		let result: false | ActiveItemSlide | number;
 		try {
 			// if the current item is the same as the requested one, only execute an slide change
 			if (item === this.playlist?.active_item) {
-				this.playlist?.set_active_slide(slide);
+				result = this.playlist?.set_active_slide(slide);
 			} else {
-				this.playlist?.set_active_item(item, slide);
+				result = this.playlist?.set_active_item(item, slide);
 			}
 		} catch (e) {
 			// catch invalid item or slide numbers
@@ -353,13 +356,17 @@ export default class Control {
 			}
 		}
 
-		this.send_all_clients({
-			command: "state",
-			active_item_slide: this.playlist?.active_item_slide,
-			client_id: client_id
-		});
+		if (result !== false) {
+			this.send_all_clients({
+				command: "state",
+				active_item_slide: this.playlist?.active_item_slide,
+				client_id: client_id
+			});
 
-		ws_send_response("slide has been selected", true, ws);
+			ws_send_response("slide has been selected", true, ws);
+		} else {
+			ws_send_response("item can't be selected", false, ws);
+		}
 	}
 
 	/**
@@ -507,6 +514,18 @@ export default class Control {
 		this.send_state();
 
 		ws_send_response("added item to playlist", true, ws);
+	}
+
+	private update_item(index: number, props: ItemProps, ws: WebSocket) {
+		const result = this.playlist.update_item(index, props);
+
+		if (result === false) {
+			ws_send_response("could not update item", false, ws);
+		} else {
+			this.send_playlist();
+
+			ws_send_response("item has been updated", true, ws);
+		}
 	}
 
 	private delete_item(position: number, ws: WebSocket) {

@@ -16,8 +16,10 @@ import TemplateItem from "./PlaylistItems/Template.ts";
 import * as fs from "fs";
 import Bible from "./PlaylistItems/Bible.ts";
 
+export type ClientPlaylistItem = ItemProps & { selectable: boolean };
+
 export interface ClientPlaylistItems {
-	playlist_items: (ItemProps & { selectable: boolean })[];
+	playlist_items: ClientPlaylistItem[];
 }
 
 export interface ActiveItemSlide {
@@ -131,6 +133,17 @@ export default class Playlist {
 		this.changes = true;
 	}
 
+	update_item(position: number, props: ItemProps): ItemProps | false {
+		position = this.validate_item_number(position);
+
+		// check, wether the props are of the same type as the item at the position
+		if (props.type === this.playlist_items[position].props.type) {
+			return this.playlist_items[position].update(props);
+		} else {
+			return false;
+		}
+	}
+
 	delete_item(position: number): boolean {
 		position = this.validate_item_number(position);
 
@@ -236,16 +249,20 @@ export default class Playlist {
 		}
 	}
 
-	set_active_item(item: number, slide: number = 0): ActiveItemSlide {
+	set_active_item(item: number, slide: number = 0): ActiveItemSlide | false {
 		item = this.validate_item_number(item);
 
-		this.active_item_number = item;
+		if (this.playlist_items[item].selectable) {
+			this.active_item_number = item;
 
-		this.active_playlist_item.set_active_slide(slide);
+			this.active_playlist_item.set_active_slide(slide);
 
-		this.casparcg_load_item();
+			this.casparcg_load_item();
 
-		return this.active_item_slide;
+			return this.active_item_slide;
+		} else {
+			return false;
+		}
 	}
 
 	set_active_slide(slide: number): number {
