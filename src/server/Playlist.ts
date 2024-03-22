@@ -14,6 +14,7 @@ import Media from "./PlaylistItems/Media.ts";
 import PDF from "./PlaylistItems/PDF.ts";
 import TemplateItem from "./PlaylistItems/Template.ts";
 import * as fs from "fs";
+import Bible from "./PlaylistItems/Bible.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: (ItemProps & { selectable: boolean })[];
@@ -115,7 +116,8 @@ export default class Playlist {
 			countdown: Countdown,
 			media: Media,
 			pdf: PDF,
-			template: TemplateItem
+			template: TemplateItem,
+			bible: Bible
 		};
 
 		const new_item = new item_class_map[item.type](item, this.casparcg_connections[0].media);

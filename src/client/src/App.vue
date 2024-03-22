@@ -10,6 +10,7 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import { ControlWindowState } from "./ControlWindow/ControlWindowState";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const Config = {
 		client_server: {
@@ -32,6 +33,7 @@
 	const media_tree = ref<JGCPSend.File[]>([]);
 	const templates_tree = ref<JGCPSend.File[]>([]);
 	const playlist_tree = ref<JGCPSend.File[]>([]);
+	const bible_file = ref<BibleFile>();
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Add
@@ -98,7 +100,8 @@
 				playlist_save: save_playlist_file,
 				media_tree: parse_media_tree,
 				template_tree: parse_template_tree,
-				playlist_tree: parse_playlist_tree
+				playlist_tree: parse_playlist_tree,
+				bible: parse_bible
 			};
 
 			command_parser_map[data.command](data as never);
@@ -196,8 +199,6 @@
 
 	function parse_media_tree(data: JGCPSend.MediaTree) {
 		media_tree.value = data.media;
-
-		console.debug(data.media);
 	}
 
 	function parse_template_tree(data: JGCPSend.TemplateTree) {
@@ -206,6 +207,10 @@
 
 	function parse_playlist_tree(data: JGCPSend.PlaylistTree) {
 		playlist_tree.value = data.playlists;
+	}
+
+	function parse_bible(data: JGCPSend.Bible) {
+		bible_file.value = data.bible;
 	}
 
 	function handle_ws_response(response: JGCPSend.Response) {
@@ -243,6 +248,7 @@
 			:media_tree="media_tree"
 			:templates_tree="templates_tree"
 			:playlist_tree="playlist_tree"
+			:bible_file="bible_file"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

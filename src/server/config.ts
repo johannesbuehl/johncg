@@ -14,6 +14,7 @@ export interface ConfigJSON {
 		song: string;
 		psalm: string;
 		pdf: string;
+		bible: string;
 	};
 	casparcg: {
 		templates: string;

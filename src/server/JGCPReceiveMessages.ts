@@ -92,6 +92,10 @@ export interface GetPlaylistTree extends Base {
 	command: "get_playlist_tree";
 }
 
+export interface GetBible extends Base {
+	command: "get_bible";
+}
+
 export interface AddItem extends Base {
 	command: "add_item";
 	props: ItemProps;
@@ -121,4 +125,5 @@ export type Message =
 	| GetPlaylistTree
 	| SavePlaylist
 	| GetMediaTree
-	| GetTemplateTree;
+	| GetTemplateTree
+	| GetBible;

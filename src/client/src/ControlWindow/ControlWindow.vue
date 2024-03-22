@@ -9,6 +9,7 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -21,6 +22,7 @@
 		media_tree: JGCPSend.File[];
 		templates_tree: JGCPSend.File[];
 		playlist_tree: JGCPSend.File[];
+		bible_file?: BibleFile;
 		selected: number;
 	}>();
 
@@ -152,6 +154,7 @@
 			:search_results="search_results"
 			:media="media_tree"
 			:templates="templates_tree"
+			:bible="bible_file"
 		/>
 	</div>
 </template>

@@ -8,6 +8,8 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import AddMedia from "./Parts/AddMedia.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
+	import AddBible from "./Parts/AddBible.vue";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	library.add(fas.faMusic, fas.faBookBible, fas.faFont, fas.faImage, fas.faFilePdf, fas.faClock);
 
@@ -16,6 +18,7 @@
 		search_results?: JGCPSend.SearchResults;
 		media: JGCPSend.File[];
 		templates: JGCPSend.File[];
+		bible?: BibleFile;
 	}>();
 
 	// const emit = defineEmits<{
@@ -54,6 +57,7 @@
 		/>
 		<AddMedia v-if="pick === 'media'" :media="media" :ws="ws" />
 		<AddTemplate v-if="pick === 'template'" :templates="templates" :ws="ws" />
+		<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" />
 	</div>
 </template>
 

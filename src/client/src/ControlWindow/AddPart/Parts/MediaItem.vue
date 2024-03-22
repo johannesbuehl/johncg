@@ -54,6 +54,10 @@
 		background-color: var(--color-active-hover);
 	}
 
+	.result_title > span {
+		font-weight: lighter;
+	}
+
 	.result_title > span:not(:first-child) {
 		color: var(--color-text-disabled);
 		font-style: italic;

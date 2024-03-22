@@ -1,12 +1,8 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import type { ClientTemplateSlides } from "./PlaylistItems/Template.ts";
-import type { ClientCommentSlides } from "./PlaylistItems/Comment.ts";
-import type { ClientCountdownSlides } from "./PlaylistItems/Countdown.ts";
-import type { ClientMediaProps } from "./PlaylistItems/Media.ts";
-import type { ClientPDFSlides } from "./PlaylistItems/PDF.ts";
-import type { ClientSongSlides } from "./PlaylistItems/Song.ts";
 import { SongResult } from "./search_part.ts";
 import PlaylistObject from "./PlaylistFile.ts";
+import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
+import { BibleFile } from "./PlaylistItems/Bible.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -48,20 +44,7 @@ interface ItemSlidesBase extends Base {
 	resolution: PlaylistClass.CasparCGResolution;
 }
 
-export type SongSlides = ClientSongSlides & ItemSlidesBase;
-export type CountdownSlides = ClientCountdownSlides & ItemSlidesBase;
-export type MediaSlides = ClientMediaProps & ItemSlidesBase;
-export type TemplateSlides = ClientTemplateSlides & ItemSlidesBase;
-export type CommentSlides = ClientCommentSlides & ItemSlidesBase;
-export type PDFSlides = ClientPDFSlides & ItemSlidesBase;
-
-export type ItemSlides =
-	| SongSlides
-	| CountdownSlides
-	| MediaSlides
-	| TemplateSlides
-	| CommentSlides
-	| PDFSlides;
+export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 
 export interface Clear extends Base {
 	command: "clear";
@@ -103,6 +86,11 @@ export interface PlaylistTree {
 	playlists: File[];
 }
 
+export interface Bible {
+	command: "bible";
+	bible: BibleFile;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -116,4 +104,5 @@ export type Message =
 	| PlaylistSave
 	| MediaTree
 	| TemplateTree
-	| PlaylistTree;
+	| PlaylistTree
+	| Bible;

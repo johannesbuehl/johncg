@@ -153,9 +153,7 @@
 						/>
 					</template>
 				</Draggable>
-				<div class="add_item_buttons">
-					<MenuButton icon="plus" text="" @click="add_song" />
-				</div>
+				<MenuButton icon="plus" text="" @click="add_song" />
 			</div>
 			<div id="result_text_wrapper">
 				<div class="header">Text</div>
@@ -300,5 +298,9 @@
 
 	.song_part {
 		overflow: visible;
+	}
+
+	.song_part > p {
+		font-weight: lighter;
 	}
 </style>

@@ -30,14 +30,12 @@ export default class TemplateItem extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientTemplateSlides> {
-		const { caption, template } = this.props;
-
 		return Promise.resolve({
 			type: "template",
-			caption,
+			caption: this.props.caption,
 			slides: [],
 			media: undefined,
-			template
+			template: this.template
 		});
 	}
 

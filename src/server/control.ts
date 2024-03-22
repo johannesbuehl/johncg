@@ -2,6 +2,7 @@ import WebSocket, { RawData } from "ws";
 
 import { CasparCG, ClipInfo, InfoConfig } from "casparcg-connection";
 import { XMLParser } from "fast-xml-parser";
+import fs from "fs";
 
 import Playlist from "./Playlist.ts";
 import type { CasparCGResolution } from "./Playlist.ts";
@@ -19,6 +20,7 @@ import type { CasparCGConnectionSettings } from "./config.ts";
 import Config from "./config.ts";
 import SearchPart from "./search_part.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
+import { BibleFile } from "./PlaylistItems/Bible.ts";
 
 interface CasparCGPathsSettings {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -95,7 +97,8 @@ export default class Control {
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
 		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws),
-		get_playlist_tree: (msg: JGCPRecv.GetPlaylistTree, ws: WebSocket) => this.get_playlist_tree(ws)
+		get_playlist_tree: (msg: JGCPRecv.GetPlaylistTree, ws: WebSocket) => this.get_playlist_tree(ws),
+		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -551,6 +554,24 @@ export default class Control {
 		const message: JGCPSend.PlaylistTree = {
 			command: "playlist_tree",
 			playlists: this.search_part.find_jcg_files()
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private get_bible(ws: WebSocket) {
+		let bible: BibleFile;
+
+		try {
+			bible = JSON.parse(fs.readFileSync(Config.path.bible, "utf-8")) as BibleFile;
+		} catch (e) {
+			ws_send_response("can't open bible-file", false, ws);
+			return;
+		}
+
+		const message: JGCPSend.Bible = {
+			command: "bible",
+			bible
 		};
 
 		ws.send(JSON.stringify(message));

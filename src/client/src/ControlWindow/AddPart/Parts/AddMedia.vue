@@ -1,14 +1,10 @@
 <script setup lang="ts">
 	import { onMounted } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { File } from "@server/JGCPSendMessages";
 	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-
-	library.add(fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
 		media: File[];
