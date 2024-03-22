@@ -13,7 +13,8 @@ export default defineConfig(({ command }) => ({
 			}
 		},
 		outDir: "../../dist/build/client",
-		emptyOutDir: true
+		emptyOutDir: true,
+		chunkSizeWarningLimit: 2000
 	},
 	publicDir: command === "build" ? false : "../../casparcg",
 	root: "src/client",

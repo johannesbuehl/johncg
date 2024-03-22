@@ -1,11 +1,12 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { TemplateSlides } from "@server/JGCPSendMessages";
+	import * as JGCPSend from "@server/JGCPSendMessages";
+
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
-		slide?: TemplateSlides;
+		slide: JGCPSend.ItemSlides & { type: "template" | "bible" };
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 	}>();

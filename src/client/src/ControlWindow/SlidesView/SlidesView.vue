@@ -53,7 +53,7 @@
 			@select_slide="$emit('select_slide', $event)"
 		/>
 	</div>
-	<div class="slides_view_container" v-if="slides?.type === 'template'">
+	<div class="slides_view_container" v-if="slides?.type === 'template' || slides?.type === 'bible'">
 		<TemplatePart
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"

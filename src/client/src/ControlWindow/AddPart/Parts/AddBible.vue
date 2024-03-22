@@ -110,6 +110,8 @@
 						!verse_selection.value[chapter_selection.value][ii];
 				}
 			}
+		} else {
+			last_verse = this_verse;
 		}
 	}
 </script>

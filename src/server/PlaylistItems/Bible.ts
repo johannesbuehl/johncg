@@ -17,9 +17,14 @@ export interface BibleProps extends ItemPropsBase {
 	}[];
 }
 
+export interface BibleJSON {
+	text: string;
+	mute_transition?: boolean;
+}
+
 export interface BibleTemplate {
 	template: string;
-	data: { text: string };
+	data: BibleJSON;
 }
 
 export interface ClientBibleSlides extends ClientItemSlidesBase {

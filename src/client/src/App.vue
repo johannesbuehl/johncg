@@ -135,6 +135,11 @@
 		playlist_items.value = data;
 
 		control_window_state.value = ControlWindowState.Playlist;
+
+		// if the playlist is empty, clear the slides-view
+		if (data.playlist_items.length === 0) {
+			item_slides.value = undefined;
+		}
 	}
 
 	function parse_state(data: JGCPSend.State) {

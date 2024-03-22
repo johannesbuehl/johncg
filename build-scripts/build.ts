@@ -48,7 +48,9 @@ const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as Confi
 config_file.path = {
 	song: "C:/path/to/song/directory",
 	pdf: "D:/path/to/pdf/directory",
-	psalm: "E:/path/to/psalm/directory"
+	psalm: "E:/path/to/psalm/directory",
+	playlist: "F:/path/to/playlist/directory",
+	bible: "Bibles/Luther-Bibel.json"
 };
 config_file.casparcg.templates = "e:/path/to/the/casparcg/templates/directory";
 fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
@@ -56,11 +58,12 @@ fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_fi
 // copy the file to the output
 copy_release_file(path.join(build_dir, exec_name));
 copy_release_file(path.join(build_dir, "main.js"));
+copy_release_dir("Bibles");
 
 copy_release_dir("casparcg/Templates", undefined, { filter: (src) => {
 	switch (true) {
 		case path.basename(src) === ".eslintrc":
-		case [".js", ".map"].includes(path.extname(src)):
+		case [".map"].includes(path.extname(src)):
 			return false;
 		default:
 			return true;
