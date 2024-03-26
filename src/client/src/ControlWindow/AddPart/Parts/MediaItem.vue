@@ -1,14 +1,14 @@
 <script setup lang="ts">
-	import type { SongResult } from "@server/search_part";
+	import type { SongData } from "@server/search_part";
 
 	defineProps<{
-		song_result: SongResult;
+		song_result: SongData;
 		active: boolean;
 		id: string;
 	}>();
 
-	defineEmits<{
-		set_selection: [song: SongResult];
+	const emit = defineEmits<{
+		set_selection: [song: SongData];
 		add_song: [];
 	}>();
 </script>
@@ -18,8 +18,8 @@
 		class="result_title"
 		:class="{ active }"
 		:for="id"
-		@click="$emit('set_selection', song_result)"
-		@dblclick="$emit('add_song')"
+		@click="emit('set_selection', song_result)"
+		@dblclick="emit('add_song')"
 	>
 		<span v-for="title of song_result?.title">
 			{{ title }}

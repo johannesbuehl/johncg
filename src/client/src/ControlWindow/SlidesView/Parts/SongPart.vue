@@ -14,7 +14,7 @@
 		scroll?: boolean;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
 
@@ -48,7 +48,7 @@
 						(active_item_slide?.slide ?? 0) < (slide?.start_index ?? 0) + (slide?.slides ?? 0)
 					: false
 			}"
-			@click="$emit('select_slide', slide?.start_index ?? 0)"
+			@click="emit('select_slide', slide?.start_index ?? 0)"
 		>
 			{{ slide?.part }}
 		</div>
@@ -62,7 +62,7 @@
 				:active="(slide?.start_index ?? 0) + _index - 1 === active_item_slide?.slide"
 				:scroll="scroll"
 				@template_load="template_loaded($event, (slide?.start_index ?? 0) + _index - 1)"
-				@click="$emit('select_slide', (slide?.start_index ?? 0) + _index - 1)"
+				@click="emit('select_slide', (slide?.start_index ?? 0) + _index - 1)"
 			/>
 		</div>
 	</div>
@@ -103,7 +103,8 @@
 
 		align-items: center;
 
-		/* padding: 0.125rem;
-	gap: 0.25rem; */
+		padding: 0.25rem;
+		/* padding-inline: 0.125rem; */
+		gap: 0.375rem;
 	}
 </style>

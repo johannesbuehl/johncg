@@ -39,6 +39,7 @@ export interface ConfigJSON {
 }
 
 import fs from "fs";
+import path from "path";
 
 const config_path = "config.json";
 
@@ -46,5 +47,29 @@ const config_path = "config.json";
 const Config: ConfigJSON = JSON.parse(
 	fs.readFileSync(config_path, { encoding: "utf-8" })
 ) as ConfigJSON;
+
+export function get_song_path(pth: string): string {
+	const return_path = path.isAbsolute(pth) ? pth : path.resolve(Config.path.song, pth);
+
+	return return_path.replaceAll("\\", "/");
+}
+
+export function get_playlist_path(pth: string): string {
+	const return_path = path.isAbsolute(pth) ? pth : path.resolve(Config.path.playlist, pth);
+
+	return return_path.replaceAll("\\", "/");
+}
+
+export function get_psalm_path(pth: string): string {
+	const return_path = path.isAbsolute(pth) ? pth : path.resolve(Config.path.psalm, pth);
+
+	return return_path.replaceAll("\\", "/");
+}
+
+export function get_pdf_path(pth: string): string {
+	const return_path = path.isAbsolute(pth) ? pth : path.resolve(Config.path.pdf, pth);
+
+	return return_path.replaceAll("\\", "/");
+}
 
 export default Config;

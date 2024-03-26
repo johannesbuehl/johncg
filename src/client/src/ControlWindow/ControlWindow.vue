@@ -1,8 +1,10 @@
 <script setup lang="ts">
+	import { nextTick, reactive, ref } from "vue";
+
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
-	import { ControlWindowState } from "./ControlWindowState";
+	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
@@ -10,6 +12,7 @@
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import EditPart from "./EditPart/EditPart.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -26,12 +29,12 @@
 		selected: number;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_item: [item: number];
 		select_slide: [item: number, slide: number];
 	}>();
 
-	const control_window_state = defineModel<ControlWindowState>({
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		required: true
 	});
 
@@ -100,6 +103,11 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
+
+	function edit_item(index: number) {
+		control_window_state.value = ControlWindowState.Edit;
+		emit("select_item", index);
+	}
 </script>
 
 <template>
@@ -120,24 +128,25 @@
 		<PlaylistItemsList
 			v-if="
 				control_window_state === ControlWindowState.Playlist ||
-				control_window_state === ControlWindowState.Add
+				control_window_state === ControlWindowState.Add ||
+				control_window_state === ControlWindowState.Edit
 			"
 			:playlist="playlist"
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
 			:ws="ws"
-			v-model="control_window_state"
-			@selection="$emit('select_item', $event)"
+			@selection="emit('select_item', $event)"
 			@dragged="dragged"
-			@set_active="$emit('select_slide', $event, 0)"
+			@set_active="emit('select_slide', $event, 0)"
+			@edit="edit_item"
 		/>
 		<SlidesView
 			v-if="slides !== undefined && control_window_state === ControlWindowState.Playlist"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			@select_slide="$emit('select_slide', slides.item, $event)"
+			@select_slide="emit('select_slide', slides.item, $event)"
 		/>
 		<AddPart
 			v-if="control_window_state === ControlWindowState.Add"
@@ -146,6 +155,14 @@
 			:media="media_tree"
 			:templates="templates_tree"
 			:bible="bible_file"
+			:mode="control_window_state"
+		/>
+		<EditPart
+			v-if="control_window_state === ControlWindowState.Edit"
+			:item_props="playlist?.playlist_items[selected]"
+			:ws="ws"
+			:search_results="search_results"
+			:item_index="selected"
 		/>
 	</div>
 </template>

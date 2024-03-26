@@ -107,7 +107,7 @@ export default class Playlist {
 
 	add_item(
 		item: ItemProps,
-		set_active: boolean = true,
+		set_active: boolean = false,
 		index: number = this.playlist_items.length
 	) {
 		const item_class_map: {
@@ -125,6 +125,10 @@ export default class Playlist {
 		const new_item = new item_class_map[item.type](item, this.casparcg_connections[0].media);
 
 		this.playlist_items.splice(index, 0, new_item);
+
+		if (this.active_item >= index) {
+			this.active_item_number++;
+		}
 
 		if (set_active) {
 			this.set_active_item(index, 0);

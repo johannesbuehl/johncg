@@ -36,7 +36,8 @@
 					color: "#008800",
 					media: file.path,
 					loop: loop.value
-				}
+				},
+				set_active: true
 			};
 
 			props.ws.send(JSON.stringify(message));

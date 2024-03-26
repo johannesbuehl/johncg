@@ -1,5 +1,5 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import { SongResult } from "./search_part.ts";
+import { SongData } from "./search_part.ts";
 import PlaylistObject from "./PlaylistFile.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
@@ -55,7 +55,7 @@ interface SearchResultsBase extends Base {
 }
 export interface SongSearchResults extends SearchResultsBase {
 	type: "song";
-	result: SongResult[];
+	result: SongData[];
 }
 
 export type SearchResults = SongSearchResults;

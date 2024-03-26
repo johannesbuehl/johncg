@@ -93,14 +93,17 @@ export default class Control {
 			this.renew_search_index(msg.type, ws),
 		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
 			this.search_item(msg.type, msg.search, ws),
-		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) => this.add_item(msg.props, msg.index, ws),
+		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) =>
+			this.add_item(msg.props, msg.index, msg.set_active, ws),
 		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
 		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws),
 		get_playlist_tree: (msg: JGCPRecv.GetPlaylistTree, ws: WebSocket) => this.get_playlist_tree(ws),
-		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws)
+		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
+			this.get_item_data(msg.type, msg.file, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -500,9 +503,9 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private add_item(props: ItemProps, index: number, ws: WebSocket) {
+	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
 		try {
-			this.playlist.add_item(props, true, index);
+			this.playlist.add_item(props, set_active, index);
 		} catch (e) {
 			ws_send_response("could not add item to playlist", false, ws);
 
@@ -548,7 +551,7 @@ export default class Control {
 			this.send_state();
 		}
 
-		ws_send_response("delete item from playlist", true, ws);
+		ws_send_response("deleted item from playlist", true, ws);
 	}
 
 	private get_media_tree(ws: WebSocket) {
@@ -591,6 +594,18 @@ export default class Control {
 		const message: JGCPSend.Bible = {
 			command: "bible",
 			bible
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
+		const result = this.search_part.get_item_data(type, path);
+
+		const message: JGCPSend.SongSearchResults = {
+			command: "search_results",
+			type: "song",
+			result: [result]
 		};
 
 		ws.send(JSON.stringify(message));

@@ -1,4 +1,3 @@
-import { ClientPlaylistItem } from "./Playlist";
 import { ItemProps } from "./PlaylistItems/PlaylistItem";
 
 /**
@@ -97,15 +96,22 @@ export interface GetBible extends Base {
 	command: "get_bible";
 }
 
+export interface GetItemData extends Base {
+	command: "get_item_data";
+	type: "song";
+	file: string;
+}
+
 export interface AddItem extends Base {
 	command: "add_item";
 	props: ItemProps;
 	index?: number;
+	set_active?: boolean;
 }
 
 export interface UpdateItem extends Base {
 	command: "update_item";
-	props: ClientPlaylistItem;
+	props: ItemProps;
 	index: number;
 }
 
@@ -134,4 +140,5 @@ export type Message =
 	| SavePlaylist
 	| GetMediaTree
 	| GetTemplateTree
-	| GetBible;
+	| GetBible
+	| GetItemData;

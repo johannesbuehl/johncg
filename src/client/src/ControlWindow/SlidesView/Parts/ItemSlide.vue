@@ -32,13 +32,13 @@
 		}
 	}
 
-	defineEmits<{
+	const emit = defineEmits<{
 		template_load: [template_object: HTMLObjectElement];
 	}>();
 </script>
 
 <template>
-	<div ref="slide" class="slide_wrapper">
+	<div ref="slide" class="slide_wrapper" :class="{ active }">
 		<img
 			class="media"
 			:src="media"
@@ -53,9 +53,9 @@
 			v-if="template"
 			class="template"
 			:data="`Templates/${template?.template}.html`"
-			@load="$emit('template_load', $event.target as HTMLObjectElement)"
+			@load="emit('template_load', $event.target as HTMLObjectElement)"
 		/>
-		<div class="slide" :class="{ active }" />
+		<div class="slide" />
 	</div>
 </template>
 
@@ -63,20 +63,19 @@
 	.slide_wrapper {
 		position: relative;
 
-		border: 0.0625rem solid transparent;
+		outline: 0.0625rem solid white;
+
 		border-radius: 0.125rem;
 
 		overflow: visible;
 
-		margin: 0.0625rem;
+		z-index: 10;
 	}
 
 	.media {
 		height: 12rem;
 
 		display: block;
-
-		margin: 0.0625rem;
 	}
 
 	.template {
@@ -95,34 +94,17 @@
 		right: 0;
 		bottom: 0;
 		cursor: pointer;
-
-		border: 0.0625rem solid white;
-		border-radius: 0.125rem;
 	}
 
-	.slide:hover {
-		border-width: 0.125rem;
-		border-radius: 0.1875rem;
-
-		margin: -0.0625rem; /* difference in border width between selected and non-selected */
-
-		z-index: 20;
+	.slide_wrapper:hover {
+		outline-width: 0.125rem;
 	}
 
-	.slide.active {
-		border-color: red;
-		border-width: 0.125rem;
-		border-radius: 0.1875rem;
-
-		z-index: 10;
-
-		margin: -0.0625rem; /* difference in border width between selected and non-selected */
+	.slide_wrapper.active {
+		outline: 0.125rem solid red;
 	}
 
-	.slide.active:hover {
-		border-width: 0.25rem;
-		border-radius: 0.3125rem;
-
-		margin: -0.1875rem; /* difference in border width between selected and non-selected */
+	.slide_wrapper.active:hover {
+		outline-width: 0.25rem;
 	}
 </style>

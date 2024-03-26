@@ -1,5 +1,6 @@
 export enum ControlWindowState {
 	Playlist = 0,
 	Add = 1,
-	OpenPlaylist = 2
+	Edit = 2,
+	OpenPlaylist = 3
 }

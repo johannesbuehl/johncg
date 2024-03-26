@@ -11,7 +11,7 @@
 		active_item_slide?: ActiveItemSlide;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
 
@@ -35,7 +35,7 @@
 		<div
 			class="header"
 			:class="{ active: 0 === active_item_slide?.slide }"
-			@click="$emit('select_slide', 0)"
+			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.caption }}
 		</div>
@@ -46,7 +46,7 @@
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
 				@template_load="template_loaded"
-				@click="$emit('select_slide', 0)"
+				@click="emit('select_slide', 0)"
 			/>
 		</div>
 	</div>

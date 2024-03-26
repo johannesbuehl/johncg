@@ -94,7 +94,8 @@
 				color: "#ff0000",
 				book_id: book_selection.value?.id ?? "",
 				chapters
-			}
+			},
+			set_active: true
 		};
 
 		props.ws.send(JSON.stringify(message));

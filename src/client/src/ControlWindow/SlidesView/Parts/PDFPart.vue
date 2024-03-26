@@ -14,7 +14,7 @@
 		scroll?: boolean;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
 
@@ -43,7 +43,7 @@
 		<div
 			class="header"
 			:class="{ active: active_item_slide?.item }"
-			@click="$emit('select_slide', 0)"
+			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.caption }}
 		</div>
@@ -56,7 +56,7 @@
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"
 				@template_load="template_loaded($event, index)"
-				@click="$emit('select_slide', index)"
+				@click="emit('select_slide', index)"
 			/>
 		</div>
 	</div>

@@ -14,7 +14,7 @@
 		scroll?: boolean;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
 
@@ -34,7 +34,7 @@
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>
 	<div class="slides_view_container" v-if="slides?.type === 'countdown'">
@@ -42,7 +42,7 @@
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>
 	<div class="slides_view_container" v-if="slides?.type === 'media'">
@@ -50,7 +50,7 @@
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>
 	<div class="slides_view_container" v-if="slides?.type === 'template' || slides?.type === 'bible'">
@@ -58,7 +58,7 @@
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>
 	<div class="slides_view_container" v-if="slides?.type === 'pdf'">
@@ -66,7 +66,7 @@
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
-			@select_slide="$emit('select_slide', $event)"
+			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>
 </template>

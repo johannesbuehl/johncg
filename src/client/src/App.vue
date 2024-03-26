@@ -7,9 +7,10 @@
 	import { ref, watch } from "vue";
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 
+	import { ControlWindowState } from "./Enums";
+
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { ControlWindowState } from "./ControlWindow/ControlWindowState";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const Config = {
@@ -42,15 +43,38 @@
 	let ws: WebSocket | undefined;
 	ws_connect();
 
+	// watch for changes in item-selection
 	watch(selected_item, (new_selection) => {
+		// only request the slides, if they are actually shown
+		if (control_window_state.value === ControlWindowState.Playlist) {
+			request_item_slides(new_selection);
+		} else {
+			// else: delete the stored item-slides
+			item_slides.value = undefined;
+		}
+	});
+
+	watch(control_window_state, (new_state) => {
+		// if the new control-window-state is the playlist, request the slides
+		if (new_state === ControlWindowState.Playlist) {
+			request_item_slides(selected_item.value);
+		} else {
+			// else delete the stored slides
+			item_slides.value = undefined;
+		}
+	});
+
+	function request_item_slides(index: number) {
 		const message: JGCPRecv.RequestItemSlides = {
 			command: "request_item_slides",
-			item: new_selection ?? -1,
+			item: index,
 			client_id
 		};
 
 		ws?.send(JSON.stringify(message));
-	});
+
+		console.debug(message);
+	}
 
 	function init() {
 		server_state.value = { command: "state" };
@@ -134,7 +158,9 @@
 	function load_playlist_items(data: JGCPSend.Playlist) {
 		playlist_items.value = data;
 
-		control_window_state.value = ControlWindowState.Playlist;
+		if (control_window_state.value === ControlWindowState.OpenPlaylist) {
+			control_window_state.value = ControlWindowState.Playlist;
+		}
 
 		// if the playlist is empty, clear the slides-view
 		if (data.playlist_items.length === 0) {
@@ -156,8 +182,11 @@
 			throw new TypeError("'visibility' is not of type 'boolean'");
 		}
 
-		// if the client_id is ours, set the selected to the active
-		if (data.active_item_slide !== undefined && data.client_id === client_id) {
+		// if the client_id is ours or currently no item is selected, set the selected to the active
+		if (
+			data.active_item_slide !== undefined &&
+			(data.client_id === client_id || selected_item.value === -1)
+		) {
 			selected_item.value = data.active_item_slide?.item;
 		}
 
@@ -241,7 +270,7 @@
 	<div id="main_window">
 		<ControlWindow
 			v-if="server_connection === ServerConnection.connected"
-			v-model="control_window_state"
+			v-model:control_window_state="control_window_state"
 			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"

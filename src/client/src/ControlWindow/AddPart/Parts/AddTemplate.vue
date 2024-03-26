@@ -39,7 +39,8 @@
 						template: file.path,
 						data: template_data.value
 					}
-				}
+				},
+				set_active: true
 			};
 
 			props.ws.send(JSON.stringify(message));

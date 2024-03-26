@@ -1,7 +1,7 @@
 import fs from "fs";
 import iconv from "iconv-lite";
 
-const verse_types = [
+export const verse_types = [
 	"refrain",
 	"chorus",
 	"vers",
@@ -17,6 +17,7 @@ const verse_types = [
 	"pre-chorus",
 	"pre-refrain",
 	"misc",
+	"solo",
 	"outro",
 	"pre-bridge",
 	"pre-coda",
@@ -86,6 +87,9 @@ export interface LyricPartClient extends BasePartClient {
 
 export type ItemPartClient = TitlePartClient | LyricPartClient;
 
+export type SongPart = string[][][];
+export type SongParts = Record<string, SongPart>;
+
 /**
  * processes and saves song-files (*.sng)
  * They should be compatible with those created by songbeamer (no guarantee given)
@@ -94,7 +98,7 @@ export default class SongFile {
 	private song_file_path?: string;
 
 	// private variables
-	private text_parts: Record<string, string[][][]> = {};
+	private text_parts: SongParts = {};
 
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -294,6 +298,10 @@ export default class SongFile {
 	 */
 	get avaliable_parts(): string[] {
 		return Object.keys(this.text_parts);
+	}
+
+	get all_parts(): SongParts {
+		return this.text_parts;
 	}
 
 	get languages(): number[] {

@@ -123,7 +123,7 @@ export function create_bible_citation_string(book_id: string, chapters: BiblePro
 	const chapter_strings = chapters.map((chapter): string => {
 		// stop the loop-iteration, if there are no verses defined
 		if (chapter.verses.length === 0) {
-			return `${chapter.chapter + 1}`;
+			return `${chapter.chapter}`;
 		}
 
 		const verse_range: { start: number; last: number } = {
@@ -153,7 +153,7 @@ export function create_bible_citation_string(book_id: string, chapters: BiblePro
 			verse_range.last = verse;
 		}
 
-		return `${chapter.chapter + 1},${verses.filter(Boolean).join(".")}`;
+		return `${chapter.chapter},${verses.filter(Boolean).join(".")}`;
 	});
 
 	return `${book_id} ${chapter_strings.join("; ")}`;

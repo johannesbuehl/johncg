@@ -4,11 +4,11 @@ import tmp from "tmp";
 
 import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { get_song_path } from "./Song.ts";
+import { get_pdf_path } from "../config.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
-	path: string;
+	file: string;
 }
 
 export interface ClientPDFSlides extends ClientItemSlidesBase {
@@ -20,7 +20,7 @@ export interface ClientPDFSlides extends ClientItemSlidesBase {
 export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
-	private slides: string[];
+	private slides: string[] = [];
 
 	protected slide_count: number = 0;
 
@@ -31,13 +31,14 @@ export default class PDF extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.is_selectable = false;
+		const selectable = this.validate_props(props);
 
-		if (this.selectable) {
+		if (selectable) {
 			void (async () => {
 				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-				const pth = get_song_path(this.props.path).replaceAll("/", "\\");
+				const pth = get_pdf_path(this.props.file).replaceAll("/", "\\");
 
 				try {
 					const pdf = await pdfjs.getDocument(pth).promise;
@@ -63,7 +64,7 @@ export default class PDF extends PlaylistItemBase {
 
 						void sharp(image_buffer).png().toFile(tmp_file.name);
 
-						this.slides[index] = tmp_file.name.replaceAll("\\", "/");
+						this.slides[index] = tmp_file.name.replaceAll("\\", "/").replace(/^(\w:\/)/, "$1/");
 
 						this.slide_count++;
 					});
@@ -76,6 +77,8 @@ export default class PDF extends PlaylistItemBase {
 						throw e;
 					}
 				}
+
+				this.is_selectable = selectable;
 			})();
 		}
 	}
@@ -126,7 +129,7 @@ export default class PDF extends PlaylistItemBase {
 		const img = sharp(media);
 		img.resize(240);
 
-		return (await img.toBuffer()).toString("base64");
+		return "data:image/png;base64," + (await img.toBuffer()).toString("base64");
 	}
 
 	protected validate_props(props: PDFProps): boolean {
@@ -134,7 +137,7 @@ export default class PDF extends PlaylistItemBase {
 			type: "pdf",
 			caption: "Template",
 			color: "Template",
-			path: "Template"
+			file: "Template"
 		};
 
 		return props.type === "pdf" && recurse_check(props, template);

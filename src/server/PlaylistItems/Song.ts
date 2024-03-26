@@ -1,11 +1,9 @@
-import path from "path";
-
+import { get_song_path } from "../config.ts";
 import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile.ts";
 
-import Config from "../config.ts";
 import { ClipInfo } from "casparcg-connection";
 
 export interface SongTemplate {
@@ -323,12 +321,4 @@ export default class Song extends PlaylistItemBase {
 
 		return "#00000000";
 	}
-}
-
-export function get_song_path(song_path: string): string {
-	const return_path = path.isAbsolute(song_path)
-		? song_path
-		: path.resolve(Config.path.song, song_path);
-
-	return return_path.replaceAll("\\", "/");
 }

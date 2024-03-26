@@ -1,16 +1,16 @@
 <script setup lang="ts">
+	import type { ClientMediaProps } from "@server/PlaylistItems/Media";
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { MediaSlides } from "@server/JGCPSendMessages";
 
 	defineProps<{
-		slide?: MediaSlides;
+		slide?: ClientMediaProps;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
 </script>
@@ -20,7 +20,7 @@
 		<div
 			class="header"
 			:class="{ active: 0 === active_item_slide?.slide }"
-			@click="$emit('select_slide', 0)"
+			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.caption }}
 		</div>
@@ -29,7 +29,7 @@
 				:media="slide?.media"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
-				@click="$emit('select_slide', 0)"
+				@click="emit('select_slide', 0)"
 			/>
 		</div>
 	</div>

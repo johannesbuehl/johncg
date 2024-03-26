@@ -1,15 +1,20 @@
 <script setup lang="ts">
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
+	import { ControlWindowState } from "@/Enums";
 	import PartRadio from "./PartRadio.vue";
-	import AddSong from "./Parts/AddSong.vue";
-
-	import * as JGCPSend from "@server/JGCPSendMessages";
 	import AddMedia from "./Parts/AddMedia.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
 	import AddBible from "./Parts/AddBible.vue";
+	import AddSong from "./Parts/Song/AddSong.vue";
+
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type { SongProps } from "@server/PlaylistItems/Song";
 
 	library.add(
 		fas.faMusic,
@@ -21,15 +26,17 @@
 		fas.faMessage
 	);
 
-	defineProps<{
+	const props = defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
 		media: JGCPSend.File[];
 		templates: JGCPSend.File[];
 		bible?: BibleFile;
+		mode: ControlWindowState;
 	}>();
 
-	const pick = defineModel<string>({ default: "song" });
+	const pick = ref<string>("song");
+	const item_props = defineModel<ItemProps>();
 
 	const part_types = [
 		{ text: "Song", value: "song", icon: "music" },
@@ -42,11 +49,27 @@
 		{ text: "Countdown", value: "countdown", icon: "clock" },
 		{ text: "Comment", value: "comment", icon: "message" }
 	];
+
+	function add_item() {
+		if (item_props.value !== undefined) {
+			const message: JGCPRecv.AddItem = {
+				command: "add_item",
+				props: item_props.value,
+				set_active: true
+			};
+
+			props.ws.send(JSON.stringify(message));
+		}
+	}
+
+	function update_item() {
+		console.debug("update_item request");
+	}
 </script>
 
 <template>
 	<div class="add_part_wrapper">
-		<div class="song_part_selector">
+		<div class="song_part_selector" v-if="mode === ControlWindowState.Add">
 			<PartRadio
 				v-for="type in part_types"
 				:value="type.value"
@@ -57,12 +80,37 @@
 		</div>
 		<AddSong
 			v-if="pick === 'song'"
+			v-model:item_props="item_props as SongProps"
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
+			:mode="mode"
+			@add="add_item"
+			@update="update_item"
 		/>
-		<AddMedia v-if="pick === 'media'" :media="media" :ws="ws" />
-		<AddTemplate v-if="pick === 'template'" :templates="templates" :ws="ws" />
-		<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" />
+		<AddMedia
+			v-if="pick === 'media'"
+			:media="media"
+			:ws="ws"
+			:mode="mode"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddTemplate
+			v-if="pick === 'template'"
+			:templates="templates"
+			:ws="ws"
+			:mode="mode"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddBible
+			v-if="pick === 'bible'"
+			:bible="bible"
+			:ws="ws"
+			:mode="mode"
+			@add="add_item"
+			@update="update_item"
+		/>
 	</div>
 </template>
 

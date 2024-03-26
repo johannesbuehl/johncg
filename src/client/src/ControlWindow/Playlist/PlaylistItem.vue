@@ -1,14 +1,8 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { ref, watch, onMounted, nextTick } from "vue";
 
 	import type { ClientPlaylistItem } from "@server/Playlist";
-
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-
-	library.add(fas.faEdit);
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -18,14 +12,14 @@
 		scroll?: boolean;
 	}>();
 
-	defineEmits<{
+	const emit = defineEmits<{
 		set_active: [];
+		delete: [];
 	}>();
 
 	const item = ref<HTMLDivElement>();
 	const color_picker = ref<HTMLInputElement>();
-	const show_context_menu = ref<boolean>(false);
-	const edit_caption = ref<boolean>(false);
+	const edit_caption_active = ref<boolean>(false);
 	const caption_element = ref<HTMLDivElement>();
 	const item_props = defineModel<ClientPlaylistItem>("item_props", { required: true });
 
@@ -64,32 +58,36 @@
 		}
 	}
 
-	function context_menu(event: MouseEvent) {
-		event.preventDefault();
+	function edit_caption() {
+		edit_caption_active.value = true;
 
-		console.debug("context");
-
-		show_context_menu.value = true;
+		nextTick().then(() => caption_element.value?.focus());
 	}
 
-	function rename() {
-		edit_caption.value = false;
+	function rename(save: boolean = true) {
+		edit_caption_active.value = false;
 
-		if (caption_element.value?.innerHTML) {
-			item_props.value.caption = caption_element.value?.innerHTML;
+		if (save) {
+			if (caption_element.value?.innerHTML) {
+				item_props.value.caption = caption_element.value?.innerHTML;
 
-			const message: JGCPRecv.UpdateItem = {
-				command: "update_item",
-				index: props.index,
-				props: item_props.value
-			};
+				const message: JGCPRecv.UpdateItem = {
+					command: "update_item",
+					index: props.index,
+					props: item_props.value
+				};
 
-			props.ws.send(JSON.stringify(message));
+				props.ws.send(JSON.stringify(message));
+			}
+		} else {
+			if (caption_element.value) {
+				caption_element.value.innerHTML = item_props.value.caption;
+			}
 		}
 	}
 
 	function delete_item() {
-		if (!edit_caption.value) {
+		if (!edit_caption_active.value) {
 			const message: JGCPRecv.DeleteItem = {
 				command: "delete_item",
 				position: props.index
@@ -98,6 +96,12 @@
 			props.ws.send(JSON.stringify(message));
 		}
 	}
+
+	defineExpose({
+		edit_caption,
+		delete_item,
+		props: item_props.value
+	});
 </script>
 
 <template>
@@ -110,14 +114,10 @@
 			active
 		}"
 		tabindex="0"
-		@keydown.enter="$emit('set_active')"
-		@keydown.f2="
-			edit_caption = true;
-			nextTick().then(() => caption_element?.focus());
-		"
+		@keydown.enter="emit('set_active')"
+		@keydown.f2="edit_caption"
 		@keydown.delete="delete_item"
 	>
-		<input type="color" style="display: none" ref="color_picker" v-model="item_props.color" />
 		<div
 			class="item_color_indicator"
 			:style="{ 'background-color': item_props.color }"
@@ -125,19 +125,18 @@
 				color_picker?.click();
 				$event.preventDefault();
 			"
-		>
-			<FontAwesomeIcon class="edit_icon" :icon="['fas', 'edit']" />
-		</div>
+		></div>
 		<div
 			class="playlist_item"
 			ref="caption_element"
-			:tabindex="edit_caption ? 0 : undefined"
-			:class="{ editing: edit_caption }"
-			:contenteditable="edit_caption ? true : false"
-			@contextmenu="context_menu"
-			@keydown.enter.capture="rename()"
-			@blur.enter="rename"
-			@keydown.capture="edit_caption ? $event.stopPropagation() : undefined"
+			:tabindex="edit_caption_active ? 0 : undefined"
+			:class="{ editing: edit_caption_active }"
+			:contenteditable="edit_caption_active ? true : false"
+			@blur.enter="rename()"
+			@keydown.enter="rename()"
+			@keydown.escape="rename(false)"
+			@keydown="edit_caption_active ? $event.stopPropagation() : undefined"
+			@contextmenu="edit_caption_active ? $event.stopPropagation() : undefined"
 		>
 			{{ item_props.caption }}
 		</div>
@@ -148,7 +147,6 @@
 	.playlist_item_wrapper {
 		background-color: var(--color-item);
 
-		border-style: none;
 		border-radius: 0.25rem !important;
 
 		display: flex;
@@ -174,15 +172,9 @@
 		align-items: center;
 	}
 
-	.edit_icon {
-		opacity: 0;
-	}
-
-	.edit_icon:hover {
-		opacity: 1;
-	}
-
 	.playlist_item {
+		font-weight: lighter;
+
 		cursor: inherit;
 
 		padding: 0.375rem;
@@ -194,7 +186,11 @@
 	}
 
 	.playlist_item.editing {
-		background-color: var(--color-active);
+		font-weight: unset;
+	}
+
+	.playlist_item.editing:focus::after {
+		border: unset;
 	}
 
 	.playlist_item_wrapper.selectable:hover > .playlist_item {

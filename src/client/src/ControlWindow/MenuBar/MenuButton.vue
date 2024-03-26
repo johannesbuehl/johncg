@@ -13,7 +13,11 @@
 		class="button"
 		:class="{ active, square: text === undefined }"
 		tabindex="0"
-		@keydown.enter="($event.target as HTMLDivElement)?.click()"
+		@keydown.enter="
+			($event.target as HTMLDivElement)?.click();
+			$event.preventDefault();
+			$event.stopPropagation();
+		"
 	>
 		<FontAwesomeIcon :icon="['fas', icon]" />
 		<span v-if="text !== undefined" class="button_text">{{ text ?? "" }}</span>

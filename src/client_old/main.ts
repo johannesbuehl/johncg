@@ -103,7 +103,7 @@ function display_items(data: JGCPSend.Playlist) {
 		div_playlist_item.classList.add(item.type);
 
 		// if it's a  Countdown-Object, insert the time
-		if (item.type === "Countdown") {
+		if (item.type === "countdown") {
 			const title_map = {
 				clock: "Clock",
 				stopwatch: "Stopwatch",

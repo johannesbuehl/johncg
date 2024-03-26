@@ -13,10 +13,11 @@
 		fas.faEyeSlash,
 		fas.faEye,
 		fas.faList,
-		fas.faPlus
+		fas.faPlus,
+		fas.faPen
 	);
 
-	import { ControlWindowState } from "../ControlWindowState";
+	import { ControlWindowState } from "@/Enums";
 	import MenuButton from "./MenuButton.vue";
 	import MenuDivider from "./MenuDivider.vue";
 
@@ -29,7 +30,7 @@
 
 	const visibility_ref = toRef(props, "visibility");
 
-	defineEmits<{
+	const emit = defineEmits<{
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
 		set_visibility: [state: boolean];
 	}>();
@@ -89,27 +90,28 @@
 		/>
 		<MenuDivider />
 		<MenuButton
+			icon="fa-list"
+			@click="control_window_state = ControlWindowState.Playlist"
+			:active="control_window_state === ControlWindowState.Playlist"
+		/>
+		<MenuButton
 			icon="fa-plus"
 			@click="control_window_state = ControlWindowState.Add"
 			:active="control_window_state === ControlWindowState.Add"
 		/>
 		<MenuButton
-			icon="fa-list"
-			@click="control_window_state = ControlWindowState.Playlist"
-			:active="control_window_state === ControlWindowState.Playlist"
+			icon="fa-pen"
+			@click="control_window_state = ControlWindowState.Edit"
+			:active="control_window_state === ControlWindowState.Edit"
 		/>
 		<MenuDivider />
-		<MenuButton icon="backward-step" @click="$emit('navigate', 'item', -1)" />
-		<MenuButton icon="forward-step" @click="$emit('navigate', 'item', 1)" />
-		<MenuButton icon="angle-left" @click="$emit('navigate', 'slide', -1)" />
-		<MenuButton icon="angle-right" @click="$emit('navigate', 'slide', 1)" />
+		<MenuButton icon="backward-step" @click="emit('navigate', 'item', -1)" />
+		<MenuButton icon="forward-step" @click="emit('navigate', 'item', 1)" />
+		<MenuButton icon="angle-left" @click="emit('navigate', 'slide', -1)" />
+		<MenuButton icon="angle-right" @click="emit('navigate', 'slide', 1)" />
 		<MenuDivider />
-		<MenuButton
-			icon="eye-slash"
-			@click="$emit('set_visibility', false)"
-			:active="!visibility_ref"
-		/>
-		<MenuButton icon="eye" @click="$emit('set_visibility', true)" :active="visibility_ref" />
+		<MenuButton icon="eye-slash" @click="emit('set_visibility', false)" :active="!visibility_ref" />
+		<MenuButton icon="eye" @click="emit('set_visibility', true)" :active="visibility_ref" />
 	</div>
 </template>
 

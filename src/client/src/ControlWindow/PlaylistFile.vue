@@ -32,7 +32,7 @@
 <template>
 	<div class="playlist_file_wrapper">
 		<div id="file_structure_container">
-			<FileDialogue :root="true" :files="files" @selection="open_schedule" />
+			<FileDialogue :root="true" :files="files" @choose="open_schedule" />
 		</div>
 	</div>
 </template>

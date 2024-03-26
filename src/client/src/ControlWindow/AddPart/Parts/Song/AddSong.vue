@@ -1,46 +1,69 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { onMounted, reactive, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import Draggable from "vuedraggable";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import { ControlWindowState } from "@/Enums";
+	import MediaItem from "../MediaItem.vue";
+	import PartSelector from "./PartSelector.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
-	import type { SongResult } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
-	import MediaItem from "./MediaItem.vue";
+	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type { SongData } from "@server/search_part";
 
-	library.add(fas.faArrowsRotate, fas.faPlus);
+	library.add(fas.faAdd, fas.faTrash, fas.faArrowsRotate, fas.faPlus);
 
 	const props = defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
+		mode: ControlWindowState;
 	}>();
 
-	const input_song_title = ref<HTMLInputElement>();
-	const selection = ref<SongResult>();
+	const emit = defineEmits<{
+		add: [];
+		update: [];
+	}>();
 
+	// song-id-input-element used for focusing on mounting
+	const input_song_id = ref<HTMLInputElement>();
+
+	// currently selected song
+	const song_selection = ref<SongData>();
+	// props of the the song
+	const item_props = defineModel<SongProps | undefined>("item_props", { required: true });
+
+	// data in the search-boxes
 	const title = defineModel<string>("title", { default: "" });
 	const id = defineModel<string>("id", { default: "" });
 	const text = defineModel<string>("text", { default: "" });
+
+	const state: { verse_order: string[] } = reactive({ verse_order: [] });
+
+	defineExpose({
+		edit: edit_item
+	});
 
 	watch(
 		() => props.search_results?.result,
 		(new_search_result) => {
 			if (new_search_result !== undefined) {
-				selection.value = new_search_result[0];
+				set_selection(new_search_result[0]);
 			}
 		}
 	);
 
 	onMounted(() => {
-		input_song_title.value?.focus();
+		if (props.mode === ControlWindowState.Add) {
+			input_song_id.value?.focus();
+		}
 	});
 
 	let input_debounce_timeout_id: NodeJS.Timeout | undefined = undefined;
-	function search_string(event?: Event, debounce_time: number = 500) {
+	function search_string(debounce_time: number = 500) {
 		clearTimeout(input_debounce_timeout_id);
 
 		input_debounce_timeout_id = setTimeout(() => {
@@ -68,86 +91,97 @@
 	}
 
 	function add_song() {
-		if (selection.value?.path !== undefined) {
-			const message: JGCPRecv.AddItem = {
-				command: "add_item",
-				props: {
-					type: "song",
-					caption: (selection.value?.title ?? [])[0] ?? "[song-title missing]",
-					color: "#0000ff",
-					file: selection.value?.path,
-					languages: [0]
-				}
-			};
+		if (song_selection.value?.file !== undefined && item_props.value !== undefined) {
+			// if the selected parts differ from the default ones, save them in the playlist
+			if (
+				!song_selection.value.parts.default.every((val, index) => val === state.verse_order[index])
+			) {
+				item_props.value.verse_order = state.verse_order;
+			}
 
-			props.ws.send(JSON.stringify(message));
+			emit("add");
 		}
 	}
 
-	function set_selection(song: SongResult) {
-		selection.value = song;
+	function set_selection(song: SongData) {
+		song_selection.value = song;
+
+		item_props.value = {
+			type: "song",
+			caption: song.title ? song.title[0] : "Song title missing",
+			color: "#0000ff",
+			file: song.file
+		};
+
+		state.verse_order = structuredClone(song.parts.default);
 	}
 
-	function on_clone(song: SongResult): SongProps {
+	function on_clone(song: SongData): SongProps {
 		return {
 			type: "song",
 			caption: (song.title ?? [""])[0],
 			color: "#0000ff",
-			file: song.path
+			file: song.file
 		};
+	}
+
+	function edit_item(edit_props: ItemProps) {
+		if (edit_props.type === "song") {
+			item_props.value = edit_props;
+		}
 	}
 
 	// init
 	renew_search_index();
-	search_string(undefined, 0);
+	search_string(0);
 </script>
 
 <template>
 	<div class="add_song_wrapper">
-		<div class="search_wrapper">
+		<div class="search_wrapper" v-if="mode === ControlWindowState.Add">
 			<div class="search_input_wrapper">
 				<input
-					v-model="title"
-					ref="input_song_title"
-					placeholder="Title"
+					v-model="id"
+					ref="input_song_id"
+					placeholder="Song ID"
 					class="search_box"
-					@input="search_string"
+					@input="search_string()"
 					@keyup.enter="add_song"
 				/>
 				<input
-					v-model="id"
-					placeholder="Song ID"
+					v-model="title"
+					placeholder="Title"
 					class="search_box"
-					@input="search_string"
+					@input="search_string()"
 					@keyup.enter="add_song"
 				/>
 				<input
 					v-model="text"
 					placeholder="Text"
 					class="search_box"
-					@input="search_string"
+					@input="search_string()"
 					@keyup.enter="add_song"
 				/>
 			</div>
 			<MenuButton icon="arrows-rotate" @click="renew_search_index" />
 		</div>
 		<div class="results_wrapper">
-			<div id="song_results">
+			<div id="song_results" v-if="mode === ControlWindowState.Add">
 				<div class="header">Songs</div>
 				<Draggable
 					class="results_list"
 					:list="search_results?.result"
 					:group="{ name: 'playlist', pull: 'clone', put: 'false' }"
-					item-key="path"
+					item-key="file"
 					:clone="on_clone"
 					:sort="false"
 				>
 					<template #item="{ element, index }">
 						<MediaItem
 							:song_result="element"
-							:active="element.path === selection?.path"
-							v-model="selection"
-							:id="`${element.path}_${index}`"
+							:active="element.file === song_selection?.file"
+							v-model="song_selection"
+							:id="`${element.file}_${index}`"
 							@set_selection="set_selection(element)"
 							@add_song="add_song"
 						/>
@@ -155,19 +189,7 @@
 				</Draggable>
 				<MenuButton icon="plus" text="" @click="add_song" />
 			</div>
-			<div id="result_text_wrapper">
-				<div class="header">Text</div>
-				<div id="result_text">
-					<div class="song_part" v-for="text in selection?.text?.split('\n\n')">
-						<p v-for="line in text.split('\n')">
-							{{ line }}
-						</p>
-					</div>
-				</div>
-			</div>
-			<div id="song_parts_wrapper">
-				<div class="header">Parts</div>
-			</div>
+			<PartSelector v-model:selected_parts="state.verse_order" :song_data="song_selection" />
 		</div>
 	</div>
 </template>
@@ -197,7 +219,7 @@
 
 		column-gap: inherit;
 		display: grid;
-		grid-template-columns: 3fr 1fr 4fr;
+		grid-template-columns: 2fr 3fr 4fr;
 	}
 
 	.search_box {
@@ -232,16 +254,7 @@
 	.results_wrapper {
 		flex: 1;
 
-		display: grid;
-		grid-template-columns: 1fr 1fr 1fr;
-
-		gap: inherit;
-	}
-
-	.results_wrapper > div {
-		border-radius: 0.25rem;
-
-		background-color: var(--color-container);
+		display: flex;
 
 		gap: inherit;
 	}
@@ -275,8 +288,15 @@
 	}
 
 	#song_results {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
+
+		border-radius: 0.25rem;
+
+		background-color: var(--color-container);
+
+		gap: inherit;
 	}
 
 	#result_text_wrapper {
@@ -300,7 +320,19 @@
 		overflow: visible;
 	}
 
-	.song_part > p {
+	.song_slides_wrapper {
+		display: flex;
+		flex-direction: column;
+
+		gap: 1rem;
+	}
+
+	.song_language_line {
 		font-weight: lighter;
+	}
+
+	.song_language_line:not(:first-child) {
+		color: var(--color-text-disabled);
+		font-style: italic;
 	}
 </style>
