@@ -208,9 +208,4 @@
 	.playlist_item_wrapper.selected {
 		outline: 0.125rem solid var(--color-text);
 	}
-
-	.item_color_indicator {
-		height: auto;
-		width: 1.5rem;
-	}
 </style>
