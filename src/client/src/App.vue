@@ -37,7 +37,7 @@
 	const bible_file = ref<BibleFile>();
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		default: ControlWindowState.Add
+		default: ControlWindowState.Playlist
 	});
 
 	let ws: WebSocket | undefined;

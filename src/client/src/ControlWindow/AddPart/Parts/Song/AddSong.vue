@@ -41,7 +41,10 @@
 	const id = defineModel<string>("id", { default: "" });
 	const text = defineModel<string>("text", { default: "" });
 
-	const state: { verse_order: string[] } = reactive({ verse_order: [] });
+	const state: { verse_order: string[]; languages: [number, boolean][] } = reactive({
+		verse_order: [],
+		languages: []
+	});
 
 	defineExpose({
 		edit: edit_item
@@ -99,6 +102,11 @@
 				item_props.value.verse_order = state.verse_order;
 			}
 
+			// if not all languages are checked or the order isn't default, add it to the props
+			if (!state.languages.every((ele, index) => ele[0] === index && ele[1])) {
+				item_props.value.languages = state.languages.filter((ele) => ele[1]).map((ele) => ele[0]);
+			}
+
 			emit("add");
 		}
 	}
@@ -114,6 +122,9 @@
 		};
 
 		state.verse_order = structuredClone(song.parts.default);
+		state.languages = Array(song_selection.value.title.length)
+			.fill([])
+			.map((ele, index) => [index, true]);
 	}
 
 	function on_clone(song: SongData): SongProps {
@@ -189,7 +200,11 @@
 				</Draggable>
 				<MenuButton icon="plus" text="" @click="add_song" />
 			</div>
-			<PartSelector v-model:selected_parts="state.verse_order" :song_data="song_selection" />
+			<PartSelector
+				v-model:selected_parts="state.verse_order"
+				v-model:selected_languages="state.languages"
+				:song_data="song_selection"
+			/>
 		</div>
 	</div>
 </template>

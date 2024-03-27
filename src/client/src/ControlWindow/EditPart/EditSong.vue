@@ -16,7 +16,10 @@
 		update: [];
 	}>();
 
-	const state: { verse_order: string[] } = reactive({ verse_order: [] });
+	const state: { verse_order: string[]; languages: [number, boolean][] } = reactive({
+		verse_order: [],
+		languages: []
+	});
 	const song_props = defineModel<SongProps>("song_props", { required: true });
 
 	let song_loaded = false;
@@ -26,24 +29,38 @@
 			state.verse_order =
 				song_props.value.verse_order ?? new_song_data?.result[0].parts.default ?? [];
 
+			const default_languages: [number, boolean][] = Array(new_song_data?.result[0].title.length)
+				.fill([])
+				.map((ele, index) => [index, true]);
+
+			if (song_props.value.languages !== undefined) {
+				state.languages = song_props.value.languages.map((ele) => [ele, true]);
+
+				state.languages.push(
+					...default_languages
+						.filter((ele) => !song_props.value.languages?.includes(ele[0]))
+						.map((ele): [number, boolean] => [ele[0], false])
+				);
+			} else {
+				state.languages = default_languages;
+			}
+
 			nextTick().then(() => {
 				song_loaded = true;
 			});
 		}
 	);
 
-	// when the selected parts change, fire an update-event
-	watch(
-		() => state.verse_order,
-		(new_verse_order) => {
-			if (song_loaded) {
-				// store the new verse-order in the song-props
-				song_props.value.verse_order = new_verse_order;
+	// when something gets changed, fire an update
+	watch(state, (new_state) => {
+		if (song_loaded) {
+			// store the new verse-order in the song-props
+			song_props.value.verse_order = state.verse_order;
+			song_props.value.languages = state.languages.filter((ele) => ele[1]).map((ele) => ele[0]);
 
-				emit("update");
-			}
+			emit("update");
 		}
-	);
+	});
 
 	// whenever the song changes, request the SongResults
 	watch(() => song_props.value.file, request_song_data);
@@ -65,8 +82,9 @@
 	<div id="edit_song_wrapper">
 		<PartSelector
 			v-if="song_data !== undefined"
-			:song_data="song_data.result[0]"
 			v-model:selected_parts="state.verse_order"
+			v-model:selected_languages="state.languages"
+			:song_data="song_data.result[0]"
 		/>
 	</div>
 </template>
