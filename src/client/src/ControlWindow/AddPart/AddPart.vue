@@ -9,6 +9,7 @@
 	import AddTemplate from "./Parts/AddTemplate.vue";
 	import AddBible from "./Parts/AddBible.vue";
 	import AddSong from "./Parts/Song/AddSong.vue";
+	import AddPDF from "./Parts/AddPDF.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -29,8 +30,7 @@
 	const props = defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
-		media: JGCPSend.File[];
-		templates: JGCPSend.File[];
+		files: Record<JGCPSend.ItemTree["type"], JGCPSend.File[]>;
 		bible?: BibleFile;
 		mode: ControlWindowState;
 	}>();
@@ -83,23 +83,6 @@
 			v-model:item_props="item_props as SongProps"
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
-			:mode="mode"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddMedia
-			v-if="pick === 'media'"
-			:media="media"
-			:ws="ws"
-			:mode="mode"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddTemplate
-			v-if="pick === 'template'"
-			:templates="templates"
-			:ws="ws"
-			:mode="mode"
 			@add="add_item"
 			@update="update_item"
 		/>
@@ -107,7 +90,27 @@
 			v-if="pick === 'bible'"
 			:bible="bible"
 			:ws="ws"
-			:mode="mode"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddMedia
+			v-if="pick === 'media'"
+			:files="files[pick]"
+			:ws="ws"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddTemplate
+			v-if="pick === 'template'"
+			:files="files[pick]"
+			:ws="ws"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddPDF
+			v-if="pick === 'pdf'"
+			:files="files[pick]"
+			:ws="ws"
 			@add="add_item"
 			@update="update_item"
 		/>

@@ -132,7 +132,7 @@ export default class SearchPart {
 	find_jcg_files(pth: string = Config.path.playlist): JGCPSend.File[] {
 		const files = fs.readdirSync(pth);
 
-		const song_files: JGCPSend.File[] = [];
+		const jcg_files: JGCPSend.File[] = [];
 
 		const check_jcg_file = /(?<name>.+)\.jcg$/;
 
@@ -144,7 +144,7 @@ export default class SearchPart {
 
 				const stat = fs.statSync(ff);
 
-				song_files.push({
+				jcg_files.push({
 					name: file_regex?.groups["name"],
 					path: ff,
 					children: stat.isDirectory() ? this.find_jcg_files(ff) : undefined
@@ -152,7 +152,33 @@ export default class SearchPart {
 			}
 		});
 
-		return song_files;
+		return jcg_files;
+	}
+
+	find_pdf_files(pth: string = Config.path.pdf): JGCPSend.File[] {
+		const files = fs.readdirSync(pth);
+
+		const pdf_files: JGCPSend.File[] = [];
+
+		const check_jcg_file = /(?<name>.+)\.pdf$/;
+
+		files.forEach((f) => {
+			const file_regex = check_jcg_file.exec(f);
+
+			if (file_regex) {
+				const ff = path.join(pth, f);
+
+				const stat = fs.statSync(ff);
+
+				pdf_files.push({
+					name: file_regex?.groups["name"],
+					path: ff,
+					children: stat.isDirectory() ? this.find_pdf_files(ff) : undefined
+				});
+			}
+		});
+
+		return pdf_files;
 	}
 
 	get_item_data(type: JGCPRecv.GetItemData["type"], path: string): SongData | undefined {

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-	import { onMounted, reactive, ref, watch } from "vue";
+	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import Draggable from "vuedraggable";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import { ControlWindowState } from "@/Enums";
 	import MediaItem from "../MediaItem.vue";
 	import PartSelector from "./PartSelector.vue";
 
@@ -20,7 +19,6 @@
 	const props = defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
-		mode: ControlWindowState;
 	}>();
 
 	const emit = defineEmits<{
@@ -33,6 +31,9 @@
 
 	// currently selected song
 	const song_selection = ref<SongData>();
+	const verse_order = ref<string[]>([]);
+	const languages = ref<[number, boolean][]>([]);
+
 	// props of the the song
 	const item_props = defineModel<SongProps | undefined>("item_props", { required: true });
 
@@ -40,11 +41,6 @@
 	const title = defineModel<string>("title", { default: "" });
 	const id = defineModel<string>("id", { default: "" });
 	const text = defineModel<string>("text", { default: "" });
-
-	const state: { verse_order: string[]; languages: [number, boolean][] } = reactive({
-		verse_order: [],
-		languages: []
-	});
 
 	defineExpose({
 		edit: edit_item
@@ -60,9 +56,7 @@
 	);
 
 	onMounted(() => {
-		if (props.mode === ControlWindowState.Add) {
-			input_song_id.value?.focus();
-		}
+		input_song_id.value?.focus();
 	});
 
 	let input_debounce_timeout_id: NodeJS.Timeout | undefined = undefined;
@@ -97,14 +91,14 @@
 		if (song_selection.value?.file !== undefined && item_props.value !== undefined) {
 			// if the selected parts differ from the default ones, save them in the playlist
 			if (
-				!song_selection.value.parts.default.every((val, index) => val === state.verse_order[index])
+				!song_selection.value.parts.default.every((val, index) => val === verse_order.value[index])
 			) {
-				item_props.value.verse_order = state.verse_order;
+				item_props.value.verse_order = verse_order.value;
 			}
 
 			// if not all languages are checked or the order isn't default, add it to the props
-			if (!state.languages.every((ele, index) => ele[0] === index && ele[1])) {
-				item_props.value.languages = state.languages.filter((ele) => ele[1]).map((ele) => ele[0]);
+			if (!languages.value.every((ele, index) => ele[0] === index && ele[1])) {
+				item_props.value.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
 			}
 
 			emit("add");
@@ -121,8 +115,8 @@
 			file: song.file
 		};
 
-		state.verse_order = structuredClone(song.parts.default);
-		state.languages = Array(song_selection.value.title.length)
+		verse_order.value = structuredClone(song.parts.default);
+		languages.value = Array(song_selection.value.title.length)
 			.fill([])
 			.map((ele, index) => [index, true]);
 	}
@@ -149,7 +143,7 @@
 
 <template>
 	<div class="add_song_wrapper">
-		<div class="search_wrapper" v-if="mode === ControlWindowState.Add">
+		<div class="search_wrapper">
 			<div class="search_input_wrapper">
 				<input
 					v-model="id"
@@ -177,7 +171,7 @@
 			<MenuButton icon="arrows-rotate" @click="renew_search_index" />
 		</div>
 		<div class="results_wrapper">
-			<div id="song_results" v-if="mode === ControlWindowState.Add">
+			<div id="song_results">
 				<div class="header">Songs</div>
 				<Draggable
 					class="results_list"
@@ -201,8 +195,8 @@
 				<MenuButton icon="plus" text="" @click="add_song" />
 			</div>
 			<PartSelector
-				v-model:selected_parts="state.verse_order"
-				v-model:selected_languages="state.languages"
+				v-model:selected_parts="verse_order"
+				v-model:selected_languages="languages"
 				:song_data="song_selection"
 			/>
 		</div>

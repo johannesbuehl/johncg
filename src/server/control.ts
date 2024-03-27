@@ -37,7 +37,7 @@ export interface CasparCGConnection {
 	settings: CasparCGConnectionSettings;
 	paths: CasparCGPathsSettings;
 	media: ClipInfo[];
-	templates: string[];
+	template: string[];
 	resolution: CasparCGResolution;
 	framerate: number;
 }
@@ -98,9 +98,7 @@ export default class Control {
 		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-		get_media_tree: (msg: JGCPRecv.GetMediaTree, ws: WebSocket) => this.get_media_tree(ws),
-		get_template_tree: (msg: JGCPRecv.GetTemplateTree, ws: WebSocket) => this.get_template_tree(ws),
-		get_playlist_tree: (msg: JGCPRecv.GetPlaylistTree, ws: WebSocket) => this.get_playlist_tree(ws),
+		get_item_tree: (msg: JGCPRecv.GetItemTree, ws: WebSocket) => this.get_item_tree(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_data(msg.type, msg.file, ws)
@@ -203,7 +201,7 @@ export default class Control {
 					) as { paths: object }
 				)?.paths as CasparCGPathsSettings,
 				media: (await (await connection.cls()).request)?.data ?? [],
-				templates: (await (await connection.tls()).request)?.data ?? [],
+				template: (await (await connection.tls()).request)?.data ?? [],
 				resolution,
 				framerate
 			};
@@ -424,7 +422,7 @@ export default class Control {
 	): Promise<void> {
 		// if there is no playlist loaded, send a negative response back and exit
 		if (this.playlist === undefined) {
-			ws_send_response("no schedule loaded", false, ws);
+			ws_send_response("no playlist loaded", false, ws);
 			return;
 		}
 
@@ -554,31 +552,33 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private get_media_tree(ws: WebSocket) {
-		const message: JGCPSend.MediaTree = {
-			command: "media_tree",
-			media: build_file_tree(this.casparcg_connections[0].media.map((m) => m.clip.split("/")))
-		};
+	private get_item_tree(type: JGCPRecv.GetItemTree["type"], ws: WebSocket) {
+		let files: JGCPSend.File[];
 
-		ws.send(JSON.stringify(message));
-	}
+		switch (type) {
+			case "media":
+				files = build_file_tree(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+				break;
+			case "template":
+				files = build_file_tree(this.casparcg_connections[0].template.map((m) => m.split("/")));
+				break;
+			case "playlist":
+				files = this.search_part.find_jcg_files();
+				break;
+			case "pdf":
+				files = this.search_part.find_pdf_files();
+				break;
+		}
 
-	private get_template_tree(ws: WebSocket) {
-		const message: JGCPSend.TemplateTree = {
-			command: "template_tree",
-			templates: build_file_tree(this.casparcg_connections[0].templates.map((m) => m.split("/")))
-		};
+		if (files !== undefined) {
+			const message: JGCPSend.ItemTree = {
+				command: "item_tree",
+				type,
+				files
+			};
 
-		ws.send(JSON.stringify(message));
-	}
-
-	private get_playlist_tree(ws: WebSocket) {
-		const message: JGCPSend.PlaylistTree = {
-			command: "playlist_tree",
-			playlists: this.search_part.find_jcg_files()
-		};
-
-		ws.send(JSON.stringify(message));
+			ws.send(JSON.stringify(message));
+		}
 	}
 
 	private get_bible(ws: WebSocket) {
@@ -696,7 +696,7 @@ export default class Control {
 		if (this.playlist) {
 			return true;
 		} else {
-			ws_send_response("no schedule loaded", false, ws);
+			ws_send_response("no playlist loaded", false, ws);
 
 			return false;
 		}

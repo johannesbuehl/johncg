@@ -1,6 +1,4 @@
 <script setup lang="ts">
-	import { nextTick, reactive, ref } from "vue";
-
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
@@ -22,9 +20,7 @@
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		search_results?: JGCPSend.SearchResults;
-		media_tree: JGCPSend.File[];
-		templates_tree: JGCPSend.File[];
-		playlist_tree: JGCPSend.File[];
+		files: Record<JGCPSend.ItemTree["type"], JGCPSend.File[]>;
 		bible_file?: BibleFile;
 		selected: number;
 	}>();
@@ -122,7 +118,7 @@
 	<div id="main_view">
 		<PlaylistFile
 			v-if="control_window_state === ControlWindowState.OpenPlaylist"
-			:files="playlist_tree"
+			:files="files.playlist"
 			:ws="ws"
 		/>
 		<PlaylistItemsList
@@ -152,8 +148,7 @@
 			v-if="control_window_state === ControlWindowState.Add"
 			:ws="ws"
 			:search_results="search_results"
-			:media="media_tree"
-			:templates="templates_tree"
+			:files="files"
 			:bible="bible_file"
 			:mode="control_window_state"
 		/>

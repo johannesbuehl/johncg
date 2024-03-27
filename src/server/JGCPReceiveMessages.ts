@@ -80,18 +80,27 @@ export interface SearchItem extends Base {
 	};
 }
 
-export interface GetMediaTree extends Base {
-	command: "get_media_tree";
+interface GetItemTreeBase extends Base {
+	command: "get_item_tree";
 }
 
-export interface GetTemplateTree extends Base {
-	command: "get_template_tree";
+export interface GetMediaTree extends GetItemTreeBase {
+	type: "media";
 }
 
-export interface GetPlaylistTree extends Base {
-	command: "get_playlist_tree";
+export interface GetTemplateTree extends GetItemTreeBase {
+	type: "template";
 }
 
+export interface GetPlaylistTree extends GetItemTreeBase {
+	type: "playlist";
+}
+
+export interface GetPDFTree extends GetItemTreeBase {
+	type: "pdf";
+}
+
+export type GetItemTree = GetMediaTree | GetTemplateTree | GetPlaylistTree | GetPDFTree;
 export interface GetBible extends Base {
 	command: "get_bible";
 }
@@ -136,9 +145,7 @@ export type Message =
 	| UpdateItem
 	| DeleteItem
 	| NewPlaylist
-	| GetPlaylistTree
 	| SavePlaylist
-	| GetMediaTree
-	| GetTemplateTree
+	| GetItemTree
 	| GetBible
 	| GetItemData;

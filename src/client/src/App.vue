@@ -31,13 +31,17 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
-	const media_tree = ref<JGCPSend.File[]>([]);
-	const templates_tree = ref<JGCPSend.File[]>([]);
-	const playlist_tree = ref<JGCPSend.File[]>([]);
 	const bible_file = ref<BibleFile>();
 	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Playlist
+	});
+
+	const files = ref<{ [key in JGCPSend.ItemTree["type"]]: JGCPSend.File[] }>({
+		media: [],
+		pdf: [],
+		playlist: [],
+		template: []
 	});
 
 	let ws: WebSocket | undefined;
@@ -122,9 +126,7 @@
 				clear: init,
 				search_results: handle_search_results,
 				playlist_save: save_playlist_file,
-				media_tree: parse_media_tree,
-				template_tree: parse_template_tree,
-				playlist_tree: parse_playlist_tree,
+				item_tree: parse_item_tree,
 				bible: parse_bible
 			};
 
@@ -231,16 +233,10 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function parse_media_tree(data: JGCPSend.MediaTree) {
-		media_tree.value = data.media;
-	}
-
-	function parse_template_tree(data: JGCPSend.TemplateTree) {
-		templates_tree.value = data.templates;
-	}
-
-	function parse_playlist_tree(data: JGCPSend.PlaylistTree) {
-		playlist_tree.value = data.playlists;
+	function parse_item_tree(data: JGCPSend.ItemTree) {
+		if (Object.keys(files).includes(data.type)) {
+			files.value[data.type] = data.files;
+		}
 	}
 
 	function parse_bible(data: JGCPSend.Bible) {
@@ -279,9 +275,7 @@
 			:active_item_slide="server_state.active_item_slide"
 			:search_results="search_results"
 			:selected="selected_item"
-			:media_tree="media_tree"
-			:templates_tree="templates_tree"
-			:playlist_tree="playlist_tree"
+			:files="files"
 			:bible_file="bible_file"
 			@select_item="select_item"
 			@select_slide="set_active_slide"

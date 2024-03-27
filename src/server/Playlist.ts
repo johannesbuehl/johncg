@@ -211,45 +211,47 @@ export default class Playlist {
 	}
 
 	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
-		if (this.playlist_items[item].selectable) {
-			const client_object = await this.playlist_items[item].create_client_object_item_slides();
+		if (this.playlist_items[item] !== undefined) {
+			if (this.playlist_items[item].selectable) {
+				const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
-			if (client_object.media !== undefined) {
-				// check wether it is a color string
-				const test_rgb_string = client_object.media.match(
-					/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
-				);
+				if (client_object.media !== undefined) {
+					// check wether it is a color string
+					const test_rgb_string = client_object.media.match(
+						/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
+					);
 
-				if (!test_rgb_string) {
-					let thumbnails: string[] = (
-						await (
-							await this.casparcg_connections[0].connection.thumbnailRetrieve({
-								filename: '"' + client_object.media + '"'
-							})
-						).request
-					).data as string[];
-
-					if (thumbnails === undefined) {
-						await this.casparcg_connections[0].connection.thumbnailGenerate({
-							filename: '"' + client_object.media + '"'
-						});
-
-						thumbnails = (
+					if (!test_rgb_string) {
+						let thumbnails: string[] = (
 							await (
 								await this.casparcg_connections[0].connection.thumbnailRetrieve({
 									filename: '"' + client_object.media + '"'
 								})
 							).request
 						).data as string[];
+
+						if (thumbnails === undefined) {
+							await this.casparcg_connections[0].connection.thumbnailGenerate({
+								filename: '"' + client_object.media + '"'
+							});
+
+							thumbnails = (
+								await (
+									await this.casparcg_connections[0].connection.thumbnailRetrieve({
+										filename: '"' + client_object.media + '"'
+									})
+								).request
+							).data as string[];
+						}
+
+						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";
+					} else {
+						client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 					}
-
-					client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";
-				} else {
-					client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 				}
-			}
 
-			return client_object;
+				return client_object;
+			}
 		}
 	}
 

@@ -8,6 +8,7 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import type { PDFProps } from "@server/PlaylistItems/PDF";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -19,25 +20,28 @@
 	const loop = ref<boolean>(false);
 
 	onMounted(() => {
-		const message: JGCPRecv.GetMediaTree = {
+		const message: JGCPRecv.GetPDFTree = {
 			command: "get_item_tree",
-			type: "media"
+			type: "pdf"
 		};
 
 		props.ws.send(JSON.stringify(message));
 	});
 
+	function create_props(file: JGCPSend.File): PDFProps {
+		return {
+			type: "pdf",
+			caption: file.name,
+			color: "#ffffff",
+			file: file.path
+		};
+	}
+
 	function add_media(file?: JGCPSend.File, type?: "dir" | "file") {
 		if (type === "file" && file !== undefined) {
 			const message: JGCPRecv.AddItem = {
 				command: "add_item",
-				props: {
-					type: "media",
-					caption: file.name,
-					color: "#008800",
-					media: file.path,
-					loop: loop.value
-				},
+				props: create_props(file),
 				set_active: true
 			};
 
@@ -45,14 +49,8 @@
 		}
 	}
 
-	function on_clone(file: JGCPSend.File): MediaProps {
-		return {
-			type: "media",
-			caption: file.name,
-			color: "#008800",
-			media: file.path,
-			loop: false
-		};
+	function on_clone(file: JGCPSend.File): PDFProps {
+		return create_props(file);
 	}
 </script>
 
@@ -67,10 +65,7 @@
 				@choose="add_media"
 			/>
 		</div>
-		<div class="button_wrapper">
-			<MenuButton icon="repeat" text="Loop" @click="loop = !loop" :active="loop" />
-			<MenuButton class="" icon="plus" text="" @click="add_media(selection, 'file')" />
-		</div>
+		<MenuButton icon="plus" text="" @click="add_media(selection, 'file')" />
 	</div>
 </template>
 
@@ -91,13 +86,5 @@
 		flex: 1;
 
 		border-radius: 0.25rem;
-	}
-
-	.button_wrapper {
-		display: flex;
-	}
-
-	.button:not(:first-child) {
-		flex: 1;
 	}
 </style>

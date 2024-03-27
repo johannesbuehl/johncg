@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { nextTick, onMounted, reactive, watch } from "vue";
+	import { nextTick, onMounted, ref, watch } from "vue";
 
 	import PartSelector from "../AddPart/Parts/Song/PartSelector.vue";
 
@@ -16,17 +16,16 @@
 		update: [];
 	}>();
 
-	const state: { verse_order: string[]; languages: [number, boolean][] } = reactive({
-		verse_order: [],
-		languages: []
-	});
+	const verse_order = ref<string[]>([]);
+	const languages = ref<[number, boolean][]>([]);
+
 	const song_props = defineModel<SongProps>("song_props", { required: true });
 
 	let song_loaded = false;
 	watch(
 		() => props.song_data,
 		(new_song_data) => {
-			state.verse_order =
+			verse_order.value =
 				song_props.value.verse_order ?? new_song_data?.result[0].parts.default ?? [];
 
 			const default_languages: [number, boolean][] = Array(new_song_data?.result[0].title.length)
@@ -34,15 +33,15 @@
 				.map((ele, index) => [index, true]);
 
 			if (song_props.value.languages !== undefined) {
-				state.languages = song_props.value.languages.map((ele) => [ele, true]);
+				languages.value = song_props.value.languages.map((ele) => [ele, true]);
 
-				state.languages.push(
+				languages.value.push(
 					...default_languages
 						.filter((ele) => !song_props.value.languages?.includes(ele[0]))
 						.map((ele): [number, boolean] => [ele[0], false])
 				);
 			} else {
-				state.languages = default_languages;
+				languages.value = default_languages;
 			}
 
 			nextTick().then(() => {
@@ -52,15 +51,18 @@
 	);
 
 	// when something gets changed, fire an update
-	watch(state, (new_state) => {
-		if (song_loaded) {
-			// store the new verse-order in the song-props
-			song_props.value.verse_order = state.verse_order;
-			song_props.value.languages = state.languages.filter((ele) => ele[1]).map((ele) => ele[0]);
+	watch(
+		() => [verse_order, languages],
+		(new_state) => {
+			if (song_loaded) {
+				// store the new verse-order in the song-props
+				song_props.value.verse_order = verse_order.value;
+				song_props.value.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
 
-			emit("update");
+				emit("update");
+			}
 		}
-	});
+	);
 
 	// whenever the song changes, request the SongResults
 	watch(() => song_props.value.file, request_song_data);
@@ -82,8 +84,8 @@
 	<div id="edit_song_wrapper">
 		<PartSelector
 			v-if="song_data !== undefined"
-			v-model:selected_parts="state.verse_order"
-			v-model:selected_languages="state.languages"
+			v-model:selected_parts="verse_order"
+			v-model:selected_languages="languages"
 			:song_data="song_data.result[0]"
 		/>
 	</div>

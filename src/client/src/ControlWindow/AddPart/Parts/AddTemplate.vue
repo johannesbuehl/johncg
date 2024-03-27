@@ -12,7 +12,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	const props = defineProps<{
-		templates: JGCPSend.File[];
+		files: JGCPSend.File[];
 		ws: WebSocket;
 	}>();
 
@@ -21,7 +21,8 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetTemplateTree = {
-			command: "get_template_tree"
+			command: "get_item_tree",
+			type: "template"
 		};
 
 		props.ws.send(JSON.stringify(message));
@@ -65,7 +66,7 @@
 		<div class="file_view">
 			<FileDialogue
 				v-model="selection"
-				:files="templates"
+				:files="files"
 				:root="true"
 				:clone_callback="on_clone"
 				@choose="add_template"

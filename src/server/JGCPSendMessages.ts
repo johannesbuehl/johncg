@@ -71,20 +71,28 @@ export interface File {
 	children?: File[];
 }
 
-export interface MediaTree {
-	command: "media_tree";
-	media: File[];
+interface ItemTreeBase {
+	command: "item_tree";
+	files: File[];
 }
 
-export interface TemplateTree {
-	command: "template_tree";
-	templates: File[];
+export interface MediaTree extends ItemTreeBase {
+	type: "media";
 }
 
-export interface PlaylistTree {
-	command: "playlist_tree";
-	playlists: File[];
+export interface TemplateTree extends ItemTreeBase {
+	type: "template";
 }
+
+export interface PlaylistTree extends ItemTreeBase {
+	type: "playlist";
+}
+
+export interface PDFTree extends ItemTreeBase {
+	type: "pdf";
+}
+
+export type ItemTree = MediaTree | TemplateTree | PlaylistTree | PDFTree;
 
 export interface Bible {
 	command: "bible";
@@ -102,7 +110,5 @@ export type Message =
 	| Clear
 	| SearchResults
 	| PlaylistSave
-	| MediaTree
-	| TemplateTree
-	| PlaylistTree
+	| PDFTree
 	| Bible;

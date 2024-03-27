@@ -13,13 +13,14 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetPlaylistTree = {
-			command: "get_playlist_tree"
+			command: "get_item_tree",
+			type: "playlist"
 		};
 
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function open_schedule(playlist: JGCPSend.File) {
+	function open_playlist(playlist: JGCPSend.File) {
 		const message: JGCPRecv.OpenPlaylist = {
 			command: "open_playlist",
 			playlist: playlist.path
@@ -32,7 +33,7 @@
 <template>
 	<div class="playlist_file_wrapper">
 		<div id="file_structure_container">
-			<FileDialogue :root="true" :files="files" @choose="open_schedule" />
+			<FileDialogue :root="true" :files="files" @choose="open_playlist" />
 		</div>
 	</div>
 </template>
