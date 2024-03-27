@@ -1,15 +1,19 @@
 <script setup lang="ts">
+	import { watch } from "vue";
+
 	import EditSong from "./EditSong.vue";
+	import EditBible from "./EditBible.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import { watch } from "vue";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		ws: WebSocket;
 		search_results?: JGCPSend.SearchResults;
 		item_index: number;
+		bible?: BibleFile;
 	}>();
 
 	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
@@ -69,6 +73,13 @@
 			v-model:song_props="item_props"
 			:ws="ws"
 			:song_data="search_results"
+			@update="update_item"
+		/>
+		<EditBible
+			v-if="item_props?.type === 'bible'"
+			v-model:bible_props="item_props"
+			:ws="ws"
+			:bible="bible"
 			@update="update_item"
 		/>
 		<div v-if="item_props?.type === undefined" id="edit_part_placeholder">

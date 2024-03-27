@@ -22,7 +22,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		add: [];
+		add: [song_props: SongProps];
 		update: [];
 	}>();
 
@@ -35,7 +35,14 @@
 	const languages = ref<[number, boolean][]>([]);
 
 	// props of the the song
-	const item_props = defineModel<SongProps | undefined>("item_props", { required: true });
+	const item_props = defineModel<SongProps>("item_props", {
+		default: {
+			type: "song",
+			caption: "",
+			color: "#0000ff",
+			file: ""
+		}
+	});
 
 	// data in the search-boxes
 	const title = defineModel<string>("title", { default: "" });
@@ -101,7 +108,7 @@
 				item_props.value.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
 			}
 
-			emit("add");
+			emit("add", item_props.value);
 		}
 	}
 

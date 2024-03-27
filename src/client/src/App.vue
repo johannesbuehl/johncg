@@ -76,8 +76,6 @@
 		};
 
 		ws?.send(JSON.stringify(message));
-
-		console.debug(message);
 	}
 
 	function init() {

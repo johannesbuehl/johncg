@@ -7,7 +7,7 @@
 	import PartRadio from "./PartRadio.vue";
 	import AddMedia from "./Parts/AddMedia.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
-	import AddBible from "./Parts/AddBible.vue";
+	import AddBible from "./Parts/Bible/AddBible.vue";
 	import AddSong from "./Parts/Song/AddSong.vue";
 	import AddPDF from "./Parts/AddPDF.vue";
 
@@ -36,7 +36,6 @@
 	}>();
 
 	const pick = ref<string>("song");
-	const item_props = defineModel<ItemProps>();
 
 	const part_types = [
 		{ text: "Song", value: "song", icon: "music" },
@@ -50,16 +49,14 @@
 		{ text: "Comment", value: "comment", icon: "message" }
 	];
 
-	function add_item() {
-		if (item_props.value !== undefined) {
-			const message: JGCPRecv.AddItem = {
-				command: "add_item",
-				props: item_props.value,
-				set_active: true
-			};
+	function add_item(item_props: ItemProps) {
+		const message: JGCPRecv.AddItem = {
+			command: "add_item",
+			props: item_props,
+			set_active: true
+		};
 
-			props.ws.send(JSON.stringify(message));
-		}
+		props.ws.send(JSON.stringify(message));
 	}
 
 	function update_item() {
@@ -80,7 +77,6 @@
 		</div>
 		<AddSong
 			v-if="pick === 'song'"
-			v-model:item_props="item_props as SongProps"
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
 			@add="add_item"

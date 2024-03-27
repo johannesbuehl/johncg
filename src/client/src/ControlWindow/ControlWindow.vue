@@ -158,6 +158,7 @@
 			:ws="ws"
 			:search_results="search_results"
 			:item_index="selected"
+			:bible="bible_file"
 		/>
 	</div>
 </template>

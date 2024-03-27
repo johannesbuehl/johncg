@@ -5,7 +5,7 @@ import {
 	recurse_check
 } from "./PlaylistItem";
 
-export type BibleFile = Record<string, Book[]>;
+export type BibleFile = Record<string, { name: string; books: Book[] }[]>;
 
 export interface Book {
 	name: string;
@@ -16,10 +16,7 @@ export interface Book {
 export interface BibleProps extends ItemPropsBase {
 	type: "bible";
 	book_id: string;
-	chapters: {
-		chapter: number;
-		verses: number[];
-	}[];
+	chapters: Record<number, number[]>;
 }
 
 export interface BibleJSON {
@@ -74,16 +71,14 @@ export default class Bible extends PlaylistItemBase {
 			caption: "Template",
 			color: "Template",
 			book_id: "Template",
-			chapters: [
-				{
-					chapter: 0,
-					verses: [0]
-				}
-			]
+			chapters: {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				0: [0]
+			}
 		};
 
 		let result = props.type === "bible";
-		result &&= props.chapters.length > 0;
+		result &&= Object.keys(props.chapters).length > 0;
 
 		return result && recurse_check(props, template);
 	}
@@ -120,31 +115,31 @@ export default class Bible extends PlaylistItemBase {
 
 export function create_bible_citation_string(book_id: string, chapters: BibleProps["chapters"]) {
 	// add the individual chapters
-	const chapter_strings = chapters.map((chapter): string => {
+	const chapter_strings = Object.entries(chapters).map(([chapter, verses]): string => {
 		// stop the loop-iteration, if there are no verses defined
-		if (chapter.verses.length === 0) {
-			return `${chapter.chapter}`;
+		if (verses.length === 0) {
+			return `${chapter}`;
 		}
 
 		const verse_range: { start: number; last: number } = {
-			start: chapter.verses[0],
-			last: chapter.verses[0]
+			start: verses[0],
+			last: verses[0]
 		};
 
 		// add the individual verses
-		const verses: string[] = [];
+		const verse_strings: string[] = [];
 
-		// const verses = chapter.verses.map((verse, index, arr): string => {
-		for (let index = 1; index <= chapter.verses.length; index++) {
-			const verse = chapter.verses[index];
+		// const verses = verses.map((verse, index, arr): string => {
+		for (let index = 1; index <= verses.length; index++) {
+			const verse = verses[index];
 
 			// if the current verse is not a direct successor of the last one, return the previous verse_range
 			if (verse !== verse_range.last + 1) {
 				// if in the verse-range start and last are the same, return them as a single one
 				if (verse_range.start === verse_range.last) {
-					verses.push(verse_range.last.toString());
+					verse_strings.push(verse_range.last.toString());
 				} else {
-					verses.push(`${verse_range.start}-${verse_range.last}`);
+					verse_strings.push(`${verse_range.start}-${verse_range.last}`);
 				}
 
 				verse_range.start = verse;
@@ -153,7 +148,7 @@ export function create_bible_citation_string(book_id: string, chapters: BiblePro
 			verse_range.last = verse;
 		}
 
-		return `${chapter.chapter},${verses.filter(Boolean).join(".")}`;
+		return `${chapter},${verse_strings.filter(Boolean).join(".")}`;
 	});
 
 	return `${book_id} ${chapter_strings.join("; ")}`;
