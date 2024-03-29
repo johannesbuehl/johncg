@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { nextTick, onMounted, ref, watch } from "vue";
 
-	import PartSelector from "../AddPart/Parts/Song/PartSelector.vue";
+	import SongPartSelector from "../AddPart/Parts/Song/SongPartSelector.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
@@ -19,7 +19,7 @@
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
-	const song_props = defineModel<SongProps>("song_props", { required: true });
+	const song_props = defineModel<SongProps>("item_props", { required: true });
 
 	let song_loaded = false;
 	watch(
@@ -52,16 +52,17 @@
 
 	// when something gets changed, fire an update
 	watch(
-		() => [verse_order, languages],
-		(new_state) => {
+		(): [string[], [number, boolean][]] => [verse_order.value, languages.value],
+		([verse_order, languages]: [string[], [number, boolean][]]) => {
 			if (song_loaded) {
 				// store the new verse-order in the song-props
-				song_props.value.verse_order = verse_order.value;
-				song_props.value.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
+				song_props.value.verse_order = verse_order;
+				song_props.value.languages = languages.filter((ele) => ele[1]).map((ele) => ele[0]);
 
 				emit("update");
 			}
-		}
+		},
+		{ deep: true }
 	);
 
 	// whenever the song changes, request the SongResults
@@ -82,7 +83,7 @@
 
 <template>
 	<div id="edit_song_wrapper">
-		<PartSelector
+		<SongPartSelector
 			v-if="song_data !== undefined"
 			v-model:selected_parts="verse_order"
 			v-model:selected_languages="languages"

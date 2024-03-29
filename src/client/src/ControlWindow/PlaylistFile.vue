@@ -13,7 +13,7 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetPlaylistTree = {
-			command: "get_item_tree",
+			command: "get_item_files",
 			type: "playlist"
 		};
 

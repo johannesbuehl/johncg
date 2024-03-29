@@ -1,3 +1,12 @@
+<script lang="ts">
+	export interface CasparCGTemplate extends Window {
+		update: (data_string: string) => void;
+		play: () => void;
+		stop: () => void;
+		next: () => void;
+	}
+</script>
+
 <script setup lang="ts">
 	import { watch, ref, onMounted } from "vue";
 
@@ -12,6 +21,7 @@
 	}>();
 
 	const slide = ref<HTMLDivElement>();
+	const template_ref = ref<HTMLObjectElement>();
 
 	const is_color = props.media?.match(/^#(?:(?:[\dA-Fa-f]{2}){3,4})$/);
 
@@ -19,6 +29,18 @@
 		() => [props.active, props.scroll],
 		() => {
 			scroll_into_view();
+		}
+	);
+
+	watch(
+		() => props.template?.data,
+		(data) => {
+			if (template_ref.value !== undefined) {
+				const contentWindows: CasparCGTemplate = template_ref.value
+					.contentWindow as CasparCGTemplate;
+
+				contentWindows.update(JSON.stringify({ ...data, mute_transition: true }));
+			}
 		}
 	);
 
@@ -51,6 +73,7 @@
 		/>
 		<object
 			v-if="template"
+			ref="template_ref"
 			class="template"
 			:data="`Templates/${template?.template}.html`"
 			@load="emit('template_load', $event.target as HTMLObjectElement)"

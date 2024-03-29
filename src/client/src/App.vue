@@ -124,7 +124,7 @@
 				clear: init,
 				search_results: handle_search_results,
 				playlist_save: save_playlist_file,
-				item_tree: parse_item_tree,
+				item_files: parse_item_files,
 				bible: parse_bible
 			};
 
@@ -231,8 +231,8 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function parse_item_tree(data: JGCPSend.ItemTree) {
-		if (Object.keys(files).includes(data.type)) {
+	function parse_item_files(data: JGCPSend.ItemTree) {
+		if (Object.keys(files.value).includes(data.type)) {
 			files.value[data.type] = data.files;
 		}
 	}

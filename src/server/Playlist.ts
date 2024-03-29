@@ -370,7 +370,7 @@ export default class Playlist {
 		const item_count = this.playlist_items.length;
 
 		if (item < -item_count || item >= this.playlist_items.length) {
-			throw new RangeError(`item-number is out of range (${-item_count}-${item_count - 1})`);
+			throw new RangeError(`item-number is out of range (${-item_count} - ${item_count - 1})`);
 		}
 
 		if (item < 0) {
@@ -456,7 +456,7 @@ export default class Playlist {
 				data: JSON.stringify(
 					JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
 						if (typeof val === "string") {
-							return val.replace('"', "\\u0022");
+							return val.replaceAll('"', "\\u0022");
 						} else {
 							return val;
 						}

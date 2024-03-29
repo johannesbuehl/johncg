@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, type VNodeRef } from "vue";
+	import { ref, watch, type Ref, type VNodeRef } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -25,10 +25,13 @@
 	});
 	const selected_parts = defineModel<string[]>("selected_parts", { required: true });
 
-	let song_parts_list: HTMLDivElement[] = [];
-	function list_ref(el: HTMLDivElement) {
+	let song_parts_list: Ref<HTMLDivElement>[] = [];
+	function list_ref(el: HTMLDivElement): VNodeRef | undefined {
 		if (el) {
-			song_parts_list.push(el);
+			const re = ref(el);
+			song_parts_list.push(re);
+
+			return re;
 		}
 	}
 
@@ -52,7 +55,7 @@
 					selected_song_part.value--;
 				}
 
-				song_parts_list[selected_song_part.value]?.focus();
+				song_parts_list[selected_song_part.value].value.focus();
 			}
 		}
 	}
@@ -65,10 +68,22 @@
 		// if the current state is "active" (gets disabled) and it is the only one active, don't toggle
 		if (
 			!selected_languages.value[index][1] ||
-			selected_languages.value.filter((ele, ii) => index !== ii).every((ele) => ele[1])
+			!selected_languages.value.filter((ele, ii) => index !== ii).every((ele) => !ele[1])
 		) {
 			selected_languages.value[index][1] = !selected_languages.value[index][1];
 		}
+	}
+
+	function get_language_lines(line: string[]): string[] {
+		const ret_lines: string[] = [];
+
+		selected_languages.value.forEach(([index, state]) => {
+			if (state) {
+				ret_lines.push(line[index]);
+			}
+		});
+
+		return ret_lines;
 	}
 </script>
 
@@ -85,6 +100,7 @@
 					easing="cubic-bezier(1, 0, 0, 1)"
 					ghostClass="dragged_ghost"
 					fallbackClass="dragged"
+					:group="{ name: 'song_part', pull: 'clone', put: 'false' }"
 				>
 					<template #item="{ element: [language_index, state], index }">
 						<div :class="{ active: state }" :id="language_index" @click="language_toggle(index)">
@@ -121,7 +137,10 @@
 								<div class="song_slides_wrapper">
 									<div v-for="slide in part">
 										<div v-for="line in slide">
-											<div class="song_language_line" v-for="lang in line">
+											<div
+												class="song_language_line"
+												v-for="(lang, lang_index) in get_language_lines(line)"
+											>
 												{{ lang }}
 											</div>
 										</div>
@@ -132,7 +151,7 @@
 					</Draggable>
 					<MenuButton
 						icon="add"
-						text=""
+						text="Add Part"
 						@click="
 							selected_available_song_part !== undefined
 								? add_song_part(song_data.parts.available[selected_available_song_part])
@@ -155,7 +174,7 @@
 							<div
 								tabindex="0"
 								class="song_part_name"
-								:ref="list_ref as unknown as VNodeRef"
+								:ref="list_ref"
 								:class="{
 									[create_song_part_type(element)]: true,
 									active: selected_song_part === index
@@ -187,7 +206,11 @@
 							</div>
 						</template>
 					</Draggable>
-					<MenuButton icon="trash" text="" @click="delete_song_part($event, selected_song_part)" />
+					<MenuButton
+						icon="trash"
+						text="Delete Part"
+						@click="delete_song_part($event, selected_song_part)"
+					/>
 				</div>
 			</div>
 		</div>

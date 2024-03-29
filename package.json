@@ -36,9 +36,8 @@
 		"pdfjs-dist": "^4.0.379",
 		"sharp": "^0.33.2",
 		"tmp": "^0.2.1",
-		"vanilla-jsoneditor": "^0.23.0",
-		"vanilla-picker": "^2.12.2",
 		"vue": "^3.4.21",
+		"vue3-ts-jsoneditor": "^2.11.2",
 		"vuedraggable": "^4.1.0",
 		"vuefinder": "^2.2.2",
 		"ws": "^8.16.0"

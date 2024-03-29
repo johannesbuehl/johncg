@@ -1,9 +1,8 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 
-	import AddBible from "../AddPart/Parts/Bible/AddBible.vue";
-
 	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
+	import BibleSelector from "../AddPart/Parts/Bible/BibleSelector.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -16,17 +15,10 @@
 
 	const book_selection = ref<Book>();
 
-	const bible_props = defineModel<BibleProps>("bible_props");
+	const bible_props = defineModel<BibleProps>("item_props");
 
 	watch(
-		() => bible_props.value.chapters,
-		(chapters) => {
-			// emit("update");
-		}
-	);
-
-	watch(
-		() => bible_props.value.book_id,
+		() => bible_props.value?.book_id,
 		(book_id) => {
 			if (props.bible !== undefined) {
 				Object.values(props.bible).forEach((div) => {
@@ -40,15 +32,13 @@
 				});
 			}
 
-			console.debug("foobar");
-
-			// emit("update");
+			console.debug(book_selection.value);
 		}
 	);
 </script>
 
 <template>
-	<AddBible
+	<BibleSelector
 		v-model:item_props="bible_props"
 		:ws="ws"
 		:bible="bible"

@@ -20,7 +20,7 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetMediaTree = {
-			command: "get_item_tree",
+			command: "get_item_files",
 			type: "media"
 		};
 
@@ -69,7 +69,7 @@
 		</div>
 		<div class="button_wrapper">
 			<MenuButton icon="repeat" text="Loop" @click="loop = !loop" :active="loop" />
-			<MenuButton class="" icon="plus" text="" @click="add_media(selection, 'file')" />
+			<MenuButton class="" icon="plus" text="Add Media" @click="add_media(selection, 'file')" />
 		</div>
 	</div>
 </template>

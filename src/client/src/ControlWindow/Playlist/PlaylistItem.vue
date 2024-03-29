@@ -147,10 +147,12 @@
 	.playlist_item_wrapper {
 		background-color: var(--color-item);
 
-		border-radius: 0.25rem !important;
+		border-radius: 0.25rem;
 
 		display: flex;
 		align-items: stretch;
+
+		overflow: visible;
 	}
 
 	.playlist_item_wrapper.selectable {
@@ -160,6 +162,16 @@
 	.playlist_item_wrapper:not(.selectable) {
 		color: var(--color-text-disabled);
 		font-style: italic;
+	}
+
+	.playlist_item_wrapper > *:first-child {
+		border-top-left-radius: 0.25rem;
+		border-bottom-left-radius: 0.25rem;
+	}
+
+	.playlist_item_wrapper > *:last-child {
+		border-top-right-radius: 0.25rem;
+		border-bottom-right-radius: 0.25rem;
 	}
 
 	.item_color_indicator {

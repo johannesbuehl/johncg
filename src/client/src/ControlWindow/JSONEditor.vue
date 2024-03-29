@@ -1,63 +1,39 @@
 <script setup lang="ts">
-	import { JSONEditor, type JSONContent } from "vanilla-jsoneditor";
-	import { onMounted, onUnmounted, ref, watch } from "vue";
-
-	import "vanilla-jsoneditor/themes/jse-theme-dark.css";
-
-	const props = defineProps<{}>();
+	import JsonEditorPlugin from "vue3-ts-jsoneditor";
 
 	const content = defineModel<object>({
 		required: true
 	});
 
-	let editor: JSONEditor;
-
-	const editor_ref = ref<HTMLDivElement>();
-
-	onMounted(() => {
-		editor = new JSONEditor({
-			target: editor_ref.value as HTMLDivElement,
-			props: {
-				content: { json: content.value ?? {} },
-				indentation: "\t",
-				tabSize: 4,
-				readOnly: false,
-				navigationBar: false,
-				onChange: (new_content, _, { contentErrors }) => {
-					if (contentErrors === null && "json" in new_content) {
-						content.value = new_content.json as object;
-					}
-				}
-			}
-		});
-	});
-
-	watch(props, (new_props) => {
-		editor.updateProps(new_props);
-	});
-
-	onUnmounted(() => {
-		editor.destroy();
-	});
+	const emit = defineEmits<{
+		update: [];
+	}>();
 </script>
 
 <template>
-	<div class="svelte-jsoneditor-vue jse-theme-dark" ref="editor_ref"></div>
+	<JsonEditorPlugin
+		v-model:json="content"
+		:indentation="'\t'"
+		:tab-size="4"
+		:read-only="false"
+		:navigation-bar="false"
+		:dark-theme="true"
+		:full-width-button="false"
+		@update:json="emit('update')"
+	/>
 </template>
 
 <style scoped>
-	.svelte-jsoneditor-vue {
+	.vue-ts-json-editor {
 		display: flex;
 		flex: 1;
+
+		border-radius: 0.25rem;
 	}
 </style>
 
 <style>
-	.cm-content *:focus {
-		border: none !important;
-	}
-
-	.svelte-jsoneditor-vue * {
+	.vue-ts-json-editor * {
 		overflow: visible;
 
 		--jse-theme-color: var(--color-container);

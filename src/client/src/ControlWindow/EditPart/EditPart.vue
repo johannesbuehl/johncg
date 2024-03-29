@@ -8,6 +8,7 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import EditTemplate from "./EditTemplate.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -70,16 +71,21 @@
 		</div>
 		<EditSong
 			v-if="item_props?.type === 'song'"
-			v-model:song_props="item_props"
+			v-model:item_props="item_props"
 			:ws="ws"
 			:song_data="search_results"
 			@update="update_item"
 		/>
 		<EditBible
 			v-if="item_props?.type === 'bible'"
-			v-model:bible_props="item_props"
+			v-model:item_props="item_props"
 			:ws="ws"
 			:bible="bible"
+			@update="update_item"
+		/>
+		<EditTemplate
+			v-if="item_props?.type === 'template'"
+			v-model:item_props="item_props"
 			@update="update_item"
 		/>
 		<div v-if="item_props?.type === undefined" id="edit_part_placeholder">

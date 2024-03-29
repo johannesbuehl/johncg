@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import { ref, type VNodeRef } from "vue";
+	import { ref, type Ref, type VNodeRef } from "vue";
 	import Draggable from "vuedraggable";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	import PlaylistItem from "./PlaylistItem.vue";
 	import ContextMenu from "./ContextMenu.vue";
+	import PlaylistItem from "./PlaylistItem.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -93,10 +93,14 @@
 		context_menu_position.value = event;
 	}
 
-	let items_list: (typeof PlaylistItem)[] = [];
-	function list_ref(el: typeof PlaylistItem) {
+	let items_list: Ref<typeof PlaylistItem>[] = [];
+	function list_ref(el: typeof PlaylistItem): VNodeRef | undefined {
 		if (el) {
-			items_list.push(el);
+			const re = ref(el);
+
+			items_list.push(re);
+
+			return re;
 		}
 	}
 
@@ -128,7 +132,7 @@
 		>
 			<template #item="{ element, index }">
 				<PlaylistItem
-					:ref="list_ref as unknown as VNodeRef"
+					:ref="list_ref"
 					:index="index"
 					:ws="ws"
 					:item_props="element"
@@ -160,7 +164,7 @@
 			id="item_color_picker_context_menu"
 			type="color"
 			style="visibility: hidden; position: absolute"
-			v-model="items_list[current_picked_item_index].props.color"
+			v-model="items_list[current_picked_item_index].value.props.color"
 			@click="$event.stopPropagation()"
 		/>
 		<label
@@ -174,15 +178,15 @@
 			<FontAwesomeIcon :icon="['fas', 'brush']" />
 			Change Color
 		</label>
-		<div @click="items_list[current_picked_item_index].edit_caption()">
+		<div @click="items_list[current_picked_item_index].value.edit_caption()">
 			<FontAwesomeIcon :icon="['fas', 'font']" />
 			Rename
 		</div>
-		<div @click="duplicate_item(items_list[current_picked_item_index].props)">
+		<div @click="duplicate_item(items_list[current_picked_item_index].value.props)">
 			<FontAwesomeIcon :icon="['fas', 'clone']" />
 			Duplicate
 		</div>
-		<div @click="items_list[current_picked_item_index].delete_item()">
+		<div @click="items_list[current_picked_item_index].value.delete_item()">
 			<FontAwesomeIcon :icon="['fas', 'trash']" />
 			Delete
 		</div>
@@ -225,6 +229,8 @@
 		gap: 0.25rem;
 
 		padding: 0.25rem;
+
+		overflow: auto;
 	}
 
 	.dragged_ghost {

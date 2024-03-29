@@ -105,6 +105,6 @@
 
 		padding: 0.25rem;
 		/* padding-inline: 0.125rem; */
-		gap: 0.375rem;
+		gap: 0.25rem;
 	}
 </style>

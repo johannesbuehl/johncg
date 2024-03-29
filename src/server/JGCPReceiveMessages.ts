@@ -81,7 +81,7 @@ export interface SearchItem extends Base {
 }
 
 interface GetItemTreeBase extends Base {
-	command: "get_item_tree";
+	command: "get_item_files";
 }
 
 export interface GetMediaTree extends GetItemTreeBase {

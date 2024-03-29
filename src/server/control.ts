@@ -98,7 +98,7 @@ export default class Control {
 		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-		get_item_tree: (msg: JGCPRecv.GetItemTree, ws: WebSocket) => this.get_item_tree(msg.type, ws),
+		get_item_files: (msg: JGCPRecv.GetItemTree, ws: WebSocket) => this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_data(msg.type, msg.file, ws)
@@ -303,7 +303,7 @@ export default class Control {
 		// type-check the item
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
-				if (this.playlist?.casparcg_connections[0].resolution !== undefined) {
+				if (this.playlist?.casparcg_connections !== undefined) {
 					const message: JGCPSend.ItemSlides = {
 						command: "item_slides",
 						item,
@@ -518,10 +518,22 @@ export default class Control {
 	}
 
 	private update_item(index: number, props: ItemProps, ws: WebSocket) {
-		const result = this.playlist.update_item(index, props);
+		let result: ItemProps | false;
+
+		try {
+			result = this.playlist.update_item(index, props);
+		} catch (e) {
+			if (e instanceof RangeError) {
+				ws_send_response(e.message, false, ws);
+
+				return;
+			} else {
+				throw e;
+			}
+		}
 
 		if (result === false) {
-			ws_send_response("could not update item", false, ws);
+			ws_send_response("could not update item (wrong item-type)", false, ws);
 		} else {
 			this.send_playlist();
 
@@ -552,15 +564,15 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private get_item_tree(type: JGCPRecv.GetItemTree["type"], ws: WebSocket) {
+	private get_item_files(type: JGCPRecv.GetItemTree["type"], ws: WebSocket) {
 		let files: JGCPSend.File[];
 
 		switch (type) {
 			case "media":
-				files = build_file_tree(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+				files = build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
 				break;
 			case "template":
-				files = build_file_tree(this.casparcg_connections[0].template.map((m) => m.split("/")));
+				files = build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
 				break;
 			case "playlist":
 				files = this.search_part.find_jcg_files();
@@ -572,7 +584,7 @@ export default class Control {
 
 		if (files !== undefined) {
 			const message: JGCPSend.ItemTree = {
-				command: "item_tree",
+				command: "item_files",
 				type,
 				files
 			};
@@ -719,7 +731,7 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	ws?.send(JSON.stringify(response));
 }
 
-function build_file_tree(media_array: string[][], root?: string): JGCPSend.File[] {
+function build_files(media_array: string[][], root?: string): JGCPSend.File[] {
 	const media_object: JGCPSend.File[] = [];
 
 	const temp_object: Record<string, string[][]> = {};
@@ -748,7 +760,7 @@ function build_file_tree(media_array: string[][], root?: string): JGCPSend.File[
 		media_object.push({
 			name: key,
 			path: file_path,
-			children: files.length !== 0 ? build_file_tree(files, file_path) : undefined
+			children: files.length !== 0 ? build_files(files, file_path) : undefined
 		});
 	});
 

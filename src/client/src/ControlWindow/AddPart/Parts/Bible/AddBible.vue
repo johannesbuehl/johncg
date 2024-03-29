@@ -1,20 +1,21 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import BibleSelector from "./BibleSelector.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import BibleSelector, { get_book_from_id } from "./BibleSelector.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	library.add(fas.faPlus);
+
 	import {
 		create_bible_citation_string,
 		type BibleFile,
-		type BibleProps,
-		type Book
+		type BibleProps
 	} from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		bible?: BibleFile;
 		ws: WebSocket;
-		edit?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -31,16 +32,19 @@
 		}
 	});
 
-	function add_item(book_name: string) {
+	function add_item() {
 		// set the caption
-		bible_props.value.caption = create_bible_citation_string(book_name, bible_props.value.chapters);
+		bible_props.value.caption = create_bible_citation_string(
+			get_book_from_id(props.bible ?? {}, bible_props.value.book_id).name,
+			bible_props.value.chapters
+		);
 
 		emit("add", bible_props.value);
-
-		console.debug(bible_props.value.chapters);
 	}
 </script>
 
 <template>
-	<BibleSelector v-model:bible_props="bible_props" :ws="ws" :bible="bible" @add="add_item" />
+	<BibleSelector v-model:bible_props="bible_props" :ws="ws" :bible="bible">
+		<MenuButton icon="plus" text="Add Bible" @click="add_item()" />
+	</BibleSelector>
 </template>

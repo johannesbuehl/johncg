@@ -6,7 +6,7 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import MediaItem from "../MediaItem.vue";
-	import PartSelector from "./PartSelector.vue";
+	import SongPartSelector from "./SongPartSelector.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
@@ -104,28 +104,37 @@
 			}
 
 			// if not all languages are checked or the order isn't default, add it to the props
-			if (!languages.value.every((ele, index) => ele[0] === index && ele[1])) {
+			if (!languages.value.every(([lang, state], index) => lang === index && state)) {
 				item_props.value.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
+			} else {
+				// delete them from the props
+				delete item_props.value.languages;
 			}
 
 			emit("add", item_props.value);
 		}
 	}
 
-	function set_selection(song: SongData) {
-		song_selection.value = song;
+	function set_selection(song?: SongData) {
+		if (song !== undefined) {
+			song_selection.value = song;
 
-		item_props.value = {
-			type: "song",
-			caption: song.title ? song.title[0] : "Song title missing",
-			color: "#0000ff",
-			file: song.file
-		};
+			item_props.value = {
+				type: "song",
+				caption: song.title ? song.title[0] : "Song title missing",
+				color: "#0000ff",
+				file: song.file
+			};
 
-		verse_order.value = structuredClone(song.parts.default);
-		languages.value = Array(song_selection.value.title.length)
-			.fill([])
-			.map((ele, index) => [index, true]);
+			verse_order.value = structuredClone(song.parts.default);
+			languages.value = Array(song_selection.value.title.length)
+				.fill([])
+				.map((ele, index) => [index, true]);
+		} else {
+			verse_order.value = [];
+			languages.value = [];
+			song_selection.value = undefined;
+		}
 	}
 
 	function on_clone(song: SongData): SongProps {
@@ -199,9 +208,9 @@
 						/>
 					</template>
 				</Draggable>
-				<MenuButton icon="plus" text="" @click="add_song" />
+				<MenuButton icon="plus" text="Add Song" @click="add_song" />
 			</div>
-			<PartSelector
+			<SongPartSelector
 				v-model:selected_parts="verse_order"
 				v-model:selected_languages="languages"
 				:song_data="song_selection"

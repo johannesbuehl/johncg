@@ -1,3 +1,21 @@
+<script lang="ts">
+	export function sort_files(files?: JGCPSend.File[]): JGCPSend.File[] | undefined {
+		return files?.sort((a, b) => {
+			if (a.name === b.name) {
+				return 0;
+			} else {
+				const sort_array = [a.name, b.name].sort();
+
+				if (sort_array[0] === a.name) {
+					return -1;
+				} else {
+					return 1;
+				}
+			}
+		});
+	}
+</script>
+
 <script setup lang="ts">
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
@@ -54,9 +72,29 @@
 			>
 				{{ file?.name }}
 			</span>
-
 			<Draggable
-				:list="files"
+				:list="sort_files(files?.filter((ele) => typeof ele.children === 'object'))"
+				:group="{ name: 'playlist', pull: 'clone', put: 'false' }"
+				item-key="path"
+				tag="span"
+				:clone="clone_callback"
+				:sort="false"
+			>
+				<!-- v-for="[name, file] in Object.entries(media)" -->
+				<template #item="{ element }">
+					<FileDialogue
+						v-if="typeof files === 'object'"
+						v-show="expanded || root"
+						:file="element"
+						:files="element.children"
+						:clone_callback="clone_callback"
+						v-model="selection"
+						@choose="on_choose"
+					/>
+				</template>
+			</Draggable>
+			<Draggable
+				:list="sort_files(files?.filter((ele) => typeof ele.children !== 'object'))"
 				:group="{ name: 'playlist', pull: 'clone', put: 'false' }"
 				item-key="path"
 				tag="span"

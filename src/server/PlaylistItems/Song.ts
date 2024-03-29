@@ -12,13 +12,10 @@ export interface SongTemplate {
 }
 
 export interface SongProps extends ItemPropsBase {
-	/* eslint-disable @typescript-eslint/naming-convention */
 	type: "song";
 	file: string;
 	verse_order?: string[];
 	languages?: number[];
-	// template?: SongTemplate;
-	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
 export interface TitleSlide extends TitlePart {}
@@ -83,10 +80,6 @@ export default class Song extends PlaylistItemBase {
 				}
 			}
 
-			if (this.props.languages === undefined) {
-				this.item_props.languages = this.song_file.languages;
-			}
-
 			// add the title-slide to the counter
 			this.slide_count++;
 
@@ -118,7 +111,7 @@ export default class Song extends PlaylistItemBase {
 		const return_object: SongTemplateData = {
 			slide: this.active_slide,
 			slides: [this.song_file.part_title],
-			languages: this.props.languages
+			languages: this.props.languages ?? this.song_file.languages
 		};
 
 		// add the individual parts to the output-object
@@ -195,7 +188,7 @@ export default class Song extends PlaylistItemBase {
 			slides: [
 				{
 					start_index: 0,
-					...this.song_file.get_title_client(this.props.languages[0])
+					...this.song_file.get_title_client(0)
 				}
 			],
 			media: this.media,
@@ -263,7 +256,14 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	get props(): SongProps {
-		return this.item_props;
+		const props = structuredClone(this.item_props);
+
+		// if the languages are the same as in the song-file, remove them from the returned props
+		if (props.languages?.every((lang, index) => lang === this.song_file.languages[index])) {
+			delete props.languages;
+		}
+
+		return props;
 	}
 
 	get active_slide(): number {

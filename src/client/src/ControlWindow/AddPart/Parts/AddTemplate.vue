@@ -1,15 +1,14 @@
 <script setup lang="ts">
-	import { onMounted, watch } from "vue";
-	import type { JSONContent } from "vanilla-jsoneditor";
+	import { onMounted } from "vue";
 
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
+	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type { File } from "@server/JGCPSendMessages";
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	const props = defineProps<{
 		files: JGCPSend.File[];
@@ -21,7 +20,7 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetTemplateTree = {
-			command: "get_item_tree",
+			command: "get_item_files",
 			type: "template"
 		};
 
@@ -71,16 +70,13 @@
 				:clone_callback="on_clone"
 				@choose="add_template"
 			/>
-		</div>
-		<div class="data_editor">
-			<JSONEditor v-model="template_data" />
 			<MenuButton
-				class=""
 				icon="plus"
-				text=""
+				text="Add Template"
 				@click="add_template(selection, selection?.children ? 'dir' : 'file')"
 			/>
 		</div>
+		<JSONEditor v-model="template_data" />
 	</div>
 </template>
 
@@ -98,6 +94,9 @@
 		background-color: var(--color-container);
 
 		overflow: auto;
+
+		display: flex;
+		flex-direction: column;
 
 		border-radius: 0.25rem;
 	}

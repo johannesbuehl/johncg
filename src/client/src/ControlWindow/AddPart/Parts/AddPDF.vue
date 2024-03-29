@@ -21,7 +21,7 @@
 
 	onMounted(() => {
 		const message: JGCPRecv.GetPDFTree = {
-			command: "get_item_tree",
+			command: "get_item_files",
 			type: "pdf"
 		};
 

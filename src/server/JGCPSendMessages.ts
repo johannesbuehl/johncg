@@ -72,7 +72,7 @@ export interface File {
 }
 
 interface ItemTreeBase {
-	command: "item_tree";
+	command: "item_files";
 	files: File[];
 }
 

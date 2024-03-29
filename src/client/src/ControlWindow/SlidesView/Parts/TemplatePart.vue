@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import ItemSlide from "./ItemSlide.vue";
+	import ItemSlide, { type CasparCGTemplate } from "./ItemSlide.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 
@@ -14,13 +14,6 @@
 	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
-
-	interface CasparCGTemplate extends Window {
-		update: (data_string: string) => void;
-		play: () => void;
-		stop: () => void;
-		next: () => void;
-	}
 
 	function template_loaded(template_object: HTMLObjectElement) {
 		const contentWindows: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
