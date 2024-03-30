@@ -12,8 +12,9 @@ import type { ClientPDFSlides, PDFProps } from "./PDF.ts";
 import type Comment from "./Comment.ts";
 import type Bible from "./Bible.ts";
 import type { BibleProps, BibleTemplate, ClientBibleSlides } from "./Bible.ts";
+import Psalm, { ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
 
-export type PlaylistItem = Song | Countdown | Comment | Media | TemplateItem | PDF | Bible;
+export type PlaylistItem = Song | Countdown | Comment | Media | TemplateItem | PDF | Bible | Psalm;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -34,7 +35,8 @@ export type ItemProps =
 	| MediaProps
 	| TemplateProps
 	| PDFProps
-	| BibleProps;
+	| BibleProps
+	| PsalmProps;
 
 export interface CasparCGTemplate {
 	template: string;
@@ -44,7 +46,7 @@ export interface CasparCGTemplate {
 export interface ClientItemSlidesBase {
 	type: string;
 	caption: string;
-	slides: Array<unknown>;
+	// slides: unknown[];
 	media: string;
 	template?: CasparCGTemplate;
 }
@@ -56,7 +58,8 @@ export type ClientItemSlides =
 	| ClientMediaProps
 	| ClientTemplateSlides
 	| ClientPDFSlides
-	| ClientBibleSlides;
+	| ClientBibleSlides
+	| ClientPsalmSlides;
 
 export interface FontFormat {
 	/* eslint-disable @typescript-eslint/naming-convention */

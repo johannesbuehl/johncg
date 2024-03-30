@@ -98,7 +98,8 @@ export default class Control {
 		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
 		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-		get_item_files: (msg: JGCPRecv.GetItemTree, ws: WebSocket) => this.get_item_files(msg.type, ws),
+		get_item_files: (msg: JGCPRecv.GetItemFiles, ws: WebSocket) =>
+			this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_data(msg.type, msg.file, ws)
@@ -564,7 +565,7 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private get_item_files(type: JGCPRecv.GetItemTree["type"], ws: WebSocket) {
+	private get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
 		let files: JGCPSend.File[];
 
 		switch (type) {
@@ -579,6 +580,9 @@ export default class Control {
 				break;
 			case "pdf":
 				files = this.search_part.find_pdf_files();
+				break;
+			case "psalm":
+				files = this.search_part.find_psalm_files();
 				break;
 		}
 

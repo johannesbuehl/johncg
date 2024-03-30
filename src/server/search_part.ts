@@ -160,10 +160,10 @@ export default class SearchPart {
 
 		const pdf_files: JGCPSend.File[] = [];
 
-		const check_jcg_file = /(?<name>.+)\.pdf$/;
+		const check_pdf_file = /(?<name>.+)\.pdf$/;
 
 		files.forEach((f) => {
-			const file_regex = check_jcg_file.exec(f);
+			const file_regex = check_pdf_file.exec(f);
 
 			if (file_regex) {
 				const ff = path.join(pth, f);
@@ -179,6 +179,32 @@ export default class SearchPart {
 		});
 
 		return pdf_files;
+	}
+
+	find_psalm_files(pth: string = Config.path.psalm): JGCPSend.File[] {
+		const files = fs.readdirSync(pth);
+
+		const psalm_files: JGCPSend.File[] = [];
+
+		const check_psalm_file = /(?<name>.+)\.psm$/;
+
+		files.forEach((f) => {
+			const file_regex = check_psalm_file.exec(f);
+
+			if (file_regex) {
+				const ff = path.join(pth, f);
+
+				const stat = fs.statSync(ff);
+
+				psalm_files.push({
+					name: file_regex?.groups["name"],
+					path: ff,
+					children: stat.isDirectory() ? this.find_psalm_files(ff) : undefined
+				});
+			}
+		});
+
+		return psalm_files;
 	}
 
 	get_item_data(type: JGCPRecv.GetItemData["type"], path: string): SongData | undefined {

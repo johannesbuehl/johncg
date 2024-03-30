@@ -237,7 +237,7 @@ export default class Song extends PlaylistItemBase {
 
 			if (result) {
 				props.languages.forEach((ele) => {
-					result && typeof ele === "number";
+					result &&= typeof ele === "number";
 				});
 			}
 		}

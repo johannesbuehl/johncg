@@ -11,9 +11,12 @@ esbuild.build({
 });
 
 fs.cpSync("casparcg/Templates", "dist/build/Templates", { recursive: true, filter: (src) => {
-	if (path.extname(src) === ".html" || fs.statSync(src).isDirectory()) {
-		return true;
-	} else {
-		return false;
+	
+	switch (true) {
+		case ".eslintrc" === src:
+		case [".map", ".js"].includes(path.extname(src)):
+			return false;
+		default:
+			return true;
 	}
 } });

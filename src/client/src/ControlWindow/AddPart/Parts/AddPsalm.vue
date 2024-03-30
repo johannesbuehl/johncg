@@ -4,11 +4,10 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import type { PDFProps } from "@server/PlaylistItems/PDF";
+	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -21,15 +20,15 @@
 	onMounted(() => {
 		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
-			type: "pdf"
+			type: "psalm"
 		};
 
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function create_props(file: JGCPSend.File): PDFProps {
+	function create_props(file: JGCPSend.File): PsalmProps {
 		return {
-			type: "pdf",
+			type: "psalm",
 			caption: file.name,
 			color: "#ffffff",
 			file: file.path
@@ -48,7 +47,7 @@
 		}
 	}
 
-	function on_clone(file: JGCPSend.File): PDFProps {
+	function on_clone(file: JGCPSend.File): PsalmProps {
 		return create_props(file);
 	}
 </script>
@@ -64,7 +63,7 @@
 				@choose="add_media"
 			/>
 		</div>
-		<MenuButton icon="plus" text="Add PDF" @click="add_media(selection, 'file')" />
+		<MenuButton icon="plus" text="Add Psalm" @click="add_media(selection, 'file')" />
 	</div>
 </template>
 

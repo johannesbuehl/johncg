@@ -3,6 +3,7 @@ import { SongData } from "./search_part.ts";
 import PlaylistObject from "./PlaylistFile.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
+import { GetItemFiles } from "./JGCPReceiveMessages.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -71,28 +72,11 @@ export interface File {
 	children?: File[];
 }
 
-interface ItemTreeBase {
+export interface ItemTree {
 	command: "item_files";
 	files: File[];
+	type: GetItemFiles["type"];
 }
-
-export interface MediaTree extends ItemTreeBase {
-	type: "media";
-}
-
-export interface TemplateTree extends ItemTreeBase {
-	type: "template";
-}
-
-export interface PlaylistTree extends ItemTreeBase {
-	type: "playlist";
-}
-
-export interface PDFTree extends ItemTreeBase {
-	type: "pdf";
-}
-
-export type ItemTree = MediaTree | TemplateTree | PlaylistTree | PDFTree;
 
 export interface Bible {
 	command: "bible";
@@ -110,5 +94,5 @@ export type Message =
 	| Clear
 	| SearchResults
 	| PlaylistSave
-	| PDFTree
+	| ItemTree
 	| Bible;

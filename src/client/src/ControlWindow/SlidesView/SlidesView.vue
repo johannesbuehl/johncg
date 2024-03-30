@@ -7,6 +7,7 @@
 	import MediaPart from "./Parts/MediaPart.vue";
 	import PDFPart from "./Parts/PDFPart.vue";
 	import TemplatePart from "./Parts/TemplatePart.vue";
+	import PsalmPart from "./Parts/PsalmPart.vue";
 
 	const props = defineProps<{
 		slides?: JGCPSend.ItemSlides;
@@ -24,8 +25,9 @@
 </script>
 
 <template>
-	<div class="slides_view_container" v-if="slides?.type === 'song'">
+	<div class="slides_view_container" v-if="slides?.type !== undefined">
 		<SongPart
+			v-if="slides?.type === 'song'"
 			v-for="slide of slides?.slides"
 			:key="`${slides.item}-${slide.start_index}`"
 			:slide="slide"
@@ -36,36 +38,41 @@
 			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"
 		/>
-	</div>
-	<div class="slides_view_container" v-if="slides?.type === 'countdown'">
+		<PsalmPart
+			v-if="slides.type === 'psalm'"
+			:slide="slides"
+			:aspect_ratio="aspect_ratio"
+			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
+			:scroll="scroll"
+			@select_slide="emit('select_slide', $event)"
+		/>
 		<CountdownPart
+			v-if="slides?.type === 'countdown'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
-	</div>
-	<div class="slides_view_container" v-if="slides?.type === 'media'">
 		<MediaPart
+			v-if="slides?.type === 'media'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
-	</div>
-	<div class="slides_view_container" v-if="slides?.type === 'template' || slides?.type === 'bible'">
 		<TemplatePart
+			v-if="slides?.type === 'template' || slides?.type === 'bible'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
-	</div>
-	<div class="slides_view_container" v-if="slides?.type === 'pdf'">
 		<PDFPart
+			v-if="slides?.type === 'pdf'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
+			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"
 		/>
 	</div>

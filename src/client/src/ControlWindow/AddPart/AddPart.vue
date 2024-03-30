@@ -10,12 +10,12 @@
 	import AddBible from "./Parts/Bible/AddBible.vue";
 	import AddSong from "./Parts/Song/AddSong.vue";
 	import AddPDF from "./Parts/AddPDF.vue";
+	import AddPsalm from "./Parts/AddPsalm.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import type { SongProps } from "@server/PlaylistItems/Song";
 
 	library.add(
 		fas.faMusic,
@@ -79,6 +79,13 @@
 			v-if="pick === 'song'"
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
+			@add="add_item"
+			@update="update_item"
+		/>
+		<AddPsalm
+			v-if="pick === 'psalm'"
+			:files="files[pick]"
+			:ws="ws"
 			@add="add_item"
 			@update="update_item"
 		/>

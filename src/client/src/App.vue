@@ -41,7 +41,8 @@
 		media: [],
 		pdf: [],
 		playlist: [],
-		template: []
+		template: [],
+		psalm: []
 	});
 
 	let ws: WebSocket | undefined;
@@ -232,6 +233,8 @@
 	}
 
 	function parse_item_files(data: JGCPSend.ItemTree) {
+		console.debug(data);
+
 		if (Object.keys(files.value).includes(data.type)) {
 			files.value[data.type] = data.files;
 		}

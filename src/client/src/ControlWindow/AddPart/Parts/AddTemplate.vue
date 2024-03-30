@@ -19,7 +19,7 @@
 	const template_data = defineModel<object>({ default: {} });
 
 	onMounted(() => {
-		const message: JGCPRecv.GetTemplateTree = {
+		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
 			type: "template"
 		};
