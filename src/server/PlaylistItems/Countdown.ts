@@ -21,12 +21,6 @@ export interface CountdownTemplate {
 
 export interface ClientCountdownSlides extends ClientItemSlidesBase {
 	type: "countdown";
-	slides: [
-		{
-			time: string;
-			mode: CountdownMode;
-		}
-	];
 	template: CountdownTemplate;
 }
 
@@ -82,12 +76,6 @@ export default class Countdown extends PlaylistItemBase {
 		return Promise.resolve({
 			caption: `${title_map[this.template.data.mode]}: ${this.props.time}`,
 			type: this.props.type,
-			slides: [
-				{
-					mode: this.template.data.mode,
-					time: this.props.time
-				}
-			],
 			media: this.media,
 			template: this.template
 		});

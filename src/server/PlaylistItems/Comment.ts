@@ -26,7 +26,6 @@ export default class Comment extends PlaylistItemBase {
 		return Promise.resolve({
 			type: "comment",
 			caption: this.props.caption,
-			slides: [],
 			media: undefined
 		});
 	}

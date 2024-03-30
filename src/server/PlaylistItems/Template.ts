@@ -35,7 +35,6 @@ export default class TemplateItem extends PlaylistItemBase {
 		return Promise.resolve({
 			type: "template",
 			caption: this.props.caption,
-			slides: [],
 			media: undefined,
 			template: this.template
 		});

@@ -2,7 +2,7 @@ import { get_song_path } from "../config.ts";
 import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
-import type { ItemPartClient, LyricPart, LyricPartClient, TitlePart } from "./SongFile.ts";
+import type { ItemPart, LyricPart } from "./SongFile.ts";
 
 import { ClipInfo } from "casparcg-connection";
 
@@ -18,26 +18,14 @@ export interface SongProps extends ItemPropsBase {
 	languages?: number[];
 }
 
-export interface TitleSlide extends TitlePart {}
-
-export interface LyricSlide {
-	type: "lyric";
-	data: string[][];
-}
-
-export type ItemSlide = LyricSlide | TitleSlide;
-
 export interface SongTemplateData {
-	slides: ItemSlide[];
+	parts: ItemPart[];
 	languages?: number[];
 	slide: number;
 }
 
-export type SongPartClient = ItemPartClient & { start_index: number };
-
 export interface ClientSongSlides extends ClientItemSlidesBase {
 	type: "song";
-	slides: SongPartClient[];
 	template: SongTemplate;
 }
 
@@ -110,7 +98,7 @@ export default class Song extends PlaylistItemBase {
 	create_template_data() {
 		const return_object: SongTemplateData = {
 			slide: this.active_slide,
-			slides: [this.song_file.part_title],
+			parts: [this.song_file.part_title],
 			languages: this.props.languages ?? this.song_file.languages
 		};
 
@@ -127,15 +115,7 @@ export default class Song extends PlaylistItemBase {
 
 			// if a part is not available, skip it
 			if (part !== undefined) {
-				// add the individual slides of the part to the output object
-				part.slides.forEach((slide) => {
-					const slide_obj: LyricSlide = {
-						type: "lyric",
-						data: slide
-					};
-
-					return_object.slides.push(slide_obj);
-				});
+				return_object.parts.push(part);
 			}
 		}
 
@@ -182,44 +162,12 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientSongSlides> {
-		const return_item: ClientSongSlides = {
+		return Promise.resolve({
 			type: "song",
 			caption: this.item_props.caption,
-			slides: [
-				{
-					start_index: 0,
-					...this.song_file.get_title_client(0)
-				}
-			],
 			media: this.media,
 			template: this.template
-		};
-
-		let slide_counter: number = 1;
-
-		for (const part_name of this.get_verse_order()) {
-			let part: LyricPartClient | undefined = undefined;
-
-			try {
-				part = this.song_file.get_part_client(part_name);
-			} catch (e) {
-				if (!(e instanceof ReferenceError)) {
-					throw e;
-				}
-			}
-
-			// if a part is not available, skip it
-			if (part !== undefined) {
-				return_item.slides.push({
-					...part,
-					start_index: slide_counter
-				});
-
-				slide_counter += part.slides;
-			}
-		}
-
-		return Promise.resolve(return_item);
+		});
 	}
 
 	protected validate_props(props: SongProps): boolean {

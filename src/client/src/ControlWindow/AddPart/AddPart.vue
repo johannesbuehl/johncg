@@ -58,10 +58,6 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
-
-	function update_item() {
-		console.debug("update_item request");
-	}
 </script>
 
 <template>
@@ -80,43 +76,12 @@
 			:ws="ws"
 			:search_results="search_results?.type === 'song' ? search_results : undefined"
 			@add="add_item"
-			@update="update_item"
 		/>
-		<AddPsalm
-			v-if="pick === 'psalm'"
-			:files="files[pick]"
-			:ws="ws"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddBible
-			v-if="pick === 'bible'"
-			:bible="bible"
-			:ws="ws"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddMedia
-			v-if="pick === 'media'"
-			:files="files[pick]"
-			:ws="ws"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddTemplate
-			v-if="pick === 'template'"
-			:files="files[pick]"
-			:ws="ws"
-			@add="add_item"
-			@update="update_item"
-		/>
-		<AddPDF
-			v-if="pick === 'pdf'"
-			:files="files[pick]"
-			:ws="ws"
-			@add="add_item"
-			@update="update_item"
-		/>
+		<AddPsalm v-if="pick === 'psalm'" :files="files[pick]" :ws="ws" @add="add_item" />
+		<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
+		<AddMedia v-if="pick === 'media'" :files="files[pick]" :ws="ws" @add="add_item" />
+		<AddTemplate v-if="pick === 'template'" :files="files[pick]" :ws="ws" @add="add_item" />
+		<AddPDF v-if="pick === 'pdf'" :files="files[pick]" :ws="ws" @add="add_item" />
 	</div>
 </template>
 

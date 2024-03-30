@@ -46,7 +46,6 @@ export interface CasparCGTemplate {
 export interface ClientItemSlidesBase {
 	type: string;
 	caption: string;
-	// slides: unknown[];
 	media: string;
 	template?: CasparCGTemplate;
 }

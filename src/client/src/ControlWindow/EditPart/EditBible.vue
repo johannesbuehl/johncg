@@ -31,8 +31,6 @@
 					});
 				});
 			}
-
-			console.debug(book_selection.value);
 		}
 	);
 </script>

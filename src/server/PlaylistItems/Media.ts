@@ -36,7 +36,6 @@ export default class Media extends PlaylistItemBase {
 		return Promise.resolve({
 			caption: this.props.caption,
 			type: "media",
-			slides: [],
 			media: this.media
 		});
 	}

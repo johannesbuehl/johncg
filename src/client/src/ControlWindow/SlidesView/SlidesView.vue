@@ -28,11 +28,7 @@
 	<div class="slides_view_container" v-if="slides?.type !== undefined">
 		<SongPart
 			v-if="slides?.type === 'song'"
-			v-for="slide of slides?.slides"
-			:key="`${slides.item}-${slide.start_index}`"
-			:slide="slide"
-			:media="slides.media"
-			:template="slides.template"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"
@@ -40,7 +36,7 @@
 		/>
 		<PsalmPart
 			v-if="slides.type === 'psalm'"
-			:slide="slides"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"

@@ -14,7 +14,6 @@ export interface PDFProps extends ItemPropsBase {
 export interface ClientPDFSlides extends ClientItemSlidesBase {
 	type: "pdf";
 	slides: string[];
-	template?: undefined;
 }
 
 export default class PDF extends PlaylistItemBase {

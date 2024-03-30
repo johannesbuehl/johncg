@@ -51,7 +51,6 @@ export default class Bible extends PlaylistItemBase {
 		return Promise.resolve({
 			type: "bible",
 			caption: this.props.caption,
-			slides: [],
 			media: undefined,
 			template: this.template
 		});

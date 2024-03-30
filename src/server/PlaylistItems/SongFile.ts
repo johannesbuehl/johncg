@@ -65,7 +65,7 @@ export interface TitlePart {
 
 export interface LyricPart {
 	type: "lyric";
-	part: SongElement;
+	part: string;
 	slides: string[][][];
 }
 

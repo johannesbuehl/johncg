@@ -40,6 +40,8 @@
 					.contentWindow as CasparCGTemplate;
 
 				contentWindow.update(JSON.stringify({ ...data, mute_transition: true }));
+
+				emit("template_load", template_ref.value);
 			}
 		}
 	);

@@ -5,7 +5,7 @@
 	import type { ClientPsalmSlides } from "@server/PlaylistItems/Psalm";
 
 	const props = defineProps<{
-		slide: ClientPsalmSlides;
+		slides: ClientPsalmSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
@@ -29,7 +29,7 @@
 	function template_loaded(template_object: HTMLObjectElement, index: number) {
 		const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
 
-		contentWindow.update(JSON.stringify({ ...props.slide.template.data, mute_transition: true }));
+		contentWindow.update(JSON.stringify({ ...props.slides.template.data, mute_transition: true }));
 		contentWindow.jump(index);
 		contentWindow.play();
 	}
@@ -42,13 +42,13 @@
 			:class="{ active: active_item_slide?.item !== undefined }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ slide?.caption }}
+			{{ slides?.caption }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				v-for="(_media, index) in slide.template.data.data?.text"
+				v-for="(_media, index) in slides.template.data.data?.text"
 				:key="index"
-				:template="slide.template"
+				:template="slides.template"
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"

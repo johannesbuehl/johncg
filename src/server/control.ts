@@ -304,7 +304,7 @@ export default class Control {
 		// type-check the item
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
-				if (this.playlist?.casparcg_connections !== undefined) {
+				if (this.playlist?.casparcg_connections.length > 0) {
 					const message: JGCPSend.ItemSlides = {
 						command: "item_slides",
 						item,

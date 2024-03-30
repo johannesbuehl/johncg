@@ -1,4 +1,5 @@
-import { ItemSlide, SongTemplateData } from "../server/PlaylistItems/Song";
+import { SongTemplateData } from "../server/PlaylistItems/Song";
+import { ItemPart } from "../server/PlaylistItems/SongFile";
 
 let data: SongTemplateData & { mute_transition: boolean };
 
@@ -44,13 +45,14 @@ function update(s_data: string) {
 	let slide_counter = 0;
 
 	// create the slides and store them in the container
-	for (const slide_data of data["slides"]) {
+	for (const part of data.parts) {
 		// parent-div of slide
-		const div_slide = create_slide(slide_data, data.languages);
-		div_slide.dataset.slide = slide_counter.toString();
-		div_storage.append(div_slide);
+		create_slide(part, data.languages).forEach((slide) => {
+			slide.dataset.slide = slide_counter.toString();
+			div_storage.append(slide);
 
-		slide_counter++;
+			slide_counter++;
+		});
 	}
 
 	// store the amount of slides
@@ -156,46 +158,53 @@ function get_max_width() {
 	return max_width;
 }
 
-function create_slide(slide_data: ItemSlide, languages: number[]) {
-	// parent-div of slide
-	const div_slide = document.createElement("div");
+function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
+	switch (part.type) {
+		case "title": {
+			// parent-div of slide
+			const div_slide = document.createElement("div");
 
-	const div_content = document.createElement("div");
-	div_content.classList.add("slide");
-	div_slide.append(div_content);
+			const div_content = document.createElement("div");
+			div_content.classList.add("slide");
+			div_slide.append(div_content);
 
-	switch (slide_data.type) {
-		case "title":
-			{
-				div_content.classList.add("title");
-				const title_container = document.createElement("div");
-				title_container.classList.add("title_container");
-				div_content.append(title_container);
+			div_content.classList.add("title");
+			const title_container = document.createElement("div");
+			title_container.classList.add("title_container");
+			div_content.append(title_container);
 
-				// create the titles for the individual languages
-				languages.forEach((language, index) => {
-					const div_title = document.createElement("div");
-					div_title.classList.add(`language_${index}`);
-					div_title.innerText = slide_data.title[language] ?? "";
-					title_container.append(div_title);
-				});
+			// create the titles for the individual languages
+			languages.forEach((language, index) => {
+				const div_title = document.createElement("div");
+				div_title.classList.add(`language_${index}`);
+				div_title.innerText = part.title[language] ?? "";
+				title_container.append(div_title);
+			});
 
-				const div_church_song_id = document.createElement("div");
-				div_church_song_id.classList.add("song_id");
+			const div_church_song_id = document.createElement("div");
+			div_church_song_id.classList.add("song_id");
 
-				if (slide_data.church_song_id !== undefined) {
-					div_church_song_id.innerText = slide_data.church_song_id;
-				}
-
-				div_content.append(div_church_song_id);
+			if (part.church_song_id !== undefined) {
+				div_church_song_id.innerText = part.church_song_id;
 			}
-			break;
-		case "lyric":
-			{
+
+			div_content.append(div_church_song_id);
+
+			return [div_slide];
+		}
+		case "lyric": {
+			return part.slides.map((slide): HTMLDivElement => {
+				// parent-div of slide
+				const div_slide = document.createElement("div");
+
+				const div_content = document.createElement("div");
+				div_content.classList.add("slide");
+				div_slide.append(div_content);
+
 				div_content.classList.add("lyric");
 
 				// add the individual text-lines
-				for (const line_package of slide_data.data) {
+				for (const line_package of slide) {
 					// create a template for the line
 					const line_template = document.createElement("div");
 					line_template.classList.add("text_line");
@@ -209,11 +218,11 @@ function create_slide(slide_data: ItemSlide, languages: number[]) {
 						div_content.append(line);
 					});
 				}
-			}
-			break;
-	}
 
-	return div_slide;
+				return div_content;
+			});
+		}
+	}
 }
 
 function resize_slides_text(max_width: number, container_width: number) {
