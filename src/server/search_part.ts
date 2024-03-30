@@ -129,82 +129,46 @@ export default class SearchPart {
 		return results;
 	}
 
-	find_jcg_files(pth: string = Config.path.playlist): JGCPSend.File[] {
+	find_files(pth: string, extensions: string[]): JGCPSend.File[] {
 		const files = fs.readdirSync(pth);
 
-		const jcg_files: JGCPSend.File[] = [];
+		const result_files: JGCPSend.File[] = [];
 
-		const check_jcg_file = /(?<name>.+)\.jcg$/;
+		const check_file = new RegExp(
+			`^(?<name>.+)(?<extension>${extensions.join("|").replaceAll(".", "\\.")})$`
+		);
 
 		files.forEach((f) => {
-			const file_regex = check_jcg_file.exec(f);
+			const file_regex = check_file.exec(f);
+			const ff = path.join(pth, f);
+			const directory = fs.statSync(ff).isDirectory();
 
-			if (file_regex) {
-				const ff = path.join(pth, f);
+			if (directory || file_regex) {
+				if (file_regex === null) {
+					console.debug(ff);
+				}
 
-				const stat = fs.statSync(ff);
-
-				jcg_files.push({
-					name: file_regex?.groups["name"],
+				result_files.push({
+					name: directory ? f : file_regex?.groups["name"],
 					path: ff,
-					children: stat.isDirectory() ? this.find_jcg_files(ff) : undefined
+					children: directory ? this.find_files(ff, extensions) : undefined
 				});
 			}
 		});
 
-		return jcg_files;
+		return result_files;
+	}
+
+	find_jcg_files(pth: string = Config.path.playlist): JGCPSend.File[] {
+		return this.find_files(pth, [".jcg"]);
 	}
 
 	find_pdf_files(pth: string = Config.path.pdf): JGCPSend.File[] {
-		const files = fs.readdirSync(pth);
-
-		const pdf_files: JGCPSend.File[] = [];
-
-		const check_pdf_file = /(?<name>.+)\.pdf$/;
-
-		files.forEach((f) => {
-			const file_regex = check_pdf_file.exec(f);
-
-			if (file_regex) {
-				const ff = path.join(pth, f);
-
-				const stat = fs.statSync(ff);
-
-				pdf_files.push({
-					name: file_regex?.groups["name"],
-					path: ff,
-					children: stat.isDirectory() ? this.find_pdf_files(ff) : undefined
-				});
-			}
-		});
-
-		return pdf_files;
+		return this.find_files(pth, [".pdf"]);
 	}
 
 	find_psalm_files(pth: string = Config.path.psalm): JGCPSend.File[] {
-		const files = fs.readdirSync(pth);
-
-		const psalm_files: JGCPSend.File[] = [];
-
-		const check_psalm_file = /(?<name>.+)\.psm$/;
-
-		files.forEach((f) => {
-			const file_regex = check_psalm_file.exec(f);
-
-			if (file_regex) {
-				const ff = path.join(pth, f);
-
-				const stat = fs.statSync(ff);
-
-				psalm_files.push({
-					name: file_regex?.groups["name"],
-					path: ff,
-					children: stat.isDirectory() ? this.find_psalm_files(ff) : undefined
-				});
-			}
-		});
-
-		return psalm_files;
+		return this.find_files(pth, [".psm"]);
 	}
 
 	get_item_data(type: JGCPRecv.GetItemData["type"], path: string): SongData | undefined {
