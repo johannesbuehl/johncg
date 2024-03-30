@@ -4,61 +4,94 @@
 			font-size: 0.8333vw;
 
 			overflow: hidden;
+
+			font-family: Ebrima;
 		}
-		
+
 		body {
 			margin: 0px;
 
 			background-color: transparent;
 
 			user-select: none;
-			cursor: pointer;
 		}
 
 		#main {
+			font-size: 4em;
+
 			position: absolute;
-			overflow: hidden;
-			height: 100%;
-
-			opacity: 0;
-			width: 0vw;
-			
-			transition: width 1s;
-		}
-
-		#main.show {
-			opacity: 1;
-
-			width: 100vw;
-		}
-
-		#main.stop {
-			transform: translateX(100%);
-
-			transition: transform 1s;
-		}
-
-		div#box {
-			background-color: white;
-
-			width: 100vw;
-			height: auto;
 
 			bottom: 0;
+			left: 0;
+
+			padding-left: 1em;
+			padding-bottom: 0.5em;
 
 			display: flex;
-			justify-content: center;
 
-			position: absolute;
+			align-items: center;
+
+			transform: translate(0, 100%);
+
+			transition: transform 0.3s cubic-bezier(0.2, 0, 0.39, 0);
 		}
 
-		span#text {
-			font-family: "Ebrima";
-			font-size: 7.5rem;
-			color: black;
-			text-align: center;
+		#main.slide_in {
+			transform: unset;
 
-			padding: 0.5rem;
+			transition-timing-function: ease-in-out;
+		}
+
+		#icon {
+			font-size: 1.5em;
+
+			width: 1em;
+
+			background-color: white;
+
+			padding: 0.375em;
+
+			border-radius: 50%;
+
+			z-index: 10;
+		}
+
+		#icon > svg {
+			aspect-ratio: 1;
+		}
+
+		#text_wrapper {
+			overflow: hidden;
+
+			z-index: 0;
+
+			width: 0em;
+
+			transition: width 0.5s ease-in-out;
+
+			transform: translate(-1.5em, 0);
+
+			background-color: white;
+
+			border-top-right-radius: 0.5em;
+			border-bottom-right-radius: 0.5em;
+		}
+		
+		#text_wrapper.show {
+			width: 100%;
+
+			transition: width 0.5s ease-out;
+		}
+		
+		#text {
+			padding: 0.25em;
+
+			padding-left: 1.5em;
+			padding-right: 0.5em;
+
+			text-wrap: nowrap;
+
+			overflow: hidden;
 		}
 	</style>
 	<!-- ------------------------------------------------------------------- -->
@@ -70,11 +103,15 @@
 	<!-- ------------------------------------------------------------------- -->
 	<body>
 		<div id="main">
-			<div id="box">
-				<span id="text"></span>
+			<div id="icon">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- !Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc. --><path d="M96 0C43 0 0 43 0 96V416c0 53 43 96 96 96H384h32c17.7 0 32-14.3 32-32s-14.3-32-32-32V384c17.7 0 32-14.3 32-32V32c0-17.7-14.3-32-32-32H384 96zm0 384H352v64H96c-17.7 0-32-14.3-32-32s14.3-32 32-32zM208 80c0-8.8 7.2-16 16-16h32c8.8 0 16 7.2 16 16v48h48c8.8 0 16 7.2 16 16v32c0 8.8-7.2 16-16 16H272V304c0 8.8-7.2 16-16 16H224c-8.8 0-16-7.2-16-16V192H160c-8.8 0-16-7.2-16-16V144c0-8.8 7.2-16 16-16h48V80z"/></svg>
+			</div>
+			<div>
+				<div id="text_wrapper">
+					<div id="text"></div>
+				</div>
 			</div>
 		</div>
 	</body>
-	<!-- ------------------------------------------------------------------- -->
 	<script src="Bible.js"></script>
 </html>

@@ -36,10 +36,10 @@
 		() => props.template?.data,
 		(data) => {
 			if (template_ref.value !== undefined) {
-				const contentWindows: CasparCGTemplate = template_ref.value
+				const contentWindow: CasparCGTemplate = template_ref.value
 					.contentWindow as CasparCGTemplate;
 
-				contentWindows.update(JSON.stringify({ ...data, mute_transition: true }));
+				contentWindow.update(JSON.stringify({ ...data, mute_transition: true }));
 			}
 		}
 	);

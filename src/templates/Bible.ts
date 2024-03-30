@@ -1,5 +1,7 @@
 import type { BibleJSON } from "../server/PlaylistItems/Bible";
 
+let mute_transition: boolean = false;
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(str_args: string) {
 	let json_args: BibleJSON;
@@ -12,34 +14,71 @@ function update(str_args: string) {
 	}
 
 	if (json_args.text !== undefined) {
-		document.getElementById("text").innerHTML = json_args.text;
+		document.querySelector("#text").innerHTML = json_args.text;
 	}
 
-	if (json_args.mute_transition) {
-		document.querySelector<HTMLDivElement>("div#main").style.transition = "none";
+	mute_transition = json_args.mute_transition;
+
+	if (mute_transition === true) {
+		document.querySelectorAll("*").forEach((ele: HTMLElement) => {
+			ele.style.transition = "unset";
+		});
 	}
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function play() {
 	const main = document.querySelector("#main");
-	main.classList.add("show");
+	const text = document.querySelector("#text_wrapper");
+
+	const show_text = () => {
+		const remove_listeners = () => {
+			main.removeEventListener("transitionend", show_text);
+			text.removeEventListener("transitionend", remove_listeners);
+		};
+
+		text.addEventListener("transitionend", remove_listeners);
+
+		setTimeout(() => {
+			text.classList.add("show");
+		}, 250);
+	};
+
+	if (mute_transition) {
+		text.classList.add("show", "slide_out");
+	} else {
+		main.addEventListener("transitionend", show_text);
+	}
+
+	main.classList.add("slide_in");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stop() {
+	const text_wrapper = document.querySelector("#text_wrapper");
 	const main = document.querySelector("#main");
 
-	main.classList.add("stop");
+	const slide_out = () => {
+		text_wrapper.removeEventListener("transitionend", slide_out);
 
-	const reset_after_stop = () => {
-		main.classList.remove("show");
-		main.classList.remove("stop");
+		setTimeout(() => {
+			const reset = () => {
+				main.removeEventListener("transitionend", reset);
+			};
 
-		main.removeEventListener("transitionend", reset_after_stop);
+			main.addEventListener("transitionend", reset);
+
+			main.classList.remove("slide_in");
+		}, 500);
 	};
 
-	main.addEventListener("transitionend", reset_after_stop);
+	if (mute_transition) {
+		main.classList.remove("slide_in");
+	} else {
+		text_wrapper.addEventListener("transitionend", slide_out);
+	}
+
+	text_wrapper.classList.remove("show");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

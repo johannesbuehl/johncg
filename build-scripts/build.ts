@@ -59,21 +59,12 @@ fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_fi
 copy_release_file(path.join(build_dir, exec_name));
 copy_release_file(path.join(build_dir, "main.js"));
 copy_release_dir("Bibles");
-
-copy_release_dir("casparcg/Templates", undefined, { filter: (src) => {
-	switch (true) {
-		case path.basename(src) === ".eslintrc":
-		case [".map"].includes(path.extname(src)):
-			return false;
-		default:
-			return true;
-	}
-} });
 copy_release_dir(path.join(build_dir, "client"));
 const copy_module = (name: string) => {
 	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
 
 };
+copy_release_dir(path.join(build_dir, "Templates"));
 copy_module("@img");
 copy_module("canvas");
 copy_module("pdfjs-dist");

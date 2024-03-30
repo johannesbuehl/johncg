@@ -77,14 +77,14 @@
 			@update="update_item"
 		/>
 		<EditBible
-			v-if="item_props?.type === 'bible'"
+			v-else-if="item_props?.type === 'bible'"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:bible="bible"
 			@update="update_item"
 		/>
 		<EditTemplate
-			v-if="item_props?.type === 'template'"
+			v-else-if="item_props?.type === 'template'"
 			v-model:item_props="item_props"
 			@update="update_item"
 		/>

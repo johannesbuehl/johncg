@@ -30,11 +30,11 @@
 	}
 
 	function template_loaded(template_object: HTMLObjectElement, index: number) {
-		const contentWindows: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
+		const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
 
-		contentWindows.update(JSON.stringify({ ...props.template?.data, mute_transition: true }));
-		contentWindows.jump(index); // add slide_index
-		contentWindows.play();
+		contentWindow.update(JSON.stringify({ ...props.template?.data, mute_transition: true }));
+		contentWindow.jump(index); // add slide_index
+		contentWindow.play();
 	}
 </script>
 

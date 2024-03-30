@@ -16,6 +16,13 @@
 			"label": "templates-watch"
 		},
 		{
+			"type": "npm",
+			"script": "templates-build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "templates-build"
+		},
+		{
 			"type": "typescript",
 			"tsconfig": "src/server/tsconfig.json",
 			"problemMatcher": [

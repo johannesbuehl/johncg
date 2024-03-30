@@ -22,10 +22,10 @@
 	}
 
 	function template_loaded(template_object: HTMLObjectElement) {
-		const contentWindows: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
+		const contentWindow: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
 
-		contentWindows.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
-		contentWindows.play();
+		contentWindow.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
+		contentWindow.play();
 	}
 </script>
 
