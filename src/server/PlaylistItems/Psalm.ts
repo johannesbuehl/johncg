@@ -51,9 +51,7 @@ export default class Psalm extends PlaylistItemBase {
 
 		const psalm_content = this.psalm_file;
 
-		if (psalm_content !== false) {
-			this.slide_count = psalm_content.text.length;
-		} else {
+		if (psalm_content === false) {
 			this.is_selectable = false;
 		}
 	}
@@ -178,7 +176,7 @@ export default class Psalm extends PlaylistItemBase {
 	}
 
 	get media(): string {
-		return "#00000000";
+		return "JOHNCG/PSALM";
 	}
 
 	get loop(): boolean {
@@ -204,6 +202,10 @@ export default class Psalm extends PlaylistItemBase {
 				throw e;
 			}
 		}
+
+		const psalm_content = this.validate_psalm_file(psalm_content_string);
+
+		this.slide_count = psalm_content !== false ? psalm_content.text.length : 0;
 
 		return this.validate_psalm_file(psalm_content_string);
 	}

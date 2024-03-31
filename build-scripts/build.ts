@@ -65,6 +65,7 @@ const copy_module = (name: string) => {
 
 };
 copy_release_dir(path.join(build_dir, "Templates"));
+copy_release_dir("casparcg/Media");
 copy_module("@img");
 copy_module("canvas");
 copy_module("pdfjs-dist");

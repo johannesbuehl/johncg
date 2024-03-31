@@ -48,6 +48,7 @@
 			<ItemSlide
 				v-for="(_media, index) in slides.template.data.data?.text"
 				:key="index"
+				:media="slides.media"
 				:template="slides.template"
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"

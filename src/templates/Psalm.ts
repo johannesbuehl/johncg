@@ -141,11 +141,15 @@ function create_slide(title_data: PsalmTemplateData["data"]["metadata"], slide_d
 	div_title_caption.classList.add("caption");
 	div_title_caption.innerText = title_data.caption;
 
-	const div_title_id = document.createElement("div");
-	div_title_id.classList.add("id");
-	div_title_id.innerText = title_data.id;
+	div_title.append(div_title_caption);
 
-	div_title.append(div_title_caption, div_title_id);
+	if (title_data.id !== undefined) {
+		const div_title_id = document.createElement("div");
+		div_title_id.classList.add("id");
+		div_title_id.innerText = title_data.id;
+
+		div_title.append(div_title_id);
+	}
 
 	const div_content = document.createElement("div");
 	div_content.classList.add("slide");
@@ -175,42 +179,3 @@ function create_slide(title_data: PsalmTemplateData["data"]["metadata"], slide_d
 
 	return div_slide;
 }
-
-update(
-	JSON.stringify({
-		slide: 0,
-		data: {
-			metadata: {
-				caption: "Psalm 22",
-				id: "EG 709.1",
-				book: "Evangelisches Gesangsbuch",
-				indent: true
-			},
-			text: [
-				[
-					[
-						"Mein Gott, mein Gott, warum hast du mich verlassen?",
-						"Ich schreie, aber meine Hilfe ist ferne."
-					],
-					[
-						"Mein Gott, des Tages rufe ich, doch antwortest du nicht,",
-						"und des Nachts, doch finde ich keine Ruhe."
-					],
-					["Du aber bist heilig,", "der du thronst über den Lobgesängen Israels."],
-					["Unsere Väter hofften auf dich;", "und da sie hofften, halfst du ihnen heraus."],
-					[
-						"Zu dir schrien sie und wurden errettet,",
-						"sie hofften auf dich und wurden nicht zuschanden."
-					]
-				],
-				[
-					["Sei nicht ferne von mir, denn Angst ist nahe;", "denn es ist hier kein Helfer."],
-					["Aber du, Herr, sei nicht ferne;", "meine Stärke, eile, mir zu helfen!"]
-				]
-			]
-		}
-	})
-);
-
-play();
-jump(2);

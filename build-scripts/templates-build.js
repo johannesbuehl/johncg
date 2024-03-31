@@ -6,8 +6,7 @@ esbuild.build({
 	entryPoints: ["./src/templates/*.ts"],
 	outdir: "./dist/build/Templates/JohnCG/",
 	tsconfig: "./src/templates/tsconfig.json",
-	target: "chrome117",
-	minify: true
+	target: "chrome117"
 });
 
 fs.cpSync("casparcg/Templates", "dist/build/Templates", { recursive: true, filter: (src) => {
