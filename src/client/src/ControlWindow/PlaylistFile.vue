@@ -1,18 +1,18 @@
 <script setup lang="ts">
 	import { onMounted } from "vue";
 
-	import FileDialogue from "./FileDialogue/FileDialogue.vue";
+	import FileItem from "./FileDialogue/FileItem.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { File } from "@server/search_part";
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files: JGCPSend.File[];
+		files: File[];
 	}>();
 
 	onMounted(() => {
-		const message: JGCPRecv.GetPlaylistTree = {
+		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
 			type: "playlist"
 		};
@@ -20,7 +20,7 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function open_playlist(playlist: JGCPSend.File) {
+	function open_playlist(playlist: File) {
 		const message: JGCPRecv.OpenPlaylist = {
 			command: "open_playlist",
 			playlist: playlist.path
@@ -33,7 +33,7 @@
 <template>
 	<div class="playlist_file_wrapper">
 		<div id="file_structure_container">
-			<FileDialogue :root="true" :files="files" @choose="open_playlist" />
+			<FileItem :root="true" :files="files" @choose="open_playlist" />
 		</div>
 	</div>
 </template>

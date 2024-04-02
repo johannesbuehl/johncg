@@ -29,8 +29,7 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		search_results?: JGCPSend.SearchResults;
-		files: Record<JGCPSend.ItemTree["type"], JGCPSend.File[]>;
+		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		bible?: BibleFile;
 		mode: ControlWindowState;
 	}>();
@@ -58,6 +57,15 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
+
+	function get_files(type: JGCPRecv.GetItemFiles["type"]) {
+		const message: JGCPRecv.GetItemFiles = {
+			command: "get_item_files",
+			type
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
@@ -71,17 +79,40 @@
 				v-model="pick"
 			/>
 		</div>
-		<AddSong
-			v-if="pick === 'song'"
-			:ws="ws"
-			:search_results="search_results?.type === 'song' ? search_results : undefined"
-			@add="add_item"
-		/>
-		<AddPsalm v-if="pick === 'psalm'" :files="files[pick]" :ws="ws" @add="add_item" />
-		<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
-		<AddMedia v-if="pick === 'media'" :files="files[pick]" :ws="ws" @add="add_item" />
-		<AddTemplate v-if="pick === 'template'" :files="files[pick]" :ws="ws" @add="add_item" />
-		<AddPDF v-if="pick === 'pdf'" :files="files[pick]" :ws="ws" @add="add_item" />
+		<template v-if="files !== undefined">
+			<AddSong
+				v-if="pick === 'song'"
+				:files="files[pick]"
+				@add="add_item"
+				@refresh="get_files(pick)"
+			/>
+			<AddPsalm
+				v-if="pick === 'psalm'"
+				:files="files[pick]"
+				@add="add_item"
+				@refresh="get_files(pick)"
+			/>
+			<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
+			<AddMedia
+				v-if="pick === 'media'"
+				:files="files[pick]"
+				@add="add_item"
+				@refresh="get_files(pick)"
+			/>
+			<AddTemplate
+				v-if="pick === 'template'"
+				:files="files[pick]"
+				@add="add_item"
+				@refresh="get_files(pick)"
+			/>
+			<AddPDF
+				v-if="pick === 'pdf'"
+				:files="files[pick]"
+				@add="add_item"
+				@refresh="get_files(pick)"
+			/>
+			<!-- <AddPDF v-if="pick === 'pdf'" :files="files[pick]" :ws="ws" @add="add_item" /> -->
+		</template>
 	</div>
 </template>
 

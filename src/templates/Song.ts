@@ -134,11 +134,12 @@ function clamp_slide_counter(counter_raw: number) {
 function resize_slides() {
 	// get the highest width
 	const max_width = get_max_width();
+	const max_height = get_max_height();
 
 	// get the width of the container
-	const active_slide = document.querySelector("#slide_active");
+	const active_slide = document.querySelector<HTMLDivElement>("div#slide_active");
 
-	resize_slides_text(max_width, active_slide?.clientWidth ?? 0);
+	resize_slides_text(max_width, max_height, active_slide);
 }
 
 // get the width of the widest slide
@@ -156,6 +157,22 @@ function get_max_width() {
 	}
 
 	return max_width;
+}
+
+function get_max_height() {
+	let max_height = 0;
+
+	// get the width of the individual slides and store the biggest one
+	for (let ii = 0; ii < slide_count; ii++) {
+		const slide = document.querySelector<HTMLDivElement>(`div#storage [data-slide='${ii}']`);
+
+		if (slide?.querySelector<HTMLDivElement>("div.lyric") !== undefined) {
+			const current_width = slide.clientHeight;
+			max_height = Math.max(current_width, max_height);
+		}
+	}
+
+	return max_height;
 }
 
 function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
@@ -225,9 +242,12 @@ function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
 	}
 }
 
-function resize_slides_text(max_width: number, container_width: number) {
+function resize_slides_text(max_width: number, max_height: number, container: HTMLElement) {
+	const width_ratio = container.clientWidth / max_width;
+	const height_ratio = container.clientHeight / max_height;
+
 	// change the font size by the size difference ratio
 	document.querySelectorAll<HTMLDivElement>("div.slide.lyric").forEach((ele) => {
-		ele.style.fontSize = `${container_width / max_width}em`;
+		ele.style.fontSize = `${Math.min(width_ratio, height_ratio)}em`;
 	});
 }

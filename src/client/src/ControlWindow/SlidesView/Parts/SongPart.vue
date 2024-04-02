@@ -83,7 +83,7 @@
 
 <template>
 	<template v-for="(part, part_index) in slides.template?.data.parts">
-		<div class="slide_part" v-if="part.type === 'title'">
+		<div class="slides_wrapper" v-if="part.type === 'title'">
 			<div
 				class="header"
 				:class="{
@@ -93,9 +93,9 @@
 			>
 				{{ slides.caption }}
 			</div>
-			<div class="slides_wrapper">
+			<div class="thumbnails">
 				<ItemSlide
-					:key="`${slides.template}_${part_index}_${0}`"
+					:key="`${JSON.stringify(slides.template)}_${part_index}_${0}`"
 					:media="slides.media"
 					:template="slides.template"
 					:aspect_ratio="aspect_ratio"
@@ -106,7 +106,7 @@
 				/>
 			</div>
 		</div>
-		<div class="slide_part" v-if="part.type === 'lyric'">
+		<div class="slides_wrapper" v-if="part.type === 'lyric'">
 			<div
 				class="header"
 				:class="{
@@ -116,10 +116,10 @@
 			>
 				{{ part.part }}
 			</div>
-			<div class="slides_wrapper">
+			<div class="thumbnails">
 				<ItemSlide
 					v-for="(_, slide_index) in part?.slides"
-					:key="`${slides.template}_${part_index}_${slide_index}`"
+					:key="`${JSON.stringify(slides.template)}_${part_index}_${slide_index}`"
 					:media="slides.media"
 					:template="slides.template"
 					:aspect_ratio="aspect_ratio"
@@ -134,11 +134,8 @@
 </template>
 
 <style scoped>
-	.slide_part {
+	.slides_wrapper {
 		border-radius: inherit;
-		overflow: visible;
-
-		display: inline-block;
 	}
 
 	.header {
@@ -162,14 +159,11 @@
 		background-color: var(--color-active);
 	}
 
-	.slides_wrapper {
+	.thumbnails {
+		padding: 0.25rem;
+
 		display: flex;
 		flex-wrap: wrap;
-
-		align-items: center;
-
-		padding: 0.25rem;
-		/* padding-inline: 0.125rem; */
-		gap: 0.25rem;
+		gap: 0.375rem;
 	}
 </style>

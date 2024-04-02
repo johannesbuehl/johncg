@@ -11,16 +11,18 @@
 </script>
 
 <template>
-	<JsonEditorPlugin
-		v-model:json="content"
-		:indentation="'\t'"
-		:tab-size="4"
-		:read-only="false"
-		:navigation-bar="false"
-		:dark-theme="true"
-		:full-width-button="false"
-		@update:json="emit('update')"
-	/>
+	<div id="json_editor_wrapper">
+		<JsonEditorPlugin
+			v-model:json="content"
+			:indentation="'\t'"
+			:tab-size="4"
+			:read-only="false"
+			:navigation-bar="false"
+			:dark-theme="true"
+			:full-width-button="false"
+			@update:json="emit('update')"
+		/>
+	</div>
 </template>
 
 <style scoped>
@@ -32,8 +34,18 @@
 	}
 </style>
 
-<style>
-	.vue-ts-json-editor * {
+<style scoped>
+	#json_editor_wrapper {
+		flex: 1;
+
+		display: flex;
+	}
+
+	#json_editor_wrapper:deep(*) {
+		overflow: visible;
+	}
+
+	:deep(.vue-ts-json-editor *) {
 		overflow: visible;
 
 		--jse-theme-color: var(--color-container);
@@ -53,36 +65,36 @@
 		--jse-button-primary-background: var(--color-item);
 	}
 
-	.jse-value:not(.jse-boolean) {
+	:deep(.jse-value:not(.jse-boolean)) {
 		padding-left: 0 !important;
 	}
 
-	.jse-separator {
+	:deep(.jse-separator) {
 		margin-right: 0.5rem;
 	}
 
-	.jse-contents,
-	.jse-table-mode-welcome {
+	:deep(.jse-contents),
+	:deep(.jse-table-mode-welcome) {
 		border: none !important;
 	}
 
-	.jse-contextmenu > * > .jse-tip {
+	:deep(.jse-contextmenu > * > .jse-tip) {
 		display: none !important;
 	}
 
-	.jse-menu {
+	:deep(.jse-menu) {
 		align-items: center !important;
 	}
 
-	.jse-menu > .jse-separator {
+	:deep(.jse-menu > .jse-separator) {
 		height: 100%;
 	}
 
-	.jse-button {
+	:deep(.jse-button) {
 		padding: 1rem !important;
 	}
 
-	.jse-button.jse-group-button {
+	:deep(.jse-button.jse-group-button) {
 		color: var(--color-text) !important;
 
 		background-color: var(--color-item) !important;
@@ -93,7 +105,7 @@
 		margin-inline: 0.125rem !important;
 	}
 
-	.jse-button.jse-group-button.jse-selected {
+	:deep(.jse-button.jse-group-button.jse-selected) {
 		background-color: var(--color-active) !important;
 	}
 </style>

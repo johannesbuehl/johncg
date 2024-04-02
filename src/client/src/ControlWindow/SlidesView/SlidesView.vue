@@ -83,10 +83,10 @@
 		overflow: auto;
 
 		flex: 1;
+		display: flex;
+		flex-wrap: wrap;
+		align-content: flex-start;
 
-		/* display: flex;
-	flex-wrap: wrap;
-	align-content: flex-start;
-	gap: 0.5rem; */
+		gap: 0.5rem;
 	}
 </style>

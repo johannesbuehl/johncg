@@ -121,12 +121,11 @@
 		<Draggable
 			id="playlist"
 			:list="playlist?.playlist_items"
-			:group="{ name: 'playlist', pull: false, put: true }"
+			:group="{ name: 'playlist', pull: false }"
 			item-key="item"
 			animation="150"
 			easing="cubic-bezier(1, 0, 0, 1)"
 			ghostClass="dragged_ghost"
-			fallbackClass="dragged"
 			@end="on_end"
 			@change="on_change"
 		>

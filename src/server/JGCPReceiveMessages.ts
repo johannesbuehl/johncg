@@ -65,24 +65,9 @@ export interface MovePlaylistItem extends Base {
 	to: number;
 }
 
-export interface RenewSearchIndex extends Base {
-	command: "renew_search_index";
-	type: "song" | "psalm" | "bible" | "text" | "media" | "template" | "pdf" | "countdown";
-}
-
-export interface SearchItem extends Base {
-	command: "search_item";
-	type: "song";
-	search: {
-		title?: string;
-		id?: string;
-		text?: string;
-	};
-}
-
 export interface GetItemFiles extends Base {
 	command: "get_item_files";
-	type: "media" | "template" | "playlist" | "pdf" | "psalm";
+	type: "song" | "media" | "template" | "playlist" | "pdf" | "psalm";
 }
 
 export interface GetBible extends Base {
@@ -123,8 +108,6 @@ export type Message =
 	| Navigate
 	| SelectItemSlide
 	| MovePlaylistItem
-	| RenewSearchIndex
-	| SearchItem
 	| AddItem
 	| UpdateItem
 	| DeleteItem

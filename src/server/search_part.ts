@@ -2,89 +2,59 @@ import path from "path";
 import fs from "fs";
 
 import * as JGCPRecv from "./JGCPReceiveMessages";
-import * as JGCPSend from "./JGCPSendMessages";
 
 import Config, { get_song_path } from "./config";
-import SongFile, { SongParts } from "./PlaylistItems/SongFile";
+import SngFile, { SongParts } from "./PlaylistItems/SongFile";
+import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
+import { CasparCGConnection } from "./control";
 
-export interface SongData {
-	file: string;
-	title: string[];
-	id: string;
-	text: SongParts;
-	parts: {
-		available: string[];
-		default: string[];
+export interface File {
+	name: string;
+	path: string;
+	children?: File[];
+}
+
+export interface SongFile extends File {
+	data?: {
+		id?: string;
+		title?: string[];
+		text?: SongParts;
+		parts: {
+			available: string[];
+			default: string[];
+		};
 	};
 }
 
-interface SongIndexData {
-	song: SongFile;
-	search_values: {
-		title: string[];
-		id: string;
-		text: string;
+export interface PsalmFile extends File {
+	data?: {
+		id?: string;
+		title?: string;
 	};
-	result_values: SongData;
 }
+
+export type MediaFile = File;
+export type TemplateFile = File;
+export type PDFFile = File;
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
+export type ItemFile = SongFile | PsalmFile | MediaFile | TemplateFile | PDFFile;
 
 export default class SearchPart {
-	private song_index: SongIndexData[] = [];
+	private casparcg_connections: CasparCGConnection[];
 
-	renew_search_index(type: JGCPRecv.RenewSearchIndex["type"]): boolean {
-		switch (type) {
-			case "song":
-				this.create_song_search_index();
-				break;
-			default:
-				return false;
-		}
-
-		return true;
+	constructor(casparcg_connections: CasparCGConnection[]) {
+		this.casparcg_connections = casparcg_connections;
 	}
 
-	private find_sng_files(pth: string): string[] {
-		const files = fs.readdirSync(pth);
+	create_song_file(f: File): SongFile {
+		const song = new SngFile(get_song_path(f.path));
 
-		const song_files: string[] = [];
-
-		files.forEach((f) => {
-			const ff = path.join(pth, f);
-
-			const stat = fs.statSync(ff);
-			if (stat.isDirectory()) {
-				song_files.push(...this.find_sng_files(ff));
-			} else if (path.extname(ff) === ".sng") {
-				song_files.push(path.relative(Config.path.song, path.join(pth, f)));
-			}
-		});
-
-		return song_files;
-	}
-
-	private create_song_data(path: string): SongIndexData {
-		const song = new SongFile(get_song_path(path));
-
-		const song_value: SongIndexData = {
-			song,
-			search_values: {
-				title: song.metadata.Title.map((tt) => tt?.toLowerCase()),
-				id: song.metadata.ChurchSongID?.toLowerCase(),
-				text: Object.values(song.text)
-					.map((part) =>
-						part
-							.map((slide) => {
-								return slide.map((line) => line.join("\n")).join("\n");
-							})
-							.join(" ")
-					)
-					.join("\n")
-			},
-			result_values: {
-				file: path,
+		const song_value: SongFile = {
+			...f,
+			data: {
 				title: song.metadata.Title,
+				id: song.metadata.ChurchSongID?.toLowerCase(),
 				text: song.all_parts,
-				id: song.metadata.ChurchSongID,
 				parts: {
 					available: song.avaliable_parts,
 					default: song.metadata.VerseOrder
@@ -99,40 +69,29 @@ export default class SearchPart {
 			});
 		});
 
-		song_value.result_values.text = song.all_parts;
-		song_value.search_values.text = this_song_text.join(" ").replace("\n", " ").toLowerCase();
-
 		return song_value;
 	}
 
-	private create_song_search_index() {
-		const song_files = this.find_sng_files(Config.path.song);
+	create_psalm_file(f: File): PsalmFile {
+		const psalm = JSON.parse(fs.readFileSync(f.path, "utf-8")) as PsmFile;
 
-		this.song_index = song_files.map((file_path) => this.create_song_data(file_path));
-	}
-
-	search_song(search: JGCPRecv.SearchItem["search"]): SongData[] {
-		const results: SongData[] = [];
-
-		this.song_index.forEach((song_index) => {
-			const { search_values } = song_index;
-
-			if (
-				search_values.title?.findIndex((tt) => tt.includes(search.title)) >= 0 &&
-				(search_values.id ?? "").includes(search.id) &&
-				(search_values.text ?? "").includes(search.text)
-			) {
-				results.push(song_index.result_values);
+		return {
+			...f,
+			data: {
+				title: psalm.metadata.caption.toLowerCase(),
+				id: psalm.metadata.id?.toLowerCase()
 			}
-		});
-
-		return results;
+		};
 	}
 
-	find_files(pth: string, extensions: string[]): JGCPSend.File[] {
+	find_files<T extends File>(
+		pth: string,
+		extensions: string[],
+		file_converter?: (f: File) => T
+	): (File | T)[] {
 		const files = fs.readdirSync(pth);
 
-		const result_files: JGCPSend.File[] = [];
+		const result_files: (File | T)[] = [];
 
 		const check_file = new RegExp(
 			`^(?<name>.+)(?<extension>${extensions.join("|").replaceAll(".", "\\.")})$`
@@ -144,40 +103,53 @@ export default class SearchPart {
 			const directory = fs.statSync(ff).isDirectory();
 
 			if (directory || file_regex) {
-				if (file_regex === null) {
-					console.debug(ff);
-				}
-
-				result_files.push({
+				const file_result: File = {
 					name: directory ? f : file_regex?.groups["name"],
 					path: ff,
-					children: directory ? this.find_files(ff, extensions) : undefined
-				});
+					children: directory ? this.find_files(ff, extensions, file_converter) : undefined
+				};
+
+				result_files.push(
+					!directory && file_converter !== undefined ? file_converter(file_result) : file_result
+				);
 			}
 		});
 
 		return result_files;
 	}
 
-	find_jcg_files(pth: string = Config.path.playlist): JGCPSend.File[] {
+	find_sng_files(pth: string = Config.path.song): SongFile[] {
+		return this.find_files(pth, [".sng"], (f) => this.create_song_file(f));
+	}
+
+	find_jcg_files(pth: string = Config.path.playlist): File[] {
 		return this.find_files(pth, [".jcg"]);
 	}
 
-	find_pdf_files(pth: string = Config.path.pdf): JGCPSend.File[] {
+	find_pdf_files(pth: string = Config.path.pdf): PsalmFile[] {
 		return this.find_files(pth, [".pdf"]);
 	}
 
-	find_psalm_files(pth: string = Config.path.psalm): JGCPSend.File[] {
-		return this.find_files(pth, [".psm"]);
+	find_psalm_files(pth: string = Config.path.psalm): PsalmFile[] {
+		return this.find_files(pth, [".psm"], (f) => this.create_psalm_file(f));
 	}
 
-	get_item_data(type: JGCPRecv.GetItemData["type"], path: string): SongData | undefined {
+	get_casparcg_media(): File[] {
+		return build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+	}
+
+	get_casparcg_template(): File[] {
+		return build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
+	}
+
+	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
+		const item_file = this.get_item_file(type, path);
+
 		switch (type) {
 			case "song": {
 				try {
-					return this.create_song_data(path).result_values;
+					return this.create_song_file(item_file);
 				} catch (e) {
-					// if the error is because the file doesn't exist, skip the rest of the loop iteration
 					if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 						console.error(`song '${path}' does not exist`);
 
@@ -189,4 +161,40 @@ export default class SearchPart {
 			}
 		}
 	}
+}
+
+function build_files(media_array: string[][], root?: string): File[] {
+	const media_object: File[] = [];
+
+	const temp_object: Record<string, string[][]> = {};
+
+	media_array.forEach((m) => {
+		if (typeof m === "string") {
+			temp_object[m] = m;
+		} else {
+			const key = m.shift();
+
+			if (key !== undefined) {
+				if (temp_object[key] === undefined) {
+					temp_object[key] = [];
+				}
+
+				if (m.length !== 0) {
+					temp_object[key].push(m);
+				}
+			}
+		}
+	});
+
+	Object.entries(temp_object).forEach(([key, files]) => {
+		const file_path = (root ? root + "/" : "") + key;
+
+		media_object.push({
+			name: key,
+			path: file_path,
+			children: files.length !== 0 ? build_files(files, file_path) : undefined
+		});
+	});
+
+	return media_object;
 }

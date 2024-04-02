@@ -19,6 +19,7 @@ export default defineConfig(({ command }) => ({
 	server: {
 		host: true
 	},
+
 	publicDir: command === "build" ? false : "../../casparcg",
 	root: "src/client",
 	resolve: {

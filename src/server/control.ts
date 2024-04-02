@@ -18,7 +18,7 @@ import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 import type { CasparCGConnectionSettings } from "./config.ts";
 
 import Config from "./config.ts";
-import SearchPart from "./search_part.ts";
+import SearchPart, { ItemFile } from "./search_part.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 
@@ -89,10 +89,6 @@ export default class Control {
 			this.set_visibility(msg.visibility, msg.client_id, ws),
 		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
 			this.move_playlist_item(msg.from, msg.to, ws),
-		renew_search_index: (msg: JGCPRecv.RenewSearchIndex, ws: WebSocket) =>
-			this.renew_search_index(msg.type, ws),
-		search_item: (msg: JGCPRecv.SearchItem, ws: WebSocket) =>
-			this.search_item(msg.type, msg.search, ws),
 		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) =>
 			this.add_item(msg.props, msg.index, msg.set_active, ws),
 		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
@@ -212,7 +208,7 @@ export default class Control {
 			this.playlist.add_casparcg_connection(casparcg_connection);
 		});
 
-		this.search_part = new SearchPart();
+		this.search_part = new SearchPart(this.casparcg_connections);
 	}
 
 	private new_playlist(ws: WebSocket) {
@@ -462,46 +458,6 @@ export default class Control {
 		ws_send_response("playlist-item has been moved", true, ws);
 	}
 
-	private renew_search_index(type: JGCPRecv.RenewSearchIndex["type"], ws: WebSocket) {
-		if (typeof type !== "string") {
-			ws_send_response("type is invalid", false, ws);
-		}
-		if (!this.search_part.renew_search_index(type)) {
-			ws_send_response("type is invalid", false, ws);
-		}
-
-		ws_send_response(`search-index for type '${type}' has been renewed`, true, ws);
-	}
-
-	private search_item(
-		type: JGCPRecv.SearchItem["type"],
-		search_query: JGCPRecv.SearchItem["search"],
-		ws: WebSocket
-	) {
-		if (typeof search_query !== "object") {
-			ws_send_response("invalid search_query", false, ws);
-		}
-
-		let result;
-
-		switch (type) {
-			case "song":
-				result = this.search_part.search_song(search_query);
-				break;
-			default:
-				ws_send_response("invalid type", false, ws);
-				return;
-		}
-
-		const message: JGCPSend.SongSearchResults = {
-			command: "search_results",
-			type: type,
-			result
-		};
-
-		ws.send(JSON.stringify(message));
-	}
-
 	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
 		try {
 			this.playlist.add_item(props, set_active, index);
@@ -566,14 +522,17 @@ export default class Control {
 	}
 
 	private get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
-		let files: JGCPSend.File[];
+		let files: ItemFile[];
 
 		switch (type) {
 			case "media":
-				files = build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+				files = this.search_part.get_casparcg_media();
 				break;
 			case "template":
-				files = build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
+				files = this.search_part.get_casparcg_template();
+				break;
+			case "song":
+				files = this.search_part.find_sng_files();
 				break;
 			case "playlist":
 				files = this.search_part.find_jcg_files();
@@ -587,7 +546,7 @@ export default class Control {
 		}
 
 		if (files !== undefined) {
-			const message: JGCPSend.ItemTree = {
+			const message: JGCPSend.ItemFiles = {
 				command: "item_files",
 				type,
 				files
@@ -616,12 +575,12 @@ export default class Control {
 	}
 
 	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
-		const result = this.search_part.get_item_data(type, path);
+		const files = [this.search_part.get_item_file(type, path)];
 
-		const message: JGCPSend.SongSearchResults = {
-			command: "search_results",
+		const message: JGCPSend.ItemFiles = {
+			command: "item_files",
 			type: "song",
-			result: [result]
+			files
 		};
 
 		ws.send(JSON.stringify(message));
@@ -733,40 +692,4 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	};
 
 	ws?.send(JSON.stringify(response));
-}
-
-function build_files(media_array: string[][], root?: string): JGCPSend.File[] {
-	const media_object: JGCPSend.File[] = [];
-
-	const temp_object: Record<string, string[][]> = {};
-
-	media_array.forEach((m) => {
-		if (typeof m === "string") {
-			temp_object[m] = m;
-		} else {
-			const key = m.shift();
-
-			if (key !== undefined) {
-				if (temp_object[key] === undefined) {
-					temp_object[key] = [];
-				}
-
-				if (m.length !== 0) {
-					temp_object[key].push(m);
-				}
-			}
-		}
-	});
-
-	Object.entries(temp_object).forEach(([key, files]) => {
-		const file_path = (root ? root + "/" : "") + key;
-
-		media_object.push({
-			name: key,
-			path: file_path,
-			children: files.length !== 0 ? build_files(files, file_path) : undefined
-		});
-	});
-
-	return media_object;
 }

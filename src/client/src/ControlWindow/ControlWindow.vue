@@ -19,8 +19,7 @@
 		playlist?: JGCPSend.Playlist;
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
-		search_results?: JGCPSend.SearchResults;
-		files: Record<JGCPSend.ItemTree["type"], JGCPSend.File[]>;
+		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		bible_file?: BibleFile;
 		selected: number;
 	}>();
@@ -147,7 +146,6 @@
 		<AddPart
 			v-if="control_window_state === ControlWindowState.Add"
 			:ws="ws"
-			:search_results="search_results"
 			:files="files"
 			:bible="bible_file"
 			:mode="control_window_state"
@@ -156,7 +154,6 @@
 			v-if="control_window_state === ControlWindowState.Edit"
 			:item_props="playlist?.playlist_items[selected]"
 			:ws="ws"
-			:search_results="search_results"
 			:item_index="selected"
 			:bible="bible_file"
 		/>

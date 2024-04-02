@@ -53,20 +53,7 @@ export default class Song extends PlaylistItemBase {
 		this.is_selectable = this.validate_props(props);
 
 		if (this.selectable) {
-			try {
-				this.song_file = new SongFile(get_song_path(props.file));
-			} catch (e) {
-				// if the error is because the file doesn't exist, skip the rest of the loop iteration
-				if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-					console.error(`song '${props.file}' does not exist`);
-
-					this.is_selectable = false;
-
-					return;
-				} else {
-					throw e;
-				}
-			}
+			this.cache_song_file();
 
 			// add the title-slide to the counter
 			this.slide_count++;
@@ -239,6 +226,23 @@ export default class Song extends PlaylistItemBase {
 		template.data.slide = this.active_slide;
 
 		return template;
+	}
+
+	cache_song_file() {
+		try {
+			this.song_file = new SongFile(get_song_path(this.props.file));
+		} catch (e) {
+			// if the error is because the file doesn't exist, skip the rest of the loop iteration
+			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+				console.error(`song '${this.props.file}' does not exist`);
+
+				this.is_selectable = false;
+
+				return;
+			} else {
+				throw e;
+			}
+		}
 	}
 
 	private path_to_casparcg_media(media?: string): string {

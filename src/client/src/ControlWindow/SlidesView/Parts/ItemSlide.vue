@@ -75,6 +75,7 @@
 		/>
 		<object
 			v-if="template"
+			:key="JSON.stringify(template)"
 			ref="template_ref"
 			class="template"
 			:data="`Templates/${template?.template}.html`"

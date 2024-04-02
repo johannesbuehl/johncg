@@ -1,9 +1,9 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import { SongData } from "./search_part.ts";
 import PlaylistObject from "./PlaylistFile.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemFiles } from "./JGCPReceiveMessages.ts";
+import { File } from "./search_part.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -50,32 +50,22 @@ export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 export interface Clear extends Base {
 	command: "clear";
 }
-
-interface SearchResultsBase extends Base {
-	command: "search_results";
-}
-export interface SongSearchResults extends SearchResultsBase {
-	type: "song";
-	result: SongData[];
-}
-
-export type SearchResults = SongSearchResults;
-
 export interface PlaylistSave {
 	command: "playlist_save";
 	playlist: PlaylistObject;
 }
 
-export interface File {
-	name: string;
-	path: string;
-	children?: File[];
-}
+// export interface File {
+// 	name: string;
+// 	path: string;
+// 	children?: File[];
+// 	data?: unknown;
+// }
 
-export interface ItemTree {
+export interface ItemFiles {
 	command: "item_files";
-	files: File[];
 	type: GetItemFiles["type"];
+	files: File[];
 }
 
 export interface Bible {
@@ -92,7 +82,6 @@ export type Message =
 	| State
 	| ItemSlides
 	| Clear
-	| SearchResults
 	| PlaylistSave
-	| ItemTree
+	| ItemFiles
 	| Bible;

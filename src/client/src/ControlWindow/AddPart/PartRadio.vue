@@ -31,6 +31,10 @@
 		border-radius: 0.25rem;
 
 		cursor: pointer;
+
+		flex: 1;
+
+		text-align: center;
 	}
 
 	.add_part_radio:hover {

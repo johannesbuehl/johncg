@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, watch, type Ref, type VNodeRef } from "vue";
+	import { ref, type Ref, type VNodeRef } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -7,13 +7,13 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import type { SongData } from "@server/search_part";
+	import type { SongFile } from "@server/search_part";
 	import type { SongPart } from "@server/PlaylistItems/SongFile";
 
-	library.add(fas.faAdd, fas.faTrash, fas.faArrowsRotate, fas.faPlus, fas.faXmark, fas.faCheck);
+	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 
 	defineProps<{
-		song_data?: SongData;
+		song_file?: SongFile;
 	}>();
 
 	// currently selected song
@@ -88,9 +88,12 @@
 </script>
 
 <template>
-	<template v-if="song_data !== undefined">
+	<template v-if="song_file?.data !== undefined">
 		<div id="song_editor_wrapper">
-			<div v-if="selected_languages.length > 1" id="language_selector">
+			<div
+				v-if="song_file.data.title !== undefined && selected_languages.length > 1"
+				id="language_selector"
+			>
 				<div class="header">Languages</div>
 				<Draggable
 					id="language_wrapper"
@@ -100,7 +103,6 @@
 					easing="cubic-bezier(1, 0, 0, 1)"
 					ghostClass="dragged_ghost"
 					fallbackClass="dragged"
-					:group="{ name: 'song_part', pull: 'clone', put: 'false' }"
 				>
 					<template #item="{ element: [language_index, state], index }">
 						<div :class="{ active: state }" :id="language_index" @click="language_toggle(index)">
@@ -108,7 +110,7 @@
 								class="language_selected_icon"
 								:icon="['fas', state ? 'check' : 'xmark']"
 							/>
-							{{ song_data.title[language_index] }}
+							{{ song_file.data.title[language_index] }}
 						</div>
 					</template>
 				</Draggable>
@@ -120,8 +122,8 @@
 						id="result_text"
 						item-key="key"
 						tag="span"
-						:list="Object.entries(song_data.text)"
-						:group="{ name: 'song_part', pull: 'clone', put: 'false' }"
+						:list="Object.entries(song_file.data.text ?? {})"
+						:group="{ name: 'song_part', pull: 'clone', put: false }"
 						:clone="on_clone"
 						:sort="false"
 					>
@@ -137,10 +139,7 @@
 								<div class="song_slides_wrapper">
 									<div v-for="slide in part">
 										<div v-for="line in slide">
-											<div
-												class="song_language_line"
-												v-for="(lang, lang_index) in get_language_lines(line)"
-											>
+											<div class="song_language_line" v-for="lang in get_language_lines(line)">
 												{{ lang }}
 											</div>
 										</div>
@@ -154,7 +153,7 @@
 						text="Add Part"
 						@click="
 							selected_available_song_part !== undefined
-								? add_song_part(song_data.parts.available[selected_available_song_part])
+								? add_song_part(song_file.data.parts.available[selected_available_song_part])
 								: undefined
 						"
 					/>
@@ -302,6 +301,8 @@
 		gap: inherit;
 
 		overflow: auto;
+
+		overflow-x: hidden;
 	}
 
 	.song_part {
@@ -383,7 +384,7 @@
 		background-color: var(--color-active-hover) !important;
 	}
 
-	.dragging {
+	.dragging.song_part {
 		padding: 0;
 	}
 

@@ -9,7 +9,7 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		song_data?: JGCPSend.SongSearchResults;
+		song_data?: JGCPSend.SongFile;
 	}>();
 
 	const emit = defineEmits<{
@@ -87,7 +87,7 @@
 			v-if="song_data !== undefined"
 			v-model:selected_parts="verse_order"
 			v-model:selected_languages="languages"
-			:song_data="song_data.result[0]"
+			:song_file="song_data.result[0]"
 		/>
 	</div>
 </template>

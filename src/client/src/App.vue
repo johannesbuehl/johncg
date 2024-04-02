@@ -12,6 +12,7 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import type { File } from "@server/search_part";
 
 	const Config = {
 		client_server: {
@@ -32,12 +33,12 @@
 	const selected_item = ref<number>(-1);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
-	const search_results = defineModel<JGCPSend.SearchResults>("search_results");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Playlist
 	});
 
-	const files = ref<{ [key in JGCPSend.ItemTree["type"]]: JGCPSend.File[] }>({
+	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
+		song: [],
 		media: [],
 		pdf: [],
 		playlist: [],
@@ -123,7 +124,6 @@
 				item_slides: load_item_slides,
 				response: handle_ws_response,
 				clear: init,
-				search_results: handle_search_results,
 				playlist_save: save_playlist_file,
 				item_files: parse_item_files,
 				bible: parse_bible
@@ -202,10 +202,6 @@
 		item_slides.value = data;
 	}
 
-	function handle_search_results(data: JGCPSend.SearchResults) {
-		search_results.value = data;
-	}
-
 	function set_active_slide(item: number, slide: number) {
 		const message: JGCPRecv.SelectItemSlide = {
 			command: "select_item_slide",
@@ -232,7 +228,7 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function parse_item_files(data: JGCPSend.ItemTree) {
+	function parse_item_files(data: JGCPSend.ItemFiles) {
 		if (Object.keys(files.value).includes(data.type)) {
 			files.value[data.type] = data.files;
 		}
@@ -272,7 +268,6 @@
 			:playlist="playlist_items"
 			:slides="item_slides"
 			:active_item_slide="server_state.active_item_slide"
-			:search_results="search_results"
 			:selected="selected_item"
 			:files="files"
 			:bible_file="bible_file"

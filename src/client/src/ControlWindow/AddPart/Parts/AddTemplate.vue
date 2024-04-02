@@ -1,53 +1,63 @@
 <script setup lang="ts">
-	import { onMounted } from "vue";
+	import { onMounted, ref, watch } from "vue";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
-	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import FileDialogue, {
+		type SearchInputDefinitions
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import type { File } from "@server/JGCPSendMessages";
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
+	import type { TemplateFile } from "@server/search_part";
+	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
+	library.add(fas.faPlus);
 	const props = defineProps<{
-		files: JGCPSend.File[];
-		ws: WebSocket;
+		files: TemplateFile[];
 	}>();
 
-	const selection = defineModel<File>("selection");
-	const template_data = defineModel<object>({ default: {} });
+	const emit = defineEmits<{
+		add: [item_props: TemplateProps];
+		refresh: [];
+	}>();
 
-	onMounted(() => {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "template"
-		};
+	const selection = defineModel<TemplateFile>("selection", {});
+	const template_data = defineModel<object>("template_data", { default: {} });
 
-		props.ws.send(JSON.stringify(message));
+	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
+		default: [{ id: "name", placeholder: "Name", value: "" }]
 	});
 
-	function add_template(file: File | undefined, type: "dir" | "file") {
-		if (file && type === "file") {
-			const message: JGCPRecv.AddItem = {
-				command: "add_item",
-				props: {
-					type: "template",
-					caption: file.name,
-					color: "#008800",
-					template: {
-						template: file.path,
-						data: template_data.value
-					}
-				},
-				set_active: true
-			};
+	const file_tree = defineModel<TemplateFile[]>("file_tree");
 
-			props.ws.send(JSON.stringify(message));
+	onMounted(() => {
+		// init
+		refresh_search_index();
+
+		init_files();
+	});
+
+	watch(
+		() => props.files,
+		() => {
+			init_files();
+		}
+	);
+
+	function init_files() {
+		search_map = create_search_map();
+
+		search_template();
+	}
+
+	function add_tempalte(file?: TemplateFile, type?: "dir" | "file") {
+		if (file !== undefined && type === "file") {
+			emit("add", create_props(file));
 		}
 	}
 
-	function on_clone(file: File): TemplateProps {
+	function create_props(file: TemplateFile): TemplateProps {
 		return {
 			type: "template",
 			caption: file.name,
@@ -58,47 +68,99 @@
 			}
 		};
 	}
+
+	function search_template() {
+		file_tree.value = search_string();
+	}
+
+	type SearchMapFile = TemplateFile & {
+		children?: SearchMapFile[];
+		search_data?: { name: string };
+	};
+	let search_map: SearchMapFile[] = [];
+	function create_search_map(files: TemplateFile[] | undefined = props.files): SearchMapFile[] {
+		const return_map: SearchMapFile[] = [];
+
+		if (files !== undefined) {
+			files.forEach((f) => {
+				return_map.push({
+					...f,
+					search_data: {
+						name: f.name.toLowerCase()
+					},
+					children: f.children !== undefined ? create_search_map(f.children) : undefined
+				});
+			});
+		}
+
+		return return_map;
+	}
+
+	function search_string(files: SearchMapFile[] | undefined = search_map): TemplateFile[] {
+		const return_files: TemplateFile[] = [];
+
+		if (files !== undefined) {
+			files.forEach((f) => {
+				if (
+					search_strings.value.every((search_string) => {
+						if (f.search_data !== undefined) {
+							if (f.search_data[search_string.id] !== undefined) {
+								return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
+							} else {
+								console.debug("empty");
+
+								return search_string.value === "";
+							}
+						} else {
+							return true;
+						}
+					})
+				) {
+					return_files.push(f);
+				} else if (f.children !== undefined) {
+					const children = search_string(f.children);
+
+					if (children.length > 0) {
+						return_files.push({
+							...f,
+							children: search_string(f.children)
+						});
+					}
+				}
+			});
+		}
+
+		return return_files;
+	}
+
+	function refresh_search_index() {
+		emit("refresh");
+	}
 </script>
 
 <template>
-	<div class="add_media_wrapper">
-		<div class="file_view">
-			<FileDialogue
-				v-model="selection"
-				:files="files"
-				:root="true"
-				:clone_callback="on_clone"
-				@choose="add_template"
-			/>
-			<MenuButton
-				icon="plus"
-				text="Add Template"
-				@click="add_template(selection, selection?.children ? 'dir' : 'file')"
-			/>
-		</div>
-		<JSONEditor v-model="template_data" />
-	</div>
+	<FileDialogue
+		:files="file_tree"
+		:clone_callback="create_props"
+		name="Template"
+		v-model:selection="selection"
+		v-model:search_strings="search_strings"
+		@choose="add_tempalte"
+		@search="search_template"
+		@refresh_files="refresh_search_index"
+	>
+		<template v-slot:buttons>
+			<MenuButton icon="plus" text="Add Template" @click="add_tempalte(selection, 'file')" />
+		</template>
+		<template v-slot:edit>
+			<JSONEditor v-model="template_data" />
+		</template>
+	</FileDialogue>
 </template>
 
 <style scoped>
-	.add_media_wrapper {
+	.button {
 		flex: 1;
-
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-
-		gap: inherit;
-	}
-
-	.file_view {
-		background-color: var(--color-container);
-
-		overflow: auto;
-
-		display: flex;
-		flex-direction: column;
-
-		border-radius: 0.25rem;
 	}
 
 	.data_editor {

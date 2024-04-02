@@ -12,7 +12,7 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		search_results?: JGCPSend.SearchResults;
+		search_results?: JGCPSend.ItemFile;
 		item_index: number;
 		bible?: BibleFile;
 	}>();

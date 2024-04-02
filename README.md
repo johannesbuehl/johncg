@@ -4,11 +4,11 @@ Generate lyric-graphics and play them out through CasparCG.
 ## Requirements
 - CasparCG
 
-## Installation (WiP)
-- move the file `song.html` into your CasparCG template directory
+## Installation
+(WiP)
 
 ## roadmap
-- implement other playlist-items than song (Missing: Bible, Psalm, PowerPoint, Diashow / Multi-Image)
+- implement other playlist-items than song (Missing: Diashow / Multi-Image)
 - client: information about connection (active / reconnecting / ...)
 - companion integration (buttons for song parts -> send name to casparcg)
 - try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
@@ -18,16 +18,13 @@ Generate lyric-graphics and play them out through CasparCG.
 - client communication with osc over websocket?
 - add support for NodeCG
 - add CLI output to server
-- create dummy-playlist-items for unsupported ones
-- disable buttons, when no playlist is loaded
 - implement all countdown modes
 - countdown: save in server wether it is finished
 - client-messages: create message-log, group same
-- build-script in node / integrate with license-generator
-- command-comment: define commands / names which get loaded straight from the start and can be shown anytime
 - fix "Buffer() is deprecated"
 - catch casparcg not running
 - create playlist-summarys or lyrics-sheets through pandoc
 - load files from disc always at item selection to stay up to date
-- add functions to Config.ts (get_song_path, get_template_path, ...)
-- PDF.ts: create_thumbnail: resize to casparcg-thumbnail resolution
+- create server-items at selection, delete after deselection to always stay up to date, but prevent multiple reloads (alternative: optional argument for accessing functions wether a reload should be done)
+
+- save relatives path in playlist
