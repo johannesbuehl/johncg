@@ -26,5 +26,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - create playlist-summarys or lyrics-sheets through pandoc
 - load files from disc always at item selection to stay up to date
 - create server-items at selection, delete after deselection to always stay up to date, but prevent multiple reloads (alternative: optional argument for accessing functions wether a reload should be done)
-
-- save relatives path in playlist
+- save file through interface instead of download

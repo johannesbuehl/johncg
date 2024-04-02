@@ -2,6 +2,7 @@ import fs from "fs";
 
 import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { get_psalm_path } from "../config.ts";
 
 export interface PsalmFile {
 	metadata: {
@@ -187,7 +188,9 @@ export default class Psalm extends PlaylistItemBase {
 		let psalm_content_string: string;
 
 		try {
-			psalm_content_string = fs.readFileSync(this.props.file, { encoding: "utf-8" });
+			psalm_content_string = fs.readFileSync(get_psalm_path(this.props.file), {
+				encoding: "utf-8"
+			});
 		} catch (e) {
 			this.is_selectable = false;
 

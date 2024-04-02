@@ -17,7 +17,7 @@ import * as JGCPSend from "./JGCPSendMessages.ts";
 import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 import type { CasparCGConnectionSettings } from "./config.ts";
 
-import Config from "./config.ts";
+import Config, { get_playlist_path } from "./config.ts";
 import SearchPart, { ItemFile } from "./search_part.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
@@ -230,7 +230,7 @@ export default class Control {
 		let new_playlist: Playlist;
 
 		try {
-			new_playlist = new Playlist(this.casparcg_connections, playlist_path);
+			new_playlist = new Playlist(this.casparcg_connections, get_playlist_path(playlist_path));
 		} catch (e) {
 			ws_send_response("invalid playlist-file", false, ws);
 			return;
@@ -521,15 +521,15 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
+	private async get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
 		let files: ItemFile[];
 
 		switch (type) {
 			case "media":
-				files = this.search_part.get_casparcg_media();
+				files = await this.search_part.get_casparcg_media();
 				break;
 			case "template":
-				files = this.search_part.get_casparcg_template();
+				files = await this.search_part.get_casparcg_template();
 				break;
 			case "song":
 				files = this.search_part.find_sng_files();

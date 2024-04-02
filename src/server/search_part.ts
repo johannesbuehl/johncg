@@ -3,7 +3,7 @@ import fs from "fs";
 
 import * as JGCPRecv from "./JGCPReceiveMessages";
 
-import Config, { get_song_path } from "./config";
+import Config, { get_psalm_path, get_song_path } from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { CasparCGConnection } from "./control";
@@ -73,7 +73,7 @@ export default class SearchPart {
 	}
 
 	create_psalm_file(f: File): PsalmFile {
-		const psalm = JSON.parse(fs.readFileSync(f.path, "utf-8")) as PsmFile;
+		const psalm = JSON.parse(fs.readFileSync(get_psalm_path(f.path), "utf-8")) as PsmFile;
 
 		return {
 			...f,
@@ -84,8 +84,9 @@ export default class SearchPart {
 		};
 	}
 
-	find_files<T extends File>(
+	private find_files<T extends File>(
 		pth: string,
+		root: string,
 		extensions: string[],
 		file_converter?: (f: File) => T
 	): (File | T)[] {
@@ -105,9 +106,11 @@ export default class SearchPart {
 			if (directory || file_regex) {
 				const file_result: File = {
 					name: directory ? f : file_regex?.groups["name"],
-					path: ff,
-					children: directory ? this.find_files(ff, extensions, file_converter) : undefined
+					path: path.relative(root, ff),
+					children: directory ? this.find_files(ff, root, extensions, file_converter) : undefined
 				};
+
+				console.debug(root, file_result.path);
 
 				result_files.push(
 					!directory && file_converter !== undefined ? file_converter(file_result) : file_result
@@ -119,26 +122,32 @@ export default class SearchPart {
 	}
 
 	find_sng_files(pth: string = Config.path.song): SongFile[] {
-		return this.find_files(pth, [".sng"], (f) => this.create_song_file(f));
+		return this.find_files(pth, pth, [".sng"], (f) => this.create_song_file(f));
 	}
 
 	find_jcg_files(pth: string = Config.path.playlist): File[] {
-		return this.find_files(pth, [".jcg"]);
+		return this.find_files(pth, pth, [".jcg"]);
 	}
 
 	find_pdf_files(pth: string = Config.path.pdf): PsalmFile[] {
-		return this.find_files(pth, [".pdf"]);
+		return this.find_files(pth, pth, [".pdf"]);
 	}
 
 	find_psalm_files(pth: string = Config.path.psalm): PsalmFile[] {
-		return this.find_files(pth, [".psm"], (f) => this.create_psalm_file(f));
+		return this.find_files(pth, pth, [".psm"], (f) => this.create_psalm_file(f));
 	}
 
-	get_casparcg_media(): File[] {
+	async get_casparcg_media(): Promise<File[]> {
+		this.casparcg_connections[0].media =
+			(await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
+
 		return build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
 	}
 
-	get_casparcg_template(): File[] {
+	async get_casparcg_template(): Promise<File[]> {
+		this.casparcg_connections[0].template =
+			(await (await this.casparcg_connections[0].connection.tls()).request)?.data ?? [];
+
 		return build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
 	}
 
