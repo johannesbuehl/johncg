@@ -188,9 +188,7 @@ export default class Psalm extends PlaylistItemBase {
 		let psalm_content_string: string;
 
 		try {
-			psalm_content_string = fs.readFileSync(get_psalm_path(this.props.file), {
-				encoding: "utf-8"
-			});
+			psalm_content_string = fs.readFileSync(get_psalm_path(this.props.file), "utf-8");
 		} catch (e) {
 			this.is_selectable = false;
 

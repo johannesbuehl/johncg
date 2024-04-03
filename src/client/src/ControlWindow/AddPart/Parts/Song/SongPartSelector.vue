@@ -68,7 +68,7 @@
 		// if the current state is "active" (gets disabled) and it is the only one active, don't toggle
 		if (
 			!selected_languages.value[index][1] ||
-			!selected_languages.value.filter((ele, ii) => index !== ii).every((ele) => !ele[1])
+			selected_languages.value.filter((ele, ii) => index !== ii).some((ele) => ele[1])
 		) {
 			selected_languages.value[index][1] = !selected_languages.value[index][1];
 		}

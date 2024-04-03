@@ -110,8 +110,6 @@ export default class SearchPart {
 					children: directory ? this.find_files(ff, root, extensions, file_converter) : undefined
 				};
 
-				console.debug(root, file_result.path);
-
 				result_files.push(
 					!directory && file_converter !== undefined ? file_converter(file_result) : file_result
 				);
@@ -152,7 +150,10 @@ export default class SearchPart {
 	}
 
 	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
-		const item_file = this.get_item_file(type, path);
+		const item_file: ItemFile = {
+			name: path,
+			path
+		};
 
 		switch (type) {
 			case "song": {

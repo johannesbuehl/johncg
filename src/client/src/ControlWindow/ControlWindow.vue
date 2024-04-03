@@ -144,14 +144,14 @@
 			@select_slide="emit('select_slide', slides.item, $event)"
 		/>
 		<AddPart
-			v-if="control_window_state === ControlWindowState.Add"
+			v-else-if="control_window_state === ControlWindowState.Add"
 			:ws="ws"
 			:files="files"
 			:bible="bible_file"
 			:mode="control_window_state"
 		/>
 		<EditPart
-			v-if="control_window_state === ControlWindowState.Edit"
+			v-else-if="control_window_state === ControlWindowState.Edit"
 			:item_props="playlist?.playlist_items[selected]"
 			:ws="ws"
 			:item_index="selected"

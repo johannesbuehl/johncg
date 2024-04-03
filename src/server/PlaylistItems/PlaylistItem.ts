@@ -107,14 +107,16 @@ export abstract class PlaylistItemBase {
 		return slide;
 	}
 
-	update(new_props: ItemProps): ItemProps {
+	update(new_props: ItemProps): ItemProps | false {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
 			this.is_selectable = true;
-		}
 
-		return this.props;
+			return this.props;
+		} else {
+			return false;
+		}
 	}
 
 	protected abstract validate_props(props: ItemProps): boolean;
@@ -165,13 +167,7 @@ export function recurse_check(obj: unknown, template: unknown): boolean {
 			return false;
 		}
 
-		for (const res of results) {
-			if (!res) {
-				return false;
-			}
-		}
-
-		return true;
+		return results.every((res) => res);
 	} else {
 		// check, wether the object and the template are of the same type
 		if (typeof obj !== typeof template) {

@@ -17,22 +17,43 @@
 </script>
 
 <script setup lang="ts">
-	import { onMounted, ref, watch, type VNodeRef, type Ref } from "vue";
+	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick } from "vue";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		ws: WebSocket;
 		bible?: BibleFile;
-		edit?: boolean;
 	}>();
 
-	const book_refs: Record<string, Ref<HTMLLabelElement>> = {};
-	function book_obj_ref(obj: HTMLLabelElement, id: string): VNodeRef | undefined {
-		if (obj) {
-			book_refs[id] = ref(obj);
+	const emit = defineEmits<{
+		update: [];
+	}>();
+
+	const book_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
+	function book_obj_ref(element: HTMLLabelElement, id: string): VNodeRef | undefined {
+		if (element !== null) {
+			book_refs[id] = ref([element]);
 
 			return book_refs[id];
+		}
+	}
+
+	const chapter_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
+	function chapter_obj_ref(element: HTMLLabelElement, index: number): VNodeRef | undefined {
+		if (element !== null) {
+			chapter_refs[index] = ref([element]);
+
+			return chapter_refs[index];
+		}
+	}
+
+	const verse_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
+	function verse_obj_ref(element: HTMLLabelElement, index: number): VNodeRef | undefined {
+		if (element !== null) {
+			verse_refs[index] = ref([element]);
+
+			return verse_refs[index];
 		}
 	}
 
@@ -41,10 +62,6 @@
 	const verse_selection = ref<boolean[]>([]);
 
 	const bible_props = defineModel<BibleProps>("bible_props");
-
-	defineExpose({
-		select: select_book
-	});
 
 	onMounted(() => {
 		const message: JGCPRecv.GetBible = {
@@ -55,17 +72,46 @@
 	});
 
 	watch(
+		() => bible_props.value,
+		(bible_props) => {
+			if (bible_props !== undefined && props.bible !== undefined) {
+				book_selection.value = get_book_from_id(props.bible, bible_props.book_id);
+			}
+		}
+	);
+
+	watch(
 		() => props.bible,
 		(bible) => {
 			if (bible !== undefined) {
-				book_selection.value = Object.values(bible)[0][0].books[0];
+				if (bible_props.value?.book_id !== undefined) {
+					book_selection.value = get_book_from_id(bible, bible_props.value?.book_id);
+				} else {
+					book_selection.value = Object.values(bible)[0][0].books[0];
+				}
 			}
 		}
 	);
 
 	watch(book_selection, (book_selection) => {
 		if (book_selection !== undefined) {
-			select_book(book_selection);
+			write_book_to_props(book_selection);
+
+			if (bible_props.value !== undefined) {
+				if (Object.keys(bible_props.value?.chapters ?? {}).length > 0) {
+					chapter_selection.value = Number(Object.keys(bible_props.value.chapters)[0]) - 1;
+				} else {
+					chapter_selection.value = 0;
+				}
+
+				create_verse_selection(bible_props.value.chapters[chapter_selection.value + 1]);
+			}
+
+			nextTick(() => {
+				book_refs[book_selection.id].value[
+					book_refs[book_selection.id].value.length - 1
+				].scrollIntoView({ behavior: "smooth", block: "center" });
+			});
 		}
 	});
 
@@ -73,17 +119,21 @@
 		// reset the last-selected verse
 		last_verse = undefined;
 
-		verse_selection.value = Array(book_selection.value?.chapters[chapter_selection]).fill(false);
-
-		if (bible_props.value !== undefined) {
+		if (bible_props.value !== undefined && book_selection.value !== undefined) {
 			// if there are already data for this chapter, load it
 			if (
 				Object.keys(bible_props.value?.chapters ?? {}).includes((chapter_selection + 1).toString())
 			) {
-				verse_selection.value = verse_selection.value.map((state, index) => {
-					return bible_props.value!.chapters[chapter_selection + 1].includes(index + 1);
-				});
+				create_verse_selection(bible_props.value.chapters[chapter_selection + 1]);
+			} else {
+				create_verse_selection();
 			}
+
+			nextTick(() => {
+				chapter_refs[chapter_selection].value[
+					chapter_refs[chapter_selection].value.length - 1
+				].scrollIntoView({ behavior: "smooth", block: "nearest" });
+			});
 		}
 	});
 
@@ -99,13 +149,15 @@
 			});
 
 			if (bible_props.value !== undefined) {
-				// if there are now verses selected, try to remove it from the props
+				// if there are no verses selected, try to remove it from the props
 				if (verses.length === 0) {
 					delete bible_props.value.chapters[chapter_selection.value + 1];
 				} else {
 					bible_props.value.chapters[chapter_selection.value + 1] = verses;
 				}
 			}
+
+			emit("update");
 		},
 		{ deep: true }
 	);
@@ -134,19 +186,29 @@
 		(event.target as HTMLElement)?.click();
 	}
 
-	function select_book(book_selection: Book) {
+	function write_book_to_props(book_selection: Book) {
 		if (bible_props.value !== undefined) {
-			bible_props.value.book_id = book_selection.id;
+			if (bible_props.value.book_id !== book_selection.id) {
+				bible_props.value.book_id = book_selection.id;
 
-			// clear the chapter and verse selection
-			bible_props.value.chapters = {};
-
-			verse_selection.value = Array(book_selection?.chapters[chapter_selection.value]).fill(false);
+				// clear the chapter and verse selection
+				bible_props.value.chapters = {};
+			}
 		}
 	}
 
-	function clear_chapter() {
+	function clear_verses() {
 		verse_selection.value.fill(false);
+	}
+
+	function create_verse_selection(verses?: number[]) {
+		verse_selection.value = Array(book_selection.value?.chapters[chapter_selection.value]).fill(
+			false
+		);
+
+		verses?.forEach((verse) => {
+			verse_selection.value[verse - 1] = true;
+		});
 	}
 </script>
 
@@ -186,7 +248,6 @@
 			<div>
 				<div class="header">Chapter</div>
 				<div class="chapters">
-					<!-- <template v-for="chapter of book_selection?.chapters.keys()"> -->
 					<template
 						v-for="(verse_count, chapter) of get_book_from_id(
 							bible ?? {},
@@ -203,13 +264,14 @@
 						<label
 							tabindex="0"
 							class="chapter"
+							:ref="chapter_obj_ref($el, chapter)"
 							:class="{
 								active: Object.keys(bible_props?.chapters ?? {}).includes((chapter + 1).toString()),
 								selected: chapter_selection === chapter
 							}"
 							:for="`${bible_props?.book_id}_${chapter}`"
 							@keydown.enter="enter_element"
-							@dblclick="clear_chapter"
+							@dblclick="clear_verses"
 						>
 							{{ chapter + 1 }}
 						</label>
@@ -230,8 +292,9 @@
 						<label
 							tabindex="0"
 							class="chapter"
+							:ref="verse_obj_ref($el, verse)"
 							:class="{ active: state }"
-							:for="`${bible_props?.book_id}_${chapter_selection}_${verse}`"
+							:for="`${book_selection?.id}_${chapter_selection}_${verse}`"
 							@click.shift="shift_click(verse)"
 							@keydown.enter="enter_element"
 						>
@@ -345,7 +408,7 @@
 	}
 
 	.chapters {
-		overflow: auto;
+		overflow-y: scroll;
 
 		padding: 0.25rem;
 

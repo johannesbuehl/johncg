@@ -6,10 +6,11 @@
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type { SongProps } from "@server/PlaylistItems/Song";
+	import type SongFile from "@server/PlaylistItems/SongFile";
 
 	const props = defineProps<{
 		ws: WebSocket;
-		song_data?: JGCPSend.SongFile;
+		song_data?: SongFile;
 	}>();
 
 	const emit = defineEmits<{

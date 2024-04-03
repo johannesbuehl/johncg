@@ -12,18 +12,18 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		search_results?: JGCPSend.ItemFile;
+		search_results?: JGCPSend.ItemFiles;
 		item_index: number;
 		bible?: BibleFile;
 	}>();
 
 	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
 
-	function update_item() {
-		if (item_props.value !== undefined) {
+	function update_item(update_props: ItemProps | undefined = item_props.value) {
+		if (update_props !== undefined) {
 			const message: JGCPRecv.UpdateItem = {
 				command: "update_item",
-				props: item_props.value,
+				props: update_props,
 				index: props.item_index
 			};
 
@@ -34,7 +34,7 @@
 	let input_debounce_timeout_id: NodeJS.Timeout | undefined = undefined;
 	watch(
 		() => item_props.value?.caption,
-		(new_caption) => {
+		(new_caption, old_caption) => {
 			if (new_caption !== undefined && item_props.value !== undefined) {
 				clearTimeout(input_debounce_timeout_id);
 
@@ -45,7 +45,9 @@
 						index: props.item_index
 					};
 
-					props.ws.send(JSON.stringify(message));
+					if (old_caption !== new_caption) {
+						props.ws.send(JSON.stringify(message));
+					}
 				}, 500);
 			}
 		}
@@ -69,15 +71,15 @@
 				placeholder="Item Caption"
 			/>
 		</div>
-		<EditSong
+		<!-- <EditSong
 			v-if="item_props?.type === 'song'"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:song_data="search_results"
 			@update="update_item"
-		/>
+		/> -->
 		<EditBible
-			v-else-if="item_props?.type === 'bible'"
+			v-if="item_props?.type === 'bible'"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:bible="bible"

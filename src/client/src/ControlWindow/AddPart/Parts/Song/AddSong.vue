@@ -87,12 +87,12 @@
 		};
 
 		// if the selected parts differ from the default ones, save them in the playlist
-		if (!file.data?.parts.default.every((val, index) => val === verse_order.value[index])) {
+		if (file.data?.parts.default.some((val, index) => val !== verse_order.value[index])) {
 			props.verse_order = verse_order.value;
 		}
 
 		// if not all languages are checked or the order isn't default, add it to the props
-		if (!languages.value.every(([lang, state], index) => lang === index && state)) {
+		if (languages.value.some(([lang, state], index) => lang !== index && state)) {
 			props.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
 		} else {
 			// delete them from the props

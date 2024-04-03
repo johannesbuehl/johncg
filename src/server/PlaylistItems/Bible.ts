@@ -76,10 +76,7 @@ export default class Bible extends PlaylistItemBase {
 			}
 		};
 
-		let result = props.type === "bible";
-		result &&= Object.keys(props.chapters).length > 0;
-
-		return result && recurse_check(props, template);
+		return props.type === "bible" && recurse_check(props, template);
 	}
 
 	get active_slide(): number {

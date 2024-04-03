@@ -47,8 +47,6 @@
 		if (element !== null && index === 0) {
 			first_input_ref.value.push(element);
 			return first_input_ref;
-		} else {
-			return undefined;
 		}
 	}
 
@@ -56,7 +54,7 @@
 		() => first_input_ref.value,
 		(first_input_ref) => {
 			if (first_input_ref.length > 0) {
-				// first_input_ref[first_input_ref.length - 1].focus();
+				first_input_ref[first_input_ref.length - 1].focus();
 			}
 		},
 		{ deep: true }

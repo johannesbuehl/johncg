@@ -490,7 +490,7 @@ export default class Control {
 		}
 
 		if (result === false) {
-			ws_send_response("could not update item (wrong item-type)", false, ws);
+			ws_send_response("could not update item", false, ws);
 		} else {
 			this.send_playlist();
 
