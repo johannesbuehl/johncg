@@ -77,7 +77,7 @@
 			<span
 				v-if="!root"
 				class="file_content"
-				:class="{ selectable: typeof files !== 'object', active: selection === file }"
+				:class="{ displayable: typeof files !== 'object', active: selection === file }"
 				@click="typeof files !== 'object' && file !== undefined ? (selection = file) : ''"
 				@dblclick="file ? on_choose(file) : undefined"
 			>
@@ -155,7 +155,7 @@
 		padding: 0.25rem;
 	}
 
-	.file_content.selectable {
+	.file_content.displayable {
 		cursor: pointer;
 
 		font-weight: lighter;
@@ -165,15 +165,15 @@
 		border-radius: 0.25rem;
 	}
 
-	.file_content.selectable:hover {
+	.file_content.displayable:hover {
 		background-color: var(--color-item-hover);
 	}
 
-	.file_content.selectable.active {
+	.file_content.displayable.active {
 		background-color: var(--color-active);
 	}
 
-	.file_content.selectable.active:hover {
+	.file_content.displayable.active:hover {
 		background-color: var(--color-active-hover);
 	}
 </style>

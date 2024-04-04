@@ -50,9 +50,9 @@ export default class Song extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.displayable = this.validate_props(props);
 
-		if (this.selectable) {
+		if (this.displayable) {
 			this.cache_song_file();
 
 			// add the title-slide to the counter
@@ -205,8 +205,8 @@ export default class Song extends PlaylistItemBase {
 		return this.active_slide_number;
 	}
 
-	get playlist_item(): SongProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): SongProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {
@@ -236,7 +236,7 @@ export default class Song extends PlaylistItemBase {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				console.error(`song '${this.props.file}' does not exist`);
 
-				this.is_selectable = false;
+				this.displayable = false;
 
 				return;
 			} else {

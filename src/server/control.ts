@@ -363,7 +363,7 @@ export default class Control {
 
 			ws_send_response("slide has been selected", true, ws);
 		} else {
-			ws_send_response("item can't be selected", false, ws);
+			ws_send_response("item can't be displayable", false, ws);
 		}
 	}
 

@@ -30,10 +30,10 @@ export default class PDF extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = false;
-		const selectable = this.validate_props(props);
+		this.displayable = false;
+		const displayable = this.validate_props(props);
 
-		if (selectable) {
+		if (displayable) {
 			void (async () => {
 				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
@@ -69,7 +69,7 @@ export default class PDF extends PlaylistItemBase {
 					});
 				} catch (e) {
 					if (e instanceof pdfjs.MissingPDFException) {
-						this.is_selectable = false;
+						this.displayable = false;
 
 						return;
 					} else {
@@ -77,7 +77,7 @@ export default class PDF extends PlaylistItemBase {
 					}
 				}
 
-				this.is_selectable = selectable;
+				this.displayable = displayable;
 			})();
 		}
 	}
@@ -150,8 +150,8 @@ export default class PDF extends PlaylistItemBase {
 		return this.item_props;
 	}
 
-	get playlist_item(): PDFProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): PDFProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {

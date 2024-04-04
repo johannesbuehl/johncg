@@ -23,7 +23,7 @@ export default class Media extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.displayable = this.validate_props(props);
 	}
 
 	set_active_slide(slide?: number): number {
@@ -74,8 +74,8 @@ export default class Media extends PlaylistItemBase {
 		return this.item_props;
 	}
 
-	get playlist_item(): MediaProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): MediaProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {

@@ -109,7 +109,7 @@
 		ref="item"
 		class="playlist_item_wrapper"
 		:class="{
-			selectable: item_props.selectable,
+			displayable: item_props.displayable,
 			selected,
 			active
 		}"
@@ -155,11 +155,11 @@
 		overflow: visible;
 	}
 
-	.playlist_item_wrapper.selectable {
+	.playlist_item_wrapper.displayable {
 		cursor: pointer;
 	}
 
-	.playlist_item_wrapper:not(.selectable) {
+	.playlist_item_wrapper:not(.displayable) {
 		color: var(--color-text-disabled);
 		font-style: italic;
 	}
@@ -205,7 +205,7 @@
 		border: unset;
 	}
 
-	.playlist_item_wrapper.selectable:hover > .playlist_item {
+	.playlist_item_wrapper.displayable:hover > .playlist_item {
 		background-color: var(--color-item-hover);
 	}
 
@@ -213,7 +213,7 @@
 		background-color: var(--color-active);
 	}
 
-	.playlist_item_wrapper.selectable.active:hover > .playlist_item {
+	.playlist_item_wrapper.displayable.active:hover > .playlist_item {
 		background-color: var(--color-active-hover);
 	}
 

@@ -48,12 +48,12 @@ export default class Psalm extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.displayable = this.validate_props(props);
 
 		const psalm_content = this.psalm_file;
 
 		if (psalm_content === false) {
-			this.is_selectable = false;
+			this.displayable = false;
 		}
 	}
 
@@ -172,8 +172,8 @@ export default class Psalm extends PlaylistItemBase {
 		return this.active_slide_number;
 	}
 
-	get playlist_item(): PsalmProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): PsalmProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {
@@ -190,7 +190,7 @@ export default class Psalm extends PlaylistItemBase {
 		try {
 			psalm_content_string = fs.readFileSync(get_psalm_path(this.props.file), "utf-8");
 		} catch (e) {
-			this.is_selectable = false;
+			this.displayable = false;
 
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {

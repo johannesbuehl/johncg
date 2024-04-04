@@ -17,7 +17,7 @@ import * as fs from "fs";
 import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
 
-export type ClientPlaylistItem = ItemProps & { selectable: boolean };
+export type ClientPlaylistItem = ItemProps & { displayable: boolean };
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -73,7 +73,7 @@ export default class Playlist {
 
 			let first_item = 0;
 
-			while (!this.playlist_items[first_item].selectable) {
+			while (!this.playlist_items[first_item].displayable) {
 				first_item++;
 
 				if (first_item === this.playlist_items.length) {
@@ -214,7 +214,7 @@ export default class Playlist {
 
 	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
 		if (this.playlist_items[item] !== undefined) {
-			if (this.playlist_items[item].selectable) {
+			if (this.playlist_items[item].displayable) {
 				const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
 				if (client_object.media !== undefined) {
@@ -230,7 +230,7 @@ export default class Playlist {
 									filename: '"' + client_object.media + '"'
 								})
 							).request
-						).data as string[];
+						)?.data as string[];
 
 						if (thumbnails === undefined) {
 							await this.casparcg_connections[0].connection.thumbnailGenerate({
@@ -260,7 +260,7 @@ export default class Playlist {
 	set_active_item(item: number, slide: number = 0): ActiveItemSlide | false {
 		item = this.validate_item_number(item);
 
-		if (this.playlist_items[item].selectable) {
+		if (this.playlist_items[item].displayable) {
 			this.active_item_number = item;
 
 			this.active_playlist_item.set_active_slide(slide);
@@ -297,11 +297,11 @@ export default class Playlist {
 		}
 
 		let new_active_item_number = this.active_item;
-		// steps until there is a selectable item
+		// steps until there is a displayable item
 		do {
 			new_active_item_number += steps;
 
-			// if the new_active_item_number is back at the start, break, since there are no selectable items
+			// if the new_active_item_number is back at the start, break, since there are no displayable items
 			if (new_active_item_number === this.active_item) {
 				console.error("loop around");
 				return;
@@ -309,7 +309,7 @@ export default class Playlist {
 
 			// sanitize the item-number
 			new_active_item_number = this.sanitize_item_number(new_active_item_number);
-		} while (!this.playlist_items[new_active_item_number].selectable);
+		} while (!this.playlist_items[new_active_item_number].displayable);
 
 		// new active item has negative index -> roll over to other end
 		if (new_active_item_number < 0) {

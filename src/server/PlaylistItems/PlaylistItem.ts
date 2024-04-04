@@ -75,7 +75,7 @@ export abstract class PlaylistItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
 
-	protected is_selectable: boolean = true;
+	protected displayable: boolean = true;
 
 	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
@@ -111,7 +111,7 @@ export abstract class PlaylistItemBase {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
-			this.is_selectable = true;
+			this.displayable = true;
 
 			return this.props;
 		} else {
@@ -123,7 +123,7 @@ export abstract class PlaylistItemBase {
 
 	abstract get props(): ItemProps;
 
-	abstract get playlist_item(): ItemProps & { selectable: boolean };
+	abstract get playlist_item(): ItemProps & { displayable: boolean };
 
 	abstract get media(): string;
 
@@ -135,8 +135,8 @@ export abstract class PlaylistItemBase {
 
 	abstract get template(): Template | undefined;
 
-	get selectable(): boolean {
-		return this.is_selectable;
+	get displayable(): boolean {
+		return this.displayable;
 	}
 }
 

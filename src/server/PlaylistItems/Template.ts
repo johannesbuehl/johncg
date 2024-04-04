@@ -28,7 +28,7 @@ export default class TemplateItem extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.displayable = this.validate_props(props);
 	}
 
 	create_client_object_item_slides(): Promise<ClientTemplateSlides> {
@@ -74,8 +74,8 @@ export default class TemplateItem extends PlaylistItemBase {
 		return this.item_props;
 	}
 
-	get playlist_item(): TemplateProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): TemplateProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {

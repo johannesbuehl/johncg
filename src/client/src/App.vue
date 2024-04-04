@@ -88,9 +88,7 @@
 	}
 
 	function select_item(item: number) {
-		if (playlist_items.value?.playlist_items[item].selectable) {
-			selected_item.value = item;
-		}
+		selected_item.value = item;
 	}
 
 	function ws_connect() {

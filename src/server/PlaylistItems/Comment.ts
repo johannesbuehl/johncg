@@ -19,7 +19,7 @@ export default class Comment extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = false;
+		this.displayable = false;
 	}
 
 	create_client_object_item_slides(): Promise<ClientCommentSlides> {
@@ -57,8 +57,8 @@ export default class Comment extends PlaylistItemBase {
 		return this.item_props;
 	}
 
-	get playlist_item(): CommentProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): CommentProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): undefined {
@@ -73,7 +73,7 @@ export default class Comment extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get selectable(): boolean {
+	get displayable(): boolean {
 		return false;
 	}
 }

@@ -42,7 +42,7 @@ export default class Countdown extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.is_selectable = this.validate_props(props);
+		this.displayable = this.validate_props(props);
 	}
 
 	navigate_slide(steps: number): number {
@@ -113,8 +113,8 @@ export default class Countdown extends PlaylistItemBase {
 		return this.item_props;
 	}
 
-	get playlist_item(): CountdownProps & { selectable: boolean } {
-		return { ...this.props, selectable: this.selectable };
+	get playlist_item(): CountdownProps & { displayable: boolean } {
+		return { ...this.props, displayable: this.displayable };
 	}
 
 	get media(): string {
