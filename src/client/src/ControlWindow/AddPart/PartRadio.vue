@@ -26,6 +26,11 @@
 	.add_part_radio {
 		background-color: var(--color-item);
 
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+
 		padding: 1rem;
 
 		border-radius: 0.25rem;

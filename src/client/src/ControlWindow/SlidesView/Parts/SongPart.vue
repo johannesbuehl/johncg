@@ -149,6 +149,12 @@
 		padding-left: 0.75rem;
 
 		cursor: pointer;
+
+		text-wrap: nowrap;
+		width: min-content;
+		min-width: 100%;
+
+		max-width: 0;
 	}
 
 	.header:hover {

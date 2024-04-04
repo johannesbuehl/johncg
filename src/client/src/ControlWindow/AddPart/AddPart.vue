@@ -21,8 +21,10 @@
 	library.add(
 		fas.faMusic,
 		fas.faBookBible,
+		fas.faQuoteLeft,
 		fas.faFont,
 		fas.faImage,
+		fas.faPenRuler,
 		fas.faFilePdf,
 		fas.faClock,
 		fas.faMessage
@@ -40,10 +42,10 @@
 	const part_types = [
 		{ text: "Song", value: "song", icon: "music" },
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
-		{ text: "Bible", value: "bible", icon: "book-bible" },
+		{ text: "Bible", value: "bible", icon: "quote-left" },
 		{ text: "Text", value: "text", icon: "font" },
 		{ text: "Media", value: "media", icon: "image" },
-		{ text: "Template", value: "template", icon: "music" },
+		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
 		{ text: "Countdown", value: "countdown", icon: "clock" },
 		{ text: "Comment", value: "comment", icon: "message" }

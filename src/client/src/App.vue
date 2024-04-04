@@ -88,7 +88,12 @@
 	}
 
 	function select_item(item: number) {
-		selected_item.value = item;
+		if (
+			playlist_items.value?.playlist_items[item].displayable ||
+			control_window_state.value === ControlWindowState.Edit
+		) {
+			selected_item.value = item;
+		}
 	}
 
 	function ws_connect() {

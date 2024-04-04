@@ -51,7 +51,7 @@
 		search_template();
 	}
 
-	function add_tempalte(file?: TemplateFile, type?: "dir" | "file") {
+	function add_template(file?: TemplateFile, type?: "dir" | "file") {
 		if (file !== undefined && type === "file") {
 			emit("add", create_props(file));
 		}
@@ -145,12 +145,12 @@
 		name="Template"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
-		@choose="add_tempalte"
+		@choose="add_template"
 		@search="search_template"
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton icon="plus" text="Add Template" @click="add_tempalte(selection, 'file')" />
+			<MenuButton icon="plus" text="Add Template" @click="add_template(selection, 'file')" />
 		</template>
 		<template v-slot:edit>
 			<JSONEditor v-model="template_data" />

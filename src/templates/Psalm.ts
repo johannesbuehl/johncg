@@ -156,15 +156,15 @@ function create_slide(title_data: PsalmTemplateData["data"]["metadata"], slide_d
 	div_slide.append(div_content);
 
 	// create a template for the parts and lines
-	const part_tempalte = document.createElement("div");
-	part_tempalte.classList.add("part");
+	const part_template = document.createElement("div");
+	part_template.classList.add("part");
 
 	const line_template = document.createElement("div");
 	line_template.classList.add("text_line");
 
 	// add the individual text-lines
 	for (const part_text of slide_data) {
-		const part = part_tempalte.cloneNode(true) as HTMLDivElement;
+		const part = part_template.cloneNode(true) as HTMLDivElement;
 
 		// add the individual languages
 		part_text.forEach((line_text) => {
