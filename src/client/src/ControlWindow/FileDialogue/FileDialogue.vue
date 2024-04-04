@@ -143,9 +143,7 @@
 		border-style: solid;
 		border-radius: 0.25rem;
 		background-color: var(--color-item);
-	}
 
-	.search_box {
 		flex: 1;
 	}
 

@@ -11,6 +11,7 @@
 	import AddSong from "./Parts/Song/AddSong.vue";
 	import AddPDF from "./Parts/AddPDF.vue";
 	import AddPsalm from "./Parts/AddPsalm.vue";
+	import AddComment from "./Parts/AddComment.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -87,31 +88,31 @@
 				@refresh="get_files(pick)"
 			/>
 			<AddPsalm
-				v-if="pick === 'psalm'"
+				v-else-if="pick === 'psalm'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files(pick)"
 			/>
 			<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
 			<AddMedia
-				v-if="pick === 'media'"
+				v-else-if="pick === 'media'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files(pick)"
 			/>
 			<AddTemplate
-				v-if="pick === 'template'"
+				v-else-if="pick === 'template'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files(pick)"
 			/>
 			<AddPDF
-				v-if="pick === 'pdf'"
+				v-else-if="pick === 'pdf'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files(pick)"
 			/>
-			<!-- <AddPDF v-if="pick === 'pdf'" :files="files[pick]" :ws="ws" @add="add_item" /> -->
+			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 		</template>
 	</div>
 </template>
