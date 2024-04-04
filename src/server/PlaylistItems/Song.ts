@@ -261,14 +261,7 @@ export default class Song extends PlaylistItemBase {
 				.replaceAll("\\", "/")
 				.toUpperCase();
 
-			// check all the casparcg-files, wether they contain a media-file that matches the path
-			for (const m of this.casparcg_media_list) {
-				const media_file = m.clip.toUpperCase().replace(/\\/, "/");
-
-				if (req_name.endsWith(media_file)) {
-					return m.clip;
-				}
-			}
+			return req_name;
 		}
 
 		return "#00000000";
