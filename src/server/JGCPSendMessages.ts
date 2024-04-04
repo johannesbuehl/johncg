@@ -55,13 +55,6 @@ export interface PlaylistSave {
 	playlist: PlaylistObject;
 }
 
-// export interface File {
-// 	name: string;
-// 	path: string;
-// 	children?: File[];
-// 	data?: unknown;
-// }
-
 export interface ItemFiles {
 	command: "item_files";
 	type: GetItemFiles["type"];

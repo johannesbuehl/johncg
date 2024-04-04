@@ -27,3 +27,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - load files from disc always at item selection to stay up to date
 - create server-items at selection, delete after deselection to always stay up to date, but prevent multiple reloads (alternative: optional argument for accessing functions wether a reload should be done)
 - save file through interface instead of download
+- on item-update refresh render and client

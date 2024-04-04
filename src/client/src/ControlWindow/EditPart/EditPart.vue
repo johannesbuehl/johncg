@@ -1,57 +1,33 @@
 <script setup lang="ts">
-	import { watch } from "vue";
-
 	import EditSong from "./EditSong.vue";
 	import EditBible from "./EditBible.vue";
+	import EditTemplate from "./EditTemplate.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import EditTemplate from "./EditTemplate.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
-		search_results?: JGCPSend.ItemFiles;
+		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		item_index: number;
 		bible?: BibleFile;
 	}>();
 
 	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
 
-	function update_item(update_props: ItemProps | undefined = item_props.value) {
-		if (update_props !== undefined) {
+	function update_item() {
+		if (item_props.value !== undefined) {
 			const message: JGCPRecv.UpdateItem = {
 				command: "update_item",
-				props: update_props,
-				index: props.item_index
+				index: props.item_index,
+				props: item_props.value
 			};
 
 			props.ws.send(JSON.stringify(message));
 		}
 	}
-
-	let input_debounce_timeout_id: NodeJS.Timeout | undefined = undefined;
-	watch(
-		() => item_props.value?.caption,
-		(new_caption, old_caption) => {
-			if (new_caption !== undefined && item_props.value !== undefined) {
-				clearTimeout(input_debounce_timeout_id);
-
-				input_debounce_timeout_id = setTimeout(() => {
-					const message: JGCPRecv.UpdateItem = {
-						command: "update_item",
-						props: { ...item_props.value!, caption: new_caption },
-						index: props.item_index
-					};
-
-					if (old_caption !== new_caption) {
-						props.ws.send(JSON.stringify(message));
-					}
-				}, 500);
-			}
-		}
-	);
 </script>
 
 <template>
@@ -71,24 +47,28 @@
 				placeholder="Item Caption"
 			/>
 		</div>
-		<!-- <EditSong
+		<EditSong
 			v-if="item_props?.type === 'song'"
+			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
-			:song_data="search_results"
-			@update="update_item"
-		/> -->
+			:song_file="files?.song"
+			:item_index="item_index"
+		/>
 		<EditBible
-			v-if="item_props?.type === 'bible'"
+			v-else-if="item_props?.type === 'bible'"
+			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:bible="bible"
-			@update="update_item"
+			:item_index="item_index"
 		/>
 		<EditTemplate
 			v-else-if="item_props?.type === 'template'"
+			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
-			@update="update_item"
+			:ws="ws"
+			:item_index="item_index"
 		/>
 		<div v-if="item_props?.type === undefined" id="edit_part_placeholder">
 			Select an item in the playlist for editing

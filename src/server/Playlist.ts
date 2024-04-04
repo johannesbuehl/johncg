@@ -368,8 +368,12 @@ export default class Playlist {
 		return new_item_order;
 	}
 
-	private validate_item_number(item: number): number {
+	private validate_item_number(item: unknown): number {
 		const item_count = this.playlist_items.length;
+
+		if (typeof item !== "number") {
+			throw new TypeError(`'${JSON.stringify(item)} is not of type 'number'`);
+		}
 
 		if (item < -item_count || item >= this.playlist_items.length) {
 			throw new RangeError(`item-number is out of range (${-item_count} - ${item_count - 1})`);

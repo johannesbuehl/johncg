@@ -11,6 +11,7 @@
 	import PlaylistFile from "./PlaylistFile.vue";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import EditPart from "./EditPart/EditPart.vue";
+	import { toRaw } from "vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -152,10 +153,11 @@
 		/>
 		<EditPart
 			v-else-if="control_window_state === ControlWindowState.Edit"
-			:item_props="playlist?.playlist_items[selected]"
+			:item_props="toRaw(playlist?.playlist_items[selected])"
 			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"
+			:files="files"
 		/>
 	</div>
 </template>
