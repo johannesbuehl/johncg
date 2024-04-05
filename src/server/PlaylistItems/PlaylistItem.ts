@@ -107,13 +107,15 @@ export abstract class PlaylistItemBase {
 		return slide;
 	}
 
-	update(new_props: ItemProps): ItemProps | false {
+	update(new_props: ItemProps, callback: (new_props: ItemProps) => void): boolean {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
 			this.is_displayable = true;
 
-			return this.props;
+			callback(this.item_props);
+
+			return true;
 		} else {
 			return false;
 		}

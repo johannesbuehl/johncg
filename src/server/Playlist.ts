@@ -153,12 +153,16 @@ export default class Playlist {
 		this.changes = true;
 	}
 
-	update_item(position: number, props: ItemProps): ItemProps | false {
+	update_item(position: number, props: ItemProps): boolean {
 		position = this.validate_item_number(position);
 
 		// check, wether the props are of the same type as the item at the position
 		if (props.type === this.playlist_items[position].props.type) {
-			const result = this.playlist_items[position].update(props);
+			const result = this.playlist_items[position].update(props, () => {
+				if (this.active_item === position) {
+					this.casparcg_update_template();
+				}
+			});
 
 			return result;
 		} else {
@@ -479,22 +483,24 @@ export default class Playlist {
 	private casparcg_load_template(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
-		let api_request: Promise<APIRequest<Commands.CgAdd>>;
+		const template = this.active_playlist_item?.template;
 
 		// if a template was specified, load it
-		if (this.active_playlist_item?.template !== undefined) {
-			logger.log(`loading CasparCG-template: '${this.active_playlist_item.template.template}'`);
+		if (template !== undefined) {
+			logger.log(
+				`loading CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
+			);
 
-			api_request = casparcg_connection.connection.cgAdd({
+			return casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers.template,
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
-				template: this.active_playlist_item.template.template,
+				template: template.template,
 				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
 				data: JSON.stringify(
-					JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
+					JSON.stringify(template.data, (_key, val: unknown) => {
 						if (typeof val === "string") {
 							return val.replaceAll('"', "\\u0022");
 						} else {
@@ -508,7 +514,7 @@ export default class Playlist {
 			logger.log("clearing CasparCG-template");
 
 			// if not, clear the previous template
-			api_request = casparcg_connection.connection.play({
+			return casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers.template,
@@ -517,8 +523,40 @@ export default class Playlist {
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
+	}
 
-		return api_request;
+	private casparcg_update_template(casparcg_connection?: CasparCGConnection) {
+		const connections =
+			casparcg_connection === undefined ? this.casparcg_connections : [casparcg_connection];
+
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		connections.forEach(async (casparcg_connection) => {
+			const template = this.active_playlist_item?.template;
+
+			if (template !== undefined) {
+				logger.log(
+					`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
+				);
+
+				await casparcg_connection.connection.cgUpdate({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.template,
+					cgLayer: 0,
+					// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+					data: JSON.stringify(
+						JSON.stringify(template.data, (_key, val: unknown) => {
+							if (typeof val === "string") {
+								return val.replaceAll('"', "\\u0022");
+							} else {
+								return val;
+							}
+						})
+					)
+					/* eslint-enable @typescript-eslint/naming-convention */
+				});
+			}
+		});
 	}
 
 	private casparcg_select_slide(slide: number): void {

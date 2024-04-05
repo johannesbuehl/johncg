@@ -559,7 +559,7 @@ export default class Control {
 	}
 
 	private update_item(index: number, props: ItemProps, ws: WebSocket) {
-		let result: ItemProps | false;
+		let result: boolean;
 
 		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);
 
@@ -751,7 +751,8 @@ export default class Control {
 	}
 
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
-		logger.debug("received JGCP-message");
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		logger.debug(`received JGCP-message: ${raw_data.toString()}`);
 
 		let data: JGCPRecv.Message;
 		// try to parse the data as a JSON-object
@@ -771,13 +772,15 @@ export default class Control {
 				ws_send_response("data is no JSON object", false, ws);
 				return;
 			} else {
+				logger.error(`can't parse JGCP-message: unknown error (${e})`);
+
 				throw e;
 			}
 		}
 
 		// check wether the JSON-object does contain a command and wether it is a valid command
 		if (typeof data.command !== "string") {
-			logger.error("can't parse JGCP-message: 'comand' is invalid");
+			logger.error("can't parse JGCP-message: 'command' is invalid");
 
 			ws_send_response("'command' is not of type 'string", false, ws);
 			return;
