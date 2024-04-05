@@ -27,7 +27,7 @@ class HTTPServer {
 					case /^\/$/.test(request.url):
 						request.url = "main.html";
 						break;
-					// serve the casparcg-templates
+					// serve the CasparCG-templates
 					case /^\/Templates\//.test(request.url):
 						resource_dir = Config.casparcg.templates;
 						request.url = request.url.replace(/\/Templates\//, "");

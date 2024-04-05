@@ -16,6 +16,7 @@ import TemplateItem from "./PlaylistItems/Template.ts";
 import * as fs from "fs";
 import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
+import { logger } from "./logger.ts";
 
 export type ClientPlaylistItem = ItemProps & { displayable: boolean };
 
@@ -69,7 +70,7 @@ export default class Playlist {
 		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
 
 		if (playlist !== undefined) {
-			this.open_playlist_file(playlist);
+			this.load_playlist_file(playlist);
 
 			let first_item = 0;
 
@@ -86,6 +87,10 @@ export default class Playlist {
 	}
 
 	add_casparcg_connection(casparcg_connection: CasparCGConnection) {
+		logger.debug(
+			`adding CasparCG-connection to playlist: '${casparcg_connection.settings.host}:${casparcg_connection.settings.port}'`
+		);
+
 		this.casparcg_connections.push(casparcg_connection);
 
 		// add a listener to send send the current-slide on connection
@@ -100,8 +105,6 @@ export default class Playlist {
 
 	destroy() {
 		this.casparcg_connections.forEach((casparcg_connection) => {
-			// casparcg_connection.connection.removeAllListeners();
-
 			casparcg_connection.connection.removeListener("connect");
 		});
 	}
@@ -144,7 +147,9 @@ export default class Playlist {
 
 		// check, wether the props are of the same type as the item at the position
 		if (props.type === this.playlist_items[position].props.type) {
-			return this.playlist_items[position].update(props);
+			const result = this.playlist_items[position].update(props);
+
+			return result;
 		} else {
 			return false;
 		}
@@ -171,14 +176,14 @@ export default class Playlist {
 		}
 	}
 
-	protected open_playlist_file(playlist_path: string): void {
+	protected load_playlist_file(playlist_path: string): void {
 		let playlist_string: string;
 
 		try {
 			playlist_string = fs.readFileSync(playlist_path, "utf-8");
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`playlist '${playlist_path}' does not exist`);
+				logger.error(`can't load playlist: playlist does not exist (${playlist_path})`);
 
 				return;
 			} else {
@@ -422,21 +427,29 @@ export default class Playlist {
 
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
-	): Promise<APIRequest<Commands.CgAdd>> {
+	): Promise<APIRequest<Commands.Play>> {
+		let api_request: Promise<APIRequest<Commands.Play>>;
+
 		// if the state is "visible", play it directly
 		if (this.visibility) {
+			const clip = this.active_playlist_item?.media ?? "#00000000";
+
+			logger.log(`loading CasparCG-media: '${clip}'`);
+
 			const message = {
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0],
-				clip: this.active_playlist_item?.media ?? "#00000000",
+				clip,
 				loop: this.active_playlist_item?.loop,
 				transition: this.casparcg_transition
 			};
 
-			return casparcg_connection.connection.play(message);
+			api_request = casparcg_connection.connection.play(message);
 		} else {
+			logger.log(`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`);
+
 			//  if the current stat is invisible, only load it in the background
-			return casparcg_connection.connection.loadbg({
+			api_request = casparcg_connection.connection.loadbg({
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[0],
 				clip: this.active_playlist_item?.media,
@@ -444,21 +457,27 @@ export default class Playlist {
 				transition: this.casparcg_transition
 			});
 		}
+
+		return api_request;
 	}
 
 	private casparcg_load_template(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.CgAdd>> {
+		let api_request: Promise<APIRequest<Commands.CgAdd>>;
+
 		// if a template was specified, load it
 		if (this.active_playlist_item?.template !== undefined) {
-			return casparcg_connection.connection.cgAdd({
+			logger.log(`loading CasparCG-template: '${this.active_playlist_item.template.template}'`);
+
+			api_request = casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[1],
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
 				template: this.active_playlist_item.template.template,
-				// escape quotation-marks by hand, since the old chrom-version of casparcg appears to have a bug
+				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
 				data: JSON.stringify(
 					JSON.stringify(this.active_playlist_item.template.data, (_key, val: unknown) => {
 						if (typeof val === "string") {
@@ -471,8 +490,10 @@ export default class Playlist {
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		} else {
+			logger.log("clearing CasparCG-template");
+
 			// if not, clear the previous template
-			return casparcg_connection.connection.play({
+			api_request = casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers[1],
@@ -481,6 +502,8 @@ export default class Playlist {
 				/* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
+
+		return api_request;
 	}
 
 	private casparcg_select_slide(slide: number): void {
@@ -489,6 +512,8 @@ export default class Playlist {
 			if (this.active_playlist_item.multi_media) {
 				void this.casparcg_load_media(casparcg_connection);
 			}
+
+			console.debug(`jumping CasparCG-template: slide '${slide}'`);
 
 			// jump to the slide-number in casparcg
 			void casparcg_connection.connection.cgInvoke({

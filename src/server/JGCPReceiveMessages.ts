@@ -15,7 +15,7 @@ export interface NewPlaylist extends Base {
  * playlist-file to be loaded
  */
 export interface OpenPlaylist extends Base {
-	command: "open_playlist";
+	command: "load_playlist";
 	playlist: string;
 }
 
@@ -34,7 +34,7 @@ export interface RequestItemSlides extends Base {
 /**
  * The different navigation-types
  */
-const item_navigate_type = ["item", "slide"] as const;
+export const item_navigate_type = ["item", "slide"] as const;
 export type NavigateType = (typeof item_navigate_type)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 export const is_item_navigate_type = (x: any): x is NavigateType => item_navigate_type.includes(x);

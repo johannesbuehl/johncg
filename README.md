@@ -29,3 +29,5 @@ Generate lyric-graphics and play them out through CasparCG.
 - save file through interface instead of download
 - on item-update refresh render and client
 - change default-item-colors
+- use playlist-caption
+- check config-file

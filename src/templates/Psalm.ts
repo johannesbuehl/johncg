@@ -4,7 +4,7 @@ let data: PsalmTemplateData & { mute_transition: boolean };
 
 let active_slide = 0;
 
-// casparcg-function: transmits data
+// CasparCG-function: transmits data
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
@@ -66,7 +66,7 @@ function update(s_data: string) {
 	jump(active_slide);
 }
 
-// casparcg-function: displays the template
+// CasparCG-function: displays the template
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function play() {
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");
@@ -76,7 +76,7 @@ function play() {
 	}
 }
 
-// casparcg-function: advances to the next step
+// CasparCG-function: advances to the next step
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function next() {
 	jump(active_slide + 1);
@@ -114,7 +114,7 @@ function jump(counter_raw: number) {
 	active_slide = counter;
 }
 
-// casparcg-function: hide the template
+// CasparCG-function: hide the template
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stop() {
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");

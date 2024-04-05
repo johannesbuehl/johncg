@@ -30,7 +30,7 @@ export default class PDF extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.displayable = false;
+		this.is_displayable = false;
 		const displayable = this.validate_props(props);
 
 		if (displayable) {
@@ -69,7 +69,7 @@ export default class PDF extends PlaylistItemBase {
 					});
 				} catch (e) {
 					if (e instanceof pdfjs.MissingPDFException) {
-						this.displayable = false;
+						this.is_displayable = false;
 
 						return;
 					} else {
@@ -77,7 +77,7 @@ export default class PDF extends PlaylistItemBase {
 					}
 				}
 
-				this.displayable = displayable;
+				this.is_displayable = displayable;
 			})();
 		}
 	}
@@ -151,7 +151,7 @@ export default class PDF extends PlaylistItemBase {
 	}
 
 	get playlist_item(): PDFProps & { displayable: boolean } {
-		return { ...this.props, displayable: this.displayable };
+		return { ...this.props, displayable: this.is_displayable };
 	}
 
 	get media(): string {

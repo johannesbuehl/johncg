@@ -48,12 +48,12 @@ export default class Psalm extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.displayable = this.validate_props(props);
+		this.is_displayable = this.validate_props(props);
 
 		const psalm_content = this.psalm_file;
 
 		if (psalm_content === false) {
-			this.displayable = false;
+			this.is_displayable = false;
 		}
 	}
 
@@ -173,7 +173,7 @@ export default class Psalm extends PlaylistItemBase {
 	}
 
 	get playlist_item(): PsalmProps & { displayable: boolean } {
-		return { ...this.props, displayable: this.displayable };
+		return { ...this.props, displayable: this.is_displayable };
 	}
 
 	get media(): string {
@@ -190,7 +190,7 @@ export default class Psalm extends PlaylistItemBase {
 		try {
 			psalm_content_string = fs.readFileSync(get_psalm_path(this.props.file), "utf-8");
 		} catch (e) {
-			this.displayable = false;
+			this.is_displayable = false;
 
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {

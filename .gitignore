@@ -7,3 +7,4 @@ casparcg/Templates/JohnCG/*.js
 client/webfonts/bahnschrift.ttf
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
+server_log.log

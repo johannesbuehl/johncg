@@ -38,10 +38,10 @@
 	const control_window_state = defineModel<ControlWindowState>();
 
 	// reference for the file-input
-	const open_playlist_input = ref<HTMLInputElement>();
+	const load_playlist_input = ref<HTMLInputElement>();
 
 	// read the content of the playlist-file and send it to the server
-	function open_playlist_file(e: Event) {
+	function load_playlist_file(e: Event) {
 		const input_event = e.target as HTMLInputElement;
 
 		// only continue, if there is a file
@@ -50,7 +50,7 @@
 
 			reader.addEventListener("load", (e) => {
 				const message: JGCPRecv.OpenPlaylist = {
-					command: "open_playlist",
+					command: "load_playlist",
 					playlist: e.target?.result as string
 				};
 
@@ -73,7 +73,6 @@
 <template>
 	<div class="menubar">
 		<MenuButton icon="file" />
-		<!-- <MenuButton icon="folder-open" @click="open_playlist_input?.click()" /> -->
 		<MenuButton
 			icon="folder-open"
 			@click="control_window_state = ControlWindowState.OpenPlaylist"
@@ -82,10 +81,10 @@
 		<MenuButton icon="floppy-disk" @click="save_playlist" />
 		<input
 			type="file"
-			ref="open_playlist_input"
+			ref="load_playlist_input"
 			:accept="'.jcg'"
-			@click="open_playlist_input ? (open_playlist_input.value = '') : null"
-			@change="open_playlist_file"
+			@click="load_playlist_input ? (load_playlist_input.value = '') : null"
+			@change="load_playlist_file"
 			style="display: none"
 		/>
 		<MenuDivider />

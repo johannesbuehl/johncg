@@ -75,7 +75,7 @@ export abstract class PlaylistItemBase {
 	protected abstract item_props: ItemProps;
 	protected abstract slide_count: number;
 
-	protected displayable: boolean = true;
+	protected is_displayable: boolean = true;
 
 	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
 	abstract set_active_slide(slide?: number): number;
@@ -111,7 +111,7 @@ export abstract class PlaylistItemBase {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
-			this.displayable = true;
+			this.is_displayable = true;
 
 			return this.props;
 		} else {
@@ -136,7 +136,7 @@ export abstract class PlaylistItemBase {
 	abstract get template(): Template | undefined;
 
 	get displayable(): boolean {
-		return this.displayable;
+		return this.is_displayable;
 	}
 }
 

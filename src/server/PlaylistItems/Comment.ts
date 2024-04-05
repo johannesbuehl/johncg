@@ -19,7 +19,7 @@ export default class Comment extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.displayable = false;
+		this.is_displayable = false;
 	}
 
 	create_client_object_item_slides(): Promise<ClientCommentSlides> {
@@ -58,7 +58,7 @@ export default class Comment extends PlaylistItemBase {
 	}
 
 	get playlist_item(): CommentProps & { displayable: boolean } {
-		return { ...this.props, displayable: this.displayable };
+		return { ...this.props, displayable: this.is_displayable };
 	}
 
 	get media(): undefined {

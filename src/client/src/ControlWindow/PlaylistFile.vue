@@ -20,9 +20,9 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function open_playlist(playlist: File) {
+	function load_playlist(playlist: File) {
 		const message: JGCPRecv.OpenPlaylist = {
-			command: "open_playlist",
+			command: "load_playlist",
 			playlist: playlist.path
 		};
 
@@ -33,7 +33,7 @@
 <template>
 	<div class="playlist_file_wrapper">
 		<div id="file_structure_container">
-			<FileItem :root="true" :files="files" @choose="open_playlist" />
+			<FileItem :root="true" :files="files" @choose="load_playlist" />
 		</div>
 	</div>
 </template>

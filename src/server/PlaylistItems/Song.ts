@@ -50,9 +50,9 @@ export default class Song extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.displayable = this.validate_props(props);
+		this.is_displayable = this.validate_props(props);
 
-		if (this.displayable) {
+		if (this.is_displayable) {
 			this.cache_song_file();
 
 			// add the title-slide to the counter
@@ -206,7 +206,7 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	get playlist_item(): SongProps & { displayable: boolean } {
-		return { ...this.props, displayable: this.displayable };
+		return { ...this.props, displayable: this.is_displayable };
 	}
 
 	get media(): string {
@@ -236,7 +236,7 @@ export default class Song extends PlaylistItemBase {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				console.error(`song '${this.props.file}' does not exist`);
 
-				this.displayable = false;
+				this.is_displayable = false;
 
 				return;
 			} else {
@@ -255,7 +255,7 @@ export default class Song extends PlaylistItemBase {
 				return media;
 			}
 
-			// make it all uppercase and remove the extension to match casparcg-clips
+			// make it all uppercase and remove the extension to match CasparCG-clips
 			const req_name = media
 				.replace(/\.[^(\\.]+$/, "")
 				.replaceAll("\\", "/")

@@ -44,7 +44,7 @@ export default class Bible extends PlaylistItemBase {
 
 		this.item_props = props;
 
-		this.displayable = this.validate_props(props);
+		this.is_displayable = this.validate_props(props);
 	}
 
 	create_client_object_item_slides(): Promise<ClientBibleSlides> {
@@ -88,7 +88,7 @@ export default class Bible extends PlaylistItemBase {
 	}
 
 	get playlist_item(): BibleProps & { displayable: boolean } {
-		return { ...this.props, displayable: this.displayable };
+		return { ...this.props, displayable: this.is_displayable };
 	}
 
 	get media(): string {

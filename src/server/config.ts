@@ -6,6 +6,7 @@ export interface CasparCGConnectionSettings {
 }
 
 export interface ConfigJSON {
+	log_level: keyof Levels;
 	behaviour: {
 		show_on_load: boolean;
 	};
@@ -39,6 +40,7 @@ export interface ConfigJSON {
 }
 
 import fs from "fs";
+import { Levels } from "log4js";
 import path from "path";
 
 const config_path = "config.json";

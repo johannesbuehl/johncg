@@ -1,9 +1,4 @@
 <script setup lang="ts">
-	/**
-	 * MISSING
-	 * error-log
-	 * create css-files for duplicate css in Parts
-	 */
 	import { ref, watch } from "vue";
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 
