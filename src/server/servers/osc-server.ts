@@ -1,5 +1,6 @@
 import { Client as ClientOSC, Server as ServerOSC } from "node-osc";
 import type { ArgumentType as ArgumentTypeOSC } from "node-osc";
+import { logger } from "../logger";
 
 export interface OSCServerArguments {
 	port_receive: number;
@@ -30,6 +31,8 @@ export default class OSCServer {
 		this.osc_client = new ClientOSC(args.address_send, args.port_send);
 
 		this.osc_server.on("message", (osc_msg) => {
+			logger.debug(`received OSC-command (${JSON.stringify(osc_msg)})`);
+
 			const parts = osc_msg[0].split("/");
 
 			// remove the first empty elementn from the leading slash
@@ -78,9 +81,11 @@ export default class OSCServer {
 
 		// if the type is undefined, the type is not supported -> exit
 		if (type === undefined) {
+			logger.warn("can't send OSC-command: invalid type");
 			return;
 		}
 
+		logger.debug(`sending OSC-command: '${path} ${JSON.stringify(value)}'`);
 		this.osc_client.send([path, value]);
 	}
 }

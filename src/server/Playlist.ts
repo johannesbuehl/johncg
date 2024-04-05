@@ -1,4 +1,4 @@
-import type { APIRequest, ClipInfo, Commands, TransitionParameters } from "casparcg-connection";
+import type { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
 
 import type { ClientItemSlides, ItemProps, PlaylistItem } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
@@ -66,11 +66,15 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(casparcg_connections?: CasparCGConnection[], playlist?: string) {
+	constructor(
+		casparcg_connections?: CasparCGConnection[],
+		playlist?: string,
+		callback?: () => void
+	) {
 		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
 
 		if (playlist !== undefined) {
-			this.load_playlist_file(playlist);
+			this.load_playlist_file(playlist, callback);
 
 			let first_item = 0;
 
@@ -112,10 +116,11 @@ export default class Playlist {
 	add_item(
 		item: ItemProps,
 		set_active: boolean = false,
+		callback?: () => void,
 		index: number = this.playlist_items.length
 	) {
 		const item_class_map: {
-			[key in ItemProps["type"]]: new (props: ItemProps, ccg?: ClipInfo[]) => PlaylistItem;
+			[key in ItemProps["type"]]: new (props: ItemProps, callback: () => void) => PlaylistItem;
 		} = {
 			song: Song,
 			comment: Comment,
@@ -127,7 +132,13 @@ export default class Playlist {
 			psalm: Psalm
 		};
 
-		const new_item = new item_class_map[item.type](item, this.casparcg_connections[0].media);
+		const new_item = new item_class_map[item.type](item, () => {
+			callback();
+
+			if (set_active) {
+				this.set_active_item(index, 0);
+			}
+		});
 
 		this.playlist_items.splice(index, 0, new_item);
 
@@ -176,7 +187,7 @@ export default class Playlist {
 		}
 	}
 
-	protected load_playlist_file(playlist_path: string): void {
+	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
 		let playlist_string: string;
 
 		try {
@@ -196,7 +207,7 @@ export default class Playlist {
 		this.caption = playlist.caption;
 
 		playlist.items.forEach((item) => {
-			this.add_item(item, false);
+			this.add_item(item, false, callback);
 		});
 	}
 
@@ -428,37 +439,41 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.Play>> {
-		let api_request: Promise<APIRequest<Commands.Play>>;
+		if (casparcg_connection.media !== undefined) {
+			let api_request: Promise<APIRequest<Commands.Play>>;
 
-		// if the state is "visible", play it directly
-		if (this.visibility) {
-			const clip = this.active_playlist_item?.media ?? "#00000000";
+			// if the state is "visible", play it directly
+			if (this.visibility) {
+				const clip = this.active_playlist_item?.media ?? "#00000000";
 
-			logger.log(`loading CasparCG-media: '${clip}'`);
+				logger.log(`loading CasparCG-media: '${clip}'`);
 
-			const message = {
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[0],
-				clip,
-				loop: this.active_playlist_item?.loop,
-				transition: this.casparcg_transition
-			};
+				const message = {
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.media,
+					clip,
+					loop: this.active_playlist_item?.loop,
+					transition: this.casparcg_transition
+				};
 
-			api_request = casparcg_connection.connection.play(message);
-		} else {
-			logger.log(`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`);
+				api_request = casparcg_connection.connection.play(message);
+			} else {
+				logger.log(
+					`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`
+				);
 
-			//  if the current stat is invisible, only load it in the background
-			api_request = casparcg_connection.connection.loadbg({
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[0],
-				clip: this.active_playlist_item?.media,
-				loop: this.active_playlist_item?.loop,
-				transition: this.casparcg_transition
-			});
+				//  if the current stat is invisible, only load it in the background
+				api_request = casparcg_connection.connection.loadbg({
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.media,
+					clip: this.active_playlist_item?.media,
+					loop: this.active_playlist_item?.loop,
+					transition: this.casparcg_transition
+				});
+			}
+
+			return api_request;
 		}
-
-		return api_request;
 	}
 
 	private casparcg_load_template(
@@ -473,7 +488,7 @@ export default class Playlist {
 			api_request = casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[1],
+				layer: casparcg_connection.settings.layers.template,
 				cgLayer: 0,
 				playOnLoad: this.casparcg_visibility,
 				template: this.active_playlist_item.template.template,
@@ -496,7 +511,7 @@ export default class Playlist {
 			api_request = casparcg_connection.connection.play({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[1],
+				layer: casparcg_connection.settings.layers.template,
 				clip: "EMPTY",
 				transition: this.casparcg_transition
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -519,7 +534,7 @@ export default class Playlist {
 			void casparcg_connection.connection.cgInvoke({
 				/* eslint-disable @typescript-eslint/naming-convention */
 				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers[1],
+				layer: casparcg_connection.settings.layers.template,
 				cgLayer: 0,
 				method: `jump(${slide})`
 				/* eslint-enable @typescript-eslint/naming-convention */
@@ -538,31 +553,37 @@ export default class Playlist {
 				await casparcg_connection.connection.cgPlay({
 					/* eslint-disable @typescript-eslint/naming-convention */
 					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers[1],
+					layer: casparcg_connection.settings.layers.template,
 					cgLayer: 0
 					/* eslint-enable @typescript-eslint/naming-convention */
 				});
 			} else {
-				await Promise.allSettled([
-					// fade-out the media
-					casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers[0],
-						clip: "EMPTY",
-						transition: this.casparcg_transition
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
-
+				const promises = [
 					// stop the template-layer
 					casparcg_connection.connection.cgStop({
 						/* eslint-disable @typescript-eslint/naming-convention */
 						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers[1],
+						layer: casparcg_connection.settings.layers.template,
 						cgLayer: 0
 						/* eslint-enable @typescript-eslint/naming-convention */
 					})
-				]);
+				];
+
+				if (casparcg_connection.media !== undefined) {
+					promises.push(
+						// fade-out the media
+						casparcg_connection.connection.play({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.media,
+							clip: "EMPTY",
+							transition: this.casparcg_transition
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					);
+				}
+
+				await Promise.allSettled(promises);
 			}
 		}
 	}

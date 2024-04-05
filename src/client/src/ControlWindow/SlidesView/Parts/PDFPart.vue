@@ -89,12 +89,10 @@
 	}
 
 	.slides_wrapper {
+		padding: 0.25rem;
+
 		display: flex;
 		flex-wrap: wrap;
-
-		align-items: center;
-
-		padding: 0.5rem;
-		gap: 0.25rem;
+		gap: 0.375rem;
 	}
 </style>

@@ -129,7 +129,7 @@ export default class Control {
 		// create the CasparCG-connections
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Config.casparcg.connections.forEach(async (connection_setting) => {
-			logger.log(`Adding CasparCG-connection (${JSON.stringify(connection_setting)})`);
+			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
 			const connection: CasparCG = new CasparCG({
 				...connection_setting,
@@ -144,11 +144,11 @@ export default class Control {
 			} catch (e) {
 				if (e instanceof Error) {
 					logger.error(
-						`Could not add CasparCG-connection (${JSON.stringify(connection_setting)}): ${e.name}: ${e.message}`
+						`Could not add CasparCG-connection ${JSON.stringify(connection_setting)}: ${e.name}: ${e.message}`
 					);
 				} else {
 					logger.error(
-						`Could not add CasparCG-connection (${JSON.stringify(connection_setting)}): unknown exception`
+						`Could not add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
 					);
 				}
 
@@ -256,7 +256,13 @@ export default class Control {
 		logger.log(`lading playlist (${playlist_path})`);
 
 		try {
-			new_playlist = new Playlist(this.casparcg_connections, get_playlist_path(playlist_path));
+			new_playlist = new Playlist(
+				this.casparcg_connections,
+				get_playlist_path(playlist_path),
+				() => {
+					this.send_playlist();
+				}
+			);
 		} catch (e) {
 			logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
 			ws_send_response("invalid playlist-file", false, ws);
@@ -524,12 +530,21 @@ export default class Control {
 	}
 
 	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
-		logger.log(`adding item: position '${index}' (${JSON.stringify(props)})`);
+		logger.log(
+			`adding item: ${index !== undefined ? `position: '${index}'` : "append"}' ${JSON.stringify(props)}`
+		);
 
 		try {
-			this.playlist.add_item(props, set_active, index);
+			this.playlist.add_item(
+				props,
+				set_active,
+				() => {
+					this.send_playlist();
+				},
+				index
+			);
 		} catch (e) {
-			logger.warn(`can't add item to playlist (${JSON.stringify(props)})`);
+			logger.warn(`can't add item to playlist ${JSON.stringify(props)}`);
 
 			ws_send_response("could not add item to playlist", false, ws);
 
@@ -546,7 +561,7 @@ export default class Control {
 	private update_item(index: number, props: ItemProps, ws: WebSocket) {
 		let result: ItemProps | false;
 
-		logger.log(`updating item: position: '${index}' (${JSON.stringify(props)})`);
+		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);
 
 		try {
 			result = this.playlist.update_item(index, props);

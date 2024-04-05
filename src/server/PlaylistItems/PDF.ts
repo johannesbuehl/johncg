@@ -5,6 +5,7 @@ import tmp from "tmp";
 import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { get_pdf_path } from "../config.ts";
+import { logger } from "../logger.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -25,7 +26,7 @@ export default class PDF extends PlaylistItemBase {
 
 	protected active_slide_number: number = 0;
 
-	constructor(props: PDFProps) {
+	constructor(props: PDFProps, callback: () => void) {
 		super();
 
 		this.item_props = props;
@@ -39,34 +40,39 @@ export default class PDF extends PlaylistItemBase {
 
 				const pth = get_pdf_path(this.props.file).replaceAll("/", "\\");
 
+				logger.debug(`loading PDF-file (${pth})`);
+
 				try {
 					const pdf = await pdfjs.getDocument(pth).promise;
 
 					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					[...Array(pdf.numPages).keys()].forEach(async (index) => {
-						// increase the counter by one, because the pages start at 1
-						const page = await pdf.getPage(index + 1);
-						// eslint-disable-next-line @typescript-eslint/naming-convention
-						const viewport = page.getViewport({ scale: 1 });
-						const canvas = Canvas.createCanvas(viewport.width, viewport.height);
-
-						await page.render({
+					await Promise.all(
+						[...Array(pdf.numPages).keys()].map(async (index) => {
+							// increase the counter by one, because the pages start at 1
+							const page = await pdf.getPage(index + 1);
 							// eslint-disable-next-line @typescript-eslint/naming-convention
-							canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
-							viewport
-						}).promise;
+							const viewport = page.getViewport({ scale: 1 });
 
-						const image_buffer = canvas.toBuffer();
+							const canvas = Canvas.createCanvas(viewport.width, viewport.height);
 
-						// save the image into a temporary file
-						const tmp_file = tmp.fileSync();
+							await page.render({
+								// eslint-disable-next-line @typescript-eslint/naming-convention
+								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
+								viewport
+							}).promise;
 
-						void sharp(image_buffer).png().toFile(tmp_file.name);
+							const image_buffer = canvas.toBuffer();
 
-						this.slides[index] = tmp_file.name.replaceAll("\\", "/").replace(/^(\w:\/)/, "$1/");
+							// save the image into a temporary file
+							const tmp_file = tmp.fileSync();
 
-						this.slide_count++;
-					});
+							void sharp(image_buffer).png().toFile(tmp_file.name);
+
+							this.slides[index] = tmp_file.name.replaceAll("\\", "/").replace(/^(\w:\/)/, "$1/");
+
+							this.slide_count++;
+						})
+					);
 				} catch (e) {
 					if (e instanceof pdfjs.MissingPDFException) {
 						this.is_displayable = false;
@@ -78,6 +84,8 @@ export default class PDF extends PlaylistItemBase {
 				}
 
 				this.is_displayable = displayable;
+
+				callback();
 			})();
 		}
 	}

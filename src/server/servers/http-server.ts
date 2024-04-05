@@ -5,6 +5,7 @@ import mime from "mime-types";
 import { unescape } from "querystring";
 
 import Config from "../config.ts";
+import { logger } from "../logger.ts";
 
 class HTTPServer {
 	private port: number;
@@ -20,6 +21,8 @@ class HTTPServer {
 
 				// unescape the percent signs in the url
 				request.url = unescape(request.url ?? "");
+
+				logger.debug(`HTTP-request (${request.url})`);
 
 				// override different requested urls
 				switch (true) {
@@ -46,6 +49,8 @@ class HTTPServer {
 				fs.readFile(path.join(resource_dir, request.url), (err, data) => {
 					// if there was an error while opening the file, serve a 404-error
 					if (err) {
+						logger.error(`can't serve HTTP-request: 404 - resource not found (${request.url})`);
+
 						response.writeHead(404, {
 							// eslint-disable-next-line @typescript-eslint/naming-convention
 							"Content-Type": "text/plain"
@@ -53,6 +58,8 @@ class HTTPServer {
 
 						response.write("Resource not found");
 					} else {
+						logger.debug(`serving HTTP-request (${request.url})`);
+
 						const mime_type = mime.lookup(request.url ?? "");
 
 						response.writeHead(200, {

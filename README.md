@@ -17,7 +17,6 @@ Generate lyric-graphics and play them out through CasparCG.
 - write installation instruction (including Bahnschrift-Font installation)
 - client communication with osc over websocket?
 - add support for NodeCG
-- add CLI output to server
 - implement all countdown modes
 - countdown: save in server wether it is finished
 - client-messages: create message-log, group same
@@ -31,3 +30,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - change default-item-colors
 - use playlist-caption
 - check config-file
+- render PDF with same size as casparcg

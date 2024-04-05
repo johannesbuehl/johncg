@@ -7,6 +7,7 @@ import Config, { get_psalm_path, get_song_path } from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { CasparCGConnection } from "./control";
+import { logger } from "./logger";
 
 export interface File {
 	name: string;
@@ -120,22 +121,32 @@ export default class SearchPart {
 	}
 
 	find_sng_files(pth: string = Config.path.song): SongFile[] {
+		logger.log("searching song-files");
+
 		return this.find_files(pth, pth, [".sng"], (f) => this.create_song_file(f));
 	}
 
 	find_jcg_files(pth: string = Config.path.playlist): File[] {
+		logger.log("searching jcg-files");
+
 		return this.find_files(pth, pth, [".jcg"]);
 	}
 
 	find_pdf_files(pth: string = Config.path.pdf): PsalmFile[] {
+		logger.log("searching PDF-files");
+
 		return this.find_files(pth, pth, [".pdf"]);
 	}
 
 	find_psalm_files(pth: string = Config.path.psalm): PsalmFile[] {
+		logger.log("searching psalm-files");
+
 		return this.find_files(pth, pth, [".psm"], (f) => this.create_psalm_file(f));
 	}
 
 	async get_casparcg_media(): Promise<File[]> {
+		logger.debug("requesting CasparCG-media-list");
+
 		this.casparcg_connections[0].media =
 			(await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
 
@@ -143,6 +154,8 @@ export default class SearchPart {
 	}
 
 	async get_casparcg_template(): Promise<File[]> {
+		logger.debug("requesting CasparCG-template-list");
+
 		this.casparcg_connections[0].template =
 			(await (await this.casparcg_connections[0].connection.tls()).request)?.data ?? [];
 
@@ -150,6 +163,8 @@ export default class SearchPart {
 	}
 
 	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
+		logger.log(`reading single ${type}-file (${path})`);
+
 		const item_file: ItemFile = {
 			name: path,
 			path

@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { RawData } from "ws";
+import { logger } from "../logger";
 
 // defintion of a JCGP-response
 export interface JGCPResponse {
@@ -43,6 +44,8 @@ export default class WebsocketServer {
 	}
 
 	private on_connection(ws: WebSocket) {
+		logger.debug(`new WebSocket-connection (${ws.url})`);
+
 		// check wether there is a protocol handler for the used protocol
 		if (Object.keys(this.message_handlers).includes(ws.protocol)) {
 			if (!Object.keys(this.connections).includes(ws.protocol)) {
@@ -68,6 +71,8 @@ export default class WebsocketServer {
 				handle_function(ws);
 			}
 		} else {
+			logger.error(`closing WebSocket (${ws.url}): protocol not supported (${ws.protocol})`);
+
 			// reject connection
 			ws.send("Protocol not supported");
 
@@ -82,13 +87,15 @@ export default class WebsocketServer {
 		}
 
 		// redirect errors to the console
-		ws.on("error", () => {
-			console.error();
+		ws.on("error", (event: Error) => {
+			logger.error(`WebSocket-connection error (${ws.url}): ${event.name}: ${event.message}`);
 
 			ws.close();
 		});
 
 		ws.on("close", () => {
+			logger.log(`WebSocket-connection closed (${ws.url})`);
+
 			ws.close();
 
 			// remove the connection from the list

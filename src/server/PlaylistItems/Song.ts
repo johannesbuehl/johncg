@@ -4,8 +4,6 @@ import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPart, LyricPart } from "./SongFile.ts";
 
-import { ClipInfo } from "casparcg-connection";
-
 export interface SongTemplate {
 	template: "JohnCG/Song";
 	data: SongTemplateData;
@@ -41,12 +39,8 @@ export default class Song extends PlaylistItemBase {
 
 	protected media_casparcg: string;
 
-	private casparcg_media_list: ClipInfo[];
-
-	constructor(props: SongProps, casparcg_media_list: ClipInfo[]) {
+	constructor(props: SongProps) {
 		super();
-
-		this.casparcg_media_list = casparcg_media_list;
 
 		this.item_props = props;
 

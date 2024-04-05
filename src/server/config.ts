@@ -2,7 +2,10 @@ export interface CasparCGConnectionSettings {
 	host: string;
 	port: number;
 	channel: number;
-	layers: [number, number];
+	layers: {
+		media?: number;
+		template: number;
+	};
 }
 
 export interface ConfigJSON {
