@@ -2,6 +2,7 @@
 	import EditSong from "./EditSong.vue";
 	import EditBible from "./EditBible.vue";
 	import EditTemplate from "./EditTemplate.vue";
+	import EditCountdown from "./EditCountdown.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -66,6 +67,13 @@
 		<EditTemplate
 			v-else-if="item_props?.type === 'template'"
 			:key="`${item_index}_template`"
+			v-model:item_props="item_props"
+			:ws="ws"
+			:item_index="item_index"
+		/>
+		<EditCountdown
+			v-else-if="item_props?.type === 'countdown'"
+			:key="`${item_index}_countdown`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"
