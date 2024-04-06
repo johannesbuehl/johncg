@@ -57,7 +57,7 @@
 	);
 
 	const emit = defineEmits<{
-		choose: [file: File, type: "dir" | "file"];
+		choose: [file: File | undefined, type: "dir" | "file"];
 	}>();
 
 	function on_enter(event: Event) {
@@ -78,19 +78,31 @@
 		:class="{ indent: !root, root }"
 		:tabindex="root ? undefined : 0"
 		@keydown.enter="on_enter"
+		@click="
+			typeof files !== 'object' && file !== undefined ? (selection = file) : '';
+			$event.stopPropagation();
+			$event.preventDefault();
+		"
+		@dblclick="
+			typeof files === 'object'
+				? (expanded = !expanded)
+				: emit('choose', file, files === undefined ? 'file' : 'dir');
+			$event.stopPropagation();
+			$event.preventDefault();
+		"
 	>
 		<div v-if="!root" class="button" @click="expanded = !expanded">
 			<FontAwesomeIcon
 				v-if="typeof files === 'object'"
+				class="expand_icon"
 				:icon="['fas', expanded ? 'minus' : 'plus']"
 			/>
 		</div>
 		<div class="file_item" ref="files_draggable">
 			<span
+				v-if="!root"
 				class="file_content"
 				:class="{ selectable: typeof files !== 'object', active: selection === file }"
-				@click="typeof files !== 'object' && file !== undefined ? (selection = file) : ''"
-				@dblclick="expanded = !expanded"
 			>
 				{{ file?.name }}
 			</span>
@@ -115,6 +127,7 @@
 						:files="element.children"
 						:clone_callback="clone_callback"
 						v-model="selection"
+						@choose="(file, type) => emit('choose', file, type)"
 					/>
 				</template>
 			</Draggable>
@@ -140,9 +153,17 @@
 		margin-left: 0.25rem;
 	}
 
+	.expand_icon {
+		cursor: pointer;
+	}
+
 	.file_item {
 		display: flex;
 		flex-direction: column;
+	}
+
+	.file_item_wrapper:not(.root) > .file_item {
+		flex: 1;
 	}
 
 	.file_item > div {
@@ -157,6 +178,8 @@
 		justify-content: center;
 
 		padding: 0.25rem;
+
+		cursor: pointer;
 	}
 
 	.file_content.selectable {
@@ -164,8 +187,6 @@
 	}
 
 	.file_item_wrapper:has(> .file_item > .file_content.selectable) {
-		cursor: pointer;
-
 		font-weight: lighter;
 
 		background-color: var(--color-item);

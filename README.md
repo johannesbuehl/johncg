@@ -35,3 +35,4 @@ Generate lyric-graphics and play them out through CasparCG.
   - tabindex for all elements
   - keyboard-shortcuts
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
+- additional playlist-item: custom amcp-command

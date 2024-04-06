@@ -20,13 +20,17 @@
 		props.ws.send(JSON.stringify(message));
 	});
 
-	function load_playlist(playlist: File) {
-		const message: JGCPRecv.OpenPlaylist = {
-			command: "load_playlist",
-			playlist: playlist.path
-		};
+	function load_playlist(playlist?: File) {
+		if (playlist !== undefined) {
+			const message: JGCPRecv.OpenPlaylist = {
+				command: "load_playlist",
+				playlist: playlist.path
+			};
 
-		props.ws.send(JSON.stringify(message));
+			props.ws.send(JSON.stringify(message));
+
+			console.debug(message);
+		}
 	}
 </script>
 

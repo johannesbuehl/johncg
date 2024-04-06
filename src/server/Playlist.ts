@@ -487,9 +487,8 @@ export default class Playlist {
 
 		// if a template was specified, load it
 		if (template !== undefined) {
-			logger.log(
-				`loading CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
-			);
+			logger.log(`loading CasparCG-template: '${template.template}'`);
+			logger.debug(`with data: ${JSON.stringify(template.data)}`);
 
 			return casparcg_connection.connection.cgAdd({
 				/* eslint-disable @typescript-eslint/naming-convention */
