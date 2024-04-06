@@ -32,7 +32,7 @@ function update(str_args: string) {
 		}
 	}
 
-	// if requested, diable transition-effects
+	// if requested, disable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");
 	if (main_div !== null) {
 		if (data.mute_transition) {
@@ -48,6 +48,8 @@ function update(str_args: string) {
 
 	if (data.show_seconds === true) {
 		spans.seconds = [document.createElement("span"), document.createElement("span")];
+	} else {
+		delete spans.seconds;
 	}
 
 	// create the individual spans
@@ -78,11 +80,11 @@ function update(str_args: string) {
 		}
 	});
 
-	// create an overlaying div for the underline
-	const underline_div = document.createElement("div");
-	underline_div.classList.add("underline");
-	underline_div.id = "underline";
-	time_div.append(underline_div);
+	// // create an overlaying div for the underline
+	// const underline_div = document.createElement("div");
+	// underline_div.classList.add("underline");
+	// underline_div.id = "underline";
+	// time_div.append(underline_div);
 
 	// if the position is undefined, set them to center
 	if (data.position.x === undefined) {
@@ -150,32 +152,14 @@ function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean] {
 	];
 }
 
-const root = document.querySelector(":root");
 const time_div = document.querySelector<HTMLDivElement>("div#time");
 
 function position_time() {
-	const root_width = root?.clientWidth;
-	const root_height = root?.clientHeight;
-	const time_width = time_div?.clientWidth;
-	const time_height = time_div?.clientHeight;
+	if (time_div !== null) {
+		time_div.style.left = `${data.position.x}%`;
+		time_div.style.top = `${data.position.y}%`;
 
-	if (
-		root_width !== undefined &&
-		root_height !== undefined &&
-		time_width !== undefined &&
-		time_height !== undefined &&
-		time_div !== null
-	) {
-		const free_width_share = 1 - time_width / root_width;
-		const free_height_share = 1 - time_height / root_height;
-
-		const left = data.position.x * free_width_share + time_width / root_width / 2;
-		const top = data.position.y * free_height_share + time_height / root_height / 2;
-
-		time_div.style.left = `${left}%`;
-		time_div.style.top = `${top}%`;
-
-		time_div.style.transform = `translate(-${left}, -${top})`;
+		time_div.style.transform = `translate(-50%, -50%)`;
 	}
 }
 
