@@ -12,7 +12,17 @@
 
 <template>
 	<input type="radio" :id="value" :value="value" v-model="pick" />
-	<label class="add_part_radio" :class="{ active: pick === value }" :for="value">
+	<label
+		tabindex="0"
+		class="add_part_radio"
+		:class="{ active: pick === value }"
+		:for="value"
+		@keydown.enter="
+			pick = value;
+			$event.stopPropagation();
+			$event.preventDefault();
+		"
+	>
 		<FontAwesomeIcon :icon="['fas', icon]" />
 		{{ text }}
 	</label>

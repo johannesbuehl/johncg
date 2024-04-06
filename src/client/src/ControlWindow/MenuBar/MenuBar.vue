@@ -22,13 +22,13 @@
 	import MenuDivider from "./MenuDivider.vue";
 
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	const props = defineProps<{
 		ws: WebSocket;
-		visibility: boolean;
 	}>();
 
-	const visibility_ref = toRef(props, "visibility");
+	const visibility = defineModel<boolean>("visibility", { required: true });
 
 	const emit = defineEmits<{
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
@@ -72,13 +72,19 @@
 
 <template>
 	<div class="menubar">
-		<MenuButton icon="file" />
+		<MenuButton :square="true">
+			<FontAwesomeIcon :icon="['fas', 'file']" />
+		</MenuButton>
 		<MenuButton
-			icon="folder-open"
+			:square="true"
 			@click="control_window_state = ControlWindowState.OpenPlaylist"
 			:active="control_window_state === ControlWindowState.OpenPlaylist"
-		/>
-		<MenuButton icon="floppy-disk" @click="save_playlist" />
+		>
+			<FontAwesomeIcon :icon="['fas', 'folder-open']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="save_playlist">
+			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
+		</MenuButton>
 		<input
 			type="file"
 			ref="load_playlist_input"
@@ -89,28 +95,43 @@
 		/>
 		<MenuDivider />
 		<MenuButton
-			icon="fa-list"
+			:square="true"
 			@click="control_window_state = ControlWindowState.Playlist"
 			:active="control_window_state === ControlWindowState.Playlist"
-		/>
+		>
+			<FontAwesomeIcon :icon="['fas', 'list']" />
+		</MenuButton>
 		<MenuButton
-			icon="fa-plus"
+			:square="true"
 			@click="control_window_state = ControlWindowState.Add"
 			:active="control_window_state === ControlWindowState.Add"
-		/>
+		>
+			<FontAwesomeIcon :icon="['fas', 'plus']" />
+		</MenuButton>
 		<MenuButton
-			icon="fa-pen"
+			:square="true"
 			@click="control_window_state = ControlWindowState.Edit"
 			:active="control_window_state === ControlWindowState.Edit"
-		/>
+		>
+			<FontAwesomeIcon :icon="['fas', 'pen']" />
+		</MenuButton>
 		<MenuDivider />
-		<MenuButton icon="backward-step" @click="emit('navigate', 'item', -1)" />
-		<MenuButton icon="forward-step" @click="emit('navigate', 'item', 1)" />
-		<MenuButton icon="angle-left" @click="emit('navigate', 'slide', -1)" />
-		<MenuButton icon="angle-right" @click="emit('navigate', 'slide', 1)" />
+		<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+			<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+			<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+			<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+			<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+		</MenuButton>
 		<MenuDivider />
-		<MenuButton icon="eye-slash" @click="emit('set_visibility', false)" :active="!visibility_ref" />
-		<MenuButton icon="eye" @click="emit('set_visibility', true)" :active="visibility_ref" />
+		<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
+			<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+		</MenuButton>
 	</div>
 </template>
 

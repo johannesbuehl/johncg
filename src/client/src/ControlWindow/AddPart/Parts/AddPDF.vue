@@ -10,6 +10,7 @@
 
 	import type { PDFFile } from "@server/search_part";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -142,7 +143,9 @@
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton icon="plus" text="Add PDF" @click="add_pdf(selection, 'file')" />
+			<MenuButton @click="add_pdf(selection, 'file')">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add PDF
+			</MenuButton>
 		</template>
 	</FileDialogue>
 </template>

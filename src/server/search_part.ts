@@ -145,6 +145,11 @@ export default class SearchPart {
 	}
 
 	async get_casparcg_media(): Promise<File[]> {
+		if (this.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-media-list: no conneciton added");
+			return;
+		}
+
 		logger.debug("requesting CasparCG-media-list");
 
 		this.casparcg_connections[0].media =
@@ -154,6 +159,11 @@ export default class SearchPart {
 	}
 
 	async get_casparcg_template(): Promise<File[]> {
+		if (this.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-template-list: no conneciton added");
+			return;
+		}
+
 		logger.debug("requesting CasparCG-template-list");
 
 		this.casparcg_connections[0].template =

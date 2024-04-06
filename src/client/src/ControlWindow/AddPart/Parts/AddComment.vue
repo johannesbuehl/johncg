@@ -5,6 +5,7 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import type { CommentProps } from "@server/PlaylistItems/Comment";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 
@@ -40,7 +41,9 @@
 			placeholder="Name"
 			@keydown.enter="add_comment"
 		/>
-		<MenuButton icon="plus" text="Add Comment" @click="add_comment" />
+		<MenuButton @click="add_comment">
+			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Comment
+		</MenuButton>
 	</div>
 </template>
 

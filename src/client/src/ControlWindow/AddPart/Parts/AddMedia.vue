@@ -10,6 +10,7 @@
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { MediaFile } from "@server/search_part";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -144,8 +145,12 @@
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton icon="repeat" text="Loop" @click="loop = !loop" :active="loop" />
-			<MenuButton icon="plus" text="Add Media" @click="add_media(selection, 'file')" />
+			<MenuButton @click="loop = !loop" :active="loop">
+				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop
+			</MenuButton>
+			<MenuButton @click="add_media(selection, 'file')">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Media
+			</MenuButton>
 		</template>
 	</FileDialogue>
 </template>

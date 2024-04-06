@@ -11,6 +11,7 @@
 	import type { PsalmFile } from "@server/search_part";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 	import type Psalm from "@server/PlaylistItems/Psalm";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{
@@ -158,7 +159,9 @@
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton icon="plus" text="Add Psalm" @click="add_psalm(selection, 'file')" />
+			<MenuButton @click="add_psalm(selection, 'file')">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Psalm
+			</MenuButton>
 		</template>
 	</FileDialogue>
 </template>

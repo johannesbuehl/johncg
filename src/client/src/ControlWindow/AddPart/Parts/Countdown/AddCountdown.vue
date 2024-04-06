@@ -7,30 +7,35 @@
 	import FileDialogue, {
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import CountdownEditor from "./CountdownEditor.vue";
 
-	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import type { TemplateFile } from "@server/search_part";
-	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
+	import type { MediaFile } from "@server/search_part";
+	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	library.add(fas.faPlus);
+	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
-		files: TemplateFile[];
+		files: MediaFile[];
 	}>();
 
 	const emit = defineEmits<{
-		add: [item_props: TemplateProps];
+		add: [item_props: CountdownProps];
 		refresh: [];
 	}>();
 
-	const selection = defineModel<TemplateFile>("selection", {});
-	const template_data = defineModel<object>("template_data", { default: {} });
+	const countdown_mode = ref<CountdownMode>("end_time");
+	const time = ref<string>(new Date(Date.now()).toLocaleTimeString());
+	const show_seconds = ref<boolean>(true);
+	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
+	const font_size = ref<number>(20);
+
+	const media_selection = defineModel<MediaFile>({});
 
 	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
 		default: [{ id: "name", placeholder: "Name", value: "" }]
 	});
 
-	const file_tree = defineModel<TemplateFile[]>("file_tree");
+	const file_tree = defineModel<MediaFile[]>("file_tree");
 
 	onMounted(() => {
 		// init
@@ -49,37 +54,40 @@
 	function init_files() {
 		search_map = create_search_map();
 
-		search_template();
+		search_media();
 	}
 
-	function add_template(file?: TemplateFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
-			emit("add", create_props(file));
+	function add_countdown() {
+		const return_props = create_props();
+
+		if (return_props !== undefined) {
+			emit("add", return_props);
 		}
 	}
 
-	function create_props(file: TemplateFile): TemplateProps {
-		return {
-			type: "template",
-			caption: file.name,
-			color: "#008800",
-			template: {
-				template: file.path,
-				data: template_data.value
-			}
-		};
+	function create_props(): CountdownProps | undefined {
+		if (media_selection.value !== undefined) {
+			return {
+				type: "countdown",
+				caption: "countdown-placeholder",
+				color: "#008800",
+				media: media_selection.value.path,
+				font_size: font_size.value,
+				mode: countdown_mode.value,
+				position: position.value,
+				show_seconds: show_seconds.value,
+				time: time.value
+			};
+		}
 	}
 
-	function search_template() {
+	function search_media() {
 		file_tree.value = search_string();
 	}
 
-	type SearchMapFile = TemplateFile & {
-		children?: SearchMapFile[];
-		search_data?: { name: string };
-	};
+	type SearchMapFile = MediaFile & { children?: SearchMapFile[]; search_data?: { name: string } };
 	let search_map: SearchMapFile[] = [];
-	function create_search_map(files: TemplateFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: MediaFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
 		if (files !== undefined) {
@@ -97,8 +105,8 @@
 		return return_map;
 	}
 
-	function search_string(files: SearchMapFile[] | undefined = search_map): TemplateFile[] {
-		const return_files: TemplateFile[] = [];
+	function search_string(files: SearchMapFile[] | undefined = search_map): MediaFile[] {
+		const return_files: MediaFile[] = [];
 
 		if (files !== undefined) {
 			files.forEach((f) => {
@@ -142,21 +150,26 @@
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:clone_callback="create_props"
-		name="Template"
-		v-model:selection="selection"
+		name="Media"
+		v-model:selection="media_selection"
 		v-model:search_strings="search_strings"
-		@choose="add_template"
-		@search="search_template"
+		@choose="add_countdown"
+		@search="search_media"
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton @click="add_template(selection, 'file')">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Template
+			<MenuButton @click="add_countdown">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown
 			</MenuButton>
 		</template>
 		<template v-slot:edit>
-			<JSONEditor v-model="template_data" />
+			<CountdownEditor
+				v-model:countdown_mode="countdown_mode"
+				v-model:font_size="font_size"
+				v-model:position="position"
+				v-model:show_seconds="show_seconds"
+				v-model:time="time"
+			/>
 		</template>
 	</FileDialogue>
 </template>
@@ -164,14 +177,5 @@
 <style scoped>
 	.button {
 		flex: 1;
-	}
-
-	.data_editor {
-		background-color: var(--color-container);
-
-		display: flex;
-		flex-direction: column;
-
-		border-radius: 0.25rem;
 	}
 </style>

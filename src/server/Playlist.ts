@@ -53,7 +53,7 @@ export default class Playlist {
 
 	private changes: boolean = false;
 
-	private active_item_number: number = 0;
+	private active_item_number: number | null = null;
 
 	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
 
@@ -306,7 +306,7 @@ export default class Playlist {
 	 * @param direction navigate forward ('next') or backward ('prev')
 	 */
 	// navigate_item(direction: NavigateDirection, slide: number = 0): void {
-	navigate_item(steps: number, slide: number = 0): void {
+	navigate_item(steps: number, slide: number = 0): boolean {
 		if (typeof steps !== "number") {
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
@@ -348,7 +348,7 @@ export default class Playlist {
 	 * @returns wether the slide has been changed
 	 */
 	navigate_slide(steps: number): boolean {
-		const item_steps = this.active_playlist_item.navigate_slide(steps);
+		const item_steps = this.active_playlist_item?.navigate_slide(steps);
 
 		if (item_steps !== 0) {
 			// if the item_steps is forwards, navigate to the first slide; if it is backwards navigate to the last one
@@ -632,7 +632,11 @@ export default class Playlist {
 		return this.visibility;
 	}
 
-	get active_item(): number {
+	get length(): number {
+		return this.playlist_items.length;
+	}
+
+	get active_item(): number | null {
 		return this.active_item_number;
 	}
 

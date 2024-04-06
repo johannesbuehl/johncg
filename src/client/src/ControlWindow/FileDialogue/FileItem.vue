@@ -1,6 +1,11 @@
 <script lang="ts">
 	export function sort_files(files?: File[]): File[] | undefined {
 		return files?.sort((a, b) => {
+			// check for different types (dir vs file)
+			if (typeof a.children !== typeof b.children) {
+				return a.children === undefined ? 1 : -1;
+			}
+
 			if (a.name === b.name) {
 				return 0;
 			} else {
@@ -30,12 +35,14 @@
 	library.add(fas.faPlus, fas.faMinus);
 
 	const props = defineProps<{
-		file?: JGCPSend.ItemFiles["files"][0];
+		file?: File;
 		root?: boolean;
 		expand?: boolean;
-		files?: JGCPSend.ItemFiles["files"];
+		files?: File[];
 		clone_callback?: (arg: JGCPSend.ItemFiles["files"][0]) => ItemProps;
 	}>();
+
+	const files_draggable = ref<HTMLDivElement>();
 
 	const expanded = ref<boolean>(props.expand ?? false);
 	const selection = defineModel<File>();
@@ -53,74 +60,61 @@
 		choose: [file: File, type: "dir" | "file"];
 	}>();
 
-	function on_choose(
-		file: File,
-		type: "dir" | "file" = typeof props.files === "object" ? "dir" : "file"
-	) {
-		if (type === "dir") {
+	function on_enter(event: Event) {
+		if (typeof props.files === "object") {
 			expanded.value = !expanded.value;
 		} else {
-			emit("choose", file, "file");
+			selection.value = props.file;
 		}
+
+		event.stopPropagation();
+		event.preventDefault();
 	}
 </script>
 
 <template>
-	<div class="file_item_wrapper" :class="{ indent: !root }">
+	<div
+		class="file_item_wrapper"
+		:class="{ indent: !root, root }"
+		:tabindex="root ? undefined : 0"
+		@keydown.enter="on_enter"
+	>
 		<div v-if="!root" class="button" @click="expanded = !expanded">
 			<FontAwesomeIcon
 				v-if="typeof files === 'object'"
 				:icon="['fas', expanded ? 'minus' : 'plus']"
 			/>
 		</div>
-		<div class="file_item">
+		<div class="file_item" ref="files_draggable">
 			<span
-				v-if="!root"
 				class="file_content"
-				:class="{ displayable: typeof files !== 'object', active: selection === file }"
+				:class="{ selectable: typeof files !== 'object', active: selection === file }"
 				@click="typeof files !== 'object' && file !== undefined ? (selection = file) : ''"
-				@dblclick="file ? on_choose(file) : undefined"
+				@dblclick="expanded = !expanded"
 			>
 				{{ file?.name }}
 			</span>
 			<Draggable
-				:list="sort_files(files?.filter((ele) => typeof ele.children === 'object'))"
-				:group="{ name: 'playlist', pull: 'clone', put: false }"
+				v-if="((files?.length ?? 0 > 0) && expanded) || root"
+				:list="sort_files(files)"
+				:group="{
+					name: 'playlist',
+					pull: clone_callback !== undefined ? 'clone' : false,
+					put: false
+				}"
 				item-key="path"
-				tag="span"
+				tag="div"
 				:clone="clone_callback"
 				:sort="false"
 			>
 				<template #item="{ element }">
 					<FileItem
-						v-if="typeof files === 'object'"
 						v-show="expanded || root"
 						:file="element"
 						:expand="expand"
 						:files="element.children"
 						:clone_callback="clone_callback"
 						v-model="selection"
-						@choose="on_choose"
-					/>
-				</template>
-			</Draggable>
-			<Draggable
-				:list="sort_files(files?.filter((ele) => typeof ele.children !== 'object'))"
-				:group="{ name: 'playlist', pull: 'clone', put: false }"
-				item-key="path"
-				tag="span"
-				:clone="clone_callback"
-				:sort="false"
-			>
-				<template #item="{ element }">
-					<FileItem
-						v-if="typeof files === 'object'"
-						v-show="expanded || root"
-						:file="element"
-						:files="element.children"
-						:clone_callback="clone_callback"
-						v-model="selection"
-						@choose="on_choose"
 					/>
 				</template>
 			</Draggable>
@@ -133,29 +127,43 @@
 		flex: 1;
 		display: flex;
 
-		align-items: baseline;
+		overflow: visible;
 
+		align-items: baseline;
+	}
+
+	.root {
 		overflow: auto;
 	}
 
 	.file_item_wrapper.indent {
-		padding-left: 0.25rem;
+		margin-left: 0.25rem;
 	}
 
 	.file_item {
 		display: flex;
 		flex-direction: column;
+	}
 
-		gap: 0.125rem;
+	.file_item > div {
+		display: flex;
+		flex-direction: column;
+
+		gap: 0.25rem;
+		padding: 0.25rem;
 	}
 
 	.file_content {
-		display: inline-block;
+		justify-content: center;
 
 		padding: 0.25rem;
 	}
 
-	.file_content.displayable {
+	.file_content.selectable {
+		font-weight: lighter;
+	}
+
+	.file_item_wrapper:has(> .file_item > .file_content.selectable) {
 		cursor: pointer;
 
 		font-weight: lighter;
@@ -165,15 +173,15 @@
 		border-radius: 0.25rem;
 	}
 
-	.file_content.displayable:hover {
+	.file_item_wrapper:has(> .file_item > .file_content.selectable:hover) {
 		background-color: var(--color-item-hover);
 	}
 
-	.file_content.displayable.active {
+	.file_item_wrapper:has(> .file_item > .file_content.selectable.active) {
 		background-color: var(--color-active);
 	}
 
-	.file_content.displayable.active:hover {
+	.file_item_wrapper:has(> .file_item > .file_content.selectable.active:hover) {
 		background-color: var(--color-active-hover);
 	}
 </style>

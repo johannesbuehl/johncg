@@ -149,14 +149,14 @@
 						</template>
 					</Draggable>
 					<MenuButton
-						icon="add"
-						text="Add Part"
 						@click="
 							selected_available_song_part !== undefined
 								? add_song_part(song_file.data.parts.available[selected_available_song_part])
 								: undefined
 						"
-					/>
+					>
+						<FontAwesomeIcon :icon="['fas', 'plus']" />Add Part
+					</MenuButton>
 				</div>
 				<div id="song_parts_wrapper">
 					<div class="header">Selected parts</div>
@@ -205,11 +205,9 @@
 							</div>
 						</template>
 					</Draggable>
-					<MenuButton
-						icon="trash"
-						text="Delete Part"
-						@click="delete_song_part($event, selected_song_part)"
-					/>
+					<MenuButton @click="delete_song_part($event, selected_song_part)">
+						<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
+					</MenuButton>
 				</div>
 			</div>
 		</div>

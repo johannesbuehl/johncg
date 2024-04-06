@@ -11,6 +11,7 @@
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{
@@ -194,7 +195,9 @@
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton icon="plus" text="Add Song" @click="add_song(selection, 'file')" />
+			<MenuButton @click="add_song(selection, 'file')">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Song
+			</MenuButton>
 		</template>
 		<template v-slot:edit>
 			<SongPartSelector

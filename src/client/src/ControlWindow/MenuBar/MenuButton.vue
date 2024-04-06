@@ -1,26 +1,25 @@
 <script setup lang="ts">
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-
 	defineProps<{
-		icon: string;
-		text?: string;
+		square?: boolean;
 		active?: boolean;
 	}>();
+
+	const state = defineModel<boolean | undefined>({ default: undefined });
 </script>
 
 <template>
 	<div
 		class="button"
-		:class="{ active, square: text === undefined }"
+		:class="{ active: state !== undefined ? state : active, square }"
 		tabindex="0"
 		@keydown.enter="
 			($event.target as HTMLDivElement)?.click();
 			$event.preventDefault();
 			$event.stopPropagation();
 		"
+		@click="state !== undefined ? (state = !state) : undefined"
 	>
-		<FontAwesomeIcon :icon="['fas', icon]" />
-		<span v-if="text !== undefined" class="button_text">{{ text ?? "" }}</span>
+		<slot></slot>
 	</div>
 </template>
 
@@ -33,6 +32,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		gap: 0.5rem;
 
 		padding: 0.5rem;
 
@@ -60,12 +60,5 @@
 	div.button,
 	div.button > * {
 		cursor: pointer;
-	}
-
-	span.button_text::before {
-		display: inline-block;
-
-		content: "";
-		width: 0.5rem;
 	}
 </style>

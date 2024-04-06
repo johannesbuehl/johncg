@@ -31,3 +31,7 @@ Generate lyric-graphics and play them out through CasparCG.
 - use playlist-caption
 - check config-file
 - render PDF with same size as casparcg
+- make keyboard-navigation better
+  - tabindex for all elements
+  - keyboard-shortcuts
+- update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

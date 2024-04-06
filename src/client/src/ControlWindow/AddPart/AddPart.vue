@@ -12,6 +12,7 @@
 	import AddPDF from "./Parts/AddPDF.vue";
 	import AddPsalm from "./Parts/AddPsalm.vue";
 	import AddComment from "./Parts/AddComment.vue";
+	import AddCountdown from "./Parts/Countdown/AddCountdown.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -76,10 +77,10 @@
 		<div class="song_part_selector" v-if="mode === ControlWindowState.Add">
 			<PartRadio
 				v-for="type in part_types"
+				v-model="pick"
 				:value="type.value"
 				:icon="type.icon"
 				:text="type.text"
-				v-model="pick"
 			/>
 		</div>
 		<template v-if="files !== undefined">
@@ -114,6 +115,12 @@
 				@add="add_item"
 				@refresh="get_files(pick)"
 			/>
+			<AddCountdown
+				v-else-if="pick === 'countdown'"
+				:files="files['media']"
+				@add="add_item"
+				@refresh="get_files('media')"
+			/>
 			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 		</template>
 	</div>
@@ -133,5 +140,7 @@
 
 		display: flex;
 		gap: inherit;
+
+		padding: 0.125rem;
 	}
 </style>

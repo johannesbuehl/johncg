@@ -17,6 +17,7 @@
 		type Book
 	} from "@server/PlaylistItems/Bible";
 	import { ref } from "vue";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	const props = defineProps<{
 		bible?: BibleFile;
@@ -61,6 +62,8 @@
 		:ws="ws"
 		:bible="bible"
 	>
-		<MenuButton icon="plus" text="Add Bible" @click="add_item()" />
+		<MenuButton @click="add_item()">
+			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Bible
+		</MenuButton>
 	</BibleSelector>
 </template>

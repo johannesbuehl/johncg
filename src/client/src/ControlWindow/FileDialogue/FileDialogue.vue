@@ -19,6 +19,7 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { File } from "@server/search_part";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faArrowsRotate);
 
@@ -62,43 +63,53 @@
 </script>
 
 <template>
-	<div id="file_dialogue_wrapper">
-		<div id="search_wrapper">
-			<div id="search_input_wrapper">
-				<input
-					v-for="({ placeholder }, index) in search_strings"
-					class="search_box"
-					v-model="search_strings[index].value"
-					:ref="create_first_input_ref($el, index)"
-					:placeholder="placeholder"
-					@input="emit('search')"
-				/>
+	<div id="element_wrapper">
+		<div id="file_dialogue_wrapper">
+			<div id="search_wrapper">
+				<div id="search_input_wrapper">
+					<input
+						v-for="({ placeholder }, index) in search_strings"
+						class="search_box"
+						v-model="search_strings[index].value"
+						:ref="create_first_input_ref($el, index)"
+						:placeholder="placeholder"
+						@input="emit('search')"
+					/>
+				</div>
+				<MenuButton :square="true" @click="emit('refresh_files')">
+					<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
+				</MenuButton>
 			</div>
-			<MenuButton icon="arrows-rotate" @click="emit('refresh_files')" />
-		</div>
-		<div id="selection_wrapper">
-			<div class="file_view">
-				<div class="header">{{ name }}</div>
-				<FileItem
-					v-model="selection"
-					:files="files"
-					:clone_callback="clone_callback"
-					:root="true"
-					:expand="
-						search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
-					"
-					@choose="(f, t) => emit('choose', f, t)"
-				/>
-				<div class="button_wrapper" v-if="!!slots.buttons">
-					<slot name="buttons"></slot>
+			<div id="selection_wrapper">
+				<div class="file_view">
+					<div class="header">{{ name }}</div>
+					<FileItem
+						v-model="selection"
+						:files="files"
+						:clone_callback="clone_callback"
+						:root="true"
+						:expand="
+							search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
+						"
+						@choose="(f, t) => emit('choose', f, t)"
+					/>
+					<div class="button_wrapper" v-if="!!slots.buttons">
+						<slot name="buttons"></slot>
+					</div>
 				</div>
 			</div>
-			<slot name="edit"></slot>
 		</div>
+		<slot name="edit"></slot>
 	</div>
 </template>
 
 <style scoped>
+	#element_wrapper {
+		flex: 1;
+		display: flex;
+		gap: 0.25rem;
+	}
+
 	#file_dialogue_wrapper {
 		flex: 1;
 		display: flex;

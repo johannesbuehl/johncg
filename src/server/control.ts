@@ -144,11 +144,11 @@ export default class Control {
 			} catch (e) {
 				if (e instanceof Error) {
 					logger.error(
-						`Could not add CasparCG-connection ${JSON.stringify(connection_setting)}: ${e.name}: ${e.message}`
+						`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
 					);
 				} else {
 					logger.error(
-						`Could not add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
+						`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
 					);
 				}
 
@@ -456,6 +456,13 @@ export default class Control {
 			ws_send_response("'steps' has to be one of [-1, 1]", false, ws);
 		}
 
+		if (this.playlist.length === 0) {
+			logger.debug("can't navigate: no items loaded");
+			ws_send_response("can't navigate: no items loaded", false, ws);
+
+			return;
+		}
+
 		logger.log(`navigating ${type}: '${steps}' steps`);
 
 		switch (type) {
@@ -546,7 +553,7 @@ export default class Control {
 		} catch (e) {
 			logger.warn(`can't add item to playlist ${JSON.stringify(props)}`);
 
-			ws_send_response("could not add item to playlist", false, ws);
+			ws_send_response("Can't add item to playlist", false, ws);
 
 			return;
 		}
@@ -584,7 +591,7 @@ export default class Control {
 		if (result === false) {
 			logger.error("can't update item: type does not match");
 
-			ws_send_response("could not update item", false, ws);
+			ws_send_response("Can't update item", false, ws);
 		} else {
 			this.send_playlist();
 
