@@ -1,4 +1,5 @@
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { recurse_object_check } from "../lib.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
@@ -100,7 +101,7 @@ export default class Countdown extends PlaylistItemBase {
 		return (
 			props.type === "countdown" &&
 			countdown_mode_items.includes(props.mode) &&
-			recurse_check(props, template)
+			recurse_object_check(props, template)
 		);
 	}
 

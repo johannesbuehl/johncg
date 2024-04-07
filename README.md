@@ -8,10 +8,9 @@ Generate lyric-graphics and play them out through CasparCG.
 (WiP)
 
 ## roadmap
-- implement other playlist-items than song (Missing: Diashow / Multi-Image)
+- implement other playlist-items than song (Missing: Diashow / Multi-Image, Text, Custom AMCP-command)
 - client: information about connection (active / reconnecting / ...)
 - companion integration (buttons for song parts -> send name to casparcg)
-- try to get the template and client to use the settings file (CSS has default values, send song data overwrites them)
 - check client -> server slide_number out of range
 - client: check response-texts, if they are still correct
 - write installation instruction (including Bahnschrift-Font installation)
@@ -29,10 +28,10 @@ Generate lyric-graphics and play them out through CasparCG.
 - on item-update refresh render and client
 - change default-item-colors
 - use playlist-caption
-- check config-file
 - render PDF with same size as casparcg
 - make keyboard-navigation better
   - tabindex for all elements
   - keyboard-shortcuts
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
-- additional playlist-item: custom amcp-command
+- change font-color of countdown
+- create library src-folder

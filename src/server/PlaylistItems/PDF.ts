@@ -2,10 +2,11 @@ import sharp from "sharp";
 import Canvas from "canvas";
 import tmp from "tmp";
 
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { get_pdf_path } from "../config.ts";
 import { logger } from "../logger.ts";
+import { recurse_object_check } from "../lib.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -147,7 +148,7 @@ export default class PDF extends PlaylistItemBase {
 			file: "Template"
 		};
 
-		return props.type === "pdf" && recurse_check(props, template);
+		return props.type === "pdf" && recurse_object_check(props, template);
 	}
 
 	get active_slide(): number {

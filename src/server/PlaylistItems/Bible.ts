@@ -1,9 +1,5 @@
-import {
-	ClientItemSlidesBase,
-	ItemPropsBase,
-	PlaylistItemBase,
-	recurse_check
-} from "./PlaylistItem";
+import { create_bible_citation_string, recurse_object_check } from "../lib";
+import { ClientItemSlidesBase, ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
 
 export type BibleFile = Record<string, { name: string; books: Book[] }[]>;
 
@@ -76,7 +72,7 @@ export default class Bible extends PlaylistItemBase {
 			}
 		};
 
-		return props.type === "bible" && recurse_check(props, template);
+		return props.type === "bible" && recurse_object_check(props, template);
 	}
 
 	get active_slide(): number {
@@ -107,45 +103,4 @@ export default class Bible extends PlaylistItemBase {
 			}
 		};
 	}
-}
-
-export function create_bible_citation_string(book_id: string, chapters: BibleProps["chapters"]) {
-	// add the individual chapters
-	const chapter_strings = Object.entries(chapters).map(([chapter, verses]): string => {
-		// stop the loop-iteration, if there are no verses defined
-		if (verses.length === 0) {
-			return `${chapter}`;
-		}
-
-		const verse_range: { start: number; last: number } = {
-			start: verses[0],
-			last: verses[0]
-		};
-
-		// add the individual verses
-		const verse_strings: string[] = [];
-
-		// const verses = verses.map((verse, index, arr): string => {
-		for (let index = 1; index <= verses.length; index++) {
-			const verse = verses[index];
-
-			// if the current verse is not a direct successor of the last one, return the previous verse_range
-			if (verse !== verse_range.last + 1) {
-				// if in the verse-range start and last are the same, return them as a single one
-				if (verse_range.start === verse_range.last) {
-					verse_strings.push(verse_range.last.toString());
-				} else {
-					verse_strings.push(`${verse_range.start}-${verse_range.last}`);
-				}
-
-				verse_range.start = verse;
-			}
-
-			verse_range.last = verse;
-		}
-
-		return `${chapter},${verse_strings.filter(Boolean).join(".")}`;
-	});
-
-	return `${book_id} ${chapter_strings.join("; ")}`;
 }

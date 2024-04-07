@@ -38,13 +38,13 @@
 		mode: ControlWindowState;
 	}>();
 
-	const pick = ref<string>("song");
+	const pick = ref<ItemProps["type"]>("song");
 
-	const part_types = [
+	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
 		{ text: "Song", value: "song", icon: "music" },
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
 		{ text: "Bible", value: "bible", icon: "quote-left" },
-		{ text: "Text", value: "text", icon: "font" },
+		// { text: "Text", value: "text", icon: "font" },
 		{ text: "Media", value: "media", icon: "image" },
 		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
@@ -88,32 +88,32 @@
 				v-if="pick === 'song'"
 				:files="files[pick]"
 				@add="add_item"
-				@refresh="get_files(pick)"
+				@refresh="get_files('song')"
 			/>
 			<AddPsalm
 				v-else-if="pick === 'psalm'"
 				:files="files[pick]"
 				@add="add_item"
-				@refresh="get_files(pick)"
+				@refresh="get_files('psalm')"
 			/>
-			<AddBible v-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
+			<AddBible v-else-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
 			<AddMedia
 				v-else-if="pick === 'media'"
 				:files="files[pick]"
 				@add="add_item"
-				@refresh="get_files(pick)"
+				@refresh="get_files('media')"
 			/>
 			<AddTemplate
 				v-else-if="pick === 'template'"
 				:files="files[pick]"
 				@add="add_item"
-				@refresh="get_files(pick)"
+				@refresh="get_files('template')"
 			/>
 			<AddPDF
 				v-else-if="pick === 'pdf'"
 				:files="files[pick]"
 				@add="add_item"
-				@refresh="get_files(pick)"
+				@refresh="get_files('pdf')"
 			/>
 			<AddCountdown
 				v-else-if="pick === 'countdown'"

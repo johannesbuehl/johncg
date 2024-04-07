@@ -1,4 +1,5 @@
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { recurse_object_check } from "../lib.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface TemplateTemplate {
@@ -63,7 +64,7 @@ export default class TemplateItem extends PlaylistItemBase {
 
 		result &&= props.template.data ? typeof props.template.data === "object" : true;
 
-		return result && recurse_check(props, template);
+		return result && recurse_object_check(props, template);
 	}
 
 	get active_slide(): number {

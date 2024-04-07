@@ -1,5 +1,6 @@
 import { get_song_path } from "../config.ts";
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { recurse_object_check } from "../lib.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPart, LyricPart } from "./SongFile.ts";
@@ -181,7 +182,7 @@ export default class Song extends PlaylistItemBase {
 			}
 		}
 
-		return result && recurse_check(props, template);
+		return result && recurse_object_check(props, template);
 	}
 
 	get props(): SongProps {

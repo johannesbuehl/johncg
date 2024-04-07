@@ -34,6 +34,10 @@ export interface PsalmFile extends File {
 	};
 }
 
+// export interface BibleFile extends File {
+// 	bible: Bible;
+// }
+
 export type MediaFile = File;
 export type TemplateFile = File;
 export type PDFFile = File;

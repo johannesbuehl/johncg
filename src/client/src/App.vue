@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
-	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 
+	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
@@ -25,7 +25,7 @@
 	const server_state = ref<JGCPSend.State>({ command: "state" });
 	const playlist_items = ref<JGCPSend.Playlist>();
 	const item_slides = ref<JGCPSend.ItemSlides>();
-	const selected_item = ref<number>(-1);
+	const selected_item = ref<number | null>(null);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
@@ -47,7 +47,7 @@
 	// watch for changes in item-selection
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
-		if (control_window_state.value === ControlWindowState.Playlist) {
+		if (control_window_state.value === ControlWindowState.Playlist && new_selection) {
 			request_item_slides(new_selection);
 		} else {
 			// else: delete the stored item-slides
@@ -57,7 +57,7 @@
 
 	watch(control_window_state, (new_state) => {
 		// if the new control-window-state is the playlist, request the slides
-		if (new_state === ControlWindowState.Playlist) {
+		if (new_state === ControlWindowState.Playlist && selected_item.value) {
 			request_item_slides(selected_item.value);
 		} else {
 			// else delete the stored slides
@@ -170,8 +170,10 @@
 	function parse_state(data: JGCPSend.State) {
 		if (typeof data.active_item_slide === "object") {
 			if (
-				typeof data.active_item_slide?.item !== "number" ||
-				typeof data.active_item_slide?.slide !== "number"
+				(typeof data.active_item_slide?.item !== "number" &&
+					data.active_item_slide?.item !== null) ||
+				(typeof data.active_item_slide?.slide !== "number" &&
+					data.active_item_slide?.slide !== null)
 			) {
 				throw new TypeError("'active_item_slide' is not of type '{item: number; slide: number}'");
 			}

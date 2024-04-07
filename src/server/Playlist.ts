@@ -25,8 +25,8 @@ export interface ClientPlaylistItems {
 }
 
 export interface ActiveItemSlide {
-	item: number;
-	slide: number;
+	item: number | null;
+	slide: number | null;
 }
 
 export interface CasparCGResolution {
@@ -650,7 +650,7 @@ export default class Playlist {
 	get active_item_slide(): ActiveItemSlide {
 		return {
 			item: this.active_item,
-			slide: (this.active_playlist_item ?? { active_slide: 0 }).active_slide
+			slide: this.active_playlist_item?.active_slide ?? null
 		};
 	}
 

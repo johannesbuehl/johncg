@@ -10,14 +10,10 @@
 
 	library.add(fas.faPlus);
 
-	import {
-		create_bible_citation_string,
-		type BibleFile,
-		type BibleProps,
-		type Book
-	} from "@server/PlaylistItems/Bible";
+	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
 	import { ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { create_bible_citation_string } from "@server/lib";
 
 	const props = defineProps<{
 		bible?: BibleFile;

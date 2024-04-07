@@ -22,7 +22,7 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		selected?: number;
+		selected: number | null;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();

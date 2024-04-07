@@ -1,17 +1,18 @@
 <script setup lang="ts">
+	import { toRaw } from "vue";
+
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
 	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
+	import EditPart from "./EditPart/EditPart.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import EditPart from "./EditPart/EditPart.vue";
-	import { toRaw } from "vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -22,7 +23,7 @@
 		active_item_slide?: ActiveItemSlide;
 		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		bible_file?: BibleFile;
-		selected: number;
+		selected: number | null;
 	}>();
 
 	const emit = defineEmits<{
@@ -138,11 +139,11 @@
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="slides !== undefined && control_window_state === ControlWindowState.Playlist"
+			v-if="slides?.item && control_window_state === ControlWindowState.Playlist"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			@select_slide="emit('select_slide', slides.item, $event)"
+			@select_slide="slides?.item ? emit('select_slide', slides.item, $event) : undefined"
 		/>
 		<AddPart
 			v-else-if="control_window_state === ControlWindowState.Add"
@@ -153,7 +154,7 @@
 		/>
 		<EditPart
 			v-else-if="control_window_state === ControlWindowState.Edit"
-			:item_props="toRaw(playlist?.playlist_items[selected])"
+			:item_props="selected ? playlist?.playlist_items[selected] : undefined"
 			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"

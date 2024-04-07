@@ -39,8 +39,11 @@
 	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		bible?: BibleFile;
+	}>();
+
+	const emit = defineEmits<{
+		refresh: [];
 	}>();
 
 	const chapter_selection = ref<number>(0);
@@ -51,11 +54,7 @@
 	);
 
 	onMounted(() => {
-		const message: JGCPRecv.GetBible = {
-			command: "get_bible"
-		};
-
-		props.ws.send(JSON.stringify(message));
+		emit("refresh");
 	});
 
 	watch(

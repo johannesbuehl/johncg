@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { recurse_object_check } from "../lib.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface MediaProps extends ItemPropsBase {
@@ -63,7 +64,7 @@ export default class Media extends PlaylistItemBase {
 			media: "Template"
 		};
 
-		return props.type === "media" && recurse_check(props, template);
+		return props.type === "media" && recurse_object_check(props, template);
 	}
 
 	get active_slide(): number {

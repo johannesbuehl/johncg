@@ -1,4 +1,5 @@
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { recurse_object_check } from "../lib.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface CommentProps extends ItemPropsBase {
@@ -46,7 +47,7 @@ export default class Comment extends PlaylistItemBase {
 			color: "Template"
 		};
 
-		return props.type === "comment" && recurse_check(props, template);
+		return props.type === "comment" && recurse_object_check(props, template);
 	}
 
 	get active_slide(): number {

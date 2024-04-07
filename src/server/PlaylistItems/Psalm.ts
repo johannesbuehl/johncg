@@ -1,8 +1,9 @@
 import fs from "fs";
 
-import { PlaylistItemBase, recurse_check } from "./PlaylistItem.ts";
+import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { get_psalm_path } from "../config.ts";
+import { recurse_object_check } from "../lib.ts";
 
 export interface PsalmFile {
 	metadata: {
@@ -115,7 +116,7 @@ export default class Psalm extends PlaylistItemBase {
 			file: "Template"
 		};
 
-		return props.type === "psalm" && recurse_check(props, template);
+		return props.type === "psalm" && recurse_object_check(props, template);
 	}
 
 	protected validate_psalm_file(psalm_string: string): PsalmFile | false {
@@ -155,7 +156,7 @@ export default class Psalm extends PlaylistItemBase {
 			result &&= typeof psalm.metadata.indent === "boolean";
 		}
 
-		result &&= recurse_check(psalm, template);
+		result &&= recurse_object_check(psalm, template);
 
 		if (result) {
 			return psalm;

@@ -12,14 +12,14 @@
 	const props = defineProps<{
 		ws: WebSocket;
 		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
-		item_index: number;
+		item_index: number | null;
 		bible?: BibleFile;
 	}>();
 
 	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
 
 	function update_item() {
-		if (item_props.value !== undefined) {
+		if (item_props.value && props.item_index) {
 			const message: JGCPRecv.UpdateItem = {
 				command: "update_item",
 				index: props.item_index,
@@ -49,7 +49,7 @@
 			/>
 		</div>
 		<EditSong
-			v-if="item_props?.type === 'song'"
+			v-if="item_props?.type === 'song' && item_index"
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -57,7 +57,7 @@
 			:item_index="item_index"
 		/>
 		<EditBible
-			v-else-if="item_props?.type === 'bible'"
+			v-else-if="item_props?.type === 'bible' && item_index"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -65,14 +65,14 @@
 			:item_index="item_index"
 		/>
 		<EditTemplate
-			v-else-if="item_props?.type === 'template'"
+			v-else-if="item_props?.type === 'template' && item_index"
 			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditCountdown
-			v-else-if="item_props?.type === 'countdown'"
+			v-else-if="item_props?.type === 'countdown' && item_index"
 			:key="`${item_index}_countdown`"
 			v-model:item_props="item_props"
 			:ws="ws"
