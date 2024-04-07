@@ -5,18 +5,33 @@ import tar from "tar";
 
 import type { ConfigJSON } from "../src/server/config.ts";
 
+// check, wether the build script supports the os
+if (!["win32", "linux"].includes(process.platform)) {
+	throw new TypeError("Buildscript does not support this OS");
+}
+
 // load the package.json
 const package_json = JSON.parse(fs.readFileSync("package.json", "utf-8")) as { version: string; dependencies: string[] };
 
-const build_name = "JohnCG_" + package_json.version;
-// temporary method until there is a solution for packaging sharp
-// const exec_name = build_name + ".exe";
-const exec_name = "node.exe";
+const build_name = `JohnCG_${package_json.version}_${process.platform}`;
+
+let exec_name: string;
+switch (process.platform) {
+	case "win32":
+		// temporary method until there is a solution for packaging sharp
+		// const exec_name = build_name + ".exe";
+		exec_name = "node.exe";
+		break;
+	case "linux":
+		exec_name = "node";
+		break;
+}
 const build_dir = "dist/build";
 const release_dir = path.join("dist", build_name);
 
-// clear the build-directory
-fs.rmSync("dist", { recursive: true, force: true });
+// clear the build- and release-directory
+fs.rmSync(build_dir, { recursive: true, force: true });
+fs.rmSync(release_dir, { recursive: true, force: true });
 fs.mkdirSync(build_dir, { recursive: true });
 fs.mkdirSync(path.join("dist", build_name), { recursive: true });
 
@@ -71,8 +86,15 @@ copy_module("canvas");
 copy_module("pdfjs-dist");
 
 // temporary method until there is a solution for packaging sharp
-// create a batch file, that start node with the main.js
-fs.writeFileSync(path.join(release_dir, build_name + ".bat"), `${exec_name} main.js\npause`);
+// create a script-file, that start node with the main.js
+switch (process.platform) {
+	case "win32":
+		fs.writeFileSync(path.join(release_dir, build_name + ".bat"), `${exec_name} main.js\npause`);
+		break;
+	case "linux":
+		fs.writeFileSync(path.join(release_dir, build_name + ".sh"), `./${exec_name} main.js\nread -n1 -r -p "Press any key to continue..." key`);
+		break;
+}
 
 // create and copy the licenses
 // void lr.cli(["--config=build-scripts/license-reporter.config.ts"]);
