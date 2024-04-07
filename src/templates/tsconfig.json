@@ -3,7 +3,7 @@
 		"target": "ES2015",
 		"module": "ES2015",
 		"moduleResolution": "bundler",
-		"outDir": "casparcg-templates/JohnCG",
+		"outDir": "casparcg/Templates/JohnCG",
 		"removeComments": true
 	}
 }

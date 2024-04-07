@@ -1,10 +1,10 @@
-import { CountdownTemplateData } from "../server/SequenceItems/Countdown";
+import { CountdownTemplateData } from "../server/PlaylistItems/Countdown";
 
 let update_interval: NodeJS.Timeout;
 const spans: {
-	hours?: HTMLSpanElement[],
-	minutes: HTMLSpanElement[],
-	seconds?: HTMLSpanElement[]
+	hours?: HTMLSpanElement[];
+	minutes: HTMLSpanElement[];
+	seconds?: HTMLSpanElement[];
 } = {
 	hours: [],
 	minutes: []
@@ -15,14 +15,15 @@ const end_time = new Date();
 
 let end_time_sign;
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(str_args: string) {
 	// clear the old-state
 	clearInterval(update_interval);
-	
+
 	try {
-		data = JSON.parse(str_args) as CountdownTemplateData & { mute_transition: boolean };
+		data = JSON.parse(str_args) as CountdownTemplateData & {
+			mute_transition: boolean;
+		};
 	} catch (error) {
 		if (!(error instanceof SyntaxError)) {
 			throw error;
@@ -31,8 +32,7 @@ function update(str_args: string) {
 		}
 	}
 
-	
-	// if requested, diable transition-effects
+	// if requested, disable transition-effects
 	const main_div = document.querySelector<HTMLDivElement>("div#main");
 	if (main_div !== null) {
 		if (data.mute_transition) {
@@ -41,24 +41,17 @@ function update(str_args: string) {
 			main_div.style.transitionProperty = "";
 		}
 	}
-	
+
 	// create the individual spans for the numbers
-	spans.hours = [
-		document.createElement("span"),
-		document.createElement("span")
-	];
-	spans.minutes = [
-		document.createElement("span"),
-		document.createElement("span")
-	];
-	
+	spans.hours = [document.createElement("span"), document.createElement("span")];
+	spans.minutes = [document.createElement("span"), document.createElement("span")];
+
 	if (data.show_seconds === true) {
-		spans.seconds = [
-			document.createElement("span"),
-			document.createElement("span")
-		];
+		spans.seconds = [document.createElement("span"), document.createElement("span")];
+	} else {
+		delete spans.seconds;
 	}
-	
+
 	// create the individual spans
 	const time_div = document.querySelector<HTMLDivElement>("#time");
 	if (time_div === null) {
@@ -77,7 +70,6 @@ function update(str_args: string) {
 			const colon_ms = colon_hm.cloneNode(true) as HTMLSpanElement;
 			colon_ms.id = "colon_ms";
 			time_div.append(colon_ms);
-
 		}
 
 		time_div.append(vals[0]);
@@ -88,11 +80,11 @@ function update(str_args: string) {
 		}
 	});
 
-	// create an overlaying div for the underline
-	const underline_div = document.createElement("div");
-	underline_div.classList.add("underline");
-	underline_div.id = "underline";
-	time_div.append(underline_div);
+	// // create an overlaying div for the underline
+	// const underline_div = document.createElement("div");
+	// underline_div.classList.add("underline");
+	// underline_div.id = "underline";
+	// time_div.append(underline_div);
 
 	// if the position is undefined, set them to center
 	if (data.position.x === undefined) {
@@ -102,20 +94,11 @@ function update(str_args: string) {
 		data.position.y = 50;
 	}
 
-	if (data.font_format !== undefined) {
+	if (data.font_size !== undefined) {
 		const this_format = {
-			...data.font_format,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			fontSize: `${data.font_format.fontSize}em`
+			fontSize: `${data.font_size}em`
 		};
-
-		// remove the underline property and show / hide the underline div
-		if (this_format.textDecoration === "underline") {
-			delete this_format.textDecoration;
-			document.querySelector<HTMLDivElement>("#underline").style.display = "";
-		} else {
-			document.querySelector<HTMLDivElement>("#underline").style.display = "none";
-		}
 
 		Object.entries(this_format).forEach(([key, val]) => {
 			time_div.style[key] = val;
@@ -130,7 +113,7 @@ function update(str_args: string) {
 			end_time.setMinutes(parseInt(time.groups.minutes));
 			end_time.setSeconds(parseInt(time.groups.seconds));
 		}
-			
+
 		end_time_sign = Math.sign(Date.now() - end_time.getTime());
 
 		update_interval = setInterval(function () {
@@ -154,10 +137,9 @@ function stop() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function next() {
-}
+function next() {}
 
-function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean]  {
+function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean] {
 	const time_remaining = new Date(end_time.getTime() - Date.now());
 
 	return [
@@ -170,47 +152,25 @@ function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean]  
 	];
 }
 
-const root = document.querySelector(":root");
 const time_div = document.querySelector<HTMLDivElement>("div#time");
 
 function position_time() {
-		const root_width = root?.clientWidth;
-		const root_height = root?.clientHeight;
-		const time_width = time_div?.clientWidth;
-		const time_height = time_div?.clientHeight;
+	if (time_div !== null) {
+		time_div.style.left = `${data.position.x}%`;
+		time_div.style.top = `${data.position.y}%`;
 
-		if (
-			root_width !== undefined &&
-			root_height !== undefined &&
-			time_width !== undefined &&
-			time_height !== undefined && 
-			time_div !== null
-		) {
-				
-			const free_width_share = 1 - time_width / root_width;
-			const free_height_share = 1 - time_height / root_height;
-			
-			const left = data.position.x * free_width_share + time_width / root_width / 2;
-			const top = data.position.y * free_height_share + time_height / root_height / 2;
-			
-			time_div.style.left = `${left}%`;
-			time_div.style.top = `${top}%`;
-			
-			time_div.style.transform = `translate(-${left}, -${top})`;
-		}
+		time_div.style.transform = `translate(-50%, -50%)`;
+	}
 }
 
 function update_time() {
-	const [time, finished]: [
-		Record<keyof typeof spans, string[]>,
-		boolean
-	] = get_remaining_time();
+	const [time, finished]: [Record<keyof typeof spans, string[]>, boolean] = get_remaining_time();
 
 	if (finished) {
 		clearInterval(update_interval);
 	} else {
 		// if the hours are 00, don't show them anymore
-		if  (time.hours.join("") === "00") {
+		if (time.hours.join("") === "00") {
 			if (spans.hours !== undefined) {
 				spans.hours[0].remove();
 				spans.hours[1].remove();

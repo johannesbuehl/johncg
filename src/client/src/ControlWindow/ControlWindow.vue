@@ -1,0 +1,173 @@
+<script setup lang="ts">
+	import { toRaw } from "vue";
+
+	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
+	import SlidesView from "./SlidesView/SlidesView.vue";
+	import MenuBar from "./MenuBar/MenuBar.vue";
+	import { ControlWindowState } from "@/Enums";
+	import AddPart from "./AddPart/AddPart.vue";
+	import EditPart from "./EditPart/EditPart.vue";
+
+	import * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
+	import PlaylistFile from "./PlaylistFile.vue";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
+
+	const props = defineProps<{
+		ws: WebSocket;
+		client_id: string;
+		server_state: JGCPSend.State;
+		playlist?: JGCPSend.Playlist;
+		slides?: JGCPSend.ItemSlides;
+		active_item_slide?: ActiveItemSlide;
+		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
+		bible_file?: BibleFile;
+		selected: number | null;
+	}>();
+
+	const emit = defineEmits<{
+		select_item: [item: number];
+		select_slide: [item: number, slide: number];
+	}>();
+
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: true
+	});
+
+	document.addEventListener("keydown", (event) => {
+		// exit on composing
+		if (event.isComposing) {
+			return;
+		}
+
+		let prevent_default = false;
+
+		// execute the navigation-keys only if the slides are visible
+		if (control_window_state.value === ControlWindowState.Playlist && !event.repeat) {
+			prevent_default = true;
+
+			switch (event.code) {
+				case "PageUp":
+				case "ArrowLeft":
+					navigate("slide", -1);
+					break;
+				case "PageDown":
+				case "ArrowRight":
+					navigate("slide", 1);
+					break;
+				default:
+					prevent_default = false;
+					break;
+			}
+		}
+
+		if (prevent_default) {
+			event.preventDefault();
+		}
+	});
+
+	// send navigate-request over teh websocket
+	function navigate(type: JGCPRecv.NavigateType, steps: number) {
+		const message: JGCPRecv.Navigate = {
+			command: "navigate",
+			type,
+			steps,
+			client_id: props.client_id
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
+
+	// send visibility changes over the websocket
+	function visibility(state: boolean) {
+		const message: JGCPRecv.SetVisibility = {
+			command: "set_visibility",
+			visibility: state,
+			client_id: props.client_id
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
+
+	function dragged(from: number, to: number) {
+		const message: JGCPRecv.MovePlaylistItem = {
+			command: "move_playlist_item",
+			from,
+			to,
+			client_id: props.client_id
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
+
+	function edit_item(index: number) {
+		control_window_state.value = ControlWindowState.Edit;
+		emit("select_item", index);
+	}
+</script>
+
+<template>
+	<MenuBar
+		class="menu_bar"
+		:ws="ws"
+		:visibility="server_state?.visibility ?? false"
+		v-model="control_window_state"
+		@navigate="navigate"
+		@set_visibility="visibility"
+	/>
+	<div id="main_view">
+		<PlaylistFile
+			v-if="control_window_state === ControlWindowState.OpenPlaylist"
+			:files="files.playlist"
+			:ws="ws"
+		/>
+		<PlaylistItemsList
+			v-if="
+				control_window_state === ControlWindowState.Playlist ||
+				control_window_state === ControlWindowState.Add ||
+				control_window_state === ControlWindowState.Edit
+			"
+			:playlist="playlist"
+			:selected="selected"
+			:active_item_slide="active_item_slide"
+			:scroll="client_id === server_state.client_id"
+			:ws="ws"
+			@selection="emit('select_item', $event)"
+			@dragged="dragged"
+			@set_active="emit('select_slide', $event, 0)"
+			@edit="edit_item"
+		/>
+		<SlidesView
+			v-if="slides?.item && control_window_state === ControlWindowState.Playlist"
+			:slides="slides"
+			:active_item_slide="active_item_slide"
+			:scroll="client_id === server_state.client_id"
+			@select_slide="slides?.item ? emit('select_slide', slides.item, $event) : undefined"
+		/>
+		<AddPart
+			v-else-if="control_window_state === ControlWindowState.Add"
+			:ws="ws"
+			:files="files"
+			:bible="bible_file"
+			:mode="control_window_state"
+		/>
+		<EditPart
+			v-else-if="control_window_state === ControlWindowState.Edit"
+			:item_props="selected ? playlist?.playlist_items[selected] : undefined"
+			:ws="ws"
+			:item_index="selected"
+			:bible="bible_file"
+			:files="files"
+		/>
+	</div>
+</template>
+
+<style scoped>
+	#main_view {
+		display: flex;
+		flex: 1;
+
+		column-gap: 0.25rem;
+	}
+</style>

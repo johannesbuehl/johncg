@@ -1,14 +1,27 @@
 import WebSocket, { RawData } from "ws";
 
-import Sequence, { CasparCGResolution } from "./Sequence";
-import OSCServer, { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server";
-import WebsocketServer, { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
-
-import * as JGCPSend from "./JGCPSendMessages";
-import * as JGCPRecv from "./JGCPReceiveMessages";
-import { CasparCG, ClipInfo, InfoConfig } from "casparcg-connection";
-import Config, { CasparCGConnectionSettings } from "./config";
+import { CasparCG, ClipInfo } from "casparcg-connection";
 import { XMLParser } from "fast-xml-parser";
+import fs from "fs";
+
+import Playlist from "./Playlist.ts";
+import type { ActiveItemSlide, CasparCGResolution } from "./Playlist.ts";
+import OSCServer from "./servers/osc-server.ts";
+import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
+import WebsocketServer from "./servers/websocket-server.ts";
+import type {
+	WebsocketServerArguments,
+	WebsocketMessageHandler
+} from "./servers/websocket-server.ts";
+import * as JGCPSend from "./JGCPSendMessages.ts";
+import * as JGCPRecv from "./JGCPReceiveMessages.ts";
+import type { CasparCGConnectionSettings } from "./config.ts";
+
+import Config, { get_playlist_path } from "./config.ts";
+import SearchPart, { ItemFile } from "./search_part.ts";
+import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
+import { BibleFile } from "./PlaylistItems/Bible.ts";
+import { logger } from "./logger.ts";
 
 interface CasparCGPathsSettings {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -21,25 +34,27 @@ interface CasparCGPathsSettings {
 }
 
 export interface CasparCGConnection {
-	connection:	CasparCG;
+	connection: CasparCG;
 	settings: CasparCGConnectionSettings;
 	paths: CasparCGPathsSettings;
 	media: ClipInfo[];
+	template: string[];
 	resolution: CasparCGResolution;
 	framerate: number;
 }
 
-class Control {
-	private sequence: Sequence;
+export default class Control {
+	private playlist: Playlist;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
+	private search_part: SearchPart;
 
 	readonly casparcg_connections: CasparCGConnection[] = [];
 
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
 		control: {
-			sequence_item: {
+			playlist_item: {
 				navigate: {
 					direction: (value: number) => this.navigate("item", value)
 				}
@@ -59,228 +74,408 @@ class Control {
 	};
 
 	// mapping of the websocket-messages to the functions
-	private readonly ws_function_map = {
-		open_sequence: (msg: JGCPRecv.OpenSequence, ws: WebSocket) => this.open_sequence(msg?.sequence, ws),
-		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) => this.get_item_slides(msg?.item, msg?.client_id, ws),
-		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) => this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
-		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) => this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
-		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) => this.set_visibility(msg.visibility, msg.client_id, ws),
-		move_sequence_item: (msg: JGCPRecv.MoveSequenceItem, ws: WebSocket) => this.move_sequence_item(msg.from, msg.to, ws)
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	private readonly ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
+		new_playlist: (msg: JGCPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
+		load_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
+			this.load_playlist(msg?.playlist, ws),
+		save_playlist: (msg: JGCPRecv.SavePlaylist, ws: WebSocket) => this.save_playlist(ws),
+		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) =>
+			this.get_item_slides(msg?.item, msg?.client_id, ws),
+		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) =>
+			this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
+		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) =>
+			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
+		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) =>
+			this.set_visibility(msg.visibility, msg.client_id, ws),
+		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
+			this.move_playlist_item(msg.from, msg.to, ws),
+		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) =>
+			this.add_item(msg.props, msg.index, msg.set_active, ws),
+		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
+			this.update_item(msg.index, msg.props, ws),
+		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
+		get_item_files: (msg: JGCPRecv.GetItemFiles, ws: WebSocket) =>
+			this.get_item_files(msg.type, ws),
+		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
+			this.get_item_file(msg.type, msg.file, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		JGCP: {
-			connection: (ws: WebSocket) => this.ws_on_connection(ws),
+			open: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
 		}
 	};
 
-	constructor(ws_server_parameters: WebsocketServerArguments, osc_server_parameters: OSCServerArguments) {
+	constructor(
+		ws_server_parameters: WebsocketServerArguments,
+		osc_server_parameters: OSCServerArguments
+	) {
 		// initialize the websocket server
+		logger.log("starting websocket-server");
 		this.ws_server = new WebsocketServer(ws_server_parameters, this.ws_message_handler);
 
 		// initialize the osc server
+		logger.log("starting osc-server");
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
 		const xml_parser = new XMLParser();
 
-		// create the casparcg-connections
+		this.playlist = new Playlist();
+
+		// create the CasparCG-connections
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		Config.casparcg.connections.forEach(async (connection_setting) => {
+			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
+
 			const connection: CasparCG = new CasparCG({
 				...connection_setting,
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				autoConnect: true
 			});
 
-			let casparcg_config: InfoConfig;
+			let casparcg_config;
+
 			try {
 				casparcg_config = (await (await connection.infoConfig()).request).data;
 			} catch (e) {
+				if (e instanceof Error) {
+					logger.error(
+						`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
+					);
+				} else {
+					logger.error(
+						`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
+					);
+				}
+
 				if (e instanceof TypeError) {
 					return;
 				}
 			}
 
-			let resolution: CasparCGResolution;
-			let framerate: number;
+			let resolution: CasparCGResolution = {
+				height: 1080,
+				width: 1920
+			};
+			let framerate: number = 25;
 
-			const video_mode_regex_results = casparcg_config.channels[connection_setting.channel - 1].videoMode.match(/(?:(?<dci>dci)?(?<width>\d+)(?:x(?<height>\d+))?[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/);
+			let video_mode_regex_results: RegExpMatchArray | undefined | null;
 
-			// if the resolution is given as PAL or NTSC, convert it
-			if (video_mode_regex_results.groups.mode) {
-				switch (video_mode_regex_results.groups.mode) {
-					case "PAL":
-						resolution = {
-							width: 720,
-							height: 576
-						};
-						framerate = 25;
-						break;
-					case "NTSC":
-						resolution = {
-							width: 720,
-							height: 480
-						};
-						framerate = 29.97;
-						break;
-				}
-			} else {
-				resolution = {
-					width: Number(video_mode_regex_results.groups.width),
-					height: Number(video_mode_regex_results.groups.height ?? Number(video_mode_regex_results.groups.width) / 16 * 9)
-				};
-				framerate = Number(video_mode_regex_results.groups.framerate) / 100;
+			if (casparcg_config?.channels !== undefined) {
+				video_mode_regex_results = casparcg_config?.channels[
+					connection_setting.channel - 1
+				].videoMode?.match(
+					/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
+				);
 			}
+
+			if (video_mode_regex_results?.groups !== undefined) {
+				// if the resolution is given as PAL or NTSC, convert it
+				if (video_mode_regex_results.groups.mode) {
+					switch (video_mode_regex_results.groups.mode) {
+						case "PAL":
+							resolution = {
+								width: 720,
+								height: 576
+							};
+							framerate = 25;
+							break;
+						case "NTSC":
+							resolution = {
+								width: 720,
+								height: 480
+							};
+							framerate = 29.97;
+							break;
+					}
+				} else {
+					resolution = {
+						width:
+							(Number(
+								video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height
+							) /
+								9) *
+							16,
+						height: Number(video_mode_regex_results.groups.height)
+					};
+					framerate = Number(video_mode_regex_results.groups.framerate) / 100;
+				}
+			}
+
+			logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
 
 			const casparcg_connection: CasparCGConnection = {
 				connection,
 				settings: connection_setting,
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				paths: xml_parser.parse((await (await connection.infoPaths()).request)?.data as string ?? "")?.paths as CasparCGPathsSettings,
+				paths: (
+					xml_parser.parse(
+						((await (await connection.infoPaths()).request)?.data as string) ?? ""
+					) as { paths: object }
+				)?.paths as CasparCGPathsSettings,
 				media: (await (await connection.cls()).request)?.data ?? [],
+				template: (await (await connection.tls()).request)?.data ?? [],
 				resolution,
 				framerate
 			};
-			
+
 			// add the connection to the stored connections
 			this.casparcg_connections.push(casparcg_connection);
+			this.playlist.add_casparcg_connection(casparcg_connection);
 		});
+
+		this.search_part = new SearchPart(this.casparcg_connections);
+	}
+
+	private new_playlist(ws: WebSocket) {
+		if (!this.playlist.unsaved_changes) {
+			logger.log("creating new playlist");
+
+			this.playlist = new Playlist();
+			this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
+
+			ws_send_response("new playlist has been created", true, ws);
+		} else {
+			logger.info("can't create new playlist: there are unsaved changes");
+
+			ws_send_response("can't create new playlist, there are unsaved changes", false, ws);
+		}
 	}
 
 	/**
-	 * open and load a sequence-file and send it to clients and renderers
-	 * @param sequence sequence-file content
+	 * open and load a playlist-file and send it to clients and renderers
+	 * @param playlist_path playlist-file content
 	 */
-	private open_sequence(sequence: string, ws?: WebSocket) {
-		// if there was already a sequence open, call it's destroy function
-		this.sequence?.destroy();
+	private load_playlist(playlist_path: string, ws: WebSocket) {
+		let new_playlist: Playlist;
 
-		this.sequence = new Sequence(sequence, this.casparcg_connections);
+		logger.log(`lading playlist (${playlist_path})`);
 
-		// sent the sequence to all clients
-		this.send_sequence();
-		
+		try {
+			new_playlist = new Playlist(
+				this.casparcg_connections,
+				get_playlist_path(playlist_path),
+				() => {
+					this.send_playlist();
+				}
+			);
+		} catch (e) {
+			logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
+			ws_send_response("invalid playlist-file", false, ws);
+			return;
+		}
+
+		// destroy the previous opened playlist
+		logger.debug("destroying existing playlist");
+		this.playlist.destroy();
+		this.playlist = new_playlist;
+
+		// send the playlist to all clients
+		this.send_playlist(Array.from(Array(this.playlist.playlist_items.length).keys()));
+
 		// send the current state to all clients
-		this.send_all_clients(this.sequence.state);
+		this.send_state();
 
-		ws_send_response("sequence has been opened", true, ws);
+		ws_send_response("playlist has been opened", true, ws);
 	}
 
-	private send_sequence(
-		new_item_order: number[] = Array.from(Array(this.sequence.sequence_items.length).keys()),
+	private save_playlist(ws: WebSocket) {
+		const message: JGCPSend.PlaylistSave = {
+			command: "playlist_save",
+			playlist: this.playlist.save()
+		};
+
+		logger.debug("sending playlist to client");
+
+		ws.send(JSON.stringify(message));
+
+		ws_send_response(`playlist has been send to client`, true, ws);
+	}
+
+	private send_playlist(
+		new_item_order: number[] = Array.from(Array(this.playlist.playlist_items.length).keys()),
 		client_id?: string,
 		ws?: WebSocket
 	) {
-		const response_sequence_items: JGCPSend.Sequence = {
-			command: "sequence_items",
+		const response_playlist_items: JGCPSend.Playlist = {
+			command: "playlist_items",
 			new_item_order,
-			...this.sequence.create_client_object_sequence(),
+			...this.playlist.create_client_object_playlist(),
 			client_id
 		};
 
 		if (ws) {
-			ws.send(JSON.stringify(response_sequence_items));
+			logger.debug("sending playlist to client");
+
+			ws.send(JSON.stringify(response_playlist_items));
 		} else {
-			this.send_all_clients(response_sequence_items);
+			logger.debug("sending playlist to all clients");
+
+			this.send_all_clients(response_playlist_items);
+		}
+	}
+
+	private send_state(client_id?: string, ws?: WebSocket) {
+		const message = { ...this.playlist.state, client_id };
+
+		if (ws) {
+			logger.debug("sending state to client");
+
+			ws.send(JSON.stringify(message));
+		} else {
+			logger.debug("sending state to all clients");
+
+			this.send_all_clients(message);
 		}
 	}
 
 	/**
 	 * Reply on a item-slides-request with the requested item-slides
-	 * @param item 
-	 * @param client_id 
-	 * @param ws 
+	 * @param item
+	 * @param client_id
+	 * @param ws
 	 */
 	private async get_item_slides(item: number, client_id?: string, ws?: WebSocket) {
 		// type-check the item
 		if (typeof item === "number") {
-			const message: JGCPSend.ItemSlides = {
-				command: "item_slides",
-				item,
-				client_id,
-				resolution: this.sequence.casparcg_connections[0].resolution,
-				...await this.sequence.create_client_object_item_slides(item)
-			};
+			if (this.check_playlist_loaded(ws)) {
+				if (this.playlist?.casparcg_connections.length > 0) {
+					const message: JGCPSend.ItemSlides = {
+						command: "item_slides",
+						item,
+						client_id,
+						resolution: this.playlist?.casparcg_connections[0].resolution,
+						...(await this.playlist?.create_client_object_item_slides(item))
+					};
 
-			ws?.send(JSON.stringify(message));
+					logger.debug("sending item-slides for item 'item' to client");
 
-			ws_send_response("slides have been sent", true, ws);
+					ws?.send(JSON.stringify(message));
+
+					ws_send_response("slides have been sent", true, ws);
+				} else {
+					logger.log("can't send item-slides to client: no active CasparCG-connections");
+
+					ws_send_response("no active CasparCG-connections", false, ws);
+				}
+			}
 		} else {
-			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-			ws_send_response(`'${item}' is not of type 'number'`, false, ws);
+			logger.debug("can't send item-slides: 'item' is not of type 'number'");
+
+			ws_send_response("'item' is not of type 'number'", false, ws);
 		}
 	}
 
 	private select_item_slide(item: number, slide: number, client_id?: string, ws?: WebSocket) {
+		// if there is no playlist loaded, send an error
 		if (typeof item !== "number") {
-			ws_send_response("'item' is not of type number", false, ws);
+			logger.debug("can't select slide: 'item' is not of type 'number'");
+
+			ws_send_response("'item' is not of type 'number'", false, ws);
 		}
 
 		if (typeof slide !== "number") {
-			ws_send_response("'slide' is not of type number", false, ws);
+			logger.debug("can't select slide: 'slide' is not of type 'number'");
+
+			ws_send_response("'slide' is not of type 'number'", false, ws);
 		}
 
 		// try to execute the item and slide change
+		let result: false | ActiveItemSlide | number;
+
+		logger.log(`selecting slide: item: '${item}', slide: '${slide}'`);
+
 		try {
 			// if the current item is the same as the requested one, only execute an slide change
-			if (item === this.sequence?.active_item) {
-				this.sequence?.set_active_slide(slide);
+			if (item === this.playlist?.active_item) {
+				result = this.playlist?.set_active_slide(slide);
 			} else {
-				this.sequence?.set_active_item(item, slide);
+				result = this.playlist?.set_active_item(item, slide);
 			}
 		} catch (e) {
 			// catch invalid item or slide numbers
 			if (e instanceof RangeError) {
+				logger.debug(`can't select slide: ${e.message}`);
+
 				ws_send_response(e.message, true, ws);
 				return;
 			} else {
+				if (e instanceof Error) {
+					logger.error(`${e.name}: ${e.message}`);
+				} else {
+					logger.error(`unkown exception: ${e}`);
+				}
 				throw e;
 			}
 		}
 
-		this.send_all_clients({
-			command: "state",
-			active_item_slide: this.sequence.active_item_slide,
-			client_id: client_id
-		});
+		if (result !== false) {
+			this.send_all_clients({
+				command: "state",
+				active_item_slide: this.playlist?.active_item_slide,
+				client_id: client_id
+			});
 
-		ws_send_response("slide has been selected", true, ws);
+			ws_send_response("slide has been selected", true, ws);
+		} else {
+			logger.warn(`can't display slide: item '${this.playlist.active_item}' is not displayable`);
+
+			ws_send_response("item isn't displayable", false, ws);
+		}
 	}
 
 	/**
 	 * navigate the active item or slide forwards or backwards
-	 * @param type 
-	 * @param steps 
-	 * @param client_id 
+	 * @param type
+	 * @param steps
+	 * @param client_id
 	 */
 	private navigate(type: JGCPRecv.NavigateType, steps: number, client_id?: string, ws?: WebSocket) {
-		// if there is no sequence loaded, send a negative response back and exit
-		if (this.sequence === undefined) {
-			ws_send_response("no schedule loaded", false, ws);
+		// if there is no playlist loaded, send a negative response back and exit
+		if (!this.check_playlist_loaded(ws)) {
 			return;
 		}
 
 		if (!JGCPRecv.is_item_navigate_type(type)) {
-			ws_send_response(`'type' has to be one of ${JSON.stringify(JGCPRecv.is_item_navigate_type)}`, false, ws);
+			logger.debug("can't navigate: 'type' is invalid");
+
+			ws_send_response(
+				`'type' has to be one of ${JSON.stringify(JGCPRecv.item_navigate_type)}`,
+				false,
+				ws
+			);
 		}
 
 		if (![-1, 1].includes(steps)) {
+			logger.debug("can't navigate: 'step' has to be one of [-1, 1]");
+
 			ws_send_response("'steps' has to be one of [-1, 1]", false, ws);
 		}
 
+		if (this.playlist.length === 0) {
+			logger.debug("can't navigate: no items loaded");
+			ws_send_response("can't navigate: no items loaded", false, ws);
+
+			return;
+		}
+
+		logger.log(`navigating ${type}: '${steps}' steps`);
+
 		switch (type) {
 			case "item":
-				this.sequence.navigate_item(steps);
+				this.playlist?.navigate_item(steps);
 				break;
 			case "slide":
-				this.sequence.navigate_slide(steps);
+				this.playlist?.navigate_slide(steps);
 		}
-		
+
 		this.send_all_clients({
 			command: "state",
-			active_item_slide: this.sequence.active_item_slide,
+			active_item_slide: this.playlist?.active_item_slide,
 			client_id: client_id
 		});
 
@@ -288,58 +483,234 @@ class Control {
 	}
 
 	/**
-	 * set the visibility of the sequence in the renderer
+	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): Promise<void> {
-		// if there is no sequence loaded, send a negative response back and exit
-		if (this.sequence === undefined) {
-			ws_send_response("no schedule loaded", false, ws);
-			return;
-		}
-
+	private async set_visibility(
+		visibility: boolean,
+		client_id?: string,
+		ws?: WebSocket
+	): Promise<void> {
 		if (typeof visibility === "boolean") {
-			await this.sequence.set_visibility(visibility);
+			logger.log(`changed CasparCG-visibility: '${visibility ? "visible" : "hidden"}'`);
+
+			await this.playlist.set_visibility(visibility);
 
 			this.send_all_clients({
 				command: "state",
-				visibility: this.sequence.visibility
+				visibility: this.playlist.visibility
 			});
 
 			ws_send_response("visibility has been set", true, ws);
 		} else {
+			logger.debug("can't change CasparCG-visibility: 'visibility' is invalid");
+
 			ws_send_response("'visibility' has to be of type boolean", false, ws);
 		}
 	}
 
-	private move_sequence_item(from: number, to: number, ws?: WebSocket) {
+	private move_playlist_item(from: number, to: number, ws: WebSocket) {
 		if (typeof from !== "number") {
+			logger.debug("can't move item: 'from' is invalid");
+
 			ws_send_response("'from' has to be of type number", false, ws);
 			return;
 		}
 
 		if (typeof to != "number") {
+			logger.debug("can't move item: 'to' is invalid");
+
 			ws_send_response("'to' has to be of type number", false, ws);
 			return;
 		}
 
-		const new_item_order = this.sequence?.move_sequence_item(from, to);
+		logger.log(`moving item: from '${from}' to '${to}`);
 
-		this.send_sequence(new_item_order);
-		
-		// // send the current state to all clients
-		// this.send_all_clients(this.sequence.state);
+		const new_item_order: number[] = this.playlist?.move_playlist_item(from, to);
 
-		ws_send_response("sequence-item has been moved", true, ws);
+		this.send_playlist(new_item_order);
+
+		// send the current state to all clients
+		this.send_state();
+
+		ws_send_response("playlist-item has been moved", true, ws);
+	}
+
+	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
+		logger.log(
+			`adding item: ${index !== undefined ? `position: '${index}'` : "append"}' ${JSON.stringify(props)}`
+		);
+
+		try {
+			this.playlist.add_item(
+				props,
+				set_active,
+				() => {
+					this.send_playlist();
+				},
+				index
+			);
+		} catch (e) {
+			logger.warn(`can't add item to playlist ${JSON.stringify(props)}`);
+
+			ws_send_response("Can't add item to playlist", false, ws);
+
+			return;
+		}
+
+		this.send_playlist();
+
+		this.send_state();
+
+		ws_send_response("added item to playlist", true, ws);
+	}
+
+	private update_item(index: number, props: ItemProps, ws: WebSocket) {
+		let result: boolean;
+
+		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);
+
+		try {
+			result = this.playlist.update_item(index, props);
+		} catch (e) {
+			if (e instanceof Error) {
+				logger.error(`can't update item: ${e.name}: ${e.message}`);
+			} else {
+				logger.error(`can't update item: unknown exception (${e})`);
+			}
+
+			if (e instanceof RangeError) {
+				ws_send_response(e.message, false, ws);
+
+				return;
+			} else {
+				throw e;
+			}
+		}
+
+		if (result === false) {
+			logger.error("can't update item: type does not match");
+
+			ws_send_response("Can't update item", false, ws);
+		} else {
+			this.send_playlist();
+
+			ws_send_response("item has been updated", true, ws);
+		}
+	}
+
+	private delete_item(position: number, ws: WebSocket) {
+		let state_change: boolean;
+
+		logger.log(`deleting item from playlist: position '${position}'`);
+
+		try {
+			state_change = this.playlist.delete_item(position);
+		} catch (e) {
+			if (e instanceof Error) {
+				logger.error(`can't delete item from playlist: ${e.name}: ${e.message}`);
+			} else {
+				logger.error(`can't delete item from playlist: unknown exception (${e})`);
+			}
+
+			if (e instanceof RangeError) {
+				ws_send_response("position is out of range", false, ws);
+				return;
+			} else {
+				throw e;
+			}
+		}
+
+		this.send_playlist();
+
+		if (state_change) {
+			this.send_state();
+		}
+
+		ws_send_response("deleted item from playlist", true, ws);
+	}
+
+	private async get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
+		logger.debug(`retrieving item-files: '${type}'`);
+
+		let files: ItemFile[];
+
+		switch (type) {
+			case "media":
+				files = await this.search_part.get_casparcg_media();
+				break;
+			case "template":
+				files = await this.search_part.get_casparcg_template();
+				break;
+			case "song":
+				files = this.search_part.find_sng_files();
+				break;
+			case "playlist":
+				files = this.search_part.find_jcg_files();
+				break;
+			case "pdf":
+				files = this.search_part.find_pdf_files();
+				break;
+			case "psalm":
+				files = this.search_part.find_psalm_files();
+				break;
+		}
+
+		if (files !== undefined) {
+			const message: JGCPSend.ItemFiles = {
+				command: "item_files",
+				type,
+				files
+			};
+
+			ws.send(JSON.stringify(message));
+		}
+	}
+
+	private get_bible(ws: WebSocket) {
+		logger.debug("retrieving bible-file");
+
+		let bible: BibleFile;
+
+		try {
+			bible = JSON.parse(fs.readFileSync(Config.path.bible, "utf-8")) as BibleFile;
+		} catch (e) {
+			logger.error("can't get bible-file: error during file-reading");
+
+			ws_send_response("can't open bible-file", false, ws);
+			return;
+		}
+
+		const message: JGCPSend.Bible = {
+			command: "bible",
+			bible
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private get_item_file(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
+		logger.debug(`retrieving item-file: '${type}' (${path})`);
+
+		const files = [this.search_part.get_item_file(type, path)];
+
+		const message: JGCPSend.ItemFiles = {
+			command: "item_files",
+			type: "song",
+			files
+		};
+
+		ws.send(JSON.stringify(message));
 	}
 
 	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
+		logger.log(
+			`toggling CasparCG-visibility: '${this.playlist.visibility ? "visible" : "hidden"}'`
+		);
+
 		let visibility_feedback = false;
 
-		// if a sequence is loaded, get it's visibility
-		if (this.sequence !== undefined) {
-			visibility_feedback = await this.sequence.toggle_visibility();
-		}
+		visibility_feedback = await this.playlist.toggle_visibility();
 
 		// if a feedback-path is given, write the feedback to it
 		if (osc_feedback_path !== undefined) {
@@ -362,17 +733,21 @@ class Control {
 
 	/**
 	 * Handle new WebSocket connections
-	 * @param ws 
+	 * @param ws
 	 */
 	private ws_on_connection(ws: WebSocket) {
-		// if there is already a sequence loaded, send it to the connected client
-		if (this.sequence !== undefined) {
-			// send the sequence
-			this.send_sequence(undefined, undefined, ws);
+		// if there is already a playlist loaded, send it to the connected client
+		if (this.playlist !== undefined) {
+			logger.log("new client-connection: sending current playlist");
+
+			// send the playlist
+			this.send_playlist(undefined, undefined, ws);
 
 			// send the selected item-slide
-			ws.send(JSON.stringify(this.sequence.state));
+			this.send_state(undefined, ws);
 		} else {
+			logger.debug("new client-connection: clearing client-data");
+
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
 			const clear_message: JGCPSend.Clear = {
 				command: "clear"
@@ -383,6 +758,9 @@ class Control {
 	}
 
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		logger.debug(`received JGCP-message: ${raw_data.toString()}`);
+
 		let data: JGCPRecv.Message;
 		// try to parse the data as a JSON-object
 		try {
@@ -396,30 +774,47 @@ class Control {
 		} catch (e) {
 			// if there was a SyntaxError, the data was not a valid JSON-object -> send response and exit
 			if (e instanceof SyntaxError) {
+				logger.error("can't parse JGCP-message: no JSON-object");
+
 				ws_send_response("data is no JSON object", false, ws);
 				return;
 			} else {
+				logger.error(`can't parse JGCP-message: unknown error (${e})`);
+
 				throw e;
 			}
 		}
 
 		// check wether the JSON-object does contain a command and wether it is a valid command
 		if (typeof data.command !== "string") {
+			logger.error("can't parse JGCP-message: 'command' is invalid");
+
 			ws_send_response("'command' is not of type 'string", false, ws);
 			return;
 		} else if (!Object.keys(this.ws_function_map).includes(data.command)) {
+			logger.error("can't parse JGCP-message: 'comand' is not implemented");
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
 			void this.ws_function_map[data.command](data as never, ws);
+		}
+	}
+
+	private check_playlist_loaded(ws: WebSocket): boolean {
+		if (this.playlist) {
+			return true;
+		} else {
+			ws_send_response("no playlist loaded", false, ws);
+
+			return false;
 		}
 	}
 }
 
 /**
  * Send a response-message
- * @param message 
+ * @param message
  * @param success status code 200 = SUCCESS (true) or 400 = ERROR (false)
- * @param ws 
+ * @param ws
  */
 function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	const response = {
@@ -430,5 +825,3 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 
 	ws?.send(JSON.stringify(response));
 }
-
-export default Control;

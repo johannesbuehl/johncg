@@ -1,16 +1,19 @@
-import { ItemSlide, SongTemplateData } from "../server/SequenceItems/Song";
+import { SongTemplateData } from "../server/PlaylistItems/Song";
+import { ItemPart } from "../server/PlaylistItems/SongFile";
 
 let data: SongTemplateData & { mute_transition: boolean };
 
 let active_slide = 0;
 let slide_count = 0;
 
-// casparcg-function: transmits data
+// CasparCG-function: transmits data
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
 	// parse the transferred data into json
 	try {
-		data = JSON.parse(s_data) as SongTemplateData & { mute_transition: boolean };
+		data = JSON.parse(s_data) as SongTemplateData & {
+			mute_transition: boolean;
+		};
 	} catch (error) {
 		if (!(error instanceof SyntaxError)) {
 			throw error;
@@ -42,13 +45,14 @@ function update(s_data: string) {
 	let slide_counter = 0;
 
 	// create the slides and store them in the container
-	for (const slide_data of data["slides"]) {
+	for (const part of data.parts) {
 		// parent-div of slide
-		const div_slide = create_slide(slide_data, data.languages);
-		div_slide.dataset.slide = slide_counter.toString();
-		div_storage.append(div_slide);
+		create_slide(part, data.languages).forEach((slide) => {
+			slide.dataset.slide = slide_counter.toString();
+			div_storage.append(slide);
 
-		slide_counter++;
+			slide_counter++;
+		});
 	}
 
 	// store the amount of slides
@@ -58,12 +62,12 @@ function update(s_data: string) {
 
 	// display the first slide
 	jump(active_slide);
-	
+
 	// resize all the slides (has to be done after displayin the first slide)
 	resize_slides();
 }
 
-// casparcg-function: displays the template
+// CasparCG-function: displays the template
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function play() {
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");
@@ -73,7 +77,7 @@ function play() {
 	}
 }
 
-// casparcg-function: advances to the next step
+// CasparCG-function: advances to the next step
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function next() {
 	jump(active_slide + 1);
@@ -98,7 +102,9 @@ function jump(counter_raw: number) {
 	main_div.innerHTML = "";
 
 	// clone the slide and change its id, so the id stays unique
-	const div_slide = document.querySelector<HTMLDivElement>(`div[data-slide='${counter}']`)?.cloneNode(true) as HTMLDivElement;
+	const div_slide = document
+		.querySelector<HTMLDivElement>(`div[data-slide='${counter}']`)
+		?.cloneNode(true) as HTMLDivElement;
 
 	if (div_slide === undefined) return;
 
@@ -109,11 +115,11 @@ function jump(counter_raw: number) {
 	active_slide = counter;
 }
 
-// casparcg-function: hide the template
+// CasparCG-function: hide the template
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stop() {
 	const main_div = document.querySelector<HTMLDivElement>("div#_main");
-	
+
 	if (main_div === null) return;
 
 	main_div.style.opacity = "0";
@@ -128,18 +134,19 @@ function clamp_slide_counter(counter_raw: number) {
 function resize_slides() {
 	// get the highest width
 	const max_width = get_max_width();
+	const max_height = get_max_height();
 
 	// get the width of the container
-	const active_slide = document.querySelector("#slide_active");
+	const active_slide = document.querySelector<HTMLDivElement>("div#slide_active");
 
-	resize_slides_text(max_width, active_slide?.clientWidth ?? 0);
+	resize_slides_text(max_width, max_height, active_slide);
 }
 
 // get the width of the widest slide
 function get_max_width() {
 	let max_width = 0;
 
-	// get the width of the individual slides and store the biggest one 
+	// get the width of the individual slides and store the biggest one
 	for (let ii = 0; ii < slide_count; ii++) {
 		const slide = document.querySelector<HTMLDivElement>(`div#storage [data-slide='${ii}']`);
 
@@ -152,16 +159,32 @@ function get_max_width() {
 	return max_width;
 }
 
-function create_slide(slide_data: ItemSlide, languages: number[]) {
-	// parent-div of slide
-	const div_slide = document.createElement("div");
+function get_max_height() {
+	let max_height = 0;
 
-	const div_content = document.createElement("div");
-	div_content.classList.add("slide");
-	div_slide.append(div_content);
+	// get the width of the individual slides and store the biggest one
+	for (let ii = 0; ii < slide_count; ii++) {
+		const slide = document.querySelector<HTMLDivElement>(`div#storage [data-slide='${ii}']`);
 
-	switch (slide_data.type) {
+		if (slide?.querySelector<HTMLDivElement>("div.lyric") !== undefined) {
+			const current_width = slide.clientHeight;
+			max_height = Math.max(current_width, max_height);
+		}
+	}
+
+	return max_height;
+}
+
+function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
+	switch (part.type) {
 		case "title": {
+			// parent-div of slide
+			const div_slide = document.createElement("div");
+
+			const div_content = document.createElement("div");
+			div_content.classList.add("slide");
+			div_slide.append(div_content);
+
 			div_content.classList.add("title");
 			const title_container = document.createElement("div");
 			title_container.classList.add("title_container");
@@ -171,46 +194,60 @@ function create_slide(slide_data: ItemSlide, languages: number[]) {
 			languages.forEach((language, index) => {
 				const div_title = document.createElement("div");
 				div_title.classList.add(`language_${index}`);
-				div_title.innerText = slide_data.title[language] ?? "";
+				div_title.innerText = part.title[language] ?? "";
 				title_container.append(div_title);
 			});
 
 			const div_church_song_id = document.createElement("div");
 			div_church_song_id.classList.add("song_id");
 
-			if (slide_data.church_song_id !== undefined) {
-				div_church_song_id.innerText = slide_data.church_song_id;
+			if (part.church_song_id !== undefined) {
+				div_church_song_id.innerText = part.church_song_id;
 			}
 
 			div_content.append(div_church_song_id);
-		} break;
+
+			return [div_slide];
+		}
 		case "lyric": {
-			div_content.classList.add("lyric");
+			return part.slides.map((slide): HTMLDivElement => {
+				// parent-div of slide
+				const div_slide = document.createElement("div");
 
-			// add the individual text-lines
-			for (const line_package of slide_data.data) {
-				// create a template for the line
-				const line_template = document.createElement("div");
-				line_template.classList.add("text_line");
+				const div_content = document.createElement("div");
+				div_content.classList.add("slide");
+				div_slide.append(div_content);
 
-				// add the individual languages
-				languages.forEach((language, index) => {
-					const line = line_template.cloneNode(true) as HTMLDivElement;
-					line.classList.add(`language_${index}`);
-					line.innerText = line_package[language];
+				div_content.classList.add("lyric");
 
-					div_content.append(line);
-				});
-			}
-		} break;
+				// add the individual text-lines
+				for (const line_package of slide) {
+					// create a template for the line
+					const line_template = document.createElement("div");
+					line_template.classList.add("text_line");
+
+					// add the individual languages
+					languages.forEach((language, index) => {
+						const line = line_template.cloneNode(true) as HTMLDivElement;
+						line.classList.add(`language_${index}`);
+						line.innerText = line_package[language];
+
+						div_content.append(line);
+					});
+				}
+
+				return div_content;
+			});
+		}
 	}
-			
-	return div_slide;
 }
 
-function resize_slides_text(max_width: number, container_width: number) {
+function resize_slides_text(max_width: number, max_height: number, container: HTMLElement) {
+	const width_ratio = container.clientWidth / max_width;
+	const height_ratio = container.clientHeight / max_height;
+
 	// change the font size by the size difference ratio
 	document.querySelectorAll<HTMLDivElement>("div.slide.lyric").forEach((ele) => {
-		ele.style.fontSize = `${container_width / max_width}em`;
+		ele.style.fontSize = `${Math.min(width_ratio, height_ratio)}em`;
 	});
 }

@@ -1,8 +1,9 @@
-import { ClientRequest, IncomingMessage } from "http";
-import { WebSocketServer, WebSocket, RawData } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
+import type { RawData } from "ws";
+import { logger } from "../logger";
 
 // defintion of a JCGP-response
-interface JGCPResponse {
+export interface JGCPResponse {
 	command: "response";
 	message: string;
 	code: number;
@@ -10,24 +11,24 @@ interface JGCPResponse {
 
 interface MessageHandler {
 	message: (ws: WebSocket, data: RawData) => void;
+	// open?: (ws: WebSocket) => void;
+	// ping?: (ws: WebSocket, data: Buffer) => void;
+	// pong?: (ws: WebSocket, data: Buffer) => void;
+	// error?: (ws: WebSocket, err: Error) => void;
+	// close?: (ws: WebSocket, reason: Buffer) => void;
+	// // eslint-disable-next-line @typescript-eslint/naming-convention
+	// "unexpected-response"?: (ws: WebSocket, request: ClientRequest, response: IncomingMessage) => void;
+	// upgrade?: (ws: WebSocket, request: IncomingMessage) => void;
 	open?: (ws: WebSocket) => void;
-	ping?: (ws: WebSocket, data: Buffer) => void;
-	pong?: (ws: WebSocket, data: Buffer) => void;
-	error?: (ws: WebSocket, err: Error) => void;
-	close?: (ws: WebSocket, reason: Buffer) => void;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	"unexpected-response"?: (ws: WebSocket, request: ClientRequest, response: IncomingMessage) => void;
-	upgrade?: (ws: WebSocket, request: IncomingMessage) => void;
-	connection?: (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => void;
 }
 
-interface WebsocketServerArguments {
+export interface WebsocketServerArguments {
 	port: number;
 }
 
-type WebsocketMessageHandler = Record<string, MessageHandler>;
+export type WebsocketMessageHandler = Record<string, MessageHandler>;
 
-class WebsocketServer {
+export default class WebsocketServer {
 	ws_server: WebSocketServer;
 
 	// store the message handlers for the different protocols
@@ -35,15 +36,16 @@ class WebsocketServer {
 
 	connections: Record<string, WebSocket[]> = {};
 
-	constructor(args: WebsocketServerArguments, 
-		message_handlers: WebsocketMessageHandler) {
+	constructor(args: WebsocketServerArguments, message_handlers: WebsocketMessageHandler) {
 		this.message_handlers = message_handlers;
 
 		this.ws_server = new WebSocketServer({ port: args.port });
-		this.ws_server.on("connection", (ws: WebSocket, socket: WebSocket, request: IncomingMessage) => this.on_connection(ws, socket, request));
+		this.ws_server.on("connection", (ws: WebSocket) => this.on_connection(ws));
 	}
 
-	private on_connection(ws: WebSocket,socket: WebSocket, request: IncomingMessage) {
+	private on_connection(ws: WebSocket) {
+		logger.debug(`new WebSocket-connection (${ws.url})`);
+
 		// check wether there is a protocol handler for the used protocol
 		if (Object.keys(this.message_handlers).includes(ws.protocol)) {
 			if (!Object.keys(this.connections).includes(ws.protocol)) {
@@ -53,36 +55,47 @@ class WebsocketServer {
 			this.connections[ws.protocol].push(ws);
 
 			// register the different action-handlers
-			Object.keys(this.message_handlers[ws.protocol]).forEach((s_type: keyof MessageHandler) => {
-				ws.on(s_type, (...args: [never, never]) => {
-					this.message_handlers[ws.protocol][s_type](ws, ...args);
-				});
+			Object.keys(this.message_handlers[ws.protocol]).forEach((s_type) => {
+				switch (s_type as keyof MessageHandler) {
+					case "message":
+						ws.on("message", (data) => {
+							this.message_handlers[ws.protocol]["message"](ws, data);
+						});
+						break;
+				}
 			});
 
 			// execute the on_connection function
-			if (this.message_handlers[ws.protocol].connection !== undefined) {
-				this.message_handlers[ws.protocol].connection(ws, socket, request);
+			const handle_function = this.message_handlers[ws.protocol].open;
+			if (handle_function !== undefined) {
+				handle_function(ws);
 			}
 		} else {
+			logger.error(`closing WebSocket (${ws.url}): protocol not supported (${ws.protocol})`);
+
 			// reject connection
 			ws.send("Protocol not supported");
 
-			ws.send(JSON.stringify({
-				command: "response",
-				message: `protocol '${ws.protocol}' is not supported`,
-				code: 400
-			}));
+			ws.send(
+				JSON.stringify({
+					command: "response",
+					message: `protocol '${ws.protocol}' is not supported`,
+					code: 400
+				})
+			);
 			ws.close();
 		}
 
 		// redirect errors to the console
-		ws.on("error", () => {
-			console.error();
+		ws.on("error", (event: Error) => {
+			logger.error(`WebSocket-connection error (${ws.url}): ${event.name}: ${event.message}`);
 
 			ws.close();
 		});
 
 		ws.on("close", () => {
+			logger.log(`WebSocket-connection closed (${ws.url})`);
+
 			ws.close();
 
 			// remove the connection from the list
@@ -102,6 +115,3 @@ class WebsocketServer {
 		}
 	}
 }
-
-export { JGCPResponse, WebsocketServerArguments, WebsocketMessageHandler };
-export default WebsocketServer;

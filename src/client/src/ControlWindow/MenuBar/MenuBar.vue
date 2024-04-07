@@ -1,0 +1,160 @@
+<script setup lang="ts">
+	import { ref, toRef } from "vue";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
+	library.add(
+		fas.faFile,
+		fas.faFolderOpen,
+		fas.faFloppyDisk,
+		fas.faBackwardStep,
+		fas.faForwardStep,
+		fas.faAngleLeft,
+		fas.faAngleRight,
+		fas.faEyeSlash,
+		fas.faEye,
+		fas.faList,
+		fas.faPlus,
+		fas.faPen
+	);
+
+	import { ControlWindowState } from "@/Enums";
+	import MenuButton from "./MenuButton.vue";
+	import MenuDivider from "./MenuDivider.vue";
+
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
+	const props = defineProps<{
+		ws: WebSocket;
+	}>();
+
+	const visibility = defineModel<boolean>("visibility", { required: true });
+
+	const emit = defineEmits<{
+		navigate: [type: JGCPRecv.NavigateType, steps: number];
+		set_visibility: [state: boolean];
+	}>();
+
+	const control_window_state = defineModel<ControlWindowState>();
+
+	// reference for the file-input
+	const load_playlist_input = ref<HTMLInputElement>();
+
+	// read the content of the playlist-file and send it to the server
+	function load_playlist_file(e: Event) {
+		const input_event = e.target as HTMLInputElement;
+
+		// only continue, if there is a file
+		if (input_event.files !== null) {
+			const reader = new FileReader();
+
+			reader.addEventListener("load", (e) => {
+				const message: JGCPRecv.OpenPlaylist = {
+					command: "load_playlist",
+					playlist: e.target?.result as string
+				};
+
+				props.ws.send(JSON.stringify(message));
+			});
+
+			reader.readAsText(input_event.files[0]);
+		}
+	}
+
+	function save_playlist() {
+		const message: JGCPRecv.SavePlaylist = {
+			command: "save_playlist"
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
+</script>
+
+<template>
+	<div class="menubar">
+		<MenuButton :square="true">
+			<FontAwesomeIcon :icon="['fas', 'file']" />
+		</MenuButton>
+		<MenuButton
+			:square="true"
+			@click="control_window_state = ControlWindowState.OpenPlaylist"
+			:active="control_window_state === ControlWindowState.OpenPlaylist"
+		>
+			<FontAwesomeIcon :icon="['fas', 'folder-open']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="save_playlist">
+			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
+		</MenuButton>
+		<input
+			type="file"
+			ref="load_playlist_input"
+			:accept="'.jcg'"
+			@click="load_playlist_input ? (load_playlist_input.value = '') : null"
+			@change="load_playlist_file"
+			style="display: none"
+		/>
+		<MenuDivider />
+		<MenuButton
+			:square="true"
+			@click="control_window_state = ControlWindowState.Playlist"
+			:active="control_window_state === ControlWindowState.Playlist"
+		>
+			<FontAwesomeIcon :icon="['fas', 'list']" />
+		</MenuButton>
+		<MenuButton
+			:square="true"
+			@click="control_window_state = ControlWindowState.Add"
+			:active="control_window_state === ControlWindowState.Add"
+		>
+			<FontAwesomeIcon :icon="['fas', 'plus']" />
+		</MenuButton>
+		<MenuButton
+			:square="true"
+			@click="control_window_state = ControlWindowState.Edit"
+			:active="control_window_state === ControlWindowState.Edit"
+		>
+			<FontAwesomeIcon :icon="['fas', 'pen']" />
+		</MenuButton>
+		<MenuDivider />
+		<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+			<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+			<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+			<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+		</MenuButton>
+		<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+			<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+		</MenuButton>
+		<MenuDivider />
+		<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
+			<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+		</MenuButton>
+	</div>
+</template>
+
+<style scoped>
+	.menubar {
+		display: flex;
+		margin-bottom: 0.25rem;
+
+		background-color: var(--color-container);
+
+		border-radius: 0.25rem;
+	}
+
+	.menubar > .button {
+		font-size: 1.5rem;
+	}
+
+	.menubar > .seperator {
+		margin-top: 0.625rem;
+		margin-bottom: 0.625rem;
+	}
+
+	.menubar > * {
+		margin: 0.125rem;
+	}
+</style>

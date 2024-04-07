@@ -1,9 +1,11 @@
 node_modules
+node_modules_windows
+node_modules_linux
+server_log.log
+
+casparcg/Templates/JohnCG/*.js
+build-scripts/build.js
+build-scripts/3rdpartylicenses.json
 out
 dist
-client/*.js
-casparcg-templates/JohnCG/*.js
 *.map
-client/webfonts/bahnschrift.ttf
-build/scripts/*.js
-build/scripts/3rdpartylicenses.json

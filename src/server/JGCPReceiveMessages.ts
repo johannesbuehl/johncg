@@ -1,3 +1,5 @@
+import { ItemProps } from "./PlaylistItems/PlaylistItem";
+
 /**
  * Base interface for Received JGCP-messages
  */
@@ -5,12 +7,20 @@ interface Base {
 	client_id?: string;
 }
 
+export interface NewPlaylist extends Base {
+	command: "new_playlist";
+}
+
 /**
- * sequence-file to be loaded
+ * playlist-file to be loaded
  */
-export interface OpenSequence extends Base {
-	command: "open_sequence";
-	sequence: string;
+export interface OpenPlaylist extends Base {
+	command: "load_playlist";
+	playlist: string;
+}
+
+export interface SavePlaylist extends Base {
+	command: "save_playlist";
 }
 
 /**
@@ -24,7 +34,7 @@ export interface RequestItemSlides extends Base {
 /**
  * The different navigation-types
  */
-const item_navigate_type = ["item", "slide"] as const;
+export const item_navigate_type = ["item", "slide"] as const;
 export type NavigateType = (typeof item_navigate_type)[number];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 export const is_item_navigate_type = (x: any): x is NavigateType => item_navigate_type.includes(x);
@@ -49,13 +59,60 @@ export interface SelectItemSlide extends Base {
 	slide: number;
 }
 
-export interface MoveSequenceItem extends Base {
-	command: "move_sequence_item";
+export interface MovePlaylistItem extends Base {
+	command: "move_playlist_item";
 	from: number;
 	to: number;
+}
+
+export interface GetItemFiles extends Base {
+	command: "get_item_files";
+	type: "song" | "media" | "template" | "playlist" | "pdf" | "psalm";
+}
+
+export interface GetBible extends Base {
+	command: "get_bible";
+}
+
+export interface GetItemData extends Base {
+	command: "get_item_data";
+	type: "song";
+	file: string;
+}
+
+export interface AddItem extends Base {
+	command: "add_item";
+	props: ItemProps;
+	index?: number;
+	set_active?: boolean;
+}
+
+export interface UpdateItem extends Base {
+	command: "update_item";
+	props: ItemProps;
+	index: number;
+}
+
+export interface DeleteItem {
+	command: "delete_item";
+	position: number;
 }
 
 /**
  * Uniun of the different JGCP-messages
  */
-export type Message = RequestItemSlides | SetVisibility | OpenSequence | Navigate | SelectItemSlide;
+export type Message =
+	| RequestItemSlides
+	| SetVisibility
+	| OpenPlaylist
+	| Navigate
+	| SelectItemSlide
+	| MovePlaylistItem
+	| AddItem
+	| UpdateItem
+	| DeleteItem
+	| NewPlaylist
+	| SavePlaylist
+	| GetItemFiles
+	| GetBible
+	| GetItemData;

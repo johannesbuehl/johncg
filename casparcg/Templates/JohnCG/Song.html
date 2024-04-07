@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<script>
+		const Config = {
+			
+		};
+	</script>
+	<head>
+		<title>
+			JohnCG - Song-template
+		</title>
+		<style>
+			body {
+				font-size: calc(1500vw / 1920);
+
+				margin: 0;
+
+				overflow: hidden;
+
+				background-color: transparent;
+			}
+
+			#_main {
+				opacity: 0;
+
+				transition: opacity 0.5s linear;
+
+				width: 100vw;
+				height: 100vh;
+
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#container {
+				color: white;
+
+				width: 100%;
+				height: 100%;
+
+				display: flex;
+			}
+
+			#container > * {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			#storage {
+				color: white;
+				opacity: 0;
+
+				width: fit-content;
+			}
+
+			/* Hide the title so it doesn't get width calculated */
+			#storage > * > .title {
+				display: none;
+			}
+			
+			.slide {
+				width: auto;
+				height: auto;
+
+				margin: 1em;
+			}
+
+			.slide.title {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+
+				height: 100%;
+				width: 100%;
+
+				font-size: 8em;
+			}
+
+			.slide > * {
+				text-shadow: calc(1em / 16) calc(1em / 16) calc(1em / 8) black;
+			}
+
+			.slide.lyric {
+				display: flex;
+				flex-direction: column;
+
+				justify-content: center;
+			}
+
+			.slide.title > .title_container {
+				display: flex;
+				justify-content: flex-end;
+				flex-direction: column;
+			}
+			
+			.slide.title > .title_container > div {
+				font-family: "Bahnschrift Condensed";
+			}
+
+			.slide.title > .title_container > .language_0 {
+
+			}
+
+			.slide.title > .title_container > .language_1 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.slide.title > .title_container > .language_2 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.slide.title > .title_container > .language_3 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.slide > .song_id {
+				font-family: "Bahnschrift Condensed";
+				font-weight: 100;
+
+				font-size: 0.75em;
+			}
+			
+			.text_line {
+				font-family: "Bahnschrift";
+				
+				text-align: center;
+				
+				white-space: nowrap;
+			}
+			
+			.text_line.language_0 {
+				font-size: 1em;
+			}
+
+			.text_line.language_1 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.text_line.language_2 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+
+			.text_line.language_3 {
+				color: hsl(0 0% 62.5%);
+				font-size: 0.625em;
+
+				font-style: italic;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="_main">
+			<div id="container">
+
+			</div>
+		</div>
+		<div id="storage"></div>
+	</body>
+	<script src="Song.js"></script>
+</html>
