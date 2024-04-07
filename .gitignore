@@ -1,12 +1,11 @@
 node_modules
 node_modules_windows
 node_modules_linux
-out
-dist
-client/*.js
+server_log.log
+
 casparcg/Templates/JohnCG/*.js
-*.map
-client/webfonts/bahnschrift.ttf
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
-server_log.log
+out
+dist
+*.map
