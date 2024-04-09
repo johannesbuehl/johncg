@@ -17,6 +17,7 @@ import * as fs from "fs";
 import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
+import AMCP from "./PlaylistItems/AMCP.ts";
 
 export type ClientPlaylistItem = ItemProps & { displayable: boolean };
 
@@ -129,7 +130,8 @@ export default class Playlist {
 			pdf: PDF,
 			template: TemplateItem,
 			bible: Bible,
-			psalm: Psalm
+			psalm: Psalm,
+			amcp: AMCP
 		};
 
 		const new_item = new item_class_map[item.type](item, () => {
@@ -443,40 +445,37 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.Play>> {
-		if (casparcg_connection.media !== undefined) {
-			let api_request: Promise<APIRequest<Commands.Play>>;
-
-			// if the state is "visible", play it directly
-			if (this.visibility) {
-				const clip = this.active_playlist_item?.media ?? "#00000000";
-
-				logger.log(`loading CasparCG-media: '${clip}'`);
-
-				const message = {
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					clip,
-					loop: this.active_playlist_item?.loop,
-					transition: this.casparcg_transition
-				};
-
-				api_request = casparcg_connection.connection.play(message);
-			} else {
-				logger.log(
-					`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`
-				);
-
-				//  if the current stat is invisible, only load it in the background
-				api_request = casparcg_connection.connection.loadbg({
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					clip: this.active_playlist_item?.media,
-					loop: this.active_playlist_item?.loop,
-					transition: this.casparcg_transition
-				});
+		// if the state is "visible", play it directly
+		if (this.visibility) {
+			if (this.active_playlist_item instanceof AMCP) {
+				this.active_playlist_item.play();
+				return;
 			}
 
-			return api_request;
+			const clip = this.active_playlist_item?.media ?? "#00000000";
+
+			logger.log(`loading CasparCG-media: '${clip}'`);
+
+			const message = {
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip,
+				loop: this.active_playlist_item?.loop,
+				transition: this.casparcg_transition
+			};
+
+			return casparcg_connection.connection.play(message);
+		} else {
+			logger.log(`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`);
+
+			//  if the current stat is invisible, only load it in the background
+			return casparcg_connection.connection.loadbg({
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip: this.active_playlist_item?.media,
+				loop: this.active_playlist_item?.loop,
+				transition: this.casparcg_transition
+			});
 		}
 	}
 
