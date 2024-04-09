@@ -139,7 +139,9 @@
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="slides?.item && control_window_state === ControlWindowState.Playlist"
+			v-if="
+				typeof slides?.item === 'number' && control_window_state === ControlWindowState.Playlist
+			"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"

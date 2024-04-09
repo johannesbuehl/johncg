@@ -1,5 +1,6 @@
-import { get_song_path } from "../config.ts";
+import Config from "../config.ts";
 import { recurse_object_check } from "../lib.ts";
+import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
@@ -225,11 +226,11 @@ export default class Song extends PlaylistItemBase {
 
 	cache_song_file() {
 		try {
-			this.song_file = new SongFile(get_song_path(this.props.file));
+			this.song_file = new SongFile(Config.get_path("song", this.props.file));
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`song '${this.props.file}' does not exist`);
+				logger.error(`song '${this.props.file}' does not exist`);
 
 				this.is_displayable = false;
 

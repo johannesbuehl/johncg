@@ -32,7 +32,7 @@ class HTTPServer {
 						break;
 					// serve the CasparCG-templates
 					case /^\/Templates\//.test(request.url):
-						resource_dir = Config.casparcg.templates;
+						resource_dir = Config.casparcg_template_path;
 						request.url = request.url.replace(/\/Templates\//, "");
 
 						// check, wether the file exits

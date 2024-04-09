@@ -1,7 +1,6 @@
 import WebSocket, { RawData } from "ws";
 
-import { CasparCG, ClipInfo } from "casparcg-connection";
-import { XMLParser } from "fast-xml-parser";
+import { CasparCG } from "casparcg-connection";
 import fs from "fs";
 
 import Playlist from "./Playlist.ts";
@@ -17,28 +16,15 @@ import * as JGCPSend from "./JGCPSendMessages.ts";
 import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 import type { CasparCGConnectionSettings } from "./config.ts";
 
-import Config, { get_playlist_path } from "./config.ts";
+import Config from "./config.ts";
 import SearchPart, { ItemFile } from "./search_part.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 
-interface CasparCGPathsSettings {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	"data-path": string;
-	"initial-path": string;
-	"log-path": string;
-	"media-path": string;
-	"template-path": string;
-	/* eslint-enable @typescript-eslint/naming-convention */
-}
-
 export interface CasparCGConnection {
 	connection: CasparCG;
 	settings: CasparCGConnectionSettings;
-	paths: CasparCGPathsSettings;
-	media: ClipInfo[];
-	template: string[];
 	resolution: CasparCGResolution;
 	framerate: number;
 }
@@ -122,13 +108,9 @@ export default class Control {
 		logger.log("starting osc-server");
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
-		const xml_parser = new XMLParser();
-
-		this.playlist = new Playlist();
-
 		// create the CasparCG-connections
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		Config.casparcg.connections.forEach(async (connection_setting) => {
+		Config.casparcg.connections.forEach((connection_setting) => {
 			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
 			const connection: CasparCG = new CasparCG({
@@ -137,106 +119,99 @@ export default class Control {
 				autoConnect: true
 			});
 
-			let casparcg_config;
-
-			try {
-				casparcg_config = (await (await connection.infoConfig()).request).data;
-			} catch (e) {
-				if (e instanceof Error) {
-					logger.error(
-						`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
-					);
-				} else {
-					logger.error(
-						`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
-					);
-				}
-
-				if (e instanceof TypeError) {
-					return;
-				}
-			}
-
-			let resolution: CasparCGResolution = {
-				height: 1080,
-				width: 1920
-			};
-			let framerate: number = 25;
-
-			let video_mode_regex_results: RegExpMatchArray | undefined | null;
-
-			if (casparcg_config?.channels !== undefined) {
-				video_mode_regex_results = casparcg_config?.channels[
-					connection_setting.channel - 1
-				].videoMode?.match(
-					/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
-				);
-			}
-
-			if (video_mode_regex_results?.groups !== undefined) {
-				// if the resolution is given as PAL or NTSC, convert it
-				if (video_mode_regex_results.groups.mode) {
-					switch (video_mode_regex_results.groups.mode) {
-						case "PAL":
-							resolution = {
-								width: 720,
-								height: 576
-							};
-							framerate = 25;
-							break;
-						case "NTSC":
-							resolution = {
-								width: 720,
-								height: 480
-							};
-							framerate = 29.97;
-							break;
-					}
-				} else {
-					resolution = {
-						width:
-							(Number(
-								video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height
-							) /
-								9) *
-							16,
-						height: Number(video_mode_regex_results.groups.height)
-					};
-					framerate = Number(video_mode_regex_results.groups.framerate) / 100;
-				}
-			}
-
-			logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
-
 			const casparcg_connection: CasparCGConnection = {
 				connection,
 				settings: connection_setting,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				paths: (
-					xml_parser.parse(
-						((await (await connection.infoPaths()).request)?.data as string) ?? ""
-					) as { paths: object }
-				)?.paths as CasparCGPathsSettings,
-				media: (await (await connection.cls()).request)?.data ?? [],
-				template: (await (await connection.tls()).request)?.data ?? [],
-				resolution,
-				framerate
+				resolution: { height: 1080, width: 1920 },
+				framerate: 25
 			};
 
 			// add the connection to the stored connections
 			this.casparcg_connections.push(casparcg_connection);
-			this.playlist.add_casparcg_connection(casparcg_connection);
+
+			connection.on("connect", () => {
+				this.playlist.casparcg_load_item(casparcg_connection);
+			});
+
+			// eslint-disable-next-line @typescript-eslint/no-misused-promises
+			connection.once("connect", async () => {
+				let resolution: CasparCGResolution = {
+					height: 1080,
+					width: 1920
+				};
+				let framerate: number = 25;
+
+				let casparcg_config;
+
+				try {
+					casparcg_config = (await (await connection.infoConfig()).request).data;
+				} catch (e) {
+					if (e instanceof TypeError) {
+						return;
+					}
+				}
+
+				let video_mode_regex_results: RegExpMatchArray | undefined | null;
+
+				if (casparcg_config?.channels !== undefined) {
+					video_mode_regex_results = casparcg_config?.channels[
+						connection_setting.channel - 1
+					].videoMode?.match(
+						/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
+					);
+				}
+
+				if (video_mode_regex_results?.groups !== undefined) {
+					// if the resolution is given as PAL or NTSC, convert it
+					if (video_mode_regex_results.groups.mode) {
+						switch (video_mode_regex_results.groups.mode) {
+							case "PAL":
+								resolution = {
+									width: 720,
+									height: 576
+								};
+								framerate = 25;
+								break;
+							case "NTSC":
+								resolution = {
+									width: 720,
+									height: 480
+								};
+								framerate = 29.97;
+								break;
+						}
+					} else {
+						resolution = {
+							width:
+								(Number(
+									video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height
+								) /
+									9) *
+								16,
+							height: Number(video_mode_regex_results.groups.height)
+						};
+						framerate = Number(video_mode_regex_results.groups.framerate) / 100;
+					}
+				}
+
+				casparcg_connection.framerate = framerate;
+				casparcg_connection.resolution = resolution;
+
+				logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
+			});
 		});
 
 		this.search_part = new SearchPart(this.casparcg_connections);
+
+		this.playlist = new Playlist(this.casparcg_connections);
 	}
 
 	private new_playlist(ws: WebSocket) {
 		if (!this.playlist.unsaved_changes) {
 			logger.log("creating new playlist");
 
-			this.playlist = new Playlist();
-			this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
+			this.playlist = new Playlist(this.casparcg_connections);
+			// this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
 
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
@@ -258,7 +233,7 @@ export default class Control {
 		try {
 			new_playlist = new Playlist(
 				this.casparcg_connections,
-				get_playlist_path(playlist_path),
+				Config.get_path("playlist", playlist_path),
 				() => {
 					this.send_playlist();
 				}
@@ -269,9 +244,6 @@ export default class Control {
 			return;
 		}
 
-		// destroy the previous opened playlist
-		logger.debug("destroying existing playlist");
-		this.playlist.destroy();
 		this.playlist = new_playlist;
 
 		// send the playlist to all clients
@@ -352,7 +324,7 @@ export default class Control {
 						...(await this.playlist?.create_client_object_item_slides(item))
 					};
 
-					logger.debug("sending item-slides for item 'item' to client");
+					logger.debug(`sending item-slides for item '${item}' to client`);
 
 					ws?.send(JSON.stringify(message));
 

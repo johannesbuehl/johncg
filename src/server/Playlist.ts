@@ -67,11 +67,11 @@ export default class Playlist {
 	};
 
 	constructor(
-		casparcg_connections?: CasparCGConnection[],
+		casparcg_connections: CasparCGConnection[],
 		playlist?: string,
 		callback?: () => void
 	) {
-		casparcg_connections?.forEach((cc) => this.add_casparcg_connection(cc));
+		this.casparcg_connections = casparcg_connections;
 
 		if (playlist !== undefined) {
 			this.load_playlist_file(playlist, callback);
@@ -88,29 +88,6 @@ export default class Playlist {
 
 			this.set_active_item(first_item, 0);
 		}
-	}
-
-	add_casparcg_connection(casparcg_connection: CasparCGConnection) {
-		logger.debug(
-			`adding CasparCG-connection to playlist: '${casparcg_connection.settings.host}:${casparcg_connection.settings.port}'`
-		);
-
-		this.casparcg_connections.push(casparcg_connection);
-
-		// add a listener to send send the current-slide on connection
-		casparcg_connection.connection.addListener("connect", () => {
-			// load the active-item
-			this.casparcg_load_item(casparcg_connection);
-		});
-
-		// load the first slide
-		this.casparcg_load_item(casparcg_connection);
-	}
-
-	destroy() {
-		this.casparcg_connections.forEach((casparcg_connection) => {
-			casparcg_connection.connection.removeListener("connect");
-		});
 	}
 
 	add_item(
@@ -263,7 +240,7 @@ export default class Playlist {
 										filename: '"' + client_object.media + '"'
 									})
 								).request
-							).data as string[];
+							)?.data as string[];
 						}
 
 						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";
@@ -323,7 +300,7 @@ export default class Playlist {
 
 			// if the new_active_item_number is back at the start, break, since there are no displayable items
 			if (new_active_item_number === this.active_item) {
-				console.error("loop around");
+				logger.error("can't navigate: no selectable items");
 				return;
 			}
 
@@ -427,7 +404,7 @@ export default class Playlist {
 		return item;
 	}
 
-	private casparcg_load_item(casparcg_connection?: CasparCGConnection, media_only?: boolean): void {
+	casparcg_load_item(casparcg_connection?: CasparCGConnection, media_only?: boolean): void {
 		const connections = casparcg_connection ? [casparcg_connection] : this.casparcg_connections;
 
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -443,41 +420,37 @@ export default class Playlist {
 	private casparcg_load_media(
 		casparcg_connection: CasparCGConnection
 	): Promise<APIRequest<Commands.Play>> {
-		if (casparcg_connection.media !== undefined) {
-			let api_request: Promise<APIRequest<Commands.Play>>;
+		let api_request: Promise<APIRequest<Commands.Play>>;
 
-			// if the state is "visible", play it directly
-			if (this.visibility) {
-				const clip = this.active_playlist_item?.media ?? "#00000000";
+		// if the state is "visible", play it directly
+		if (this.visibility) {
+			const clip = this.active_playlist_item?.media ?? "#00000000";
 
-				logger.log(`loading CasparCG-media: '${clip}'`);
+			logger.log(`loading CasparCG-media: '${clip}'`);
 
-				const message = {
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					clip,
-					loop: this.active_playlist_item?.loop,
-					transition: this.casparcg_transition
-				};
+			const message = {
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip,
+				loop: this.active_playlist_item?.loop,
+				transition: this.casparcg_transition
+			};
 
-				api_request = casparcg_connection.connection.play(message);
-			} else {
-				logger.log(
-					`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`
-				);
+			api_request = casparcg_connection.connection.play(message);
+		} else {
+			logger.log(`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`);
 
-				//  if the current stat is invisible, only load it in the background
-				api_request = casparcg_connection.connection.loadbg({
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					clip: this.active_playlist_item?.media,
-					loop: this.active_playlist_item?.loop,
-					transition: this.casparcg_transition
-				});
-			}
-
-			return api_request;
+			//  if the current stat is invisible, only load it in the background
+			api_request = casparcg_connection.connection.loadbg({
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip: this.active_playlist_item?.media,
+				loop: this.active_playlist_item?.loop,
+				transition: this.casparcg_transition
+			});
 		}
+
+		return api_request;
 	}
 
 	private casparcg_load_template(
@@ -565,7 +538,7 @@ export default class Playlist {
 				void this.casparcg_load_media(casparcg_connection);
 			}
 
-			console.debug(`jumping CasparCG-template: slide '${slide}'`);
+			logger.debug(`jumping CasparCG-template: slide '${slide}'`);
 
 			// jump to the slide-number in casparcg
 			void casparcg_connection.connection.cgInvoke({
@@ -606,19 +579,17 @@ export default class Playlist {
 					})
 				];
 
-				if (casparcg_connection.media !== undefined) {
-					promises.push(
-						// fade-out the media
-						casparcg_connection.connection.play({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.media,
-							clip: "EMPTY",
-							transition: this.casparcg_transition
-							/* eslint-enable @typescript-eslint/naming-convention */
-						})
-					);
-				}
+				promises.push(
+					// fade-out the media
+					casparcg_connection.connection.play({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel: casparcg_connection.settings.channel,
+						layer: casparcg_connection.settings.layers.media,
+						clip: "EMPTY",
+						transition: this.casparcg_transition
+						/* eslint-enable @typescript-eslint/naming-convention */
+					})
+				);
 
 				await Promise.allSettled(promises);
 			}

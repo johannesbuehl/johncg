@@ -4,9 +4,9 @@ import tmp from "tmp";
 
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { get_pdf_path } from "../config.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
+import Config from "../config.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -39,7 +39,7 @@ export default class PDF extends PlaylistItemBase {
 			void (async () => {
 				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-				const pth = get_pdf_path(this.props.file).replaceAll("/", "\\");
+				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
 
 				logger.debug(`loading PDF-file (${pth})`);
 

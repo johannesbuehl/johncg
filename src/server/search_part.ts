@@ -3,7 +3,7 @@ import fs from "fs";
 
 import * as JGCPRecv from "./JGCPReceiveMessages";
 
-import Config, { get_psalm_path, get_song_path } from "./config";
+import Config from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { CasparCGConnection } from "./control";
@@ -52,7 +52,7 @@ export default class SearchPart {
 	}
 
 	create_song_file(f: File): SongFile {
-		const song = new SngFile(get_song_path(f.path));
+		const song = new SngFile(Config.get_path("song", f.path));
 
 		const song_value: SongFile = {
 			...f,
@@ -78,7 +78,7 @@ export default class SearchPart {
 	}
 
 	create_psalm_file(f: File): PsalmFile {
-		const psalm = JSON.parse(fs.readFileSync(get_psalm_path(f.path), "utf-8")) as PsmFile;
+		const psalm = JSON.parse(fs.readFileSync(Config.get_path("psalm", f.path), "utf-8")) as PsmFile;
 
 		return {
 			...f,
@@ -156,10 +156,9 @@ export default class SearchPart {
 
 		logger.debug("requesting CasparCG-media-list");
 
-		this.casparcg_connections[0].media =
-			(await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
+		const media = (await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
 
-		return build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
 	async get_casparcg_template(): Promise<File[]> {
@@ -170,10 +169,10 @@ export default class SearchPart {
 
 		logger.debug("requesting CasparCG-template-list");
 
-		this.casparcg_connections[0].template =
+		const template =
 			(await (await this.casparcg_connections[0].connection.tls()).request)?.data ?? [];
 
-		return build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
+		return build_files(template.map((m) => m.split("/")));
 	}
 
 	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
@@ -190,7 +189,7 @@ export default class SearchPart {
 					return this.create_song_file(item_file);
 				} catch (e) {
 					if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-						console.error(`song '${path}' does not exist`);
+						logger.error(`song '${path}' does not exist`);
 
 						return;
 					} else {

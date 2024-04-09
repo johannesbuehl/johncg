@@ -47,7 +47,10 @@
 	// watch for changes in item-selection
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
-		if (control_window_state.value === ControlWindowState.Playlist && new_selection) {
+		if (
+			control_window_state.value === ControlWindowState.Playlist &&
+			typeof new_selection === "number"
+		) {
 			request_item_slides(new_selection);
 		} else {
 			// else: delete the stored item-slides

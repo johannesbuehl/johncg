@@ -9,9 +9,7 @@ Generate lyric-graphics and play them out through CasparCG.
 
 ## roadmap
 - implement other playlist-items than song (Missing: Diashow / Multi-Image, Text, Custom AMCP-command)
-- client: information about connection (active / reconnecting / ...)
 - companion integration (buttons for song parts -> send name to casparcg)
-- check client -> server slide_number out of range
 - client: check response-texts, if they are still correct
 - write installation instruction (including Bahnschrift-Font installation)
 - client communication with osc over websocket?
