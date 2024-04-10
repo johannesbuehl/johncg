@@ -249,7 +249,7 @@ export default class Control {
 		this.playlist = new_playlist;
 
 		// send the playlist to all clients
-		this.send_playlist(Array.from(Array(this.playlist.playlist_items.length).keys()));
+		this.send_playlist(undefined, undefined, undefined, true);
 
 		// send the current state to all clients
 		this.send_state();
@@ -273,13 +273,15 @@ export default class Control {
 	private send_playlist(
 		new_item_order: number[] = Array.from(Array(this.playlist.playlist_items.length).keys()),
 		client_id?: string,
-		ws?: WebSocket
+		ws?: WebSocket,
+		new_playlist?: boolean
 	) {
 		const response_playlist_items: JGCPSend.Playlist = {
 			command: "playlist_items",
 			new_item_order,
 			...this.playlist.create_client_object_playlist(),
-			client_id
+			client_id,
+			new: new_playlist
 		};
 
 		if (ws) {

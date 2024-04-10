@@ -29,7 +29,7 @@
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		default: ControlWindowState.Playlist
+		default: ControlWindowState.Slides
 	});
 
 	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
@@ -48,7 +48,7 @@
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
 		if (
-			control_window_state.value === ControlWindowState.Playlist &&
+			control_window_state.value === ControlWindowState.Slides &&
 			typeof new_selection === "number"
 		) {
 			request_item_slides(new_selection);
@@ -60,7 +60,7 @@
 
 	watch(control_window_state, (new_state) => {
 		// if the new control-window-state is the playlist, request the slides
-		if (new_state === ControlWindowState.Playlist && selected_item.value) {
+		if (new_state === ControlWindowState.Slides && selected_item.value) {
 			request_item_slides(selected_item.value);
 		} else {
 			// else delete the stored slides
@@ -160,13 +160,28 @@
 	function load_playlist_items(data: JGCPSend.Playlist) {
 		playlist_items.value = data;
 
+		// if it is a new-playlist, reset the selected-item to the first one
+		if (data.new) {
+			selected_item.value = data.playlist_items.length > 0 ? 0 : null;
+		}
+
 		if (control_window_state.value === ControlWindowState.OpenPlaylist) {
-			control_window_state.value = ControlWindowState.Playlist;
+			control_window_state.value = ControlWindowState.Slides;
 		}
 
 		// if the playlist is empty, clear the slides-view
 		if (data.playlist_items.length === 0) {
 			item_slides.value = undefined;
+		} else {
+			// request new slides for the selected item
+			if (control_window_state.value === ControlWindowState.Slides && selected_item.value) {
+				const message: JGCPRecv.RequestItemSlides = {
+					command: "request_item_slides",
+					item: selected_item.value
+				};
+
+				ws?.send(JSON.stringify(message));
+			}
 		}
 	}
 

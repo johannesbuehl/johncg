@@ -108,8 +108,6 @@
 							if (f.search_data[search_string.id] !== undefined) {
 								return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
 							} else {
-								console.debug("empty");
-
 								return search_string.value === "";
 							}
 						} else {

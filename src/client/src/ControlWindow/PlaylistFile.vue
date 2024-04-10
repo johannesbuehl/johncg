@@ -28,8 +28,6 @@
 			};
 
 			props.ws.send(JSON.stringify(message));
-
-			console.debug(message);
 		}
 	}
 </script>

@@ -96,8 +96,8 @@
 		<MenuDivider />
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.Playlist"
-			:active="control_window_state === ControlWindowState.Playlist"
+			@click="control_window_state = ControlWindowState.Slides"
+			:active="control_window_state === ControlWindowState.Slides"
 		>
 			<FontAwesomeIcon :icon="['fas', 'list']" />
 		</MenuButton>

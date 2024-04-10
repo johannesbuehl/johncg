@@ -44,7 +44,7 @@
 		let prevent_default = false;
 
 		// execute the navigation-keys only if the slides are visible
-		if (control_window_state.value === ControlWindowState.Playlist && !event.repeat) {
+		if (control_window_state.value === ControlWindowState.Slides && !event.repeat) {
 			prevent_default = true;
 
 			switch (event.code) {
@@ -124,7 +124,7 @@
 		/>
 		<PlaylistItemsList
 			v-if="
-				control_window_state === ControlWindowState.Playlist ||
+				control_window_state === ControlWindowState.Slides ||
 				control_window_state === ControlWindowState.Add ||
 				control_window_state === ControlWindowState.Edit
 			"
@@ -139,9 +139,7 @@
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="
-				typeof slides?.item === 'number' && control_window_state === ControlWindowState.Playlist
-			"
+			v-if="typeof slides?.item === 'number' && control_window_state === ControlWindowState.Slides"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
