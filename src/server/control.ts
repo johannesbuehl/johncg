@@ -25,7 +25,6 @@ import { logger } from "./logger.ts";
 export interface CasparCGConnection {
 	connection: CasparCG;
 	settings: CasparCGConnectionSettings;
-	resolution: CasparCGResolution;
 	framerate: number;
 }
 
@@ -110,7 +109,7 @@ export default class Control {
 
 		// create the CasparCG-connections
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		Config.casparcg.connections.forEach((connection_setting) => {
+		Config.casparcg.connections.forEach((connection_setting, connection_index) => {
 			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
 			const connection: CasparCG = new CasparCG({
@@ -122,7 +121,6 @@ export default class Control {
 			const casparcg_connection: CasparCGConnection = {
 				connection,
 				settings: connection_setting,
-				resolution: { height: 1080, width: 1920 },
 				framerate: 25
 			};
 
@@ -195,7 +193,11 @@ export default class Control {
 				}
 
 				casparcg_connection.framerate = framerate;
-				casparcg_connection.resolution = resolution;
+
+				// if it is the first connection, store its resolution
+				if (connection_index === 0) {
+					Config.casparcg_resolution = resolution;
+				}
 
 				logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
 			});
@@ -320,7 +322,7 @@ export default class Control {
 						command: "item_slides",
 						item,
 						client_id,
-						resolution: this.playlist?.casparcg_connections[0].resolution,
+						resolution: Config.casparcg_resolution,
 						...(await this.playlist?.create_client_object_item_slides(item))
 					};
 

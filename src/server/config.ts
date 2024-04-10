@@ -2,6 +2,7 @@ import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
 import { recurse_object_check } from "./lib";
+import { CasparCGResolution } from "./Playlist";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -95,7 +96,12 @@ class ConfigClass {
 	private config_path: string;
 
 	private config: ConfigJSON;
-	private config_interal: { casparcg_template_path?: string } = {};
+	private config_interal: {
+		casparcg_template_path?: string;
+		casparcg_resolution: CasparCGResolution;
+	} = {
+		casparcg_resolution: { height: 1080, width: 1920 }
+	};
 
 	constructor(pth: string = config_path) {
 		this.open(pth);
@@ -177,8 +183,27 @@ class ConfigClass {
 
 	set casparcg_template_path(pth: string) {
 		if (typeof pth === "string" && pth.length > 0) {
-			this.config_interal.casparcg_template_path = pth;
+			this.config_interal.casparcg_template_path = structuredClone(pth);
 		}
+	}
+
+	set casparcg_resolution(res: CasparCGResolution) {
+		const template: CasparCGResolution = {
+			height: 0,
+			width: 0
+		};
+
+		let result = recurse_object_check(res, template);
+
+		result &&= res?.height > 0 && res?.width > 0;
+
+		if (result) {
+			this.config_interal.casparcg_resolution = structuredClone(res);
+		}
+	}
+
+	get casparcg_resolution(): CasparCGResolution {
+		return structuredClone(this.config_interal.casparcg_resolution);
 	}
 
 	get path(): ConfigJSON["path"] {

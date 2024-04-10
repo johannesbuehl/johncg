@@ -7,6 +7,7 @@ import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
+import { CasparCGResolution } from "../Playlist.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -51,15 +52,36 @@ export default class PDF extends PlaylistItemBase {
 						[...Array(pdf.numPages).keys()].map(async (index) => {
 							// increase the counter by one, because the pages start at 1
 							const page = await pdf.getPage(index + 1);
+
 							// eslint-disable-next-line @typescript-eslint/naming-convention
 							const viewport = page.getViewport({ scale: 1 });
 
-							const canvas = Canvas.createCanvas(viewport.width, viewport.height);
+							const casparcg_resolution = Config.casparcg_resolution;
+
+							const scales: Partial<Record<keyof CasparCGResolution, number>> = {};
+							Object.entries(casparcg_resolution).forEach(
+								([key, res]: [keyof CasparCGResolution, number]) => {
+									scales[key] = res / viewport[key];
+								}
+							);
+							const scale = Math.min(...Object.values(scales));
+
+							const canvas = Canvas.createCanvas(
+								casparcg_resolution.width,
+								casparcg_resolution.height
+							);
 
 							await page.render({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
 								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
-								viewport
+								/* eslint-disable @typescript-eslint/naming-convention */
+								viewport: page.getViewport({
+									scale,
+									offsetY: (casparcg_resolution.height - scale * viewport.height) / 2,
+									offsetX: (casparcg_resolution.width - scale * viewport.width) / 2
+								}),
+								/* eslint-enable @typescript-eslint/naming-convention */
+								background: "#000000"
 							}).promise;
 
 							const image_buffer = canvas.toBuffer();
