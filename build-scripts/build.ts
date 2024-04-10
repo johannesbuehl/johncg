@@ -61,13 +61,15 @@ copy_build_file(process.execPath, exec_name);
 // load the config-file, censor the file-paths and store it for the relase
 const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
 config_file.path = {
-	song: "C:/path/to/song/directory",
-	pdf: "D:/path/to/pdf/directory",
-	psalm: "E:/path/to/psalm/directory",
-	playlist: "F:/path/to/playlist/directory",
+	song: "Songs/",
+	pdf: "PDFs/",
+	psalm: "Psalms/",
+	playlist: "Playlists/",
 	bible: "Bibles/Luther-Bibel.json"
 };
-config_file.casparcg.templates = "e:/path/to/the/casparcg/templates/directory";
+config_file.companion.address = "172.0.0.1";
+config_file.log_level = "INFO";
+
 fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
 
 // copy the file to the output
