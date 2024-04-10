@@ -11,9 +11,7 @@ const spans: {
 };
 let data: CountdownTemplateData & { mute_transition: boolean };
 
-const end_time = new Date();
-
-let end_time_sign;
+let template_time = new Date();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(str_args: string) {
@@ -106,15 +104,7 @@ function update(str_args: string) {
 	}
 
 	if (data.time !== undefined) {
-		const time = data.time.match(/(?<hours>\d+)(?::)(?<minutes>\d\d)((?::)(?<seconds>\d\d))?/);
-
-		if (time?.groups) {
-			end_time.setHours(parseInt(time.groups.hours));
-			end_time.setMinutes(parseInt(time.groups.minutes));
-			end_time.setSeconds(parseInt(time.groups.seconds));
-		}
-
-		end_time_sign = Math.sign(Date.now() - end_time.getTime());
+		template_time = new Date(data.time);
 
 		update_interval = setInterval(function () {
 			update_time();
@@ -139,17 +129,16 @@ function stop() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function next() {}
 
-function get_remaining_time(): [Record<keyof typeof spans, string[]>, boolean] {
-	const time_remaining = new Date(end_time.getTime() - Date.now());
+function get_remaining_time(): [Time, boolean] {
+	const time_remaining = new Date(template_time.getTime() - Date.now());
 
-	return [
-		{
-			hours: time_remaining.getUTCHours().toString().padStart(2, "0").split(""),
-			minutes: time_remaining.getUTCMinutes().toString().padStart(2, "0").split(""),
-			seconds: time_remaining.getUTCSeconds().toString().padStart(2, "0").split("")
-		},
-		Math.sign(time_remaining.getTime()) === end_time_sign
-	];
+	return [create_utc_time_object(time_remaining), Math.sign(time_remaining.getTime()) === -1];
+}
+
+function get_stopwatch_time(): Time {
+	const elapsed_time = new Date(Date.now() - template_time.getTime());
+
+	return create_utc_time_object(elapsed_time);
 }
 
 const time_div = document.querySelector<HTMLDivElement>("div#time");
@@ -163,14 +152,30 @@ function position_time() {
 	}
 }
 
+type Time = Record<keyof typeof spans, string[]>;
+
 function update_time() {
-	const [time, finished]: [Record<keyof typeof spans, string[]>, boolean] = get_remaining_time();
+	let time: Time;
+	let finished = false;
+
+	switch (data.mode) {
+		case "end_time":
+		case "duration":
+			[time, finished] = get_remaining_time();
+			break;
+		case "clock":
+			time = create_time_object(new Date());
+			break;
+		case "stopwatch":
+			time = get_stopwatch_time();
+			break;
+	}
 
 	if (finished) {
 		clearInterval(update_interval);
 	} else {
-		// if the hours are 00, don't show them anymore
-		if (time.hours.join("") === "00") {
+		// if the mode isn't 'clock' and the hours are 00, don't show them anymore
+		if (data.mode !== "clock" && time.hours.join("") === "00") {
 			if (spans.hours !== undefined) {
 				spans.hours[0].remove();
 				spans.hours[1].remove();
@@ -183,9 +188,26 @@ function update_time() {
 			}
 		}
 
+		// display the time
 		Object.entries(spans).forEach(([key, val]) => {
 			val[0].innerText = time[key as keyof typeof spans][0];
 			val[1].innerText = time[key as keyof typeof spans][1];
 		});
 	}
+}
+
+function create_utc_time_object(dt: Date): Time {
+	return {
+		hours: dt.getUTCHours().toString().padStart(2, "0").split(""),
+		minutes: dt.getUTCMinutes().toString().padStart(2, "0").split(""),
+		seconds: dt.getUTCSeconds().toString().padStart(2, "0").split("")
+	};
+}
+
+function create_time_object(dt: Date): Time {
+	return {
+		hours: dt.getHours().toString().padStart(2, "0").split(""),
+		minutes: dt.getMinutes().toString().padStart(2, "0").split(""),
+		seconds: dt.getSeconds().toString().padStart(2, "0").split("")
+	};
 }

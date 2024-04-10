@@ -3,7 +3,7 @@ import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
-export type CountdownMode = (typeof countdown_mode_items)[number];
+export type CountdownMode = "duration" | "end_time" | "stopwatch" | "clock";
 
 interface CountdownPosition {
 	x: number;
@@ -38,6 +38,8 @@ export default class Countdown extends PlaylistItemBase {
 
 	protected slide_count: number = 1;
 
+	private time: Date;
+
 	constructor(props: CountdownProps) {
 		super();
 
@@ -63,19 +65,43 @@ export default class Countdown extends PlaylistItemBase {
 	set_active_slide(slide?: number): number {
 		slide = this.validate_slide_number(slide);
 
+		const time = this.props.time.match(
+			/(?<hours>\d+)(?::)(?<minutes>\d\d)((?::)(?<seconds>\d\d))?/
+		);
+
+		// depending on the countdown_mode, set the counter to now
+		switch (this.props.mode) {
+			case "stopwatch":
+				this.time = new Date();
+				break;
+			case "end_time":
+				this.time = new Date();
+
+				this.time.setHours(parseInt(time.groups.hours));
+				this.time.setMinutes(parseInt(time.groups.minutes));
+				this.time.setSeconds(parseInt(time.groups?.seconds ?? "0"));
+
+				// if the end-time is already passed, advance a day;
+				if (this.time < new Date()) {
+					this.time.setDate(this.time.getDate() + 1);
+				}
+
+				break;
+			case "duration":
+				this.time = new Date();
+
+				this.time.setHours(this.time.getHours() + parseInt(time.groups.hours));
+				this.time.setMinutes(this.time.getMinutes() + parseInt(time.groups.minutes));
+				this.time.setSeconds(this.time.getSeconds() + parseInt(time.groups?.seconds ?? "0"));
+				break;
+		}
+
 		return slide;
 	}
 
 	create_client_object_item_slides(): Promise<ClientCountdownSlides> {
-		const title_map: Record<CountdownMode, string> = {
-			clock: "Clock",
-			stopwatch: "Stopwatch",
-			duration: "Countdown (duration)",
-			end_time: "Countdown (end time)"
-		};
-
 		return Promise.resolve({
-			caption: `${title_map[this.template.data.mode]}: ${this.props.time}`,
+			caption: this.props.caption,
 			type: this.props.type,
 			media: this.media,
 			template: this.template
@@ -130,7 +156,7 @@ export default class Countdown extends PlaylistItemBase {
 		return {
 			template: "JohnCG/Countdown",
 			data: {
-				time: this.props.time,
+				time: (this.time ?? new Date()).toUTCString(),
 				mode: this.props.mode,
 				position: this.props.position,
 				font_size: this.props.font_size,

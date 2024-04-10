@@ -2,6 +2,7 @@
 	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
@@ -11,7 +12,7 @@
 
 	import type { MediaFile } from "@server/search_part";
 	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { countdown_title_map } from "@server/lib";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -69,7 +70,7 @@
 		if (media_selection.value !== undefined) {
 			return {
 				type: "countdown",
-				caption: "countdown-placeholder",
+				caption: `${countdown_title_map[countdown_mode.value]}: ${time.value}`,
 				color: "#FF6200",
 				media: media_selection.value.path,
 				font_size: font_size.value,

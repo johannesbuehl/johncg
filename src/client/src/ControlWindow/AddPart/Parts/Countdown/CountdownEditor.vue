@@ -31,7 +31,7 @@
 	const modes: Record<CountdownMode, { name: string; icon: string; time_selector?: string }> = {
 		end_time: { name: "End Time", time_selector: "Countdown Ending Time", icon: "calendar-xmark" },
 		duration: { name: "Duration", time_selector: "Countdown Duration", icon: "hourglass-end" },
-		stopwatch: { name: "Stopwatch", time_selector: "Stopwatch offset", icon: "stopwatch" },
+		stopwatch: { name: "Stopwatch", icon: "stopwatch" },
 		clock: { name: "Clock", icon: "clock" }
 	};
 

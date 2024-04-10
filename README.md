@@ -19,8 +19,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - implement other playlist-items than song (Missing: Diashow / Multi-Image, Text, Custom AMCP-command)
 - companion integration (buttons for song parts -> send name to casparcg)
 - client: check response-texts, if they are still correct
-- implement all countdown modes in Template
-- countdown: save in server wether it is finished
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
 - create playlist-summarys or lyrics-sheets through pandoc
@@ -37,3 +35,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - playout PDFs as base64 to make them work on all render-servers
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
+- make countdown editable
