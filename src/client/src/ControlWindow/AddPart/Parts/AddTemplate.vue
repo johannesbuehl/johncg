@@ -62,7 +62,7 @@
 		return {
 			type: "template",
 			caption: file.name,
-			color: "#008800",
+			color: "#FFC300",
 			template: {
 				template: file.path,
 				data: template_data.value

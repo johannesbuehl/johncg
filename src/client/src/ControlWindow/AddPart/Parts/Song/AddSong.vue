@@ -83,7 +83,7 @@
 		const props: SongProps = {
 			type: "song",
 			caption: file.name,
-			color: "#0000ff",
+			color: "#008CFF",
 			file: file.path
 		};
 

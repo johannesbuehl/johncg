@@ -62,11 +62,19 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
-	function get_files(type: JGCPRecv.GetItemFiles["type"]) {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type
-		};
+	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
+		let message: JGCPRecv.Message;
+
+		if (type === "bible") {
+			message = {
+				command: "get_bible"
+			};
+		} else {
+			message = {
+				command: "get_item_files",
+				type
+			};
+		}
 
 		props.ws.send(JSON.stringify(message));
 	}
@@ -96,7 +104,12 @@
 				@add="add_item"
 				@refresh="get_files('psalm')"
 			/>
-			<AddBible v-else-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
+			<AddBible
+				v-else-if="pick === 'bible'"
+				:bible="bible"
+				@add="add_item"
+				@refresh="get_files('bible')"
+			/>
 			<AddMedia
 				v-else-if="pick === 'media'"
 				:files="files[pick]"

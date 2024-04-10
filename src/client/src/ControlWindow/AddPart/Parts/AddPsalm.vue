@@ -67,7 +67,7 @@
 		return {
 			type: "psalm",
 			caption: file.name,
-			color: "#008800",
+			color: "#FB00FF",
 			file: file.path
 		};
 	}

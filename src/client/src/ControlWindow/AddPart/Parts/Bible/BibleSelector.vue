@@ -35,7 +35,6 @@
 
 <script setup lang="ts">
 	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick } from "vue";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{

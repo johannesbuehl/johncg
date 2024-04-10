@@ -70,7 +70,7 @@
 			return {
 				type: "countdown",
 				caption: "countdown-placeholder",
-				color: "#008800",
+				color: "#FF6200",
 				media: media_selection.value.path,
 				font_size: font_size.value,
 				mode: countdown_mode.value,

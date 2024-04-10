@@ -17,11 +17,11 @@
 
 	const props = defineProps<{
 		bible?: BibleFile;
-		ws: WebSocket;
 	}>();
 
 	const emit = defineEmits<{
 		add: [bible_props: BibleProps];
+		refresh: [];
 	}>();
 
 	const book_selection = defineModel<Book>("book_selection");
@@ -41,7 +41,7 @@
 					get_book_from_id(props.bible, book_selection.value.id).name,
 					chapters
 				),
-				color: "#ff0000",
+				color: "#00EEFF",
 				book_id: book_selection.value.id,
 				chapters
 			};
@@ -55,8 +55,8 @@
 	<BibleSelector
 		v-model:book_selection="book_selection"
 		v-model:chapter_verse_selection="chapter_verse_selection"
-		:ws="ws"
 		:bible="bible"
+		@refresh="emit('refresh')"
 	>
 		<MenuButton @click="add_item()">
 			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Bible

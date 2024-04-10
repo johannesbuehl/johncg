@@ -60,7 +60,7 @@
 		return {
 			type: "pdf",
 			caption: file.name,
-			color: "#ffffff",
+			color: "#77FF00",
 			file: file.path
 		};
 	}

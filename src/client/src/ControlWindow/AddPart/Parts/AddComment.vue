@@ -26,7 +26,7 @@
 			emit("add", {
 				type: "comment",
 				caption: text_input.value,
-				color: "#ffffff"
+				color: "#9900FF"
 			});
 		}
 	}

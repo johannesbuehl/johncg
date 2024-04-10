@@ -61,7 +61,7 @@
 		return {
 			type: "media",
 			caption: file.name,
-			color: "#008800",
+			color: "#FF0040",
 			media: file.path,
 			loop: loop.value
 		};
