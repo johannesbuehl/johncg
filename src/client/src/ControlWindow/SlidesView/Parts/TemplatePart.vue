@@ -38,8 +38,8 @@
 				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
-				@template_load="template_loaded"
 				@click="emit('select_slide', 0)"
+				@onLoaded="template_loaded"
 			/>
 		</div>
 	</div>

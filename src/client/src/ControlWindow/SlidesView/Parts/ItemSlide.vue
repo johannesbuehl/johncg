@@ -20,6 +20,10 @@
 		scroll?: boolean;
 	}>();
 
+	const emit = defineEmits<{
+		onLoaded: [template_object: HTMLObjectElement];
+	}>();
+
 	const slide = ref<HTMLDivElement>();
 	const template_ref = ref<HTMLObjectElement>();
 
@@ -32,20 +36,6 @@
 		}
 	);
 
-	watch(
-		() => props.template?.data,
-		(data) => {
-			if (template_ref.value !== undefined) {
-				const contentWindow: CasparCGTemplate = template_ref.value
-					.contentWindow as CasparCGTemplate;
-
-				contentWindow.update(JSON.stringify({ ...data, mute_transition: true }));
-
-				emit("template_load", template_ref.value);
-			}
-		}
-	);
-
 	onMounted(() => {
 		scroll_into_view();
 	});
@@ -55,10 +45,6 @@
 			slide.value?.scrollIntoView({ behavior: "smooth", block: "center" });
 		}
 	}
-
-	const emit = defineEmits<{
-		template_load: [template_object: HTMLObjectElement];
-	}>();
 </script>
 
 <template>
@@ -79,7 +65,7 @@
 			ref="template_ref"
 			class="template"
 			:data="`Templates/${template?.template}.html`"
-			@load="emit('template_load', $event.target as HTMLObjectElement)"
+			@load="emit('onLoaded', $event.target as HTMLObjectElement)"
 		/>
 		<div class="slide" />
 	</div>

@@ -35,4 +35,3 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - playout PDFs as base64 to make them work on all render-servers
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
-- make countdown editable

@@ -61,7 +61,7 @@
 	function is_active(part: number, part_slide?: number): boolean {
 		create_part_slide_map();
 
-		if (props.active_item_slide !== undefined) {
+		if (props.active_item_slide !== undefined && props.active_item_slide.slide !== null) {
 			if (part_slide !== undefined) {
 				return props.active_item_slide?.slide === part_slide_map[part][part_slide];
 			} else {
@@ -101,7 +101,7 @@
 					:aspect_ratio="aspect_ratio"
 					:active="is_active(part_index, 0)"
 					:scroll="scroll"
-					@template_load="template_loaded($event, part_slide_map[part_index][0])"
+					@onLoaded="template_loaded($event, part_slide_map[part_index][0])"
 					@click="emit('select_slide', part_slide_map[part_index][0])"
 				/>
 			</div>
@@ -125,7 +125,7 @@
 					:aspect_ratio="aspect_ratio"
 					:active="is_active(part_index, slide_index)"
 					:scroll="scroll"
-					@template_load="template_loaded($event, part_slide_map[part_index][slide_index])"
+					@onLoaded="template_loaded($event, part_slide_map[part_index][slide_index])"
 					@click="emit('select_slide', part_slide_map[part_index][slide_index])"
 				/>
 			</div>

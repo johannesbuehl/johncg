@@ -40,11 +40,11 @@
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				:media="slide?.media[0]"
+				:media="slide?.media"
 				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
-				@template_load="template_loaded"
+				@onLoaded="template_loaded"
 				@click="emit('select_slide', 0)"
 			/>
 		</div>
