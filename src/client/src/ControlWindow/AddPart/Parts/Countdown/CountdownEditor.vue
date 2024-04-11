@@ -16,10 +16,6 @@
 		fas.faStopwatch20
 	);
 
-	// const props = defineProps<{
-
-	// }>();
-
 	const emit = defineEmits<{}>();
 
 	const countdown_mode = defineModel<CountdownMode>("countdown_mode", { required: true });
@@ -27,6 +23,7 @@
 	const show_seconds = defineModel<boolean>("show_seconds", { required: true });
 	const position = defineModel<{ x: number; y: number }>("position", { required: true });
 	const font_size = defineModel<number>("font_size", { required: true });
+	const font_color = defineModel<string>("font_color", { required: true });
 
 	const modes: Record<CountdownMode, { name: string; icon: string; time_selector?: string }> = {
 		end_time: { name: "End Time", time_selector: "Countdown Ending Time", icon: "calendar-xmark" },
@@ -112,7 +109,7 @@
 			</div>
 		</div>
 		<div class="editor_wrapper">
-			<div class="header">Font Size</div>
+			<div class="header">Font</div>
 			<div class="input_wrapper">
 				<div class="named_input">
 					<input type="number" min="0" v-model="font_size" @change="input_change" /><span
@@ -120,6 +117,13 @@
 						>pt</span
 					>
 				</div>
+				<input
+					id="font_color_picker"
+					type="color"
+					style="visibility: hidden; position: absolute"
+					v-model="font_color"
+				/>
+				<label id="props_color" for="font_color_picker" :style="{ backgroundColor: font_color }" />
 			</div>
 		</div>
 	</div>
@@ -276,5 +280,15 @@
 
 	#position_input_wrapper {
 		gap: 1rem;
+	}
+
+	#props_color {
+		flex: unset;
+
+		aspect-ratio: 1;
+
+		height: 100%;
+
+		border-radius: 0.25rem;
 	}
 </style>

@@ -5,11 +5,10 @@
 	import EditCountdown from "./EditCountdown.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
-	const props = defineProps<{
+	defineProps<{
 		ws: WebSocket;
 		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		item_index: number | null;
@@ -17,18 +16,6 @@
 	}>();
 
 	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
-
-	function update_item() {
-		if (item_props.value && props.item_index) {
-			const message: JGCPRecv.UpdateItem = {
-				command: "update_item",
-				index: props.item_index,
-				props: item_props.value
-			};
-
-			props.ws.send(JSON.stringify(message));
-		}
-	}
 </script>
 
 <template>
@@ -107,8 +94,6 @@
 	}
 
 	#props_color {
-		display: block;
-
 		aspect-ratio: 1;
 
 		height: 100%;

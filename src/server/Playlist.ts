@@ -373,7 +373,7 @@ export default class Playlist {
 		}
 
 		if (item < -item_count || item >= this.playlist_items.length) {
-			throw new RangeError(`item-number is out of range (${-item_count} - ${item_count - 1})`);
+			throw new RangeError(`item-number is out of range ('${-item_count}' - '${item_count - 1}')`);
 		}
 
 		if (item < 0) {

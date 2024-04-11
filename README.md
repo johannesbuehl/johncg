@@ -9,16 +9,16 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Getting started
 1. Download CasparCG and set it up according to its [GitHub-site](https://github.com/CasparCG/server).
 2. Download the latest JohnCG-version from [releases](https://github.com/johannesbuehl/johncg/releases) and unzip it.
-3. Edit `config.json` if necessary
-4. Start CasparCG
-5. Start JohnCG through `JohnCG_[VERSION]_linux.bat` or `JohnCG_[VERSION]_linux.sh`
-6. Open [`127.0.0.1:8888`](127.0.0.1:8888) (or the port you specified in `settings.json`)
-7. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
+3. Move the content of `casparcg/Templates` and `casparcg/Media` inside of CasparCGs Template and Media directories.
+4. Edit `config.json` if necessary
+5. Start CasparCG
+6. Start JohnCG through `JohnCG_[VERSION]_linux.bat` or `JohnCG_[VERSION]_linux.sh`
+7. Open [`127.0.0.1:8888`](127.0.0.1:8888) (or the port you specified in `settings.json`)
+8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## roadmap
-- implement other playlist-items than song (Missing: Diashow / Multi-Image, Text, Custom AMCP-command)
+- implement more playlist-items: Diashow / Multi-Image, Text, Custom AMCP-command
 - companion integration (buttons for song parts -> send name to casparcg)
-- client: check response-texts, if they are still correct
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
 - create playlist-summarys or lyrics-sheets through pandoc
@@ -35,3 +35,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - playout PDFs as base64 to make them work on all render-servers
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
+- create example-files for songs and psalm

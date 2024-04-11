@@ -29,6 +29,7 @@
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
 	const font_size = ref<number>(20);
+	const font_color = ref<string>("#000000");
 
 	const media_selection = defineModel<MediaFile>({});
 
@@ -74,6 +75,7 @@
 				color: "#FF6200",
 				media: media_selection.value.path,
 				font_size: font_size.value,
+				font_color: font_color.value,
 				mode: countdown_mode.value,
 				position: position.value,
 				show_seconds: show_seconds.value,
@@ -168,6 +170,7 @@
 				v-model:position="position"
 				v-model:show_seconds="show_seconds"
 				v-model:time="time"
+				v-model:font_color="font_color"
 			/>
 		</template>
 	</FileDialogue>

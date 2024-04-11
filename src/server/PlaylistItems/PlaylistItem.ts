@@ -97,7 +97,9 @@ export abstract class PlaylistItemBase {
 		}
 
 		if (slide < -slide_count || slide >= slide_count) {
-			throw new RangeError(`slide-number is out of range (${-slide_count}-${slide_count - 1})`);
+			throw new RangeError(
+				`slide-number is out of range ('${-slide_count}' - '${slide_count - 1}')`
+			);
 		}
 
 		if (slide < 0) {

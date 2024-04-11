@@ -28,6 +28,7 @@ export interface ClientCountdownSlides extends ClientItemSlidesBase {
 export interface CountdownTemplateData {
 	position: CountdownPosition;
 	font_size: number;
+	font_color: string;
 	time: string;
 	show_seconds: boolean;
 	mode: CountdownMode;
@@ -118,6 +119,7 @@ export default class Countdown extends PlaylistItemBase {
 				y: 0
 			},
 			font_size: 0,
+			font_color: "Template",
 			time: "Template",
 			show_seconds: false,
 			mode: "clock",
@@ -160,6 +162,7 @@ export default class Countdown extends PlaylistItemBase {
 				mode: this.props.mode,
 				position: this.props.position,
 				font_size: this.props.font_size,
+				font_color: this.props.font_color,
 				show_seconds: this.props.show_seconds
 			}
 		};
