@@ -4,7 +4,7 @@ import { CasparCG } from "casparcg-connection";
 import fs from "fs";
 
 import Playlist from "./Playlist.ts";
-import type { ActiveItemSlide, CasparCGResolution } from "./Playlist.ts";
+import type { ActiveItemSlide, CasparCGResolution, ClientPlaylistItem } from "./Playlist.ts";
 import OSCServer from "./servers/osc-server.ts";
 import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
@@ -541,7 +541,7 @@ export default class Control {
 		ws_send_response("added item to playlist", true, ws);
 	}
 
-	private update_item(index: number, props: ItemProps, ws: WebSocket) {
+	private update_item(index: number, props: ClientPlaylistItem, ws: WebSocket) {
 		let result: boolean;
 
 		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);

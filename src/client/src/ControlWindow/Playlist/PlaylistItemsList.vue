@@ -10,8 +10,7 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
-	import { type ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type { ActiveItemSlide, ClientPlaylistItem } from "@server/Playlist";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 
@@ -46,7 +45,7 @@
 		}
 	}
 
-	function on_change(evt: { added: { element: ItemProps; newIndex: number } }) {
+	function on_change(evt: { added: { element: ClientPlaylistItem; newIndex: number } }) {
 		Object.entries(evt).forEach(([type, data]) => {
 			if (type === "added") {
 				const message: JGCPRecv.AddItem = {
@@ -104,7 +103,7 @@
 		}
 	}
 
-	function duplicate_item(item_props: ItemProps) {
+	function duplicate_item(item_props: ClientPlaylistItem) {
 		const message: JGCPRecv.AddItem = {
 			command: "add_item",
 			props: item_props,

@@ -1,3 +1,4 @@
+import { ClientPlaylistItem } from "./Playlist";
 import { ItemProps } from "./PlaylistItems/PlaylistItem";
 
 /**
@@ -89,7 +90,7 @@ export interface AddItem extends Base {
 
 export interface UpdateItem extends Base {
 	command: "update_item";
-	props: ItemProps;
+	props: ClientPlaylistItem;
 	index: number;
 }
 

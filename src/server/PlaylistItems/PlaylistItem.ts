@@ -13,6 +13,7 @@ import type Comment from "./Comment.ts";
 import type Bible from "./Bible.ts";
 import type { BibleProps, BibleTemplate, ClientBibleSlides } from "./Bible.ts";
 import Psalm, { ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
+import { ClientPlaylistItem } from "../Playlist.ts";
 
 export type PlaylistItem = Song | Countdown | Comment | Media | TemplateItem | PDF | Bible | Psalm;
 
@@ -113,8 +114,6 @@ export abstract class PlaylistItemBase {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
-			this.is_displayable = true;
-
 			callback(this.item_props);
 
 			return true;
@@ -127,7 +126,7 @@ export abstract class PlaylistItemBase {
 
 	abstract get props(): ItemProps;
 
-	abstract get playlist_item(): ItemProps & { displayable: boolean };
+	abstract get playlist_item(): ClientPlaylistItem;
 
 	abstract get media(): string;
 

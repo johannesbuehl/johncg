@@ -130,12 +130,15 @@ export default class Playlist {
 		this.changes = true;
 	}
 
-	update_item(position: number, props: ItemProps): boolean {
+	update_item(position: number, props: ClientPlaylistItem): boolean {
 		position = this.validate_item_number(position);
 
 		// check, wether the props are of the same type as the item at the position
 		if (props.type === this.playlist_items[position].props.type) {
-			const result = this.playlist_items[position].update(props, () => {
+			const update_props = structuredClone(props);
+			delete update_props.displayable;
+
+			const result = this.playlist_items[position].update(update_props, () => {
 				if (this.active_item === position) {
 					this.casparcg_update_template();
 				}

@@ -91,7 +91,7 @@
 						:expand="
 							search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
 						"
-						@choose="(f, t) => emit('choose', f, t)"
+						@choose="(f, t) => (f !== undefined ? emit('choose', f, t) : undefined)"
 					/>
 					<div class="button_wrapper" v-if="!!slots.buttons">
 						<slot name="buttons"></slot>

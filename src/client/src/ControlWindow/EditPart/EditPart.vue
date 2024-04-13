@@ -5,8 +5,8 @@
 	import EditCountdown from "./EditCountdown.vue";
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
-	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import type { ClientPlaylistItem } from "@server/Playlist";
 
 	defineProps<{
 		ws: WebSocket;
@@ -15,7 +15,7 @@
 		bible?: BibleFile;
 	}>();
 
-	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
+	const item_props = defineModel<ClientPlaylistItem | undefined>("item_props", { required: true });
 </script>
 
 <template>
