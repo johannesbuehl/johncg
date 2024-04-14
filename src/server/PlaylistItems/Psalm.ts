@@ -4,6 +4,7 @@ import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { get_psalm_path } from "../config.ts";
 import { recurse_object_check } from "../lib.ts";
+import { logger } from "../logger.ts";
 
 export interface PsalmFile {
 	metadata: {
@@ -201,10 +202,10 @@ export default class Psalm extends PlaylistItemBase {
 
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`psalm '${this.props.file}' does not exist`);
+				logger.error(`psalm '${this.props.file}' does not exist`);
 				return;
 			} else if (e instanceof SyntaxError) {
-				console.error(`psalm '${this.props.file}' has invalid json`);
+				logger.error(`psalm '${this.props.file}' has invalid json`);
 				return;
 			} else {
 				throw e;

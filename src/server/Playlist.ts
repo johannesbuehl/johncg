@@ -318,7 +318,7 @@ export default class Playlist {
 
 			// if the new_active_item_number is back at the start, break, since there are no displayable items
 			if (new_active_item_number === this.active_item) {
-				console.error("loop around");
+				logger.error("can't determine new_item, there is no selectable");
 				return;
 			}
 
