@@ -1,4 +1,4 @@
-import type { APIRequest, Commands, TransitionParameters } from "casparcg-connection";
+import type { TransitionParameters } from "casparcg-connection";
 
 import type { ClientItemSlides, ItemProps, PlaylistItem } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
@@ -6,7 +6,6 @@ import Song from "./PlaylistItems/Song.ts";
 import * as JGCPSend from "./JGCPSendMessages.ts";
 
 import Config from "./config.ts";
-import type { CasparCGConnection } from "./control.ts";
 import PlaylistObject from "./PlaylistFile.ts";
 import Comment from "./PlaylistItems/Comment.ts";
 import Countdown from "./PlaylistItems/Countdown.ts";
@@ -17,6 +16,8 @@ import * as fs from "fs";
 import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
+import AMCP from "./PlaylistItems/AMCP.ts";
+import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
 
 export type ClientPlaylistItem = ItemProps & { displayable: boolean };
 
@@ -27,11 +28,6 @@ export interface ClientPlaylistItems {
 export interface ActiveItemSlide {
 	item: number | null;
 	slide: number | null;
-}
-
-export interface CasparCGResolution {
-	width: number;
-	height: number;
 }
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -57,8 +53,6 @@ export default class Playlist {
 
 	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
 
-	readonly casparcg_connections: CasparCGConnection[] = [];
-
 	readonly casparcg_transition: TransitionParameters = {
 		/* eslint-disable @typescript-eslint/naming-convention */
 		duration: Config.casparcg.transition_length,
@@ -66,13 +60,7 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(
-		casparcg_connections: CasparCGConnection[],
-		playlist?: string,
-		callback?: () => void
-	) {
-		this.casparcg_connections = casparcg_connections;
-
+	constructor(playlist?: string, callback?: () => void) {
 		if (playlist !== undefined) {
 			this.load_playlist_file(playlist, callback);
 
@@ -88,6 +76,17 @@ export default class Playlist {
 
 			this.set_active_item(first_item, 0);
 		}
+
+		// add a listener to send send the current-slide on connection
+		add_casparcg_listener("connect", (casparcg_connection) => {
+			// load the active-item
+			void this.active_playlist_item.play(casparcg_connection);
+		});
+
+		casparcg.casparcg_connections.forEach((casparcg_connection) => {
+			// load the first slide
+			void this.active_playlist_item.play(casparcg_connection);
+		});
 	}
 
 	add_item(
@@ -106,7 +105,8 @@ export default class Playlist {
 			pdf: PDF,
 			template: TemplateItem,
 			bible: Bible,
-			psalm: Psalm
+			psalm: Psalm,
+			amcp: AMCP
 		};
 
 		const new_item = new item_class_map[item.type](item, () => {
@@ -153,22 +153,38 @@ export default class Playlist {
 	delete_item(position: number): boolean {
 		position = this.validate_item_number(position);
 
-		this.playlist_items.splice(position, 1);
-		this.changes = true;
+		// save wether the state changed
+		let new_state = false;
+		const old_active_item = this.active_item;
 
-		// if the deleted item came before the ative-item, adjust the index of the active-item
-		if (this.active_item > position) {
+		// if the deleted item was the last item or lower than the active-item, adjust the index of the active-item
+		if (position < this.active_item || position === this.playlist_items.length - 1) {
 			this.active_item_number--;
 
-			return true;
-		} else {
-			// if the deleted item was the active one, load the new-active-item into casparcg
-			if (this.active_item === position) {
-				this.casparcg_load_item();
+			if (this.active_item === -1) {
+				this.active_item_number = null;
 			}
 
-			return false;
+			new_state = true;
 		}
+
+		// remove the item
+		const old_item = this.playlist_items.splice(position, 1);
+		void old_item[0].stop();
+
+		// now we have unsaved playlist-changes
+		this.changes = true;
+
+		// if the deleted item was the active one, load the new-active-item into casparcg
+		if (old_active_item === position) {
+			void this.active_playlist_item?.play();
+		}
+
+		if (this.active_item === null) {
+			void casparcg_clear();
+		}
+
+		return new_state;
 	}
 
 	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
@@ -226,20 +242,20 @@ export default class Playlist {
 					if (!test_rgb_string) {
 						let thumbnails: string[] = (
 							await (
-								await this.casparcg_connections[0].connection.thumbnailRetrieve({
+								await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
 									filename: '"' + client_object.media + '"'
 								})
 							).request
 						)?.data as string[];
 
 						if (thumbnails === undefined) {
-							await this.casparcg_connections[0].connection.thumbnailGenerate({
+							await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
 								filename: '"' + client_object.media + '"'
 							});
 
 							thumbnails = (
 								await (
-									await this.casparcg_connections[0].connection.thumbnailRetrieve({
+									await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
 										filename: '"' + client_object.media + '"'
 									})
 								).request
@@ -261,11 +277,15 @@ export default class Playlist {
 		item = this.validate_item_number(item);
 
 		if (this.playlist_items[item].displayable) {
+			const old_playlist_item = this.active_playlist_item;
+
 			this.active_item_number = item;
 
 			this.active_playlist_item.set_active_slide(slide);
 
-			this.casparcg_load_item();
+			void old_playlist_item?.stop();
+
+			void this.active_playlist_item.play();
 
 			return this.active_item_slide;
 		} else {
@@ -275,8 +295,6 @@ export default class Playlist {
 
 	set_active_slide(slide: number): number {
 		const response = this.active_playlist_item.set_active_slide(slide);
-
-		this.casparcg_select_slide(this.active_slide);
 
 		return response;
 	}
@@ -303,7 +321,7 @@ export default class Playlist {
 
 			// if the new_active_item_number is back at the start, break, since there are no displayable items
 			if (new_active_item_number === this.active_item) {
-				logger.error("can't navigate: no selectable items");
+				logger.error("can't determine new_item, there is no selectable");
 				return;
 			}
 
@@ -333,8 +351,6 @@ export default class Playlist {
 		if (item_steps !== 0) {
 			// if the item_steps is forwards, navigate to the first slide; if it is backwards navigate to the last one
 			this.navigate_item(steps, steps > 0 ? 0 : -1);
-		} else {
-			this.casparcg_select_slide(this.active_playlist_item.active_slide);
 		}
 
 		return item_steps !== 0;
@@ -407,200 +423,21 @@ export default class Playlist {
 		return item;
 	}
 
-	casparcg_load_item(casparcg_connection?: CasparCGConnection, media_only?: boolean): void {
-		const connections = casparcg_connection ? [casparcg_connection] : this.casparcg_connections;
-
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		connections.forEach(async (connection) => {
-			await this.casparcg_load_media(connection);
-
-			if (!media_only) {
-				void this.casparcg_load_template(connection);
-			}
-		});
-	}
-
-	private casparcg_load_media(
-		casparcg_connection: CasparCGConnection
-	): Promise<APIRequest<Commands.Play>> {
-		let api_request: Promise<APIRequest<Commands.Play>>;
-
-		// if the state is "visible", play it directly
-		if (this.visibility) {
-			const clip = this.active_playlist_item?.media ?? "#00000000";
-
-			logger.log(`loading CasparCG-media: '${clip}'`);
-
-			const message = {
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.media,
-				clip,
-				loop: this.active_playlist_item?.loop,
-				transition: this.casparcg_transition
-			};
-
-			api_request = casparcg_connection.connection.play(message);
-		} else {
-			logger.log(`loading CasparCG-media in the background: '${this.active_playlist_item.media}'`);
-
-			//  if the current stat is invisible, only load it in the background
-			api_request = casparcg_connection.connection.loadbg({
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.media,
-				clip: this.active_playlist_item?.media,
-				loop: this.active_playlist_item?.loop,
-				transition: this.casparcg_transition
-			});
-		}
-
-		return api_request;
-	}
-
-	private casparcg_load_template(
-		casparcg_connection: CasparCGConnection
-	): Promise<APIRequest<Commands.CgAdd>> {
-		const template = this.active_playlist_item?.template;
-
-		// if a template was specified, load it
-		if (template !== undefined) {
-			logger.log(`loading CasparCG-template: '${template.template}'`);
-			logger.debug(`with data: ${JSON.stringify(template.data)}`);
-
-			return casparcg_connection.connection.cgAdd({
-				/* eslint-disable @typescript-eslint/naming-convention */
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.template,
-				cgLayer: 0,
-				playOnLoad: this.casparcg_visibility,
-				template: template.template,
-				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
-				data: JSON.stringify(
-					JSON.stringify(template.data, (_key, val: unknown) => {
-						if (typeof val === "string") {
-							return val.replaceAll('"', "\\u0022");
-						} else {
-							return val;
-						}
-					})
-				)
-				/* eslint-enable @typescript-eslint/naming-convention */
-			});
-		} else {
-			logger.log("clearing CasparCG-template");
-
-			// if not, clear the previous template
-			return casparcg_connection.connection.play({
-				/* eslint-disable @typescript-eslint/naming-convention */
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.template,
-				clip: "EMPTY",
-				transition: this.casparcg_transition
-				/* eslint-enable @typescript-eslint/naming-convention */
-			});
-		}
-	}
-
 	private casparcg_update_template(casparcg_connection?: CasparCGConnection) {
 		const connections =
-			casparcg_connection === undefined ? this.casparcg_connections : [casparcg_connection];
+			casparcg_connection !== undefined ? [casparcg_connection] : casparcg.casparcg_connections;
 
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		connections.forEach(async (casparcg_connection) => {
-			const template = this.active_playlist_item?.template;
-
-			if (template !== undefined) {
-				logger.log(
-					`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
-				);
-
-				await casparcg_connection.connection.cgUpdate({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.template,
-					cgLayer: 0,
-					// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
-					data: JSON.stringify(
-						JSON.stringify(template.data, (_key, val: unknown) => {
-							if (typeof val === "string") {
-								return val.replaceAll('"', "\\u0022");
-							} else {
-								return val;
-							}
-						})
-					)
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			}
+		connections.forEach((casparcg_connection) => {
+			this.active_playlist_item.update_template(casparcg_connection);
 		});
 	}
 
-	private casparcg_select_slide(slide: number): void {
-		this.casparcg_connections.forEach((casparcg_connection) => {
-			// if the item has multiple media-files, load the new one
-			if (this.active_playlist_item.multi_media) {
-				void this.casparcg_load_media(casparcg_connection);
-			}
-
-			logger.debug(`jumping CasparCG-template: slide '${slide}'`);
-
-			// jump to the slide-number in casparcg
-			void casparcg_connection.connection.cgInvoke({
-				/* eslint-disable @typescript-eslint/naming-convention */
-				channel: casparcg_connection.settings.channel,
-				layer: casparcg_connection.settings.layers.template,
-				cgLayer: 0,
-				method: `jump(${slide})`
-				/* eslint-enable @typescript-eslint/naming-convention */
-			});
-		});
+	set_visibility(visibility: boolean): void {
+		void this.active_playlist_item.set_visibility(visibility);
 	}
 
-	async set_visibility(visibility: boolean): Promise<void> {
-		this.casparcg_visibility = visibility;
-
-		for (const casparcg_connection of this.casparcg_connections) {
-			if (visibility) {
-				// load the media-item. Since it is invisible, it will only be prepared
-				this.casparcg_load_item(casparcg_connection, true);
-
-				await casparcg_connection.connection.cgPlay({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.template,
-					cgLayer: 0
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			} else {
-				const promises = [
-					// stop the template-layer
-					casparcg_connection.connection.cgStop({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						cgLayer: 0
-						/* eslint-enable @typescript-eslint/naming-convention */
-					})
-				];
-
-				promises.push(
-					// fade-out the media
-					casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media,
-						clip: "EMPTY",
-						transition: this.casparcg_transition
-						/* eslint-enable @typescript-eslint/naming-convention */
-					})
-				);
-
-				await Promise.allSettled(promises);
-			}
-		}
-	}
-
-	async toggle_visibility(): Promise<boolean> {
-		await this.set_visibility(!this.visibility);
+	toggle_visibility(): boolean {
+		this.set_visibility(!this.visibility);
 
 		return this.visibility;
 	}

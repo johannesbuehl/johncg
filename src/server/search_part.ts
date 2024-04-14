@@ -6,8 +6,8 @@ import * as JGCPRecv from "./JGCPReceiveMessages";
 import Config from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
-import { CasparCGConnection } from "./control";
 import { logger } from "./logger";
+import { CasparCGConnection } from "./CasparCG";
 
 export interface File {
 	name: string;
@@ -189,7 +189,7 @@ export default class SearchPart {
 					return this.create_song_file(item_file);
 				} catch (e) {
 					if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-						logger.error(`song '${path}' does not exist`);
+						logger.error(`can't open song: '${path}' does not exist`);
 
 						return;
 					} else {

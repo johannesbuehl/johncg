@@ -2,7 +2,9 @@ import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
 import { recurse_object_check } from "./lib";
-import { CasparCGResolution } from "./Playlist";
+import { TransitionParameters } from "casparcg-connection";
+import { TransitionType } from "casparcg-connection/dist/enums";
+import { CasparCGResolution } from "./CasparCG";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -237,5 +239,12 @@ class ConfigClass {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Config = new ConfigClass();
-
 export default Config;
+
+export function get_casparcg_transition(): TransitionParameters {
+	return {
+		duration: Config.casparcg.transition_length,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		transitionType: TransitionType.Mix
+	};
+}

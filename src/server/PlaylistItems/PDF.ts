@@ -7,7 +7,7 @@ import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
-import { CasparCGResolution } from "../Playlist.ts";
+import { CasparCGResolution } from "../CasparCG.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -116,6 +116,9 @@ export default class PDF extends PlaylistItemBase {
 	set_active_slide(slide?: number): number {
 		this.active_slide_number = this.validate_slide_number(slide);
 
+		// display the slide
+		void this.casparcg_navigate();
+
 		return this.active_slide;
 	}
 
@@ -150,6 +153,9 @@ export default class PDF extends PlaylistItemBase {
 			slide_steps = 1;
 		} else {
 			this.active_slide_number = new_active_slide_number;
+
+			// display the slide
+			void this.casparcg_navigate();
 		}
 
 		return slide_steps;

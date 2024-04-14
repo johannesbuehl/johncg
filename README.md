@@ -36,3 +36,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - create example-files for songs and psalm
+- move template-jump()-function into update() to prevent error messages in casparcg-log
