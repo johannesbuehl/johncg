@@ -7,7 +7,7 @@
 	} from "../AddPart/Parts/Bible/BibleSelector.vue";
 
 	import type { Book, BibleFile, BibleProps } from "@server/PlaylistItems/Bible";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;

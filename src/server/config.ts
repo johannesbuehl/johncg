@@ -98,7 +98,7 @@ class ConfigClass {
 	private config_path: string;
 
 	private config: ConfigJSON;
-	private config_interal: {
+	private config_internal: {
 		casparcg_template_path?: string;
 		casparcg_resolution: CasparCGResolution;
 	} = {
@@ -167,25 +167,29 @@ class ConfigClass {
 		return file_check;
 	}
 
-	get_path(type: keyof ConfigJSON["path"] | "template", pth: string): string {
+	get_path(type: keyof ConfigJSON["path"] | "template", pth?: string): string {
 		let base_path: string;
 
 		if (type === "template") {
-			base_path = this.config_interal.casparcg_template_path;
+			base_path = this.config_internal.casparcg_template_path;
 		} else if (Object.keys(this.config.path).includes(type)) {
 			base_path = this.config.path[type];
 		}
 
 		if (base_path !== undefined) {
-			const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
+			if (pth !== undefined) {
+				const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
 
-			return return_path.replaceAll("\\", "/");
+				return return_path.replaceAll("\\", "/");
+			} else {
+				return base_path;
+			}
 		}
 	}
 
 	set casparcg_template_path(pth: string) {
 		if (typeof pth === "string" && pth.length > 0) {
-			this.config_interal.casparcg_template_path = structuredClone(pth);
+			this.config_internal.casparcg_template_path = structuredClone(pth);
 		}
 	}
 
@@ -200,12 +204,12 @@ class ConfigClass {
 		result &&= res?.height > 0 && res?.width > 0;
 
 		if (result) {
-			this.config_interal.casparcg_resolution = structuredClone(res);
+			this.config_internal.casparcg_resolution = structuredClone(res);
 		}
 	}
 
 	get casparcg_resolution(): CasparCGResolution {
-		return structuredClone(this.config_interal.casparcg_resolution);
+		return structuredClone(this.config_internal.casparcg_resolution);
 	}
 
 	get path(): ConfigJSON["path"] {

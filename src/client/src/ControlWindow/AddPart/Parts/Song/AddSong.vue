@@ -2,6 +2,7 @@
 	import { onMounted, ref, toRaw, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
@@ -11,7 +12,6 @@
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{

@@ -4,7 +4,7 @@
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;

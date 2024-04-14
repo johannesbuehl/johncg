@@ -35,7 +35,8 @@
 
 <script setup lang="ts">
 	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick, toRaw } from "vue";
-	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
+
+	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		bible?: BibleFile;

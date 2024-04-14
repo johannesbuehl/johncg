@@ -1,6 +1,8 @@
 <script setup lang="ts">
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { ref } from "vue";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import BibleSelector, {
@@ -8,12 +10,10 @@
 		get_book_from_id
 	} from "./BibleSelector.vue";
 
-	library.add(fas.faPlus);
-
-	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
-	import { ref } from "vue";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
 	import { create_bible_citation_string } from "@server/lib";
+
+	library.add(fas.faPlus);
 
 	const props = defineProps<{
 		bible?: BibleFile;

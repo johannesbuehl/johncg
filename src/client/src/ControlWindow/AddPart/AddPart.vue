@@ -14,8 +14,8 @@
 	import AddComment from "./Parts/AddComment.vue";
 	import AddCountdown from "./Parts/Countdown/AddCountdown.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 

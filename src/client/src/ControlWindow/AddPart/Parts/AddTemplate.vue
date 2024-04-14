@@ -2,16 +2,16 @@
 	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
 	import type { TemplateFile } from "@server/search_part";
-	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{

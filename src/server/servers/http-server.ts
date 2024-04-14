@@ -32,7 +32,7 @@ class HTTPServer {
 						break;
 					// serve the CasparCG-templates
 					case /^\/Templates\//.test(request.url):
-						resource_dir = Config.casparcg_template_path;
+						resource_dir = Config.get_path("template");
 						request.url = request.url.replace(/\/Templates\//, "");
 
 						// check, wether the file exits
@@ -46,7 +46,7 @@ class HTTPServer {
 				}
 
 				// try to serve the requested url
-				fs.readFile(path.join(resource_dir, request.url), (err, data) => {
+				fs.readFile(path.join(resource_dir ?? "", request.url), (err, data) => {
 					// if there was an error while opening the file, serve a 404-error
 					if (err) {
 						logger.error(`can't serve HTTP-request: 404 - resource not found (${request.url})`);

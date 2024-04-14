@@ -1,8 +1,9 @@
 <script setup lang="ts">
-	import { onMounted, onUnmounted, ref, watchEffect } from "vue";
+	import { onUnmounted, ref, watchEffect } from "vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import CountdownEditor from "../AddPart/Parts/Countdown/CountdownEditor.vue";
+
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
 
 	const props = defineProps<{

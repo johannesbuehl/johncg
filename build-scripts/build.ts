@@ -61,11 +61,11 @@ copy_build_file(process.execPath, exec_name);
 // load the config-file, censor the file-paths and store it for the relase
 const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
 config_file.path = {
-	song: "Songs/",
-	pdf: "PDFs/",
-	psalm: "Psalms/",
-	playlist: "Playlists/",
-	bible: "Bibles/Luther-Bibel.json"
+	song: "Song/",
+	pdf: "PDF/",
+	psalm: "Psalm/",
+	playlist: "Playlist/",
+	bible: "Bible/Luther-Bibel.json"
 };
 config_file.companion.address = "172.0.0.1";
 config_file.log_level = "INFO";
@@ -75,7 +75,7 @@ fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_fi
 // copy the file to the output
 copy_release_file(path.join(build_dir, exec_name));
 copy_release_file(path.join(build_dir, "main.js"));
-copy_release_dir("Bibles");
+fs.readdirSync("files").forEach((dir) => copy_release_dir(path.join("files", dir)));
 copy_release_dir(path.join(build_dir, "client"));
 const copy_module = (name: string) => {
 	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);

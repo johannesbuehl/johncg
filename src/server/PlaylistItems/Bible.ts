@@ -1,5 +1,5 @@
 import { create_bible_citation_string, recurse_object_check } from "../lib";
-import { ClientItemSlidesBase, ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
+import { type ClientItemSlidesBase, type ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
 
 export type BibleFile = Record<string, { name: string; books: Book[] }[]>;
 

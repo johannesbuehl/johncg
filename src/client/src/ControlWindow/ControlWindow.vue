@@ -7,11 +7,11 @@
 	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
-
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
+
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{

@@ -12,14 +12,14 @@
 	import { ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import FileItem from "./FileItem.vue";
 	import MenuButton from "../MenuBar/MenuButton.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { File } from "@server/search_part";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faArrowsRotate);
 

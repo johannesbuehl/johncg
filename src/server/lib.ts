@@ -1,4 +1,4 @@
-import { BibleProps } from "./PlaylistItems/Bible";
+import type { BibleProps } from "./PlaylistItems/Bible";
 import type { CountdownMode } from "./PlaylistItems/Countdown";
 
 export function recurse_object_check(obj: unknown, template: unknown): boolean {

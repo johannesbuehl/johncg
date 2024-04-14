@@ -21,11 +21,8 @@ export interface CasparCGResolution {
 export interface CasparCGConnection {
 	connection: CasparCG;
 	settings: CasparCGConnectionSettings;
-	paths: CasparCGPathsSettings;
 	media: ClipInfo[];
 	template: string[];
-	resolution: CasparCGResolution;
-	framerate: number;
 }
 
 interface CallbackObject {
@@ -52,28 +49,55 @@ export const casparcg: { visibility: boolean; casparcg_connections: CasparCGConn
 	visibility: true,
 	casparcg_connections: []
 };
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-Config.casparcg.connections.forEach(async (connection_setting) => {
-	logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
-	const connection: CasparCG = new CasparCG({
-		...connection_setting,
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		autoConnect: true
-	});
+void (async () => {
+	casparcg.casparcg_connections = await Promise.all(
+		Config.casparcg.connections.map(async (connection_setting) => {
+			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
+
+			const connection: CasparCG = new CasparCG({
+				...connection_setting,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				autoConnect: true
+			});
+
+			const casparcg_connection: CasparCGConnection = {
+				connection,
+				settings: connection_setting,
+				media: (await (await connection.cls()).request)?.data ?? [],
+				template: (await (await connection.tls()).request)?.data ?? []
+			};
+
+			connection.addListener("connect", () => {
+				callbacks.connect.forEach((ele) => ele(casparcg_connection));
+			});
+
+			connection.addListener("disconnect", () => {
+				callbacks.disconnect.forEach((ele) => ele(casparcg_connection));
+			});
+
+			connection.addListener("error", (err) => {
+				callbacks.error.forEach((ele) => ele(casparcg_connection, err));
+			});
+
+			// add the connection to the stored connections
+			return casparcg_connection;
+		})
+	);
 
 	let casparcg_config;
+	const connection = casparcg.casparcg_connections[0];
 
 	try {
-		casparcg_config = (await (await connection.infoConfig()).request).data;
+		casparcg_config = (await (await connection.connection.infoConfig()).request).data;
 	} catch (e) {
 		if (e instanceof Error) {
 			logger.error(
-				`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
+				`Can't add CasparCG-connection (${connection.settings.host}:${connection.settings.port})`
 			);
 		} else {
 			logger.error(
-				`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
+				`Can't add CasparCG-connection (${connection.settings.host}:${connection.settings.port}): unknown error`
 			);
 		}
 
@@ -82,17 +106,13 @@ Config.casparcg.connections.forEach(async (connection_setting) => {
 		}
 	}
 
-	let resolution: CasparCGResolution = {
-		height: 1080,
-		width: 1920
-	};
 	let framerate: number = 25;
 
 	let video_mode_regex_results: RegExpMatchArray | undefined | null;
 
 	if (casparcg_config?.channels !== undefined) {
 		video_mode_regex_results = casparcg_config?.channels[
-			connection_setting.channel - 1
+			connection.settings.channel - 1
 		].videoMode?.match(
 			/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
 		);
@@ -103,14 +123,14 @@ Config.casparcg.connections.forEach(async (connection_setting) => {
 		if (video_mode_regex_results.groups.mode) {
 			switch (video_mode_regex_results.groups.mode) {
 				case "PAL":
-					resolution = {
+					Config.casparcg_resolution = {
 						width: 720,
 						height: 576
 					};
 					framerate = 25;
 					break;
 				case "NTSC":
-					resolution = {
+					Config.casparcg_resolution = {
 						width: 720,
 						height: 480
 					};
@@ -118,7 +138,7 @@ Config.casparcg.connections.forEach(async (connection_setting) => {
 					break;
 			}
 		} else {
-			resolution = {
+			Config.casparcg_resolution = {
 				width:
 					(Number(video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height) /
 						9) *
@@ -129,38 +149,20 @@ Config.casparcg.connections.forEach(async (connection_setting) => {
 		}
 	}
 
-	logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
+	logger.log(
+		`using resolution: '${Config.casparcg_resolution.width}x${Config.casparcg_resolution.height}p${framerate}'`
+	);
 
-	const casparcg_connection: CasparCGConnection = {
-		connection,
-		settings: connection_setting,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-		paths: (
-			xml_parser.parse(((await (await connection.infoPaths()).request)?.data as string) ?? "") as {
-				paths: object;
-			}
-		)?.paths as CasparCGPathsSettings,
-		media: (await (await connection.cls()).request)?.data ?? [],
-		template: (await (await connection.tls()).request)?.data ?? [],
-		resolution,
-		framerate
-	};
+	const paths = (
+		xml_parser.parse(
+			((await (await connection.connection.infoPaths()).request)?.data as string) ?? ""
+		) as {
+			paths: object;
+		}
+	)?.paths as CasparCGPathsSettings;
 
-	connection.addListener("connect", () => {
-		callbacks.connect.forEach((ele) => ele(casparcg_connection));
-	});
-
-	connection.addListener("disconnect", () => {
-		callbacks.disconnect.forEach((ele) => ele(casparcg_connection));
-	});
-
-	connection.addListener("error", (err) => {
-		callbacks.error.forEach((ele) => ele(casparcg_connection, err));
-	});
-
-	// add the connection to the stored connections
-	casparcg.casparcg_connections.push(casparcg_connection);
-});
+	Config.casparcg_template_path = paths["template-path"];
+})();
 
 export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 	const connections =

@@ -8,8 +8,8 @@
 	import ContextMenu from "./ContextMenu.vue";
 	import PlaylistItem from "./PlaylistItem.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide, ClientPlaylistItem } from "@server/Playlist";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);

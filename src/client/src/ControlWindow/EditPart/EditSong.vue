@@ -3,8 +3,7 @@
 
 	import SongPartSelector from "../AddPart/Parts/Song/SongPartSelector.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { SongProps } from "@server/PlaylistItems/Song";
 	import type { SongFile } from "@server/search_part";
 

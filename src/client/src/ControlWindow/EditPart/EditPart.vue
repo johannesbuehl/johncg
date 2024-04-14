@@ -4,7 +4,7 @@
 	import EditTemplate from "./EditTemplate.vue";
 	import EditCountdown from "./EditCountdown.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/Playlist";
 

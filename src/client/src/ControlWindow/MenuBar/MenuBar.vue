@@ -21,7 +21,7 @@
 	import MenuButton from "./MenuButton.vue";
 	import MenuDivider from "./MenuDivider.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	const props = defineProps<{

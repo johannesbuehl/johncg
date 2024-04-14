@@ -2,7 +2,7 @@
 	import { ref, watch, onMounted, nextTick } from "vue";
 
 	import type { ClientPlaylistItem } from "@server/Playlist";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;

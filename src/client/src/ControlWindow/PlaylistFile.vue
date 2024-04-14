@@ -3,7 +3,7 @@
 
 	import FileItem from "./FileDialogue/FileItem.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { File } from "@server/search_part";
 
 	const props = defineProps<{

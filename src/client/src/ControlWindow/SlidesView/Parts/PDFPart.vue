@@ -2,7 +2,6 @@
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { Template } from "@server/PlaylistItems/PlaylistItem";
 	import type { ClientPDFSlides } from "@server/PlaylistItems/PDF";
 
 	defineProps<{

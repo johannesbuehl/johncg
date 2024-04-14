@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import ItemSlide, { type CasparCGTemplate } from "./ItemSlide.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
 

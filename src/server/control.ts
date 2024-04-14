@@ -221,7 +221,7 @@ export default class Control {
 						command: "item_slides",
 						item,
 						client_id,
-						resolution: casparcg.casparcg_connections[0].resolution,
+						resolution: Config.casparcg_resolution,
 						...(await this.playlist?.create_client_object_item_slides(item))
 					};
 

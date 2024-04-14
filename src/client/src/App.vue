@@ -4,8 +4,8 @@
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
 
