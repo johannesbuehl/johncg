@@ -4,6 +4,7 @@ import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemFiles } from "./JGCPReceiveMessages.ts";
 import { File } from "./search_part.ts";
+import { CasparCGResolution } from "./CasparCG.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -42,7 +43,7 @@ interface ItemSlidesBase extends Base {
 	client_id: string;
 	item: number;
 	command: "item_slides";
-	resolution: PlaylistClass.CasparCGResolution;
+	resolution: CasparCGResolution;
 }
 
 export type ItemSlides = ClientItemSlides & ItemSlidesBase;

@@ -113,6 +113,8 @@ export default class Song extends PlaylistItemBase {
 
 		this.active_slide_number = slide;
 
+		void this.casparcg_navigate();
+
 		return this.active_slide_number;
 	}
 
@@ -129,15 +131,20 @@ export default class Song extends PlaylistItemBase {
 		const new_active_slide_number = this.active_slide + steps;
 		let slide_steps = 0;
 
-		// new active item has negative index -> roll over to the last slide of the previous element
+		// new active slide has negative index -> roll over to the last slide of the previous item
 		if (new_active_slide_number < 0) {
 			slide_steps = -1;
 
 			// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_slide_number >= this.slide_count) {
 			slide_steps = 1;
+
+			// new active slide is from this object
 		} else {
 			this.active_slide_number = new_active_slide_number;
+
+			// display the slide
+			void this.casparcg_navigate();
 		}
 
 		return slide_steps;

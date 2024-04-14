@@ -1,11 +1,9 @@
 import WebSocket, { RawData } from "ws";
 
-import { CasparCG, ClipInfo } from "casparcg-connection";
-import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
 
 import Playlist from "./Playlist.ts";
-import type { ActiveItemSlide, CasparCGResolution } from "./Playlist.ts";
+import type { ActiveItemSlide } from "./Playlist.ts";
 import OSCServer from "./servers/osc-server.ts";
 import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
@@ -15,41 +13,19 @@ import type {
 } from "./servers/websocket-server.ts";
 import * as JGCPSend from "./JGCPSendMessages.ts";
 import * as JGCPRecv from "./JGCPReceiveMessages.ts";
-import type { CasparCGConnectionSettings } from "./config.ts";
 
 import Config, { get_playlist_path } from "./config.ts";
 import SearchPart, { ItemFile } from "./search_part.ts";
 import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
-
-interface CasparCGPathsSettings {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	"data-path": string;
-	"initial-path": string;
-	"log-path": string;
-	"media-path": string;
-	"template-path": string;
-	/* eslint-enable @typescript-eslint/naming-convention */
-}
-
-export interface CasparCGConnection {
-	connection: CasparCG;
-	settings: CasparCGConnectionSettings;
-	paths: CasparCGPathsSettings;
-	media: ClipInfo[];
-	template: string[];
-	resolution: CasparCGResolution;
-	framerate: number;
-}
+import { casparcg } from "./CasparCG.ts";
 
 export default class Control {
 	private playlist: Playlist;
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
 	private search_part: SearchPart;
-
-	readonly casparcg_connections: CasparCGConnection[] = [];
 
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
@@ -66,8 +42,8 @@ export default class Control {
 			},
 			output: {
 				visibility: {
-					set: async (value: boolean) => this.set_visibility(value),
-					toggle: async (value: string) => this.toggle_visibility(value)
+					set: (value: boolean) => this.set_visibility(value),
+					toggle: (value: string) => this.toggle_visibility(value)
 				}
 			}
 		}
@@ -122,113 +98,9 @@ export default class Control {
 		logger.log("starting osc-server");
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
-		const xml_parser = new XMLParser();
-
 		this.playlist = new Playlist();
 
-		// create the CasparCG-connections
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		Config.casparcg.connections.forEach(async (connection_setting) => {
-			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
-
-			const connection: CasparCG = new CasparCG({
-				...connection_setting,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				autoConnect: true
-			});
-
-			let casparcg_config;
-
-			try {
-				casparcg_config = (await (await connection.infoConfig()).request).data;
-			} catch (e) {
-				if (e instanceof Error) {
-					logger.error(
-						`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
-					);
-				} else {
-					logger.error(
-						`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
-					);
-				}
-
-				if (e instanceof TypeError) {
-					return;
-				}
-			}
-
-			let resolution: CasparCGResolution = {
-				height: 1080,
-				width: 1920
-			};
-			let framerate: number = 25;
-
-			let video_mode_regex_results: RegExpMatchArray | undefined | null;
-
-			if (casparcg_config?.channels !== undefined) {
-				video_mode_regex_results = casparcg_config?.channels[
-					connection_setting.channel - 1
-				].videoMode?.match(
-					/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
-				);
-			}
-
-			if (video_mode_regex_results?.groups !== undefined) {
-				// if the resolution is given as PAL or NTSC, convert it
-				if (video_mode_regex_results.groups.mode) {
-					switch (video_mode_regex_results.groups.mode) {
-						case "PAL":
-							resolution = {
-								width: 720,
-								height: 576
-							};
-							framerate = 25;
-							break;
-						case "NTSC":
-							resolution = {
-								width: 720,
-								height: 480
-							};
-							framerate = 29.97;
-							break;
-					}
-				} else {
-					resolution = {
-						width:
-							(Number(
-								video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height
-							) /
-								9) *
-							16,
-						height: Number(video_mode_regex_results.groups.height)
-					};
-					framerate = Number(video_mode_regex_results.groups.framerate) / 100;
-				}
-			}
-
-			logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
-
-			const casparcg_connection: CasparCGConnection = {
-				connection,
-				settings: connection_setting,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				paths: (
-					xml_parser.parse(
-						((await (await connection.infoPaths()).request)?.data as string) ?? ""
-					) as { paths: object }
-				)?.paths as CasparCGPathsSettings,
-				media: (await (await connection.cls()).request)?.data ?? [],
-				template: (await (await connection.tls()).request)?.data ?? [],
-				resolution,
-				framerate
-			};
-
-			// add the connection to the stored connections
-			this.casparcg_connections.push(casparcg_connection);
-			this.playlist.add_casparcg_connection(casparcg_connection);
-		});
-
-		this.search_part = new SearchPart(this.casparcg_connections);
+		this.search_part = new SearchPart(casparcg.casparcg_connections);
 	}
 
 	private new_playlist(ws: WebSocket) {
@@ -236,7 +108,6 @@ export default class Control {
 			logger.log("creating new playlist");
 
 			this.playlist = new Playlist();
-			this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
 
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
@@ -256,13 +127,9 @@ export default class Control {
 		logger.log(`lading playlist (${playlist_path})`);
 
 		try {
-			new_playlist = new Playlist(
-				this.casparcg_connections,
-				get_playlist_path(playlist_path),
-				() => {
-					this.send_playlist();
-				}
-			);
+			new_playlist = new Playlist(get_playlist_path(playlist_path), () => {
+				this.send_playlist();
+			});
 		} catch (e) {
 			logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
 			ws_send_response("invalid playlist-file", false, ws);
@@ -271,7 +138,6 @@ export default class Control {
 
 		// destroy the previous opened playlist
 		logger.debug("destroying existing playlist");
-		this.playlist.destroy();
 		this.playlist = new_playlist;
 
 		// send the playlist to all clients
@@ -343,12 +209,12 @@ export default class Control {
 		// type-check the item
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
-				if (this.playlist?.casparcg_connections.length > 0) {
+				if (casparcg.casparcg_connections.length > 0) {
 					const message: JGCPSend.ItemSlides = {
 						command: "item_slides",
 						item,
 						client_id,
-						resolution: this.playlist?.casparcg_connections[0].resolution,
+						resolution: casparcg.casparcg_connections[0].resolution,
 						...(await this.playlist?.create_client_object_item_slides(item))
 					};
 
@@ -486,15 +352,11 @@ export default class Control {
 	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private async set_visibility(
-		visibility: boolean,
-		client_id?: string,
-		ws?: WebSocket
-	): Promise<void> {
+	private set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): void {
 		if (typeof visibility === "boolean") {
 			logger.log(`changed CasparCG-visibility: '${visibility ? "visible" : "hidden"}'`);
 
-			await this.playlist.set_visibility(visibility);
+			this.playlist.set_visibility(visibility);
 
 			this.send_all_clients({
 				command: "state",
@@ -703,14 +565,14 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
+	private toggle_visibility(osc_feedback_path?: string): void {
 		logger.log(
 			`toggling CasparCG-visibility: '${this.playlist.visibility ? "visible" : "hidden"}'`
 		);
 
 		let visibility_feedback = false;
 
-		visibility_feedback = await this.playlist.toggle_visibility();
+		visibility_feedback = this.playlist.toggle_visibility();
 
 		// if a feedback-path is given, write the feedback to it
 		if (osc_feedback_path !== undefined) {

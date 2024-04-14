@@ -14,6 +14,10 @@ import type Bible from "./Bible.ts";
 import type { BibleProps, BibleTemplate, ClientBibleSlides } from "./Bible.ts";
 import Psalm, { ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
 import AMCP, { AMCPProps, ClientAMCPSlides } from "./AMCP.ts";
+import { PlayParameters } from "casparcg-connection";
+import { logger } from "../logger.ts";
+import { get_casparcg_transition } from "../config.ts";
+import { CasparCGConnection, casparcg } from "../CasparCG.ts";
 
 export type PlaylistItem =
 	| Song
@@ -131,6 +135,196 @@ export abstract class PlaylistItemBase {
 		} else {
 			return false;
 		}
+	}
+
+	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
+
+		return Promise.all(
+			connections.map((connection) => {
+				return Promise.allSettled([this.play_media(connection), this.play_template(connection)]);
+			})
+		);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+	stop(_casparcg_connection?: CasparCGConnection) {}
+
+	private play_media(casparcg_connection: CasparCGConnection) {
+		if (casparcg.visibility) {
+			const clip = this.media ?? "#00000000";
+
+			logger.log(`loading CasparCG-media: '${clip}'`);
+
+			const message: PlayParameters = {
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip,
+				loop: this.loop,
+				transition: get_casparcg_transition()
+			};
+
+			return casparcg_connection.connection.play(message);
+		} else {
+			logger.log(`loading CasparCG-media in the background: '${this.media}'`);
+
+			//  if the current stat is invisible, only load it in the background
+			return casparcg_connection.connection.loadbg({
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip: this.media,
+				loop: this.loop,
+				transition: get_casparcg_transition()
+			});
+		}
+	}
+
+	private play_template(casparcg_connection: CasparCGConnection) {
+		const template = this.template;
+
+		// if a template was specified, load it
+		if (template !== undefined) {
+			logger.log(`loading CasparCG-template: '${template.template}'`);
+			logger.debug(`with data: ${JSON.stringify(template.data)}`);
+
+			return casparcg_connection.connection.cgAdd({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				cgLayer: 0,
+				playOnLoad: casparcg.visibility,
+				template: template.template,
+				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+				data: JSON.stringify(
+					JSON.stringify(template.data, (_key, val: unknown) => {
+						if (typeof val === "string") {
+							return val.replaceAll('"', "\\u0022");
+						} else {
+							return val;
+						}
+					})
+				)
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		} else {
+			logger.log("clearing CasparCG-template");
+
+			// if not, clear the previous template
+			return casparcg_connection.connection.play({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				clip: "EMPTY",
+				transition: get_casparcg_transition()
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
+	}
+
+	update_template(casparcg_connection: CasparCGConnection) {
+		const template = this.template;
+
+		if (template !== undefined) {
+			logger.log(
+				`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
+			);
+
+			void casparcg_connection.connection.cgUpdate({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				cgLayer: 0,
+				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+				data: JSON.stringify(
+					JSON.stringify(template.data, (_key, val: unknown) => {
+						if (typeof val === "string") {
+							return val.replaceAll('"', "\\u0022");
+						} else {
+							return val;
+						}
+					})
+				)
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
+	}
+
+	set_visibility(visibility: boolean, casparcg_connection?: CasparCGConnection): Promise<unknown> {
+		casparcg.visibility = visibility;
+
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
+
+		return Promise.all(
+			connections.map((connection) => {
+				if (visibility) {
+					return Promise.allSettled([
+						this.play_media(connection),
+
+						connection.connection.cgPlay({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: connection.settings.channel,
+							layer: connection.settings.layers.template,
+							cgLayer: 0
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					]);
+				} else {
+					const promises = [
+						// stop the template-layer
+						connection.connection.cgStop({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: connection.settings.channel,
+							layer: connection.settings.layers.template,
+							cgLayer: 0
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					];
+
+					if (connection.media !== undefined) {
+						promises.push(
+							// fade-out the media
+							connection.connection.play({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: connection.settings.channel,
+								layer: connection.settings.layers.media,
+								clip: "EMPTY",
+								transition: get_casparcg_transition()
+								/* eslint-enable @typescript-eslint/naming-convention */
+							})
+						);
+					}
+
+					return Promise.allSettled(promises);
+				}
+			})
+		);
+	}
+
+	protected casparcg_navigate() {
+		return casparcg.casparcg_connections.map((casparcg_connection) => {
+			const promises = [];
+
+			// if the item has multiple media-files, load the new one
+			if (this.multi_media) {
+				promises.push(this.play_media(casparcg_connection));
+			}
+
+			logger.debug(`jumping CasparCG-template: slide '${this.active_slide}'`);
+
+			// jump to the slide-number in casparcg
+			promises.push(
+				casparcg_connection.connection.cgInvoke({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.template,
+					cgLayer: 0,
+					method: `jump(${this.active_slide})`
+					/* eslint-enable @typescript-eslint/naming-convention */
+				})
+			);
+
+			return Promise.allSettled(promises);
+		});
 	}
 
 	protected abstract validate_props(props: ItemProps): boolean;

@@ -94,6 +94,9 @@ export default class PDF extends PlaylistItemBase {
 	set_active_slide(slide?: number): number {
 		this.active_slide_number = this.validate_slide_number(slide);
 
+		// display the slide
+		void this.casparcg_navigate();
+
 		return this.active_slide;
 	}
 
@@ -128,6 +131,9 @@ export default class PDF extends PlaylistItemBase {
 			slide_steps = 1;
 		} else {
 			this.active_slide_number = new_active_slide_number;
+
+			// display the slide
+			void this.casparcg_navigate();
 		}
 
 		return slide_steps;

@@ -35,3 +35,4 @@ Generate lyric-graphics and play them out through CasparCG.
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
 - change font-color of countdown
 - create library src-folder
+- move template-jump()-function into update() to prevent error messages in casparcg-log

@@ -1,9 +1,14 @@
 {
 	"name": "johncg",
 	"version": "ALPHA-1.5.0",
+	"license": "MIT",
+	"author": "Simon Ziegler <simon.ziegler.1998+github@pm.me>",
 	"bin": "out/main.js",
 	"main": "server/src/main.ts",
-	"license": "MIT",
+	"repository": {
+		"url": "https://github.com/johannesbuehl/johncg",
+		"type": "git"
+	},
 	"scripts": {
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
@@ -23,19 +28,20 @@
 	"dependencies": {
 		"@babel/types": "^7.24.0",
 		"@fortawesome/fontawesome-free": "^6.5.1",
+		"@fortawesome/fontawesome-svg-core": "^6.5.2",
 		"@fortawesome/free-brands-svg-icons": "^6.5.1",
 		"@fortawesome/free-regular-svg-icons": "^6.5.1",
 		"@fortawesome/free-solid-svg-icons": "^6.5.1",
 		"@fortawesome/vue-fontawesome": "^3.0.6",
 		"canvas": "^2.11.2",
-		"casparcg-connection": "^6.2.1",
+		"casparcg-connection": "6.3.0-nightly-master-20240412-065100-23103b26.0",
 		"fast-xml-parser": "^4.3.4",
 		"iconv-lite": "^0.6.3",
 		"log4js": "^6.9.1",
 		"mime-types": "^2.1.35",
 		"node-osc": "^9.1.0",
 		"pdfjs-dist": "^4.0.379",
-		"sharp": "^0.33.2",
+		"sharp": "^0.33.3",
 		"tmp": "^0.2.1",
 		"vue": "^3.4.21",
 		"vue3-ts-jsoneditor": "^2.11.2",

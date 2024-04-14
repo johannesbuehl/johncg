@@ -6,8 +6,8 @@ import * as JGCPRecv from "./JGCPReceiveMessages";
 import Config, { get_psalm_path, get_song_path } from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
-import { CasparCGConnection } from "./control";
 import { logger } from "./logger";
+import { CasparCGConnection } from "./CasparCG";
 
 export interface File {
 	name: string;

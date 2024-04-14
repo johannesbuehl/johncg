@@ -65,7 +65,11 @@
 			if (part_slide !== undefined) {
 				return props.active_item_slide?.slide === part_slide_map[part][part_slide];
 			} else {
-				return part_slide_map[part].includes(props.active_item_slide?.slide);
+				if (typeof props.active_item_slide?.slide === "number") {
+					return part_slide_map[part].includes(props.active_item_slide.slide);
+				} else {
+					return false;
+				}
 			}
 		} else {
 			return false;

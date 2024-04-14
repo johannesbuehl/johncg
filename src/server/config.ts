@@ -46,6 +46,8 @@ import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
 import { recurse_object_check } from "./lib";
+import { TransitionParameters } from "casparcg-connection";
+import { TransitionType } from "casparcg-connection/dist/enums";
 
 const config_path = "config.json";
 
@@ -53,6 +55,7 @@ const config_path = "config.json";
 const Config: ConfigJSON = JSON.parse(
 	fs.readFileSync(config_path, { encoding: "utf-8" })
 ) as ConfigJSON;
+export default Config;
 
 // validate the config file
 const config_template: ConfigJSON = {
@@ -150,4 +153,10 @@ export function get_pdf_path(pth: string): string {
 	return return_path.replaceAll("\\", "/");
 }
 
-export default Config;
+export function get_casparcg_transition(): TransitionParameters {
+	return {
+		duration: Config.casparcg.transition_length,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		transitionType: TransitionType.Mix
+	};
+}
