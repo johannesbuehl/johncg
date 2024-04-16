@@ -1,6 +1,6 @@
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface TemplateTemplate {
 	template: string;
@@ -11,6 +11,8 @@ export interface TemplateProps extends ItemPropsBase {
 	type: "template";
 	template: TemplateTemplate;
 }
+
+export type ClientTemplateItem = TemplateProps & ClientItemBase;
 
 export interface ClientTemplateSlides extends ClientItemSlidesBase {
 	type: "template";

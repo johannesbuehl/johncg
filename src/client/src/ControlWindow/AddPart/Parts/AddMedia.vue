@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { MediaFile } from "@server/search_part";
@@ -61,7 +61,7 @@
 		return {
 			type: "media",
 			caption: file.name,
-			color: "#FF0040",
+			color: "#00FF00",
 			media: file.path,
 			loop: loop.value
 		};

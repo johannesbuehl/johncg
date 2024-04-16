@@ -1,6 +1,11 @@
 import type { TransitionParameters } from "casparcg-connection";
 
-import type { ClientItemSlides, ItemProps, PlaylistItem } from "./PlaylistItems/PlaylistItem.ts";
+import type {
+	ClientItemSlides,
+	ClientPlaylistItem,
+	ItemProps,
+	PlaylistItem
+} from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
 
 import * as JGCPSend from "./JGCPSendMessages.ts";
@@ -18,8 +23,6 @@ import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
 import AMCP from "./PlaylistItems/AMCP.ts";
 import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
-
-export type ClientPlaylistItem = ItemProps & { displayable: boolean };
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -80,12 +83,12 @@ export default class Playlist {
 		// add a listener to send send the current-slide on connection
 		add_casparcg_listener("connect", (casparcg_connection) => {
 			// load the active-item
-			void this.active_playlist_item.play(casparcg_connection);
+			void this.active_playlist_item?.play(casparcg_connection);
 		});
 
 		casparcg.casparcg_connections.forEach((casparcg_connection) => {
 			// load the first slide
-			void this.active_playlist_item.play(casparcg_connection);
+			void this.active_playlist_item?.play(casparcg_connection);
 		});
 	}
 

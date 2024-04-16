@@ -1,7 +1,7 @@
 import fs from "fs";
 
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
 import { logger } from "../logger.ts";
@@ -30,6 +30,8 @@ export interface PsalmProps extends ItemPropsBase {
 	type: "psalm";
 	file: string;
 }
+
+export type ClientPsalmItem = PsalmProps & ClientItemBase;
 
 export interface ClientPsalmSlides extends ClientItemSlidesBase {
 	type: "psalm";

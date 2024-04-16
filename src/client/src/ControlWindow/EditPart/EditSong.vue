@@ -1,10 +1,10 @@
 <script setup lang="ts">
 	import { nextTick, onMounted, ref, watch } from "vue";
 
-	import SongPartSelector from "../AddPart/Parts/Song/SongPartSelector.vue";
+	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { SongProps } from "@server/PlaylistItems/Song";
+	import type { ClientSongItem } from "@server/PlaylistItems/Song";
 	import type { SongFile } from "@server/search_part";
 
 	const props = defineProps<{
@@ -16,7 +16,7 @@
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
-	const song_props = defineModel<SongProps>("item_props", { required: true });
+	const song_props = defineModel<ClientSongItem>("item_props", { required: true });
 
 	let song_loaded = false;
 

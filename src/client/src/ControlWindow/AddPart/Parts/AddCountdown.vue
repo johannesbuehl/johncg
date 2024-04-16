@@ -7,8 +7,8 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import CountdownEditor from "./CountdownEditor.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 
 	import type { MediaFile } from "@server/search_part";
 	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
@@ -72,7 +72,7 @@
 			return {
 				type: "countdown",
 				caption: `${countdown_title_map[countdown_mode.value]}: ${time.value}`,
-				color: "#FF6200",
+				color: "#FF0080",
 				media: media_selection.value.path,
 				font_size: font_size.value,
 				font_color: font_color.value,

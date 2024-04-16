@@ -17,7 +17,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## roadmap
-- implement more playlist-items: Diashow / Multi-Image, Text, Custom AMCP-command
+- implement more playlist-items: Diashow / Multi-Image, Text
 - companion integration (buttons for song parts -> send name to casparcg)
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
@@ -37,3 +37,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
+- switch release to xz-compression
+- implement countdown-color in template

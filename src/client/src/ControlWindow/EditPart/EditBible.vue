@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+	import { onMounted, onUnmounted, ref, watch } from "vue";
 
 	import BibleSelector, {
 		chapter_verse_selection_to_props,
 		get_book_from_id
-	} from "../AddPart/Parts/Bible/BibleSelector.vue";
+	} from "../ItemDialogue/BibleSelector.vue";
 
-	import type { Book, BibleFile, BibleProps } from "@server/PlaylistItems/Bible";
+	import type { Book, BibleFile, ClientBibleItem } from "@server/PlaylistItems/Bible";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
@@ -18,7 +18,7 @@
 	const book_selection = ref<Book>();
 	const chapter_verse_selection = ref<Record<string, boolean[]>>({});
 
-	const bible_props = defineModel<BibleProps>("item_props");
+	const bible_props = defineModel<ClientBibleItem>("item_props");
 
 	watch(
 		bible_props,

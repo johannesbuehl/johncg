@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
@@ -62,7 +62,7 @@
 		return {
 			type: "template",
 			caption: file.name,
-			color: "#FFC300",
+			color: "#FF0000",
 			template: {
 				template: file.path,
 				data: template_data.value

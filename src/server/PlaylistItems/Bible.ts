@@ -1,5 +1,10 @@
 import { create_bible_citation_string, recurse_object_check } from "../lib";
-import { type ClientItemSlidesBase, type ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
+import {
+	type ClientItemSlidesBase,
+	type ItemPropsBase,
+	PlaylistItemBase,
+	ClientItemBase
+} from "./PlaylistItem";
 
 export type BibleFile = Record<string, { name: string; books: Book[] }[]>;
 
@@ -14,6 +19,8 @@ export interface BibleProps extends ItemPropsBase {
 	book_id: string;
 	chapters: Record<number, number[]>;
 }
+
+export type ClientBibleItem = BibleProps & ClientItemBase;
 
 export interface BibleJSON {
 	text: string;

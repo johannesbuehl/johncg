@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 
 	import type { PsalmFile } from "@server/search_part";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
@@ -66,7 +66,7 @@
 		return {
 			type: "psalm",
 			caption: file.name,
-			color: "#FB00FF",
+			color: "#FFFF00",
 			file: file.path
 		};
 	}

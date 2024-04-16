@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface MediaProps extends ItemPropsBase {
 	type: "media";
 	media: string;
 	loop: boolean;
 }
+
+export type ClientMediaItem = MediaProps & ClientItemBase;
 
 export interface ClientMediaProps extends ClientItemSlidesBase {
 	type: "media";

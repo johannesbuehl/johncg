@@ -1,8 +1,8 @@
 <script setup lang="ts">
 	import { ref, watch, onMounted, nextTick } from "vue";
 
-	import type { ClientPlaylistItem } from "@server/Playlist";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -19,7 +19,6 @@
 
 	const item = ref<HTMLDivElement>();
 	const color_picker = ref<HTMLInputElement>();
-	const edit_caption_active = ref<boolean>(false);
 	const caption_element = ref<HTMLDivElement>();
 	const item_props = defineModel<ClientPlaylistItem>("item_props", { required: true });
 
@@ -58,47 +57,16 @@
 		}
 	}
 
-	function edit_caption() {
-		edit_caption_active.value = true;
-
-		nextTick().then(() => caption_element.value?.focus());
-	}
-
-	function rename(save: boolean = true) {
-		edit_caption_active.value = false;
-
-		if (save) {
-			if (caption_element.value?.innerHTML) {
-				item_props.value.caption = caption_element.value?.innerHTML;
-
-				const message: JGCPRecv.UpdateItem = {
-					command: "update_item",
-					index: props.index,
-					props: item_props.value
-				};
-
-				props.ws.send(JSON.stringify(message));
-			}
-		} else {
-			if (caption_element.value) {
-				caption_element.value.innerHTML = item_props.value.caption;
-			}
-		}
-	}
-
 	function delete_item() {
-		if (!edit_caption_active.value) {
-			const message: JGCPRecv.DeleteItem = {
-				command: "delete_item",
-				position: props.index
-			};
+		const message: JGCPRecv.DeleteItem = {
+			command: "delete_item",
+			position: props.index
+		};
 
-			props.ws.send(JSON.stringify(message));
-		}
+		props.ws.send(JSON.stringify(message));
 	}
 
 	defineExpose({
-		edit_caption,
 		delete_item,
 		props: item_props.value
 	});
@@ -115,7 +83,6 @@
 		}"
 		tabindex="0"
 		@keydown.enter="emit('set_active')"
-		@keydown.f2="edit_caption"
 		@keydown.delete="delete_item"
 	>
 		<div
@@ -126,18 +93,7 @@
 				$event.preventDefault();
 			"
 		></div>
-		<div
-			class="playlist_item"
-			ref="caption_element"
-			:tabindex="edit_caption_active ? 0 : undefined"
-			:class="{ editing: edit_caption_active }"
-			:contenteditable="edit_caption_active ? true : false"
-			@blur.enter="rename()"
-			@keydown.enter="rename()"
-			@keydown.escape="rename(false)"
-			@keydown="edit_caption_active ? $event.stopPropagation() : undefined"
-			@contextmenu="edit_caption_active ? $event.stopPropagation() : undefined"
-		>
+		<div class="playlist_item" ref="caption_element">
 			{{ item_props.caption }}
 		</div>
 	</div>
@@ -195,14 +151,6 @@
 		flex: 1;
 
 		text-wrap: nowrap;
-	}
-
-	.playlist_item.editing {
-		font-weight: unset;
-	}
-
-	.playlist_item.editing:focus::after {
-		border: unset;
 	}
 
 	.playlist_item_wrapper.displayable:hover > .playlist_item {

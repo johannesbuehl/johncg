@@ -15,7 +15,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import FileItem from "./FileItem.vue";
-	import MenuButton from "../MenuBar/MenuButton.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";

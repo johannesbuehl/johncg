@@ -1,24 +1,56 @@
 <script setup lang="ts">
-	import { onMounted } from "vue";
+	import { onMounted, ref, watch } from "vue";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import FileItem from "./FileDialogue/FileItem.vue";
+	import FileDialogue, {
+		type SearchInputDefinitions
+	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
+	import MenuButton from "./MenuBar/MenuButton.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { File } from "@server/search_part";
+
+	library.add(fas.faFolderOpen);
 
 	const props = defineProps<{
 		ws: WebSocket;
 		files: File[];
 	}>();
 
+	const selection = ref<File>();
+
+	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
+		default: [{ id: "name", placeholder: "Name", value: "" }]
+	});
+
+	type SearchMapFile = File & { children?: SearchMapFile[]; search_data?: { name: string } };
+	let search_map: SearchMapFile[] = [];
+	const file_tree = defineModel<File[]>("file_tree");
+
 	onMounted(() => {
+		refresh_items();
+	});
+
+	watch(
+		() => props.files,
+		() => {
+			search_map = create_search_map();
+
+			search_file();
+		},
+		{ immediate: true, deep: true }
+	);
+
+	function refresh_items() {
 		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
 			type: "playlist"
 		};
 
 		props.ws.send(JSON.stringify(message));
-	});
+	}
 
 	function load_playlist(playlist?: File) {
 		if (playlist !== undefined) {
@@ -30,33 +62,83 @@
 			props.ws.send(JSON.stringify(message));
 		}
 	}
+
+	function search_file() {
+		file_tree.value = search_string();
+	}
+
+	function create_search_map(files: File[] | undefined = props.files): SearchMapFile[] {
+		const return_map: SearchMapFile[] = [];
+
+		if (files !== undefined) {
+			files.forEach((f) => {
+				return_map.push({
+					...f,
+					search_data: {
+						name: f.name.toLowerCase()
+					},
+					children: f.children !== undefined ? create_search_map(f.children) : undefined
+				});
+			});
+		}
+
+		return return_map;
+	}
+
+	function search_string(files: SearchMapFile[] | undefined = search_map): File[] {
+		const return_files: File[] = [];
+
+		files?.forEach((f) => {
+			if (
+				search_strings.value.every((search_string) => {
+					if (f.search_data !== undefined) {
+						if (f.search_data[search_string.id] !== undefined) {
+							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
+						} else {
+							return search_string.value === "";
+						}
+					} else {
+						return true;
+					}
+				})
+			) {
+				return_files.push(f);
+			} else if (f.children !== undefined) {
+				const children = search_string(f.children);
+
+				if (children.length > 0) {
+					return_files.push({
+						...f,
+						children: search_string(f.children)
+					});
+				}
+			}
+		});
+
+		return return_files;
+	}
 </script>
 
 <template>
-	<div class="playlist_file_wrapper">
-		<div id="file_structure_container">
-			<FileItem :root="true" :files="files" @choose="load_playlist" />
-		</div>
-	</div>
+	<FileDialogue
+		:files="file_tree"
+		name="PlaylistFiles"
+		v-model:selection="selection"
+		v-model:search_strings="search_strings"
+		@choose="load_playlist"
+		@search="search_file"
+		@refresh_files="refresh_items"
+	>
+		<template v-slot:buttons>
+			<MenuButton @click="load_playlist(selection)">
+				<FontAwesomeIcon :icon="['fas', 'folder-open']" />Load Playlist
+			</MenuButton>
+		</template>
+	</FileDialogue>
 </template>
 
 <style scoped>
-	.playlist_file_wrapper {
-		display: flex;
-		flex-direction: column;
-
-		flex: 1;
-
-		gap: 0.25rem;
-	}
-
-	.playlist_file_wrapper > div {
-		border-radius: 0.25rem;
-
-		background-color: var(--color-container);
-	}
-
-	#file_structure_container {
+	.button {
 		flex: 1;
 	}
 </style>

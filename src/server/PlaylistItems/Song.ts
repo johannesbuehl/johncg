@@ -2,7 +2,7 @@ import Config from "../config.ts";
 import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPart, LyricPart } from "./SongFile.ts";
 
@@ -17,6 +17,8 @@ export interface SongProps extends ItemPropsBase {
 	verse_order?: string[];
 	languages?: number[];
 }
+
+export type ClientSongItem = SongProps & ClientItemBase;
 
 export interface SongTemplateData {
 	parts: ItemPart[];

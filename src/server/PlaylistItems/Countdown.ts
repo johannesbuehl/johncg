@@ -1,6 +1,6 @@
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
 export type CountdownMode = "duration" | "end_time" | "stopwatch" | "clock";
@@ -14,6 +14,8 @@ export interface CountdownProps extends ItemPropsBase, CountdownTemplateData {
 	type: "countdown";
 	media: string;
 }
+
+export type ClientCountdownItem = CountdownProps & ClientItemBase;
 
 export interface CountdownTemplate {
 	template: "JohnCG/Countdown";

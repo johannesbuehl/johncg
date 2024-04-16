@@ -8,7 +8,7 @@
 	import BibleSelector, {
 		chapter_verse_selection_to_props,
 		get_book_from_id
-	} from "./BibleSelector.vue";
+	} from "@/ControlWindow/ItemDialogue/BibleSelector.vue";
 
 	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
 	import { create_bible_citation_string } from "@server/lib";
@@ -41,7 +41,7 @@
 					get_book_from_id(props.bible, book_selection.value.id).name,
 					chapters
 				),
-				color: "#00EEFF",
+				color: "#0080FF",
 				book_id: book_selection.value.id,
 				chapters
 			};

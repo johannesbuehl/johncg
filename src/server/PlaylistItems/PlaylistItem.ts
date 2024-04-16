@@ -1,24 +1,33 @@
 import type Song from "./Song.ts";
-import type { ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
+import type { ClientSongItem, ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
 import type Countdown from "./Countdown.ts";
-import type { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown.ts";
-import type { ClientCommentSlides, CommentProps } from "./Comment.ts";
+import type {
+	ClientCountdownItem,
+	ClientCountdownSlides,
+	CountdownProps,
+	CountdownTemplate
+} from "./Countdown.ts";
+import type { ClientCommentItem, ClientCommentSlides, CommentProps } from "./Comment.ts";
 import type Media from "./Media.ts";
-import type { ClientMediaProps, MediaProps } from "./Media.ts";
+import type { ClientMediaItem, ClientMediaProps, MediaProps } from "./Media.ts";
 import type TemplateItem from "./Template.ts";
-import type { ClientTemplateSlides, TemplateProps, TemplateTemplate } from "./Template.ts";
+import type {
+	ClientTemplateItem,
+	ClientTemplateSlides,
+	TemplateProps,
+	TemplateTemplate
+} from "./Template.ts";
 import type PDF from "./PDF.ts";
-import type { ClientPDFSlides, PDFProps } from "./PDF.ts";
+import type { ClientPDFItem, ClientPDFSlides, PDFProps } from "./PDF.ts";
 import type Comment from "./Comment.ts";
 import type Bible from "./Bible.ts";
-import type { BibleProps, BibleTemplate, ClientBibleSlides } from "./Bible.ts";
-import Psalm, { ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
-import AMCP, { AMCPProps, ClientAMCPSlides } from "./AMCP.ts";
+import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } from "./Bible.ts";
+import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
+import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
 import { PlayParameters } from "casparcg-connection";
 import { logger } from "../logger.ts";
 import { get_casparcg_transition } from "../config.ts";
 import { CasparCGConnection, casparcg } from "../CasparCG.ts";
-import { ClientPlaylistItem } from "../Playlist.ts";
 
 export type PlaylistItem =
 	| Song
@@ -43,6 +52,10 @@ export interface ItemPropsBase {
 	color: string;
 }
 
+export interface ClientItemBase {
+	displayable: boolean;
+}
+
 export type ItemProps =
 	| SongProps
 	| CountdownProps
@@ -53,6 +66,17 @@ export type ItemProps =
 	| BibleProps
 	| PsalmProps
 	| AMCPProps;
+
+export type ClientPlaylistItem =
+	| ClientSongItem
+	| ClientCountdownItem
+	| ClientCommentItem
+	| ClientMediaItem
+	| ClientTemplateItem
+	| ClientPDFItem
+	| ClientBibleItem
+	| ClientPsalmItem
+	| ClientAMCPItem;
 
 export interface CasparCGTemplate {
 	template: string;

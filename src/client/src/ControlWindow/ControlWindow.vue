@@ -154,7 +154,7 @@
 		/>
 		<EditPart
 			v-else-if="control_window_state === ControlWindowState.Edit"
-			:item_props="selected ? playlist?.playlist_items[selected] : undefined"
+			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
 			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"

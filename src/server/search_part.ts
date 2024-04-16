@@ -7,7 +7,7 @@ import Config from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
-import { CasparCGConnection } from "./CasparCG";
+import { casparcg } from "./CasparCG";
 
 export interface File {
 	name: string;
@@ -45,11 +45,7 @@ export type PDFFile = File;
 export type ItemFile = SongFile | PsalmFile | MediaFile | TemplateFile | PDFFile;
 
 export default class SearchPart {
-	private casparcg_connections: CasparCGConnection[];
-
-	constructor(casparcg_connections: CasparCGConnection[]) {
-		this.casparcg_connections = casparcg_connections;
-	}
+	constructor() {}
 
 	create_song_file(f: File): SongFile {
 		const song = new SngFile(Config.get_path("song", f.path));
@@ -149,28 +145,29 @@ export default class SearchPart {
 	}
 
 	async get_casparcg_media(): Promise<File[]> {
-		if (this.casparcg_connections.length === 0) {
-			logger.log("can't request CasparCG-media-list: no conneciton added");
+		if (casparcg.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-media-list: no connection added");
 			return;
 		}
 
 		logger.debug("requesting CasparCG-media-list");
 
-		const media = (await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
+		const media =
+			(await (await casparcg.casparcg_connections[0].connection.cls()).request)?.data ?? [];
 
 		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
 	async get_casparcg_template(): Promise<File[]> {
-		if (this.casparcg_connections.length === 0) {
-			logger.log("can't request CasparCG-template-list: no conneciton added");
+		if (casparcg.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-template-list: no connection added");
 			return;
 		}
 
 		logger.debug("requesting CasparCG-template-list");
 
 		const template =
-			(await (await this.casparcg_connections[0].connection.tls()).request)?.data ?? [];
+			(await (await casparcg.casparcg_connections[0].connection.tls()).request)?.data ?? [];
 
 		return build_files(template.map((m) => m.split("/")));
 	}

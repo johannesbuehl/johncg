@@ -140,9 +140,8 @@ void (async () => {
 		} else {
 			Config.casparcg_resolution = {
 				width:
-					(Number(video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height) /
-						9) *
-					16,
+					Number(video_mode_regex_results.groups.width) ??
+					(Number(video_mode_regex_results.groups.height) / 9) * 16,
 				height: Number(video_mode_regex_results.groups.height)
 			};
 			framerate = Number(video_mode_regex_results.groups.framerate) / 100;

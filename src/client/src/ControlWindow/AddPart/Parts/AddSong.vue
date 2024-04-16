@@ -7,8 +7,8 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import SongPartSelector from "./SongPartSelector.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import SongPartSelector from "@/ControlWindow/ItemDialogue/SongPartSelector.vue";
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
@@ -83,7 +83,7 @@
 		const props: SongProps = {
 			type: "song",
 			caption: file.name,
-			color: "#008CFF",
+			color: "#0000FF",
 			file: file.path
 		};
 

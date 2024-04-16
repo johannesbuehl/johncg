@@ -1,15 +1,23 @@
 import { CasparCGConnection, casparcg } from "../CasparCG";
 import { recurse_object_check } from "../lib";
-import { ClientItemSlidesBase, ItemProps, ItemPropsBase, PlaylistItemBase } from "./PlaylistItem";
+import {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemProps,
+	ItemPropsBase,
+	PlaylistItemBase
+} from "./PlaylistItem";
 import { APIRequest, Commands } from "casparcg-connection";
 
 export interface AMCPProps extends ItemPropsBase {
 	type: "amcp";
 	commands: {
-		play?: string;
-		stop?: string;
+		set_active?: string;
+		set_inactive?: string;
 	};
 }
+
+export type ClientAMCPItem = AMCPProps & ClientItemBase;
 
 export interface ClientAMCPSlides extends ClientItemSlidesBase {
 	type: "amcp";
@@ -65,49 +73,27 @@ export default class AMCP extends PlaylistItemBase {
 		return steps;
 	}
 
-	play(casparcg_connection?: CasparCGConnection): Promise<APIRequest<Commands.Custom>[]> {
-		if (this.props.commands.play !== undefined) {
-			const connections = casparcg_connection
-				? [casparcg_connection]
-				: casparcg.casparcg_connections;
+	private send_custom_command(command: string, casparcg_connection?: CasparCGConnection) {
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
-			return Promise.all(
-				connections.map((connection) => {
-					if (casparcg.visibility) {
-						return connection.connection.sendCustom({
-							command: this.props.commands.stop
-						});
-					}
-				})
-			);
+		return Promise.all(
+			connections.map((connection) => {
+				return connection.connection.sendCustom({
+					command: command
+				});
+			})
+		);
+	}
+
+	play(casparcg_connection?: CasparCGConnection): Promise<APIRequest<Commands.Custom>[]> {
+		if (this.props.commands.set_active !== undefined) {
+			return this.send_custom_command(this.props.commands.set_active, casparcg_connection);
 		}
 	}
 
 	stop(casparcg_connection?: CasparCGConnection): Promise<APIRequest<Commands.Custom>[]> {
-		if (this.props.commands.stop !== undefined) {
-			const connections = casparcg_connection
-				? [casparcg_connection]
-				: casparcg.casparcg_connections;
-
-			return Promise.all(
-				connections.map((connection) => {
-					if (casparcg.visibility) {
-						return connection.connection.sendCustom({
-							command: this.props.commands.stop
-						});
-					}
-				})
-			);
-		}
-	}
-
-	set_visibility(visibility: boolean, casparcg_connection?: CasparCGConnection) {
-		casparcg.visibility = visibility;
-
-		if (visibility) {
-			return this.play(casparcg_connection);
-		} else {
-			return this.stop(casparcg_connection);
+		if (this.props.commands.set_inactive !== undefined) {
+			return this.send_custom_command(this.props.commands.set_inactive, casparcg_connection);
 		}
 	}
 
@@ -119,11 +105,16 @@ export default class AMCP extends PlaylistItemBase {
 			commands: {}
 		};
 
+		const valid_command_types: (keyof AMCPProps["commands"])[] = ["set_active", "set_inactive"];
+
 		return (
 			props.type === "amcp" &&
 			recurse_object_check(props, template) &&
 			Object.entries(props.commands).every(([key, command]) => {
-				return ["play", "stop"].includes(key) && ["string", "undefined"].includes(typeof command);
+				return (
+					(valid_command_types as string[]).includes(key) &&
+					["string", "undefined"].includes(typeof command)
+				);
 			})
 		);
 	}

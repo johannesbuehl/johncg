@@ -3,7 +3,7 @@ import Canvas from "canvas";
 import tmp from "tmp";
 
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
@@ -13,6 +13,8 @@ export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
 	file: string;
 }
+
+export type ClientPDFItem = PDFProps & ClientItemBase;
 
 export interface ClientPDFSlides extends ClientItemSlidesBase {
 	type: "pdf";

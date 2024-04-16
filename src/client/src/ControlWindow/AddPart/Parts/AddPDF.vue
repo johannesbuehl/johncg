@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 
 	import type { PDFFile } from "@server/search_part";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";
@@ -60,7 +60,7 @@
 		return {
 			type: "pdf",
 			caption: file.name,
-			color: "#77FF00",
+			color: "#00FFFF",
 			file: file.path
 		};
 	}

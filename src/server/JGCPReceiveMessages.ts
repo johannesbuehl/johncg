@@ -1,5 +1,4 @@
-import { ClientPlaylistItem } from "./Playlist";
-import { ItemProps } from "./PlaylistItems/PlaylistItem";
+import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 
 /**
  * Base interface for Received JGCP-messages

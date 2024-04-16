@@ -6,7 +6,8 @@
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import type { ClientPlaylistItem } from "@server/Playlist";
+	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import EditAMCP from "./EditAMCP.vue";
 
 	defineProps<{
 		ws: WebSocket;
@@ -19,7 +20,7 @@
 </script>
 
 <template>
-	<div id="edit_item_wrapper">
+	<div id="edit_item_wrapper" v-if="item_index !== null">
 		<div v-if="item_props?.type !== undefined" id="item_editor_general">
 			<input
 				id="color_picker"
@@ -36,7 +37,7 @@
 			/>
 		</div>
 		<EditSong
-			v-if="item_props?.type === 'song' && item_index"
+			v-if="item_props?.type === 'song'"
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -44,7 +45,7 @@
 			:item_index="item_index"
 		/>
 		<EditBible
-			v-else-if="item_props?.type === 'bible' && item_index"
+			v-else-if="item_props?.type === 'bible'"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -52,15 +53,22 @@
 			:item_index="item_index"
 		/>
 		<EditTemplate
-			v-else-if="item_props?.type === 'template' && item_index"
+			v-else-if="item_props?.type === 'template'"
 			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditCountdown
-			v-else-if="item_props?.type === 'countdown' && item_index"
+			v-else-if="item_props?.type === 'countdown'"
 			:key="`${item_index}_countdown`"
+			v-model:item_props="item_props"
+			:ws="ws"
+			:item_index="item_index"
+		/>
+		<EditAMCP
+			v-else-if="item_props?.type === 'amcp'"
+			:key="`${item_index}_amcp`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"

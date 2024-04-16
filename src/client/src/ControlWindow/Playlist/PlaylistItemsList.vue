@@ -36,7 +36,6 @@
 	const playlist = defineModel<JGCPSend.Playlist>("playlist");
 
 	const context_menu_position = ref<{ x: number; y: number }>();
-	const color_picker = ref<HTMLInputElement>();
 
 	function on_end(evt: DragEndEvent) {
 		// send only, if the index has changed
@@ -165,21 +164,6 @@
 			v-model="items_list[current_picked_item_index].value.props.color"
 			@click="$event.stopPropagation()"
 		/>
-		<label
-			for="item_color_picker_context_menu"
-			@click.capture="
-				color_picker?.click();
-				$event.stopPropagation();
-				$event.preventDefault();
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'brush']" />
-			Change Color
-		</label>
-		<div @click="items_list[current_picked_item_index].value.edit_caption()">
-			<FontAwesomeIcon :icon="['fas', 'font']" />
-			Rename
-		</div>
 		<div @click="duplicate_item(items_list[current_picked_item_index].value.props)">
 			<FontAwesomeIcon :icon="['fas', 'clone']" />
 			Duplicate

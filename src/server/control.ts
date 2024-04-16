@@ -3,7 +3,7 @@ import WebSocket, { RawData } from "ws";
 import fs from "fs";
 
 import Playlist from "./Playlist.ts";
-import type { ActiveItemSlide, ClientPlaylistItem } from "./Playlist.ts";
+import type { ActiveItemSlide } from "./Playlist.ts";
 import OSCServer from "./servers/osc-server.ts";
 import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
@@ -16,7 +16,7 @@ import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 
 import Config, { CasparCGConnectionSettings } from "./config.ts";
 import SearchPart, { ItemFile } from "./search_part.ts";
-import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
+import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg } from "./CasparCG.ts";
@@ -107,7 +107,7 @@ export default class Control {
 
 		this.playlist = new Playlist();
 
-		this.search_part = new SearchPart(casparcg.casparcg_connections);
+		this.search_part = new SearchPart();
 	}
 
 	private new_playlist(ws: WebSocket) {
@@ -407,7 +407,7 @@ export default class Control {
 
 	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
 		logger.log(
-			`adding item: ${index !== undefined ? `position: '${index}'` : "append"}' ${JSON.stringify(props)}`
+			`adding item: ${index !== undefined ? `position: '${index}'` : "append"} ' ${JSON.stringify(props)}`
 		);
 
 		try {

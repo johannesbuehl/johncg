@@ -7,12 +7,13 @@
 	import PartRadio from "./PartRadio.vue";
 	import AddMedia from "./Parts/AddMedia.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
-	import AddBible from "./Parts/Bible/AddBible.vue";
-	import AddSong from "./Parts/Song/AddSong.vue";
+	import AddBible from "./Parts/AddBible.vue";
+	import AddSong from "./Parts/AddSong.vue";
 	import AddPDF from "./Parts/AddPDF.vue";
 	import AddPsalm from "./Parts/AddPsalm.vue";
+	import AddCountdown from "./Parts/AddCountdown.vue";
+	import AddAMCP from "./Parts/AddAMCP.vue";
 	import AddComment from "./Parts/AddComment.vue";
-	import AddCountdown from "./Parts/Countdown/AddCountdown.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -28,6 +29,7 @@
 		fas.faPenRuler,
 		fas.faFilePdf,
 		fas.faClock,
+		fas.faTerminal,
 		fas.faMessage
 	);
 
@@ -49,6 +51,7 @@
 		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
 		{ text: "Countdown", value: "countdown", icon: "clock" },
+		{ text: "AMCP", value: "amcp", icon: "terminal" },
 		{ text: "Comment", value: "comment", icon: "message" }
 	];
 
@@ -134,6 +137,7 @@
 				@add="add_item"
 				@refresh="get_files('media')"
 			/>
+			<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" @refresh="get_files('media')" />
 			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 		</template>
 	</div>
