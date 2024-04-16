@@ -20,7 +20,7 @@
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
 	const font_size = ref<number>(20);
-	const font_color = ref<string>("#000000");
+	const font_color = ref<string>("#FFFFFF");
 
 	const item_props = defineModel<ClientCountdownItem>("item_props", { required: true });
 

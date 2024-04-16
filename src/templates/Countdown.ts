@@ -50,6 +50,8 @@ function update(str_args: string) {
 		delete spans.seconds;
 	}
 
+	main_div.style.color = data.font_color;
+
 	// create the individual spans
 	const time_div = document.querySelector<HTMLDivElement>("#time");
 	if (time_div === null) {
