@@ -3,7 +3,10 @@ import Config from "./config";
 
 log4js.configure({
 	appenders: {
-		log_file: { type: "file", filename: "server_log.log" },
+		log_file: {
+			type: "file",
+			filename: "server_log." + new Date().toISOString().slice(0, 19).replaceAll(":", "-") + ".log"
+		},
 		console: { type: "console" }
 	},
 	categories: {
