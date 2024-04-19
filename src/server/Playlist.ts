@@ -54,8 +54,6 @@ export default class Playlist {
 
 	private active_item_number: number | null = null;
 
-	private casparcg_visibility: boolean = Config.behaviour.show_on_load;
-
 	readonly casparcg_transition: TransitionParameters = {
 		/* eslint-disable @typescript-eslint/naming-convention */
 		duration: Config.casparcg.transition_length,
@@ -435,14 +433,14 @@ export default class Playlist {
 		});
 	}
 
-	set_visibility(visibility: boolean): void {
-		void this.active_playlist_item.set_visibility(visibility);
+	async set_visibility(visibility: boolean): Promise<boolean> {
+		await this.active_playlist_item.set_visibility(visibility);
+
+		return casparcg.visibility;
 	}
 
-	toggle_visibility(): boolean {
-		this.set_visibility(!this.visibility);
-
-		return this.visibility;
+	async toggle_visibility(): Promise<boolean> {
+		return await this.set_visibility(!this.visibility);
 	}
 
 	get length(): number {
@@ -469,7 +467,7 @@ export default class Playlist {
 	}
 
 	get visibility(): boolean {
-		return this.casparcg_visibility;
+		return casparcg.visibility;
 	}
 
 	get state(): JGCPSend.State {

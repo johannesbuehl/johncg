@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { nextTick, onMounted, ref, watch } from "vue";
+	import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
@@ -52,20 +52,9 @@
 		}
 	);
 
-	// when something gets changed, fire an update
-	watch(
-		(): [string[], [number, boolean][]] => [verse_order.value, languages.value],
-		([verse_order, languages]: [string[], [number, boolean][]]) => {
-			if (song_loaded) {
-				// store the new verse-order in the song-props
-				song_props.value.verse_order = verse_order;
-				song_props.value.languages = languages.filter((ele) => ele[1]).map((ele) => ele[0]);
-
-				update();
-			}
-		},
-		{ deep: true }
-	);
+	onUnmounted(() => {
+		update();
+	});
 
 	// whenever the song changes, request the SongResults
 	watch(() => song_props.value.file, request_song_data);
@@ -83,6 +72,8 @@
 	}
 
 	function update() {
+		console.debug(song_props.value);
+
 		const message: JGCPRecv.UpdateItem = {
 			command: "update_item",
 			index: props.item_index,

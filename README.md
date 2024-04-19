@@ -38,4 +38,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - switch release to xz-compression
-- implement countdown-color in template
+- client: debug duplicate-item
+- create new log-file for every start

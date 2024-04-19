@@ -359,15 +359,13 @@ export default class Control {
 	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket): void {
+	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket) {
 		if (typeof visibility === "boolean") {
 			logger.log(`changed CasparCG-visibility: '${visibility ? "visible" : "hidden"}'`);
 
-			void this.playlist.set_visibility(visibility);
-
 			this.send_all_clients({
 				command: "state",
-				visibility: this.playlist.visibility
+				visibility: await this.playlist.set_visibility(visibility)
 			});
 
 			ws_send_response("visibility has been set", true, ws);
@@ -572,19 +570,22 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private toggle_visibility(osc_feedback_path?: string): void {
-		logger.log(
-			`toggling CasparCG-visibility: '${this.playlist.visibility ? "visible" : "hidden"}'`
-		);
+	private async toggle_visibility(osc_feedback_path?: string) {
+		logger.log(`toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "true"}'`);
 
 		let visibility_feedback = false;
 
-		visibility_feedback = this.playlist.toggle_visibility();
+		visibility_feedback = await this.playlist.toggle_visibility();
 
 		// if a feedback-path is given, write the feedback to it
 		if (osc_feedback_path !== undefined) {
 			this.osc_server.send_value(osc_feedback_path, visibility_feedback);
 		}
+
+		this.send_all_clients({
+			command: "state",
+			visibility: visibility_feedback
+		});
 	}
 
 	/**

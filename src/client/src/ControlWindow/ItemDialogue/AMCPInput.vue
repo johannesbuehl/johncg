@@ -15,33 +15,41 @@
 	});
 </script>
 <template>
-	<div id="inputs_wrapper">
-		Selection
-		<input
-			ref="first_input"
-			class="input_box"
-			v-model="command_active"
-			placeholder="Command"
-			@keydown="
-				$event.stopPropagation();
-				emit('update');
-			"
-		/>
-		Deselection
-		<input
-			class="input_box"
-			v-model="command_inactive"
-			placeholder="Command"
-			@keydown="
-				$event.stopPropagation();
-				emit('update');
-			"
-		/>
+	<div id="component_wrapper">
+		<div id="inputs_wrapper">
+			Selection
+			<input
+				ref="first_input"
+				class="input_box"
+				v-model="command_active"
+				placeholder="Command"
+				@keydown="
+					$event.stopPropagation();
+					emit('update');
+				"
+			/>
+			Deselection
+			<input
+				class="input_box"
+				v-model="command_inactive"
+				placeholder="Command"
+				@keydown="
+					$event.stopPropagation();
+					emit('update');
+				"
+			/>
+		</div>
 		<slot></slot>
 	</div>
 </template>
 
 <style scoped>
+	#component_wrapper {
+		display: flex;
+		flex-direction: column;
+
+		background-color: var(--color-container);
+	}
 	#inputs_wrapper {
 		display: grid;
 		grid-template-columns: auto 100%;
@@ -51,8 +59,6 @@
 
 		font-size: 1.25em;
 		font-weight: lighter;
-
-		background-color: var(--color-container);
 
 		padding: 0.25rem;
 

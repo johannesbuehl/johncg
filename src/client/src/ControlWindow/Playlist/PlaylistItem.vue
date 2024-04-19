@@ -29,24 +29,6 @@
 		}
 	);
 
-	let input_debounce_timeout_id: NodeJS.Timeout | undefined = undefined;
-	watch(
-		() => item_props.value.color,
-		(cc) => {
-			clearTimeout(input_debounce_timeout_id);
-
-			input_debounce_timeout_id = setTimeout(() => {
-				const message: JGCPRecv.UpdateItem = {
-					command: "update_item",
-					props: { ...item_props.value, color: cc },
-					index: props.index
-				};
-
-				props.ws.send(JSON.stringify(message));
-			}, 500);
-		}
-	);
-
 	onMounted(() => {
 		scroll_into_view();
 	});

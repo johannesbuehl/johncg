@@ -56,6 +56,11 @@
 				case "ArrowRight":
 					navigate("slide", 1);
 					break;
+				case "KeyB":
+					if (props.server_state.visibility !== undefined) {
+						visibility(!props.server_state.visibility);
+					}
+					break;
 				default:
 					prevent_default = false;
 					break;
@@ -143,7 +148,9 @@
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			@select_slide="slides?.item ? emit('select_slide', slides.item, $event) : undefined"
+			@select_slide="
+				slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
+			"
 		/>
 		<AddPart
 			v-else-if="control_window_state === ControlWindowState.Add"

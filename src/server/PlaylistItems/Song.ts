@@ -252,12 +252,17 @@ export default class Song extends PlaylistItemBase {
 
 	private path_to_casparcg_media(media?: string): string {
 		if (media !== undefined) {
-			// test wether it is a color-string
-			const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
+			// check, wether it is a songbeamer-video-path
+			if (media.slice(0, 11).toLowerCase() === "bgvideos://") {
+				media = media.slice(11);
+			} else {
+				// test wether it is a color-string
+				const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
 
-			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
-			if (test_rgb_string) {
-				return media;
+				// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+				if (test_rgb_string) {
+					return media;
+				}
 			}
 
 			// make it all uppercase and remove the extension to match CasparCG-clips

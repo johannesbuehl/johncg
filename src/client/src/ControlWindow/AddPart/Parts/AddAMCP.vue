@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import { onMounted, ref } from "vue";
+	import { ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -43,4 +43,8 @@
 	</AMCPInput>
 </template>
 
-<style scoped></style>
+<style scoped>
+	.button {
+		flex: 1;
+	}
+</style>

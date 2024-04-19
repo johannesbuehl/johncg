@@ -44,7 +44,7 @@
 <template>
 	<AMCPInput
 		v-model:command_active="set_active_command"
-		v-model:command_inactive="set_active_command"
+		v-model:command_inactive="set_inactive_command"
 	/>
 </template>
 
