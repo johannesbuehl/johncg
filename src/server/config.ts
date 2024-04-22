@@ -106,7 +106,9 @@ class ConfigClass {
 	};
 
 	constructor(pth: string = config_path) {
-		this.open(pth);
+		if (!this.open(pth)) {
+			throw new SyntaxError("invalid config file");
+		}
 	}
 
 	open(pth: string = config_path): boolean {
