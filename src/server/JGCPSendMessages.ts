@@ -68,6 +68,11 @@ export interface Bible {
 	bible: BibleFile;
 }
 
+export interface PlaylistPDF {
+	command: "playlist_pdf";
+	playlist_pdf: string;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -79,4 +84,5 @@ export type Message =
 	| Clear
 	| PlaylistSave
 	| ItemFiles
-	| Bible;
+	| Bible
+	| PlaylistPDF;

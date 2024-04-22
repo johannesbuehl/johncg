@@ -1,4 +1,4 @@
-import { recurse_object_check } from "../lib.ts";
+import { countdown_title_map, recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
@@ -168,5 +168,22 @@ export default class Countdown extends PlaylistItemBase {
 				show_seconds: this.props.show_seconds
 			}
 		};
+	}
+
+	get pdf_export_string(): string {
+		let return_string = `# ${countdown_title_map[this.props.mode]}: "${this.props.caption}"`;
+
+		switch (this.props.mode) {
+			case "duration":
+				return_string += `\nDuration: ${this.props.time}`;
+				break;
+			case "end_time":
+				return_string += `\nEnd time: ${this.props.time}`;
+				break;
+		}
+
+		return_string += "\n\n";
+
+		return return_string;
 	}
 }

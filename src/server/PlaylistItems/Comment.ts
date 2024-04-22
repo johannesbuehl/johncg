@@ -79,4 +79,10 @@ export default class Comment extends PlaylistItemBase {
 	get displayable(): boolean {
 		return false;
 	}
+
+	get pdf_export_string(): string {
+		return `# Comment: "${this.props.caption}"
+
+`;
+	}
 }

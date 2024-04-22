@@ -92,4 +92,10 @@ export default class Media extends PlaylistItemBase {
 	get template(): undefined {
 		return undefined;
 	}
+
+	get pdf_export_string(): string {
+		return `# Media: "${this.props.caption}" (${this.props.media})
+
+`;
+	}
 }

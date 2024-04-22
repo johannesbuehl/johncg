@@ -23,6 +23,7 @@ import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
 import AMCP from "./PlaylistItems/AMCP.ts";
 import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
+import path from "path";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -206,6 +207,10 @@ export default class Playlist {
 		const playlist: PlaylistObject = JSON.parse(playlist_string) as PlaylistObject;
 
 		this.caption = playlist.caption;
+
+		if (this.caption === undefined || this.caption === "") {
+			this.caption = path.basename(playlist_path).replace(/\.jcg$/, "");
+		}
 
 		playlist.items.forEach((item) => {
 			this.add_item(item, false, callback);
@@ -480,6 +485,21 @@ export default class Playlist {
 
 	get unsaved_changes(): boolean {
 		return this.changes;
+	}
+
+	get playlist_markdown(): string {
+		const date = new Date();
+
+		let playlist_markdown = `---
+title: Playlist "${this.caption}"
+date: Created on ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}
+---\n`;
+
+		this.playlist_items.forEach((playlist_item) => {
+			playlist_markdown += playlist_item.pdf_export_string;
+		});
+
+		return playlist_markdown;
 	}
 }
 

@@ -208,4 +208,10 @@ export default class PDF extends PlaylistItemBase {
 	get template(): undefined {
 		return undefined;
 	}
+
+	get pdf_export_string(): string {
+		return `# PDF: "${this.props.caption}"
+
+`;
+	}
 }

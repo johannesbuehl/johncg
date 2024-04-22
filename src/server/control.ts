@@ -82,7 +82,9 @@ export default class Control {
 			this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
-			this.get_item_file(msg.type, msg.file, ws)
+			this.get_item_file(msg.type, msg.file, ws),
+		create_playlist_markdown: (msg: JGCPRecv.CreatePlaylistMarkdown, ws: WebSocket) =>
+			this.create_playlist_markdown(ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -565,6 +567,17 @@ export default class Control {
 			command: "item_files",
 			type: "song",
 			files
+		};
+
+		ws.send(JSON.stringify(message));
+	}
+
+	private create_playlist_markdown(ws: WebSocket) {
+		const markdown = this.playlist.playlist_markdown;
+
+		const message: JGCPSend.PlaylistPDF = {
+			command: "playlist_pdf",
+			playlist_pdf: markdown
 		};
 
 		ws.send(JSON.stringify(message));

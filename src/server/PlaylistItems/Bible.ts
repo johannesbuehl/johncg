@@ -110,4 +110,10 @@ export default class Bible extends PlaylistItemBase {
 			}
 		};
 	}
+
+	get pdf_export_string(): string {
+		return `# Bible: "${this.props.caption}" (${create_bible_citation_string(this.props.book_id, this.props.chapters)})
+
+`;
+	}
 }

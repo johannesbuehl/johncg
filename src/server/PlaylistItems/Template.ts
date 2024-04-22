@@ -92,4 +92,17 @@ export default class TemplateItem extends PlaylistItemBase {
 	get template(): TemplateTemplate {
 		return this.props.template;
 	}
+
+	get pdf_export_string(): string {
+		let return_string = `# Template: "${this.props.caption}" (${this.props.template.template})`;
+
+		if (this.props.template.data !== undefined) {
+			return_string +=
+				"\n\n```json\n" + JSON.stringify(this.props.template.data, undefined, "\t") + "\n```";
+		}
+
+		return_string += "\n\n";
+
+		return return_string;
+	}
 }

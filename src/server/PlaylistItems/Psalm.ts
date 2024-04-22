@@ -236,4 +236,32 @@ export default class Psalm extends PlaylistItemBase {
 
 		return template;
 	}
+
+	get pdf_export_string(): string {
+		let return_string = `# Psalm: "${this.props.caption}"`;
+
+		if (this.psalm_file) {
+			return_string += " (";
+
+			if (this.psalm_file.metadata.id !== undefined) {
+				return_string += `${this.psalm_file.metadata.id}: `;
+			}
+
+			return_string += `${this.psalm_file.metadata.caption})\n`;
+
+			this.psalm_file.text.forEach((slide) => {
+				slide.forEach((block) => {
+					block.forEach((line) => {
+						return_string += `${line}  \n`;
+					});
+
+					return_string += "\n";
+				});
+			});
+		}
+
+		return_string += "\n";
+
+		return return_string;
+	}
 }

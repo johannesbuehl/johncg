@@ -65,7 +65,7 @@
 			color: "#FF0000",
 			template: {
 				template: file.path,
-				data: template_data.value
+				data: Object.keys(template_data.value).length > 0 ? template_data.value : undefined
 			}
 		};
 	}

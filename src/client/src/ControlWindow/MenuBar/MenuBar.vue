@@ -1,11 +1,13 @@
 <script setup lang="ts">
-	import { ref, toRef } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import * as fab from "@fortawesome/free-brands-svg-icons";
 	library.add(
 		fas.faFile,
 		fas.faFolderOpen,
 		fas.faFloppyDisk,
+		fab.faMarkdown,
 		fas.faBackwardStep,
 		fas.faForwardStep,
 		fas.faAngleLeft,
@@ -68,6 +70,14 @@
 
 		props.ws.send(JSON.stringify(message));
 	}
+
+	function create_playlist_markdown() {
+		const message: JGCPRecv.CreatePlaylistMarkdown = {
+			command: "create_playlist_markdown"
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
@@ -93,6 +103,9 @@
 			@change="load_playlist_file"
 			style="display: none"
 		/>
+		<MenuButton :square="true" @click="create_playlist_markdown">
+			<FontAwesomeIcon :icon="['fab', 'markdown']" />
+		</MenuButton>
 		<MenuDivider />
 		<MenuButton
 			:square="true"

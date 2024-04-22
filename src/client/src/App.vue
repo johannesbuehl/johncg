@@ -127,7 +127,8 @@
 				clear: init,
 				playlist_save: save_playlist_file,
 				item_files: parse_item_files,
-				bible: parse_bible
+				bible: parse_bible,
+				playlist_pdf: save_playlist_pdf
 			};
 
 			command_parser_map[data.command](data as never);
@@ -254,6 +255,21 @@
 
 	function parse_bible(data: JGCPSend.Bible) {
 		bible_file.value = data.bible;
+	}
+
+	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
+		const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
+
+		const blob = new Blob([JSON.parse(json_string)], { type: "text/x-markdown" });
+		const url = URL.createObjectURL(blob);
+
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "playlist.md";
+
+		link.click();
+
+		URL.revokeObjectURL(url);
 	}
 
 	function handle_ws_response(response: JGCPSend.Response) {

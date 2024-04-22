@@ -23,6 +23,10 @@ export interface SavePlaylist extends Base {
 	command: "save_playlist";
 }
 
+export interface CreatePlaylistMarkdown extends Base {
+	command: "create_playlist_markdown";
+}
+
 /**
  * request for the slides of a specific item
  */
@@ -115,4 +119,5 @@ export type Message =
 	| SavePlaylist
 	| GetItemFiles
 	| GetBible
-	| GetItemData;
+	| GetItemData
+	| CreatePlaylistMarkdown;

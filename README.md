@@ -40,3 +40,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - switch release to xz-compression
 - client: debug duplicate-item
 - create new log-file for every start
+- add option for small-export of markdown-playlist without song and psalm-text
