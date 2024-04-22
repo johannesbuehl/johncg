@@ -102,7 +102,9 @@
 					return val[0] !== index || val[1] === false;
 				})
 			) {
-				return_props.languages = languages.value.map((val) => val[0]);
+				return_props.languages = languages.value
+					.filter(([number, active]) => active)
+					.map(([number, active]) => number);
 			} else {
 				return_props.languages = undefined;
 			}
