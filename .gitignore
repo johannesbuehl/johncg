@@ -1,7 +1,7 @@
 node_modules
 node_modules_windows
 node_modules_linux
-server_log.*.log
+logs
 
 casparcg/Templates/JohnCG/*.js
 build-scripts/build.js

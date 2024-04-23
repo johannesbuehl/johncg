@@ -93,20 +93,15 @@
 		}
 	);
 
-	let init = true;
 	watch(
 		() => book_selection.value,
 		(book_selection) => {
 			if (book_selection !== undefined) {
-				if (init) {
-					init = false;
-				} else {
-					chapter_verse_selection.value = {};
+				chapter_verse_selection.value = {};
 
-					nextTick(() => {
-						create_verse_selection();
-					});
-				}
+				nextTick(() => {
+					create_verse_selection();
+				});
 			}
 		}
 	);
