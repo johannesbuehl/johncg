@@ -209,9 +209,7 @@ export default class PDF extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get pdf_export_string(): string {
-		return `# PDF: "${this.props.caption}"
-
-`;
+	get_markdown_export_string(): string {
+		return `# PDF: "${this.props.caption}"\n\n`;
 	}
 }

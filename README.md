@@ -38,6 +38,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - switch release to xz-compression
-- client: debug duplicate-item
-- create new log-file for every start
-- add option for small-export of markdown-playlist without song and psalm-text
+- make pandoc-installer cross-platform
+- compile pandoc-installer in release
+- make pandoc cross platform

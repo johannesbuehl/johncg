@@ -277,7 +277,7 @@ export default class Song extends PlaylistItemBase {
 		return "#00000000";
 	}
 
-	get pdf_export_string(): string {
+	get_markdown_export_string(full: boolean): string {
 		let return_string = `# Song: "${this.props.caption}" (`;
 
 		if (this.song_file.metadata.ChurchSongID !== undefined) {
@@ -286,21 +286,23 @@ export default class Song extends PlaylistItemBase {
 
 		const language_index = this.props.languages ? this.props.languages[0] : 0;
 
-		return_string += `${this.song_file.metadata.Title[language_index]})`;
+		return_string += `${this.song_file.metadata.Title[language_index]})\n\n`;
 
-		const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
+		if (full) {
+			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
 
-		parts.forEach((part) => {
-			return_string += `\n**${part}**  `;
+			parts.forEach((part) => {
+				return_string += `**${part}**  `;
 
-			this.song_file.get_part(part).slides.forEach((slide) => {
-				slide.forEach((line) => {
-					return_string += `\n${line[language_index]}  `;
+				this.song_file.get_part(part).slides.forEach((slide) => {
+					slide.forEach((line) => {
+						return_string += `\n${line[language_index]}  `;
+					});
 				});
-			});
 
-			return_string += "\n";
-		});
+				return_string += "\n\n";
+			});
+		}
 
 		return return_string;
 	}

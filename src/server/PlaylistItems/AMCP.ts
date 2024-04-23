@@ -146,19 +146,17 @@ export default class AMCP extends PlaylistItemBase {
 		};
 	}
 
-	get pdf_export_string(): string {
+	get_markdown_export_string(full: boolean): string {
 		let return_string = '# AMCP: "${this.props.caption}"';
 
-		if (this.props.commands.set_active !== undefined) {
-			return_string += `\n\n## Set-Active
-\`${this.props.commands.set_active}\`
-`;
-		}
+		if (full) {
+			if (this.props.commands.set_active !== undefined) {
+				return_string += `\n\n## Set-Active\n\`${this.props.commands.set_active}\`\n`;
+			}
 
-		if (this.props.commands.set_inactive !== undefined) {
-			return_string += `\n\n## Set-Inactive
-\`${this.props.commands.set_inactive}\`
-`;
+			if (this.props.commands.set_inactive !== undefined) {
+				return_string += `\n\n## Set-Inactive\n\`${this.props.commands.set_inactive}\`\n`;
+			}
 		}
 
 		return_string += "\n\n";

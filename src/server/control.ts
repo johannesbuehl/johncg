@@ -1,6 +1,8 @@
 import WebSocket, { RawData } from "ws";
-
 import fs from "fs";
+import { CasparCG } from "casparcg-connection";
+import child_process from "child_process";
+import tmp from "tmp";
 
 import Playlist from "./Playlist.ts";
 import type { ActiveItemSlide } from "./Playlist.ts";
@@ -20,7 +22,6 @@ import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg } from "./CasparCG.ts";
-import { CasparCG } from "casparcg-connection";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -83,8 +84,8 @@ export default class Control {
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_file(msg.type, msg.file, ws),
-		create_playlist_markdown: (msg: JGCPRecv.CreatePlaylistMarkdown, ws: WebSocket) =>
-			this.create_playlist_markdown(ws)
+		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
+			this.create_playlist_pdf(ws, msg.type)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -572,15 +573,46 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private create_playlist_markdown(ws: WebSocket) {
-		const markdown = this.playlist.playlist_markdown;
+	private create_playlist_pdf(ws: WebSocket, type: JGCPRecv.CreatePlaylistPDF["type"]) {
+		if (!fs.existsSync("pandoc/pandoc.exe")) {
+			logger.warn("can't create PDF: pandoc-executable not found");
 
-		const message: JGCPSend.PlaylistPDF = {
-			command: "playlist_pdf",
-			playlist_pdf: markdown
-		};
+			return;
+		}
 
-		ws.send(JSON.stringify(message));
+		const markdown = this.playlist.get_playlist_markdown(type === "full");
+
+		const markdown_file = tmp.fileSync({ postfix: ".md" });
+		const pdf_file = tmp.fileSync({ postfix: ".pdf" });
+
+		fs.writeFile(markdown_file.name, markdown, { encoding: "utf-8" }, () => {
+			const command = `.\\pandoc\\pandoc.exe ${markdown_file.name} -o ${pdf_file.name} --pdf-engine pandoc/texlive/bin/windows/pdflatex.exe --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
+
+			try {
+				child_process.execSync(command);
+
+				logger.log(`creating ${type}-PDF`);
+			} catch (e) {
+				let error_text: string;
+
+				if (e instanceof Error) {
+					error_text = `${e.name}: ${e.message}`;
+				} else {
+					error_text = `${e}`;
+				}
+
+				logger.error(`can't create PDF: ${error_text}`);
+
+				return;
+			}
+
+			const message: JGCPSend.PlaylistPDF = {
+				command: "playlist_pdf",
+				playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64")
+			};
+
+			ws.send(JSON.stringify(message));
+		});
 	}
 
 	private async toggle_visibility(osc_feedback_path?: string) {

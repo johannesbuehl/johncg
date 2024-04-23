@@ -2,10 +2,12 @@ node_modules
 node_modules_windows
 node_modules_linux
 logs
+miktex
+out
+dist
+pandoc
 
 casparcg/Templates/JohnCG/*.js
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
-out
-dist
 *.map

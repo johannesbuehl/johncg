@@ -21,6 +21,15 @@
 					"media": 20,
 					"template": 21
 				}
+			},
+			{
+				"host": "WS-JOHNCG",
+				"port": 5250,
+				"channel": 1,
+				"layers": {
+					"media": 20,
+					"template": 21
+				}
 			}
 		]
 	},

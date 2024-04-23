@@ -2,12 +2,11 @@
 	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import * as fab from "@fortawesome/free-brands-svg-icons";
 	library.add(
 		fas.faFile,
 		fas.faFolderOpen,
 		fas.faFloppyDisk,
-		fab.faMarkdown,
+		fas.faFilePdf,
 		fas.faBackwardStep,
 		fas.faForwardStep,
 		fas.faAngleLeft,
@@ -18,13 +17,14 @@
 		fas.faPlus,
 		fas.faPen
 	);
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import { ControlWindowState } from "@/Enums";
 	import MenuButton from "./MenuButton.vue";
 	import MenuDivider from "./MenuDivider.vue";
+	import PopUp from "../PopUp.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -71,12 +71,16 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
-	function create_playlist_markdown() {
-		const message: JGCPRecv.CreatePlaylistMarkdown = {
-			command: "create_playlist_markdown"
+	const pdf_popup = ref<boolean>(false);
+	function create_playlist_pdf(type: "full" | "small") {
+		const message: JGCPRecv.CreatePlaylistPDF = {
+			command: "create_playlist_pdf",
+			type
 		};
 
 		props.ws.send(JSON.stringify(message));
+
+		pdf_popup.value = false;
 	}
 </script>
 
@@ -103,8 +107,8 @@
 			@change="load_playlist_file"
 			style="display: none"
 		/>
-		<MenuButton :square="true" @click="create_playlist_markdown">
-			<FontAwesomeIcon :icon="['fab', 'markdown']" />
+		<MenuButton :square="true" @click="pdf_popup = true">
+			<FontAwesomeIcon :icon="['fas', 'file-pdf']" />
 		</MenuButton>
 		<MenuDivider />
 		<MenuButton
@@ -145,6 +149,12 @@
 		<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
 			<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
 		</MenuButton>
+		<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
+			<div class="popup_menu_buttons">
+				<MenuButton @click="create_playlist_pdf('full')"> With content </MenuButton>
+				<MenuButton @click="create_playlist_pdf('small')"> Only itemlist </MenuButton>
+			</div>
+		</PopUp>
 	</div>
 </template>
 
@@ -169,5 +179,11 @@
 
 	.menubar > * {
 		margin: 0.125rem;
+	}
+
+	.popup_menu_buttons {
+		display: grid;
+
+		grid-template-columns: 1fr 1fr;
 	}
 </style>

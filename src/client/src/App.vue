@@ -258,14 +258,15 @@
 	}
 
 	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
-		const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
+		// const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
 
-		const blob = new Blob([JSON.parse(json_string)], { type: "text/x-markdown" });
-		const url = URL.createObjectURL(blob);
+		// const blob = new Blob([Buffer.from(data.playlist_pdf, "base64")], { type: "application/pdf" });
+		// const url = URL.createObjectURL(blob);
+		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
 
 		const link = document.createElement("a");
 		link.href = url;
-		link.download = "playlist.md";
+		link.download = "playlist.pdf";
 
 		link.click();
 

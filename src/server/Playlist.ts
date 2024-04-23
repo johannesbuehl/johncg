@@ -487,7 +487,7 @@ export default class Playlist {
 		return this.changes;
 	}
 
-	get playlist_markdown(): string {
+	get_playlist_markdown(full: boolean): string {
 		const date = new Date();
 
 		let playlist_markdown = `---
@@ -496,7 +496,7 @@ date: Created on ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,
 ---\n`;
 
 		this.playlist_items.forEach((playlist_item) => {
-			playlist_markdown += playlist_item.pdf_export_string;
+			playlist_markdown += playlist_item.get_markdown_export_string(full);
 		});
 
 		return playlist_markdown;

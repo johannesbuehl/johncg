@@ -55,11 +55,18 @@ void (async () => {
 		Config.casparcg.connections.map(async (connection_setting) => {
 			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
-			const connection: CasparCG = new CasparCG({
-				...connection_setting,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				autoConnect: true
-			});
+			let connection: CasparCG;
+
+			try {
+				connection = new CasparCG({
+					...connection_setting,
+					/* eslint-disable @typescript-eslint/naming-convention */
+					autoConnect: true
+					/* eslint-enable @typescript-eslint/naming-convention */
+				});
+			} catch (e) {
+				/* empty */
+			}
 
 			const casparcg_connection: CasparCGConnection = {
 				connection,

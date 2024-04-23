@@ -237,7 +237,7 @@ export default class Psalm extends PlaylistItemBase {
 		return template;
 	}
 
-	get pdf_export_string(): string {
+	get_markdown_export_string(full: boolean): string {
 		let return_string = `# Psalm: "${this.props.caption}"`;
 
 		if (this.psalm_file) {
@@ -249,15 +249,17 @@ export default class Psalm extends PlaylistItemBase {
 
 			return_string += `${this.psalm_file.metadata.caption})\n`;
 
-			this.psalm_file.text.forEach((slide) => {
-				slide.forEach((block) => {
-					block.forEach((line) => {
-						return_string += `${line}  \n`;
-					});
+			if (full) {
+				this.psalm_file.text.forEach((slide) => {
+					slide.forEach((block) => {
+						block.forEach((line) => {
+							return_string += `${line}  \n`;
+						});
 
-					return_string += "\n";
+						return_string += "\n";
+					});
 				});
-			});
+			}
 		}
 
 		return_string += "\n";

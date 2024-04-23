@@ -170,16 +170,18 @@ export default class Countdown extends PlaylistItemBase {
 		};
 	}
 
-	get pdf_export_string(): string {
+	get_markdown_export_string(full: boolean): string {
 		let return_string = `# ${countdown_title_map[this.props.mode]}: "${this.props.caption}"`;
 
-		switch (this.props.mode) {
-			case "duration":
-				return_string += `\nDuration: ${this.props.time}`;
-				break;
-			case "end_time":
-				return_string += `\nEnd time: ${this.props.time}`;
-				break;
+		if (full) {
+			switch (this.props.mode) {
+				case "duration":
+					return_string += `\nDuration: ${this.props.time}`;
+					break;
+				case "end_time":
+					return_string += `\nEnd time: ${this.props.time}`;
+					break;
+			}
 		}
 
 		return_string += "\n\n";

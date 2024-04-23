@@ -372,5 +372,5 @@ export abstract class PlaylistItemBase {
 		return this.is_displayable;
 	}
 
-	abstract get pdf_export_string(): string;
+	abstract get_markdown_export_string(full: boolean): string;
 }

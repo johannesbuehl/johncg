@@ -80,9 +80,7 @@ export default class Comment extends PlaylistItemBase {
 		return false;
 	}
 
-	get pdf_export_string(): string {
-		return `# Comment: "${this.props.caption}"
-
-`;
+	get_markdown_export_string(): string {
+		return `# Comment: "${this.props.caption}"\n\n`;
 	}
 }

@@ -93,9 +93,15 @@ export default class Media extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get pdf_export_string(): string {
-		return `# Media: "${this.props.caption}" (${this.props.media})
+	get_markdown_export_string(full: boolean): string {
+		let return_string = `# Media: "${this.props.caption}" (${this.props.media})`;
 
-`;
+		if (full) {
+			return_string += `\nLoop: \`${this.props.loop === true}\``;
+		}
+
+		return_string += "\n\n";
+
+		return return_string;
 	}
 }

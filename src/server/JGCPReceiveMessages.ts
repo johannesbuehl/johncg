@@ -23,8 +23,9 @@ export interface SavePlaylist extends Base {
 	command: "save_playlist";
 }
 
-export interface CreatePlaylistMarkdown extends Base {
-	command: "create_playlist_markdown";
+export interface CreatePlaylistPDF extends Base {
+	command: "create_playlist_pdf";
+	type: "full" | "small";
 }
 
 /**
@@ -120,4 +121,4 @@ export type Message =
 	| GetItemFiles
 	| GetBible
 	| GetItemData
-	| CreatePlaylistMarkdown;
+	| CreatePlaylistPDF;
