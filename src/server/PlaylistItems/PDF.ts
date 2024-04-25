@@ -1,13 +1,13 @@
 import sharp from "sharp";
 import Canvas from "canvas";
+import tmp from "tmp";
 
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
-import Config, { get_casparcg_transition } from "../config.ts";
-import { CasparCGConnection, CasparCGResolution, casparcg } from "../CasparCG.ts";
-import { PlayHtmlParameters } from "casparcg-connection";
+import Config from "../config.ts";
+import { CasparCGResolution } from "../CasparCG.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -24,7 +24,7 @@ export interface ClientPDFSlides extends ClientItemSlidesBase {
 export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
-	private slides: { image: string; thumbnail: string }[] = [];
+	private slides: string[] = [];
 
 	protected slide_count: number = 0;
 
@@ -88,7 +88,12 @@ export default class PDF extends PlaylistItemBase {
 
 							const image_buffer = canvas.toBuffer();
 
-							this.slides[index] = await this.create_base64(sharp(image_buffer));
+							// save the image into a temporary file
+							const tmp_file = tmp.fileSync();
+
+							void sharp(image_buffer).png().toFile(tmp_file.name);
+
+							this.slides[index] = tmp_file.name.replaceAll("\\", "/").replace(/^(\w:\/)/, "$1/");
 
 							this.slide_count++;
 						})
@@ -119,11 +124,11 @@ export default class PDF extends PlaylistItemBase {
 		return this.active_slide;
 	}
 
-	create_client_object_item_slides(): Promise<ClientPDFSlides> {
+	async create_client_object_item_slides(): Promise<ClientPDFSlides> {
 		return Promise.resolve({
 			caption: this.props.caption,
 			type: "pdf",
-			slides: this.slides.map((m) => m.thumbnail),
+			slides: await Promise.all(this.slides.map(async (m) => await this.create_thumbnail(m))),
 			media: undefined
 		});
 	}
@@ -158,20 +163,11 @@ export default class PDF extends PlaylistItemBase {
 		return slide_steps;
 	}
 
-	async create_base64(img: sharp.Sharp): Promise<{ image: string; thumbnail: string }> {
-		img.png();
+	async create_thumbnail(media: string): Promise<string> {
+		const img = sharp(media);
+		img.resize(240);
 
-		const thumnb = img.clone();
-
-		thumnb.resize(240);
-
-		const img_to_base64 = async (img: sharp.Sharp) =>
-			"data:image/png;base64," + (await img.toBuffer()).toString("base64");
-
-		return {
-			image: await img_to_base64(img),
-			thumbnail: await img_to_base64(thumnb)
-		};
+		return "data:image/png;base64," + (await img.toBuffer()).toString("base64");
 	}
 
 	protected validate_props(props: PDFProps): boolean {
@@ -183,28 +179,6 @@ export default class PDF extends PlaylistItemBase {
 		};
 
 		return props.type === "pdf" && recurse_object_check(props, template);
-	}
-
-	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
-		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
-
-		return Promise.all(
-			connections.map((casparcg_connection) => {
-				const message: PlayHtmlParameters = {
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					url: this.media,
-					transition: get_casparcg_transition()
-				};
-
-				const media_logger_string = `${this.media.slice(0, 20)}${this.media.length > 20 ? "..." : ""}`;
-				if (casparcg.visibility) {
-					logger.log(`loading CasparCG-media: '${media_logger_string}'`);
-
-					return casparcg_connection.connection.play(message);
-				}
-			})
-		);
 	}
 
 	get active_slide(): number {
@@ -220,7 +194,7 @@ export default class PDF extends PlaylistItemBase {
 	}
 
 	get media(): string {
-		return this.slides[this.active_slide].image;
+		return this.slides[this.active_slide];
 	}
 
 	get multi_media(): boolean {
