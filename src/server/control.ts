@@ -574,24 +574,37 @@ export default class Control {
 	}
 
 	private create_playlist_pdf(ws: WebSocket, type: JGCPRecv.CreatePlaylistPDF["type"]) {
-		if (!fs.existsSync("pandoc/pandoc.exe")) {
-			logger.warn("can't create PDF: pandoc-executable not found");
-
-			return;
-		}
-
 		const markdown = this.playlist.get_playlist_markdown(type === "full");
 
 		const markdown_file = tmp.fileSync({ postfix: ".md" });
 		const pdf_file = tmp.fileSync({ postfix: ".pdf" });
 
 		fs.writeFile(markdown_file.name, markdown, { encoding: "utf-8" }, () => {
-			const command = `.\\pandoc\\pandoc.exe ${markdown_file.name} -o ${pdf_file.name} --pdf-engine pandoc/texlive/bin/windows/pdflatex.exe --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
+			// use different commands based on the operating system
+			let command: string;
+
+			switch (process.platform) {
+				case "win32":
+					command = `.\\pandoc\\pandoc.exe --pdf-engine pandoc/texlive/bin/windows/pdflatex.exe`;
+					break;
+				case "linux":
+					command = "pandoc";
+					break;
+			}
+
+			command += ` ${markdown_file.name} -o ${pdf_file.name} --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
+
+			let message: JGCPSend.PlaylistPDF;
 
 			try {
 				child_process.execSync(command);
 
 				logger.log(`creating ${type}-PDF`);
+
+				message = {
+					command: "playlist_pdf",
+					playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64")
+				};
 			} catch (e) {
 				let error_text: string;
 
@@ -604,12 +617,10 @@ export default class Control {
 				logger.error(`can't create PDF: ${error_text}`);
 
 				return;
+			} finally {
+				fs.rm(markdown_file.name, () => {});
+				fs.rm(pdf_file.name, () => {});
 			}
-
-			const message: JGCPSend.PlaylistPDF = {
-				command: "playlist_pdf",
-				playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64")
-			};
 
 			ws.send(JSON.stringify(message));
 		});

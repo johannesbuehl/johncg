@@ -5,9 +5,13 @@ logs
 miktex
 out
 dist
-pandoc
+pandoc/*
 
 casparcg/Templates/JohnCG/*.js
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
 *.map
+install-tl.log
+
+!pandoc/install.py
+!pandoc/texlive.profile

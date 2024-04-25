@@ -1,6 +1,6 @@
 {
 	"name": "johncg",
-	"version": "0.6.0",
+	"version": "0.7.0-rc.1",
 	"license": "MIT",
 	"author": "Simon Ziegler <simon.ziegler.1998+github@pm.me>",
 	"bin": "out/main.js",
@@ -23,7 +23,8 @@
 		"client-preview": "vite -c src/client/vite.config.ts preview",
 		"client-build-only": "vite -c src/client/vite.config.ts build",
 		"client-type-check": "vue-tsc --noEmit -p src/client/tsconfig.json",
-		"prepare": "husky"
+		"prepare": "husky",
+		"pandoc-build": "node build-scripts/pandoc-build.js"
 	},
 	"dependencies": {
 		"@babel/types": "^7.24.0",
@@ -40,6 +41,7 @@
 		"log4js": "^6.9.1",
 		"mime-types": "^2.1.35",
 		"node-osc": "^9.1.0",
+		"node-stream-zip": "^1.15.0",
 		"pdfjs-dist": "^4.0.379",
 		"sharp": "^0.33.3",
 		"tmp": "^0.2.1",
@@ -77,6 +79,5 @@
 		"typescript": "^5.3.3",
 		"vite": "^5.0.11",
 		"vue-tsc": "^1.8.27"
-	},
-	"packageManager": "yarn@4.1.1"
+	}
 }

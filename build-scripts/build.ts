@@ -33,7 +33,7 @@ const release_dir = path.join("dist", build_name);
 fs.rmSync(build_dir, { recursive: true, force: true });
 fs.rmSync(release_dir, { recursive: true, force: true });
 fs.mkdirSync(build_dir, { recursive: true });
-fs.mkdirSync(path.join("dist", build_name), { recursive: true });
+fs.mkdirSync(release_dir, { recursive: true });
 
 const copy_build_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(build_dir, dest ?? path.basename(file)));
 // const copy_build_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(build_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
@@ -44,6 +44,7 @@ const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions)
 execSync("npm run server-build");
 execSync("npm run client-build");
 execSync("npm run templates-build");
+execSync("npm run pandoc-build");
 
 // temporary method until there is a solution for packaging sharp
 // // create sea-prep.blob
@@ -83,20 +84,16 @@ const copy_module = (name: string) => {
 };
 copy_release_dir(path.join(build_dir, "Templates"));
 copy_release_dir("casparcg/Media");
+copy_release_dir(path.join(build_dir, "pandoc"));
+copy_release_file("pandoc/texlive.profile", "pandoc/texlive.profile");
 copy_module("@img");
 copy_module("canvas");
 copy_module("pdfjs-dist");
 
 // temporary method until there is a solution for packaging sharp
 // create a script-file, that start node with the main.js
-switch (process.platform) {
-	case "win32":
-		fs.writeFileSync(path.join(release_dir, build_name + ".bat"), `${exec_name} main.js\npause`);
-		break;
-	case "linux":
-		fs.writeFileSync(path.join(release_dir, build_name + ".sh"), `./${exec_name} main.js\nread -n1 -r -p "Press any key to continue..." key`);
-		break;
-}
+create_launch_script("main.js", build_name);
+create_launch_script("pandoc-installer.js", "pandoc/install");
 
 // create and copy the licenses
 // void lr.cli(["--config=build-scripts/license-reporter.config.ts"]);
@@ -135,3 +132,16 @@ copy_release_dir(path.join(build_dir, "licenses"));
 
 // pack the files in a .tar.gz-file
 void tar.c({ gzip: true, file: release_dir + ".tar.gz", cwd: "dist" }, [path.relative("dist", release_dir)]);
+
+function create_launch_script(pth: string, destination: string) {
+	const relative_path_prefix = "../".repeat((destination.match(/\//g) ?? []).length);
+
+	switch (process.platform) {
+		case "win32":
+			fs.writeFileSync(path.join(release_dir, destination + ".bat"), `cd /D "%~dp0"\n${relative_path_prefix}${exec_name} ${pth}\npause`);
+			break;
+		case "linux":
+			fs.writeFileSync(path.join(release_dir, destination + ".sh"), `${relative_path_prefix}./${exec_name} ${pth}\nread -n1 -r -p "Press any key to continue..." key`);
+			break;
+	}
+}

@@ -5,6 +5,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - CasparCG
 - CasparCG-capable hardware
 - SongBeamer for creation of song-files
+- Linux: `pandoc` and `LaTeX`-packages (basic, langgerman, latex, latexrecommended, latexextra, fontsextra, fontsrecommended)
 
 ## Getting started
 1. Download CasparCG and set it up according to its [GitHub-site](https://github.com/CasparCG/server).
@@ -38,6 +39,3 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - switch release to xz-compression
-- make pandoc-installer cross-platform
-- compile pandoc-installer in release
-- make pandoc cross platform

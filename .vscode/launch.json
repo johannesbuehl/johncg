@@ -11,7 +11,7 @@
 			"skipFiles": [
 				"<node_internals>/**"
 			],
-			"program": "${workspaceFolder}\\src\\server\\main.ts",
+			"program": "${workspaceFolder}/src/server/main.ts",
 			// "preLaunchTask": "tsc: build - server",
 			"preLaunchTask": "type-check and esbuild-server-sourcemap",
 			"outFiles": [
