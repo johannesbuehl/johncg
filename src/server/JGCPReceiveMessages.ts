@@ -58,6 +58,10 @@ export interface SetVisibility extends Base {
 	visibility: boolean;
 }
 
+export interface ToggleVisibility extends Base {
+	command: "toggle_visibility";
+}
+
 export interface SelectItemSlide extends Base {
 	command: "select_item_slide";
 	item: number;
@@ -109,6 +113,7 @@ export interface DeleteItem {
 export type Message =
 	| RequestItemSlides
 	| SetVisibility
+	| ToggleVisibility
 	| OpenPlaylist
 	| Navigate
 	| SelectItemSlide

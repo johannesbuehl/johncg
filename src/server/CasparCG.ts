@@ -5,11 +5,13 @@ import { XMLParser } from "fast-xml-parser";
 
 interface CasparCGPathsSettings {
 	/* eslint-disable @typescript-eslint/naming-convention */
+	/* eslint-disable @typescript-eslint/naming-convention */
 	"data-path": string;
 	"initial-path": string;
 	"log-path": string;
 	"media-path": string;
 	"template-path": string;
+	/* eslint-enable @typescript-eslint/naming-convention */
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 

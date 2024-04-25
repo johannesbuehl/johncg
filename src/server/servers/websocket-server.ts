@@ -99,7 +99,7 @@ export default class WebsocketServer {
 			ws.close();
 
 			// remove the connection from the list
-			const index = this.connections[ws.protocol].indexOf(ws);
+			const index = this.connections[ws.protocol]?.indexOf(ws);
 
 			if (index > -1) {
 				this.connections[ws.protocol].splice(index, 1);

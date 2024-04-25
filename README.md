@@ -19,7 +19,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 ## roadmap
 - implement more playlist-items: Text
-- companion integration (buttons for song parts -> send name to casparcg)
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
 - load files from disc always at item selection to stay up to date

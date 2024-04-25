@@ -6,8 +6,6 @@ import tmp from "tmp";
 
 import Playlist from "./Playlist.ts";
 import type { ActiveItemSlide } from "./Playlist.ts";
-import OSCServer from "./servers/osc-server.ts";
-import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
 import type {
 	WebsocketServerArguments,
@@ -32,34 +30,11 @@ export interface CasparCGConnection {
 export default class Control {
 	private playlist: Playlist;
 	private ws_server: WebsocketServer;
-	private osc_server: OSCServer;
 	private search_part: SearchPart;
-
-	// mapping of the OSC-commands to the functions
-	private readonly osc_function_map: OSCFunctionMap = {
-		control: {
-			playlist_item: {
-				navigate: {
-					direction: (value: number) => this.navigate("item", value)
-				}
-			},
-			item_slide: {
-				navigate: {
-					direction: (value: number) => this.navigate("slide", value)
-				}
-			},
-			output: {
-				visibility: {
-					set: (value: boolean) => this.set_visibility(value),
-					toggle: (value: string) => this.toggle_visibility(value)
-				}
-			}
-		}
-	};
 
 	// mapping of the websocket-messages to the functions
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	private readonly ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
+	private readonly client_ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
 		new_playlist: (msg: JGCPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		load_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.load_playlist(msg?.playlist, ws),
@@ -72,6 +47,7 @@ export default class Control {
 			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
 		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) =>
 			this.set_visibility(msg.visibility, msg.client_id, ws),
+		toggle_visibility: () => this.toggle_visibility(),
 		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
 			this.move_playlist_item(msg.from, msg.to, ws),
 		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) =>
@@ -93,20 +69,18 @@ export default class Control {
 		JGCP: {
 			open: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
+		},
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		"": {
+			open: (ws: WebSocket) => this.ws_on_connection(ws),
+			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
 		}
 	};
 
-	constructor(
-		ws_server_parameters: WebsocketServerArguments,
-		osc_server_parameters: OSCServerArguments
-	) {
+	constructor(ws_server_parameters: WebsocketServerArguments) {
 		// initialize the websocket server
 		logger.log("starting websocket-server");
 		this.ws_server = new WebsocketServer(ws_server_parameters, this.ws_message_handler);
-
-		// initialize the osc server
-		logger.log("starting osc-server");
-		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
 		this.playlist = new Playlist();
 
@@ -165,7 +139,7 @@ export default class Control {
 
 		logger.debug("sending playlist to client");
 
-		ws.send(JSON.stringify(message));
+		ws?.send(JSON.stringify(message));
 
 		ws_send_response(`playlist has been send to client`, true, ws);
 	}
@@ -187,7 +161,7 @@ export default class Control {
 		if (ws) {
 			logger.debug("sending playlist to client");
 
-			ws.send(JSON.stringify(response_playlist_items));
+			ws?.send(JSON.stringify(response_playlist_items));
 		} else {
 			logger.debug("sending playlist to all clients");
 
@@ -201,7 +175,7 @@ export default class Control {
 		if (ws) {
 			logger.debug("sending state to client");
 
-			ws.send(JSON.stringify(message));
+			ws?.send(JSON.stringify(message));
 		} else {
 			logger.debug("sending state to all clients");
 
@@ -533,7 +507,7 @@ export default class Control {
 				files
 			};
 
-			ws.send(JSON.stringify(message));
+			ws?.send(JSON.stringify(message));
 		}
 	}
 
@@ -556,7 +530,7 @@ export default class Control {
 			bible
 		};
 
-		ws.send(JSON.stringify(message));
+		ws?.send(JSON.stringify(message));
 	}
 
 	private get_item_file(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
@@ -570,7 +544,7 @@ export default class Control {
 			files
 		};
 
-		ws.send(JSON.stringify(message));
+		ws?.send(JSON.stringify(message));
 	}
 
 	private create_playlist_pdf(ws: WebSocket, type: JGCPRecv.CreatePlaylistPDF["type"]) {
@@ -622,25 +596,24 @@ export default class Control {
 				fs.rm(pdf_file.name, () => {});
 			}
 
-			ws.send(JSON.stringify(message));
+			ws?.send(JSON.stringify(message));
 		});
 	}
 
-	private async toggle_visibility(osc_feedback_path?: string) {
-		logger.log(`toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "true"}'`);
+	private async toggle_visibility() {
+		logger.log(
+			`toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "visible"}'`
+		);
 
-		let visibility_feedback = false;
-
-		visibility_feedback = await this.playlist.toggle_visibility();
-
-		// if a feedback-path is given, write the feedback to it
-		if (osc_feedback_path !== undefined) {
-			this.osc_server.send_value(osc_feedback_path, visibility_feedback);
-		}
-
-		this.send_all_clients({
+		const message: JGCPSend.State = {
 			command: "state",
-			visibility: visibility_feedback
+			visibility: await this.playlist.toggle_visibility()
+		};
+
+		this.send_all_clients(message);
+
+		this.ws_server.get_connections("").forEach((ws_client) => {
+			ws_client?.send(JSON.stringify(message));
 		});
 	}
 
@@ -649,12 +622,21 @@ export default class Control {
 	 * @param message JSON-message to be sent
 	 */
 	private send_all_clients(message: JGCPSend.Message) {
+		const message_string = JSON.stringify(message);
+
 		// gather all the clients
 		const ws_clients = this.ws_server.get_connections("JGCP");
 
 		ws_clients.forEach((ws_client) => {
-			ws_client.send(JSON.stringify(message));
+			ws_client.send(message_string);
 		});
+
+		// if the command is "state" and includes "visibility"
+		if (message.command === "state" && typeof message.visibility === "boolean") {
+			this.ws_server.get_connections("").forEach((ws) => {
+				ws.send(message_string);
+			});
+		}
 	}
 
 	/**
@@ -679,7 +661,7 @@ export default class Control {
 				command: "clear"
 			};
 
-			ws.send(JSON.stringify(clear_message));
+			ws?.send(JSON.stringify(clear_message));
 		}
 	}
 
@@ -717,11 +699,11 @@ export default class Control {
 
 			ws_send_response("'command' is not of type 'string", false, ws);
 			return;
-		} else if (!Object.keys(this.ws_function_map).includes(data.command)) {
+		} else if (!Object.keys(this.client_ws_function_map).includes(data.command)) {
 			logger.error("can't parse JGCP-message: 'comand' is not implemented");
 			ws_send_response(`command '${data.command}' is not implemented`, false, ws);
 		} else {
-			void this.ws_function_map[data.command](data as never, ws);
+			void this.client_ws_function_map[data.command](data as never, ws);
 		}
 	}
 

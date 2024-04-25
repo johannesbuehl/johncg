@@ -40,13 +40,6 @@ export interface ConfigJSON {
 			port: number;
 		};
 	};
-	osc_server: {
-		port: number;
-	};
-	companion: {
-		address: string;
-		osc_port: number;
-	};
 }
 
 const config_path = "config.json";
@@ -84,13 +77,6 @@ const config_template: ConfigJSON = {
 		websocket: {
 			port: 0
 		}
-	},
-	osc_server: {
-		port: 0
-	},
-	companion: {
-		address: "template",
-		osc_port: 0
 	}
 };
 
@@ -163,8 +149,6 @@ class ConfigClass {
 		);
 		file_check &&= check_valid_port(config?.client_server?.http?.port);
 		file_check &&= check_valid_port(config?.client_server?.websocket?.port);
-		file_check &&= check_valid_port(config?.osc_server?.port);
-		file_check &&= check_valid_port(config?.companion?.osc_port);
 
 		return file_check;
 	}
@@ -228,14 +212,6 @@ class ConfigClass {
 
 	get client_server(): ConfigJSON["client_server"] {
 		return structuredClone(this.config.client_server);
-	}
-
-	get osc_server(): ConfigJSON["osc_server"] {
-		return structuredClone(this.config["osc_server"]);
-	}
-
-	get companion(): ConfigJSON["companion"] {
-		return structuredClone(this.config.companion);
 	}
 
 	get behaviour(): ConfigJSON["behaviour"] {

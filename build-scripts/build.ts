@@ -68,7 +68,6 @@ config_file.path = {
 	playlist: "Playlist/",
 	bible: "Bible/Luther-Bibel.json"
 };
-config_file.companion.address = "172.0.0.1";
 config_file.log_level = "INFO";
 
 fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
