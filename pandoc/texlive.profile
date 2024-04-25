@@ -2,12 +2,12 @@
 # It will NOT be updated and reflects only the
 # installation profile at installation time.
 selected_scheme scheme-custom
-TEXDIR pandoc/texlive
+TEXDIR texlive
 TEXMFCONFIG $TEXMFSYSCONFIG
 TEXMFHOME $TEXMFLOCAL
-TEXMFLOCAL pandoc/texlive/texmf-local
-TEXMFSYSCONFIG pandoc/texlive/texmf-config
-TEXMFSYSVAR pandoc/texlive/texmf-var
+TEXMFLOCAL texlive/texmf-local
+TEXMFSYSCONFIG texlive/texmf-config
+TEXMFSYSVAR texlive/texmf-var
 TEXMFVAR $TEXMFSYSVAR
 binary_windows 1
 collection-basic 1

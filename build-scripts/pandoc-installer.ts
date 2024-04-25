@@ -3,8 +3,26 @@ import fs from "fs";
 import path from "path";
 import StreamZip from "node-stream-zip";
 import child_process from "child_process";
+import readline from "node:readline/promises";
+import { stdin, stdout } from "process";
 
 void (async () => {
+	let license_message: string;
+	
+	if (process.platform === "win32") {
+		license_message = "You are about to download eisvogel, pandoc and texlive, which licenses differ from the one of JohnCG. Their respetive licenses can be found at https://raw.githubusercontent.com/Wandmalfarbe/pandoc-latex-template/master/LICENSE, https://raw.githubusercontent.com/jgm/pandoc/main/COPYRIGHT and https://www.tug.org/texlive/LICENSE.TL . By proceeding you acknowledge those.";
+	} else {
+		license_message = "You are about to download eisvogel which license differs from the one of JohnCG. It can be found at https://raw.githubusercontent.com/Wandmalfarbe/pandoc-latex-template/master/LICENSE . By proceeding you acknowledge it.";
+	}
+
+	const rl = readline.createInterface({ input: stdin, output: stdout });
+
+	const response = rl.question(license_message + " Proceed? (y/[n]) ");
+
+	if ((await response).toLowerCase() !== "y") {
+		process.exit(0);
+	}
+
 	const urls: Record<string, Record<string, string>> = {
 		win32: {
 			pandoc: "https://github.com/jgm/pandoc/releases/download/3.1.13/pandoc-3.1.13-windows-x86_64.zip",

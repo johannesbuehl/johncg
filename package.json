@@ -13,7 +13,7 @@
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
-		"build-release": "node build-scripts/build-build.js && node build-scripts/build.js",
+		"build": "node build-scripts/build-build.js && node build-scripts/build.js",
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
 		"templates-build": "node build-scripts/templates-build.js",

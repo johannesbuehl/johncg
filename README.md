@@ -31,7 +31,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
   - keyboard-shortcuts
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
 - create library src-folder
-- playout PDFs as base64 to make them work on all render-servers
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - create example-files for songs and psalm

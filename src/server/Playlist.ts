@@ -171,8 +171,8 @@ export default class Playlist {
 		}
 
 		// remove the item
-		const old_item = this.playlist_items.splice(position, 1);
-		void old_item[0].stop();
+		const old_item = this.playlist_items.splice(position, 1)[0];
+		void old_item.stop();
 
 		// now we have unsaved playlist-changes
 		this.changes = true;
@@ -439,7 +439,7 @@ export default class Playlist {
 	}
 
 	async set_visibility(visibility: boolean): Promise<boolean> {
-		await this.active_playlist_item.set_visibility(visibility);
+		await this.active_playlist_item?.set_visibility(visibility);
 
 		return casparcg.visibility;
 	}

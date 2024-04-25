@@ -165,9 +165,9 @@ export abstract class PlaylistItemBase {
 	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
 		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
-		return Promise.all(
+		return Promise.allSettled(
 			connections.map((connection) => {
-				return Promise.allSettled([this.play_media(connection), this.play_template(connection)]);
+				return Promise.all([this.play_media(connection), this.play_template(connection)]);
 			})
 		);
 	}
@@ -175,7 +175,7 @@ export abstract class PlaylistItemBase {
 	// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 	stop(_casparcg_connection?: CasparCGConnection) {}
 
-	private play_media(casparcg_connection: CasparCGConnection) {
+	protected play_media(casparcg_connection: CasparCGConnection) {
 		if (casparcg.visibility) {
 			const clip = this.media ?? "#00000000";
 
@@ -279,7 +279,7 @@ export abstract class PlaylistItemBase {
 
 		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
-		return Promise.all(
+		return Promise.allSettled(
 			connections.map((connection) => {
 				if (visibility) {
 					return Promise.allSettled([
@@ -325,7 +325,9 @@ export abstract class PlaylistItemBase {
 		);
 	}
 
-	protected casparcg_navigate() {
+	protected casparcg_navigate(): Promise<unknown>[] {
+		logger.debug(`jumping CasparCG-template: slide '${this.active_slide}'`);
+
 		return casparcg.casparcg_connections.map((casparcg_connection) => {
 			const promises = [];
 
@@ -333,8 +335,6 @@ export abstract class PlaylistItemBase {
 			if (this.multi_media) {
 				promises.push(this.play_media(casparcg_connection));
 			}
-
-			logger.debug(`jumping CasparCG-template: slide '${this.active_slide}'`);
 
 			// jump to the slide-number in casparcg
 			promises.push(
@@ -348,7 +348,7 @@ export abstract class PlaylistItemBase {
 				})
 			);
 
-			return Promise.allSettled(promises);
+			return Promise.all(promises);
 		});
 	}
 
