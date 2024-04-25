@@ -93,7 +93,7 @@ copy_module("pdfjs-dist");
 // temporary method until there is a solution for packaging sharp
 // create a script-file, that start node with the main.js
 create_launch_script("main.js", build_name);
-create_launch_script("pandoc-installer.js", "pandoc/install");
+create_launch_script("pandoc-installer.js", "pandoc/install", process.platform === "win32" ? "You are about to download pandoc and texlive, which licenses differ from the one of JohnCG. Their respetive licenses can be found at https://github.com/jgm/pandoc/blob/main/COPYRIGHT and https://www.tug.org/texlive/LICENSE.TL . Proceed?" : undefined);
 
 // create and copy the licenses
 // void lr.cli(["--config=build-scripts/license-reporter.config.ts"]);
@@ -131,14 +131,27 @@ copy_release_file("LICENSE", "LICENSE.txt");
 copy_release_dir(path.join(build_dir, "licenses"));
 
 // pack the files in a .tar.gz-file
-void tar.c({ gzip: true, file: release_dir + ".tar.gz", cwd: "dist" }, [path.relative("dist", release_dir)]);
+void tar.c({ gzip: true, file: release_dir + ".tar.br", cwd: "dist" }, [path.relative("dist", release_dir)]);
 
-function create_launch_script(pth: string, destination: string) {
+function create_launch_script(pth: string, destination: string, confirm?: string) {
 	const relative_path_prefix = "../".repeat((destination.match(/\//g) ?? []).length);
 
 	switch (process.platform) {
-		case "win32":
-			fs.writeFileSync(path.join(release_dir, destination + ".bat"), `cd /D "%~dp0"\n${relative_path_prefix}${exec_name} ${pth}\npause`);
+		case "win32": {
+				let text = "";
+
+				if (confirm !== undefined) {
+					text += `@echo off\nsetlocal\nSET /P AREYOUSURE="${confirm} (y/[n]) "\nIF /I "%AREYOUSURE%" NEQ "y" GOTO END\n`;
+				}
+			
+				text += `cd /D "%~dp0"\n${relative_path_prefix.replaceAll("/", "\\")}${exec_name} ${pth}\npause\n`;
+
+				if (confirm !== undefined) {
+					text += "\n:END\nendlocal";
+				}
+
+				fs.writeFileSync(path.join(release_dir, destination + ".bat"), text);
+			}
 			break;
 		case "linux":
 			fs.writeFileSync(path.join(release_dir, destination + ".sh"), `${relative_path_prefix}./${exec_name} ${pth}\nread -n1 -r -p "Press any key to continue..." key`);

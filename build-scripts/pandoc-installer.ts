@@ -46,7 +46,10 @@ void (async () => {
 	if (process.platform === "win32") {
 		fs.copyFileSync(path.join(download_dir.name, path.basename(urls.win32.pandoc).match(/(.*)\.zip$/)[1], "pandoc-3.1.13", "pandoc.exe"), "pandoc.exe");
 	
-		child_process.execSync(`${path.join(download_dir.name, "install-tl", "install-tl-20240423", "install-tl-windows.bat")} -portable -no-gui --profile texlive.profile`, { stdio: "inherit" });
+		// get the path with its changed filename
+		const dir = fs.readdirSync(path.join(download_dir.name, "install-tl")).filter((ele) => ele.match(/^install-tl-\d{8}$/))[0];
+
+		child_process.execSync(`${path.join(download_dir.name, "install-tl", dir, "install-tl-windows.bat")} -portable -no-gui --profile texlive.profile`, { stdio: "inherit" });
 	}
 
 	fs.rmSync(download_dir.name, { recursive: true, force: true });

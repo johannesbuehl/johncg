@@ -18,11 +18,10 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## roadmap
-- implement more playlist-items: Diashow / Multi-Image, Text
+- implement more playlist-items: Text
 - companion integration (buttons for song parts -> send name to casparcg)
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
-- create playlist-summarys or lyrics-sheets through pandoc
 - load files from disc always at item selection to stay up to date
 - create server-items at selection, delete after deselection to always stay up to date, but prevent multiple reloads (alternative: optional argument for accessing functions wether a reload should be done)
 - save file through interface instead of download
@@ -31,11 +30,11 @@ Generate graphics with song-lyrics or for other church-service-elements and play
   - tabindex for all elements
   - keyboard-shortcuts
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
-- change font-color of countdown
 - create library src-folder
 - playout PDFs as base64 to make them work on all render-servers
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
-- switch release to xz-compression
+- parse chords in songfile in preparation for chord-view
+- casparcg: if no connection on startup possible: try periodically to reconnect
