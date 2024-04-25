@@ -54,6 +54,7 @@ export interface SongFileMetadata {
 	Translation?: string;
 	Copyright?: string;
 	LangCount: number;
+	Chords?: Chords;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -90,6 +91,8 @@ export type ItemPartClient = TitlePartClient | LyricPartClient;
 export type SongPart = string[][][];
 export type SongParts = Record<string, SongPart>;
 
+export type Chords = Record<number, Record<number, string>>;
+
 /**
  * processes and saves song-files (*.sng)
  * They should be compatible with those created by songbeamer (no guarantee given)
@@ -111,7 +114,7 @@ export default class SongFile {
 		this.song_file_path = path;
 
 		if (path !== undefined) {
-			this.parse_song_text();
+			this.parse_song_file();
 		}
 	}
 
@@ -119,7 +122,7 @@ export default class SongFile {
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
 	 */
-	private parse_text_header(header: string): void {
+	private parse_metadata(header: string): void {
 		// split the header into the individual lines
 		const header_data: string[] = header.split(/\r?\n/);
 
@@ -154,14 +157,52 @@ export default class SongFile {
 				case "LangCount":
 					this.metadata[key] = Number(value);
 					break;
+				case "Chords":
+					this.metadata.Chords = this.parse_base64_chords(value);
+					break;
 				default:
 					break;
 			}
 		});
 	}
 
+	private parse_base64_chords(base64: string): Chords {
+		const return_object: Chords = {};
+
+		const chords = Buffer.from(base64, "base64").toString();
+
+		const chord_regex = /(?<position>\d+),(?<line>\d+),(?<chord>.*)\r/g;
+
+		let match = chord_regex.exec(chords);
+		while (match !== null) {
+			const check_number = (val: string): number | false => {
+				const number = Number(val);
+
+				if (Number.isNaN(number) || !Number.isInteger(number) || number < -1) {
+					return false;
+				} else {
+					return number;
+				}
+			};
+
+			const line = check_number(match.groups?.line);
+			const position = check_number(match.groups?.position);
+			const chord = match.groups?.chord;
+
+			if (line !== false && position !== false && typeof chord === "string") {
+				return_object[line] ??= {};
+
+				return_object[line][position] = chord;
+			}
+
+			match = chord_regex.exec(chords);
+		}
+
+		return return_object;
+	}
+
 	// parse the text-content
-	private parse_song_text() {
+	private parse_song_file() {
 		if (!this.song_file_path) {
 			return;
 		}
@@ -188,7 +229,7 @@ export default class SongFile {
 		const data = raw_data.split(/\r?\n---?(?:\r?\n|$)/);
 
 		// parse metadata of the header
-		this.parse_text_header(data[0]);
+		this.parse_metadata(data[0]);
 
 		// remove the header the array
 		data.splice(0, 1);

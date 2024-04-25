@@ -34,5 +34,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - create example-files for songs and psalm
 - move template-jump()-function into update() to prevent error messages in casparcg-log
-- parse chords in songfile in preparation for chord-view
 - casparcg: if no connection on startup possible: try periodically to reconnect
+- song-file: chords itself as chords and transpose them
