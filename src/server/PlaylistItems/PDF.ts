@@ -9,6 +9,13 @@ import Config, { get_casparcg_transition } from "../config.ts";
 import { CasparCGConnection, CasparCGResolution, casparcg } from "../CasparCG.ts";
 import { APIRequest, Commands, PlayHtmlParameters } from "casparcg-connection";
 
+// prettier-ignore
+let pdfjs: typeof import("pdfjs-dist/legacy/build/pdf.mjs",
+{ with: { "resolution-mode": "import" } });
+void (async () => {
+	pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+})();
+
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
 	file: string;
@@ -40,8 +47,6 @@ export default class PDF extends PlaylistItemBase {
 
 		if (displayable) {
 			void (async () => {
-				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
 				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
 
 				logger.debug(`loading PDF-file (${pth})`);
