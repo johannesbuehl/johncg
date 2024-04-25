@@ -185,7 +185,7 @@ export default class SongFile {
 		const raw_data = iconv.decode(raw_data_buffer, encoding);
 
 		// the different slides are seperated by a line of 2 or 3 dashes
-		const data = String(raw_data).split(/\r?\n---?\r?\n/);
+		const data = raw_data.split(/\r?\n---?(?:\r?\n|$)/);
 
 		// parse metadata of the header
 		this.parse_text_header(data[0]);

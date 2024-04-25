@@ -2,10 +2,10 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { onMounted, ref } from "vue";
-
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import type { CommentProps } from "@server/PlaylistItems/Comment";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
+	import type { CommentProps } from "@server/PlaylistItems/Comment";
 
 	library.add(fas.faPlus);
 
@@ -26,7 +26,7 @@
 			emit("add", {
 				type: "comment",
 				caption: text_input.value,
-				color: "#ffffff"
+				color: "#FF8000"
 			});
 		}
 	}

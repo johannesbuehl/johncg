@@ -1,7 +1,8 @@
-import { get_song_path } from "../config.ts";
+import Config from "../config.ts";
 import { recurse_object_check } from "../lib.ts";
+import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile.ts";
 import type { ItemPart, LyricPart } from "./SongFile.ts";
 
@@ -16,6 +17,8 @@ export interface SongProps extends ItemPropsBase {
 	verse_order?: string[];
 	languages?: number[];
 }
+
+export type ClientSongItem = SongProps & ClientItemBase;
 
 export interface SongTemplateData {
 	parts: ItemPart[];
@@ -113,6 +116,8 @@ export default class Song extends PlaylistItemBase {
 
 		this.active_slide_number = slide;
 
+		void this.casparcg_navigate();
+
 		return this.active_slide_number;
 	}
 
@@ -129,15 +134,20 @@ export default class Song extends PlaylistItemBase {
 		const new_active_slide_number = this.active_slide + steps;
 		let slide_steps = 0;
 
-		// new active item has negative index -> roll over to the last slide of the previous element
+		// new active slide has negative index -> roll over to the last slide of the previous item
 		if (new_active_slide_number < 0) {
 			slide_steps = -1;
 
 			// index is bigger than the slide-count -> roll over to zero
 		} else if (new_active_slide_number >= this.slide_count) {
 			slide_steps = 1;
+
+			// new active slide is from this object
 		} else {
 			this.active_slide_number = new_active_slide_number;
+
+			// display the slide
+			void this.casparcg_navigate();
 		}
 
 		return slide_steps;
@@ -225,11 +235,11 @@ export default class Song extends PlaylistItemBase {
 
 	cache_song_file() {
 		try {
-			this.song_file = new SongFile(get_song_path(this.props.file));
+			this.song_file = new SongFile(Config.get_path("song", this.props.file));
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				console.error(`song '${this.props.file}' does not exist`);
+				logger.error(`can't open song: '${this.props.file}' does not exist`);
 
 				this.is_displayable = false;
 
@@ -242,12 +252,17 @@ export default class Song extends PlaylistItemBase {
 
 	private path_to_casparcg_media(media?: string): string {
 		if (media !== undefined) {
-			// test wether it is a color-string
-			const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
+			// check, wether it is a songbeamer-video-path
+			if (media.slice(0, 11).toLowerCase() === "bgvideos://") {
+				media = media.slice(11);
+			} else {
+				// test wether it is a color-string
+				const test_rgb_string = media.match(/^#(?:(?:[\dA-Fa-f]{2}){3})$/);
 
-			// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
-			if (test_rgb_string) {
-				return media;
+				// if it is an rgb-string, put the alpha-value at the beginning (something something CasparCG)
+				if (test_rgb_string) {
+					return media;
+				}
 			}
 
 			// make it all uppercase and remove the extension to match CasparCG-clips
@@ -260,5 +275,35 @@ export default class Song extends PlaylistItemBase {
 		}
 
 		return "#00000000";
+	}
+
+	get_markdown_export_string(full: boolean): string {
+		let return_string = `# Song: "${this.props.caption}" (`;
+
+		if (this.song_file.metadata.ChurchSongID !== undefined) {
+			return_string += `${this.song_file.metadata.ChurchSongID}: `;
+		}
+
+		const language_index = this.props.languages ? this.props.languages[0] : 0;
+
+		return_string += `${this.song_file.metadata.Title[language_index]})\n\n`;
+
+		if (full) {
+			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
+
+			parts.forEach((part) => {
+				return_string += `**${part}**  `;
+
+				this.song_file.get_part(part).slides.forEach((slide) => {
+					slide.forEach((line) => {
+						return_string += `\n${line[language_index]}  `;
+					});
+				});
+
+				return_string += "\n\n";
+			});
+		}
+
+		return return_string;
 	}
 }

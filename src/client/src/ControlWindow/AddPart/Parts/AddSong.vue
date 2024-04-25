@@ -2,16 +2,16 @@
 	import { onMounted, ref, toRaw, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import SongPartSelector from "./SongPartSelector.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import SongPartSelector from "@/ControlWindow/ItemDialogue/SongPartSelector.vue";
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{
@@ -83,7 +83,7 @@
 		const props: SongProps = {
 			type: "song",
 			caption: file.name,
-			color: "#0000ff",
+			color: "#0000FF",
 			file: file.path
 		};
 

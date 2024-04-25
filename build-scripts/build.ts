@@ -33,7 +33,7 @@ const release_dir = path.join("dist", build_name);
 fs.rmSync(build_dir, { recursive: true, force: true });
 fs.rmSync(release_dir, { recursive: true, force: true });
 fs.mkdirSync(build_dir, { recursive: true });
-fs.mkdirSync(path.join("dist", build_name), { recursive: true });
+fs.mkdirSync(release_dir, { recursive: true });
 
 const copy_build_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(build_dir, dest ?? path.basename(file)));
 // const copy_build_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(build_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
@@ -44,6 +44,7 @@ const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions)
 execSync("npm run server-build");
 execSync("npm run client-build");
 execSync("npm run templates-build");
+execSync("npm run pandoc-build");
 
 // temporary method until there is a solution for packaging sharp
 // // create sea-prep.blob
@@ -61,19 +62,21 @@ copy_build_file(process.execPath, exec_name);
 // load the config-file, censor the file-paths and store it for the relase
 const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
 config_file.path = {
-	song: "C:/path/to/song/directory",
-	pdf: "D:/path/to/pdf/directory",
-	psalm: "E:/path/to/psalm/directory",
-	playlist: "F:/path/to/playlist/directory",
-	bible: "Bibles/Luther-Bibel.json"
+	song: "Song/",
+	pdf: "PDF/",
+	psalm: "Psalm/",
+	playlist: "Playlist/",
+	bible: "Bible/Luther-Bibel.json"
 };
-config_file.casparcg.templates = "e:/path/to/the/casparcg/templates/directory";
+config_file.companion.address = "172.0.0.1";
+config_file.log_level = "INFO";
+
 fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
 
 // copy the file to the output
 copy_release_file(path.join(build_dir, exec_name));
 copy_release_file(path.join(build_dir, "main.js"));
-copy_release_dir("Bibles");
+fs.readdirSync("files").forEach((dir) => copy_release_dir(path.join("files", dir)));
 copy_release_dir(path.join(build_dir, "client"));
 const copy_module = (name: string) => {
 	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
@@ -81,20 +84,16 @@ const copy_module = (name: string) => {
 };
 copy_release_dir(path.join(build_dir, "Templates"));
 copy_release_dir("casparcg/Media");
+copy_release_dir(path.join(build_dir, "pandoc"));
+copy_release_file("pandoc/texlive.profile", "pandoc/texlive.profile");
 copy_module("@img");
 copy_module("canvas");
 copy_module("pdfjs-dist");
 
 // temporary method until there is a solution for packaging sharp
 // create a script-file, that start node with the main.js
-switch (process.platform) {
-	case "win32":
-		fs.writeFileSync(path.join(release_dir, build_name + ".bat"), `${exec_name} main.js\npause`);
-		break;
-	case "linux":
-		fs.writeFileSync(path.join(release_dir, build_name + ".sh"), `./${exec_name} main.js\nread -n1 -r -p "Press any key to continue..." key`);
-		break;
-}
+create_launch_script("main.js", build_name);
+create_launch_script("pandoc-installer.js", "pandoc/install");
 
 // create and copy the licenses
 // void lr.cli(["--config=build-scripts/license-reporter.config.ts"]);
@@ -132,4 +131,18 @@ copy_release_file("LICENSE", "LICENSE.txt");
 copy_release_dir(path.join(build_dir, "licenses"));
 
 // pack the files in a .tar.gz-file
-void tar.c({ gzip: true, file: release_dir + ".tar.gz", cwd: "dist" }, [path.relative("dist", release_dir)]);
+void tar.c({ gzip: true, file: release_dir + ".tar.br", cwd: "dist" }, [path.relative("dist", release_dir)]);
+
+function create_launch_script(pth: string, destination: string) {
+	const relative_path_prefix = "../".repeat((destination.match(/\//g) ?? []).length);
+
+	switch (process.platform) {
+		case "win32": {
+				fs.writeFileSync(path.join(release_dir, destination + ".bat"), `@echo off\ncd /D "%~dp0"\n${relative_path_prefix.replaceAll("/", "\\")}${exec_name} ${pth}\npause\n`);
+			}
+			break;
+		case "linux":
+			fs.writeFileSync(path.join(release_dir, destination + ".sh"), `${relative_path_prefix}./${exec_name} ${pth}\nread -n1 -r -p "Press any key to continue..." key`);
+			break;
+	}
+}

@@ -1,0 +1,28 @@
+{
+	"metadata": {
+		"indent": true,
+		"caption": "Example Psalm",
+		"id": "Book ID",
+		"book": "Book of Examples"
+	},
+	"text": [
+		[
+			[
+				"First line of the first part",
+				"Another line"
+			],
+			[
+				"First line of the seond part which is indented,",
+				"which can be toggled in the metada-field of the file"
+			],
+			[
+				"and another one"
+			]
+		],[
+			[
+				"Second page",
+				"indentation on the second page just continues"
+			]
+		]
+	]
+}

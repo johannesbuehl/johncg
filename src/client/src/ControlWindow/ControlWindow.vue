@@ -7,11 +7,11 @@
 	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
-
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import PlaylistFile from "./PlaylistFile.vue";
+
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
@@ -44,7 +44,7 @@
 		let prevent_default = false;
 
 		// execute the navigation-keys only if the slides are visible
-		if (control_window_state.value === ControlWindowState.Playlist && !event.repeat) {
+		if (control_window_state.value === ControlWindowState.Slides && !event.repeat) {
 			prevent_default = true;
 
 			switch (event.code) {
@@ -55,6 +55,11 @@
 				case "PageDown":
 				case "ArrowRight":
 					navigate("slide", 1);
+					break;
+				case "KeyB":
+					if (props.server_state.visibility !== undefined) {
+						visibility(!props.server_state.visibility);
+					}
 					break;
 				default:
 					prevent_default = false;
@@ -124,7 +129,7 @@
 		/>
 		<PlaylistItemsList
 			v-if="
-				control_window_state === ControlWindowState.Playlist ||
+				control_window_state === ControlWindowState.Slides ||
 				control_window_state === ControlWindowState.Add ||
 				control_window_state === ControlWindowState.Edit
 			"
@@ -139,11 +144,13 @@
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="slides?.item && control_window_state === ControlWindowState.Playlist"
+			v-if="typeof slides?.item === 'number' && control_window_state === ControlWindowState.Slides"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			@select_slide="slides?.item ? emit('select_slide', slides.item, $event) : undefined"
+			@select_slide="
+				slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
+			"
 		/>
 		<AddPart
 			v-else-if="control_window_state === ControlWindowState.Add"
@@ -154,7 +161,7 @@
 		/>
 		<EditPart
 			v-else-if="control_window_state === ControlWindowState.Edit"
-			:item_props="selected ? playlist?.playlist_items[selected] : undefined"
+			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
 			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"

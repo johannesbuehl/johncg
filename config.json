@@ -8,10 +8,9 @@
 		"song": "G:/Meine Ablage/Streaming/80_Songs/Lieder",
 		"psalm": "G:/Meine Ablage/Streaming/80_Songs/Psalme",
 		"pdf": "g:/Meine Ablage/Streaming/60_PDF/",
-		"bible": "Bibles/Luther-Bibel.json"
+		"bible": "files/Bible/Luther-Bibel.json"
 	},
 	"casparcg": {
-		"templates": "g:/Meine Ablage/Streaming/51_CasparCG-Templates/",
 		"transition_length": "12.5",
 		"connections": [
 			{

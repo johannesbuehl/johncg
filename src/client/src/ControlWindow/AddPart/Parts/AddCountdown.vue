@@ -2,16 +2,17 @@
 	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
-	import CountdownEditor from "./CountdownEditor.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 
 	import type { MediaFile } from "@server/search_part";
 	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { countdown_title_map } from "@server/lib";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -28,6 +29,7 @@
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
 	const font_size = ref<number>(20);
+	const font_color = ref<string>("#FFFFFF");
 
 	const media_selection = defineModel<MediaFile>({});
 
@@ -69,10 +71,11 @@
 		if (media_selection.value !== undefined) {
 			return {
 				type: "countdown",
-				caption: "countdown-placeholder",
-				color: "#008800",
+				caption: `${countdown_title_map[countdown_mode.value]}: ${time.value}`,
+				color: "#FF0080",
 				media: media_selection.value.path,
 				font_size: font_size.value,
+				font_color: font_color.value,
 				mode: countdown_mode.value,
 				position: position.value,
 				show_seconds: show_seconds.value,
@@ -116,8 +119,6 @@
 							if (f.search_data[search_string.id] !== undefined) {
 								return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
 							} else {
-								console.debug("empty");
-
 								return search_string.value === "";
 							}
 						} else {
@@ -169,6 +170,7 @@
 				v-model:position="position"
 				v-model:show_seconds="show_seconds"
 				v-model:time="time"
+				v-model:font_color="font_color"
 			/>
 		</template>
 	</FileDialogue>

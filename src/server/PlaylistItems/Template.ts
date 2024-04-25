@@ -1,6 +1,6 @@
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface TemplateTemplate {
 	template: string;
@@ -11,6 +11,8 @@ export interface TemplateProps extends ItemPropsBase {
 	type: "template";
 	template: TemplateTemplate;
 }
+
+export type ClientTemplateItem = TemplateProps & ClientItemBase;
 
 export interface ClientTemplateSlides extends ClientItemSlidesBase {
 	type: "template";
@@ -89,5 +91,18 @@ export default class TemplateItem extends PlaylistItemBase {
 
 	get template(): TemplateTemplate {
 		return this.props.template;
+	}
+
+	get_markdown_export_string(full: boolean): string {
+		let return_string = `# Template: "${this.props.caption}" (${this.props.template.template})`;
+
+		if (this.props.template.data !== undefined && full) {
+			return_string +=
+				"\n```json\n" + JSON.stringify(this.props.template.data, undefined, "\t") + "\n```";
+		}
+
+		return_string += "\n\n";
+
+		return return_string;
 	}
 }

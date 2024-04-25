@@ -1,11 +1,11 @@
 import WebSocket, { RawData } from "ws";
-
-import { CasparCG, ClipInfo } from "casparcg-connection";
-import { XMLParser } from "fast-xml-parser";
 import fs from "fs";
+import { CasparCG } from "casparcg-connection";
+import child_process from "child_process";
+import tmp from "tmp";
 
 import Playlist from "./Playlist.ts";
-import type { ActiveItemSlide, CasparCGResolution } from "./Playlist.ts";
+import type { ActiveItemSlide } from "./Playlist.ts";
 import OSCServer from "./servers/osc-server.ts";
 import type { OSCFunctionMap, OSCServerArguments } from "./servers/osc-server.ts";
 import WebsocketServer from "./servers/websocket-server.ts";
@@ -15,31 +15,17 @@ import type {
 } from "./servers/websocket-server.ts";
 import * as JGCPSend from "./JGCPSendMessages.ts";
 import * as JGCPRecv from "./JGCPReceiveMessages.ts";
-import type { CasparCGConnectionSettings } from "./config.ts";
 
-import Config, { get_playlist_path } from "./config.ts";
+import Config, { CasparCGConnectionSettings } from "./config.ts";
 import SearchPart, { ItemFile } from "./search_part.ts";
-import { ItemProps } from "./PlaylistItems/PlaylistItem.ts";
+import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
-
-interface CasparCGPathsSettings {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	"data-path": string;
-	"initial-path": string;
-	"log-path": string;
-	"media-path": string;
-	"template-path": string;
-	/* eslint-enable @typescript-eslint/naming-convention */
-}
+import { casparcg } from "./CasparCG.ts";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
 	settings: CasparCGConnectionSettings;
-	paths: CasparCGPathsSettings;
-	media: ClipInfo[];
-	template: string[];
-	resolution: CasparCGResolution;
 	framerate: number;
 }
 
@@ -48,8 +34,6 @@ export default class Control {
 	private ws_server: WebsocketServer;
 	private osc_server: OSCServer;
 	private search_part: SearchPart;
-
-	readonly casparcg_connections: CasparCGConnection[] = [];
 
 	// mapping of the OSC-commands to the functions
 	private readonly osc_function_map: OSCFunctionMap = {
@@ -66,8 +50,8 @@ export default class Control {
 			},
 			output: {
 				visibility: {
-					set: async (value: boolean) => this.set_visibility(value),
-					toggle: async (value: string) => this.toggle_visibility(value)
+					set: (value: boolean) => this.set_visibility(value),
+					toggle: (value: string) => this.toggle_visibility(value)
 				}
 			}
 		}
@@ -99,7 +83,9 @@ export default class Control {
 			this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
-			this.get_item_file(msg.type, msg.file, ws)
+			this.get_item_file(msg.type, msg.file, ws),
+		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
+			this.create_playlist_pdf(ws, msg.type)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -122,113 +108,9 @@ export default class Control {
 		logger.log("starting osc-server");
 		this.osc_server = new OSCServer(osc_server_parameters, this.osc_function_map);
 
-		const xml_parser = new XMLParser();
-
 		this.playlist = new Playlist();
 
-		// create the CasparCG-connections
-		// eslint-disable-next-line @typescript-eslint/no-misused-promises
-		Config.casparcg.connections.forEach(async (connection_setting) => {
-			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
-
-			const connection: CasparCG = new CasparCG({
-				...connection_setting,
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				autoConnect: true
-			});
-
-			let casparcg_config;
-
-			try {
-				casparcg_config = (await (await connection.infoConfig()).request).data;
-			} catch (e) {
-				if (e instanceof Error) {
-					logger.error(
-						`Can't add CasparCG-connection (${connection_setting.host}:${connection_setting.port})`
-					);
-				} else {
-					logger.error(
-						`Can't add CasparCG-connection ${JSON.stringify(connection_setting)}: unknown exception`
-					);
-				}
-
-				if (e instanceof TypeError) {
-					return;
-				}
-			}
-
-			let resolution: CasparCGResolution = {
-				height: 1080,
-				width: 1920
-			};
-			let framerate: number = 25;
-
-			let video_mode_regex_results: RegExpMatchArray | undefined | null;
-
-			if (casparcg_config?.channels !== undefined) {
-				video_mode_regex_results = casparcg_config?.channels[
-					connection_setting.channel - 1
-				].videoMode?.match(
-					/(?:(?<dci>dci)?(?:(?<width>\d+)x)?(?<height>\d+)[pi](?<framerate>\d{4})|(?<mode>PAL|NTSC))/
-				);
-			}
-
-			if (video_mode_regex_results?.groups !== undefined) {
-				// if the resolution is given as PAL or NTSC, convert it
-				if (video_mode_regex_results.groups.mode) {
-					switch (video_mode_regex_results.groups.mode) {
-						case "PAL":
-							resolution = {
-								width: 720,
-								height: 576
-							};
-							framerate = 25;
-							break;
-						case "NTSC":
-							resolution = {
-								width: 720,
-								height: 480
-							};
-							framerate = 29.97;
-							break;
-					}
-				} else {
-					resolution = {
-						width:
-							(Number(
-								video_mode_regex_results.groups.width ?? video_mode_regex_results.groups.height
-							) /
-								9) *
-							16,
-						height: Number(video_mode_regex_results.groups.height)
-					};
-					framerate = Number(video_mode_regex_results.groups.framerate) / 100;
-				}
-			}
-
-			logger.log(`using resolution: '${resolution.width}x${resolution.height}p${framerate}'`);
-
-			const casparcg_connection: CasparCGConnection = {
-				connection,
-				settings: connection_setting,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-				paths: (
-					xml_parser.parse(
-						((await (await connection.infoPaths()).request)?.data as string) ?? ""
-					) as { paths: object }
-				)?.paths as CasparCGPathsSettings,
-				media: (await (await connection.cls()).request)?.data ?? [],
-				template: (await (await connection.tls()).request)?.data ?? [],
-				resolution,
-				framerate
-			};
-
-			// add the connection to the stored connections
-			this.casparcg_connections.push(casparcg_connection);
-			this.playlist.add_casparcg_connection(casparcg_connection);
-		});
-
-		this.search_part = new SearchPart(this.casparcg_connections);
+		this.search_part = new SearchPart();
 	}
 
 	private new_playlist(ws: WebSocket) {
@@ -236,7 +118,6 @@ export default class Control {
 			logger.log("creating new playlist");
 
 			this.playlist = new Playlist();
-			this.casparcg_connections.forEach((con) => this.playlist.add_casparcg_connection(con));
 
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
@@ -256,26 +137,19 @@ export default class Control {
 		logger.log(`lading playlist (${playlist_path})`);
 
 		try {
-			new_playlist = new Playlist(
-				this.casparcg_connections,
-				get_playlist_path(playlist_path),
-				() => {
-					this.send_playlist();
-				}
-			);
+			new_playlist = new Playlist(Config.get_path("playlist", playlist_path), () => {
+				this.send_playlist();
+			});
 		} catch (e) {
 			logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
 			ws_send_response("invalid playlist-file", false, ws);
 			return;
 		}
 
-		// destroy the previous opened playlist
-		logger.debug("destroying existing playlist");
-		this.playlist.destroy();
 		this.playlist = new_playlist;
 
 		// send the playlist to all clients
-		this.send_playlist(Array.from(Array(this.playlist.playlist_items.length).keys()));
+		this.send_playlist(undefined, undefined, undefined, true);
 
 		// send the current state to all clients
 		this.send_state();
@@ -299,13 +173,15 @@ export default class Control {
 	private send_playlist(
 		new_item_order: number[] = Array.from(Array(this.playlist.playlist_items.length).keys()),
 		client_id?: string,
-		ws?: WebSocket
+		ws?: WebSocket,
+		new_playlist?: boolean
 	) {
 		const response_playlist_items: JGCPSend.Playlist = {
 			command: "playlist_items",
 			new_item_order,
 			...this.playlist.create_client_object_playlist(),
-			client_id
+			client_id,
+			new: new_playlist
 		};
 
 		if (ws) {
@@ -343,16 +219,16 @@ export default class Control {
 		// type-check the item
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
-				if (this.playlist?.casparcg_connections.length > 0) {
+				if (casparcg.casparcg_connections.length > 0) {
 					const message: JGCPSend.ItemSlides = {
 						command: "item_slides",
 						item,
 						client_id,
-						resolution: this.playlist?.casparcg_connections[0].resolution,
+						resolution: Config.casparcg_resolution,
 						...(await this.playlist?.create_client_object_item_slides(item))
 					};
 
-					logger.debug("sending item-slides for item 'item' to client");
+					logger.debug(`sending item-slides for item '${item}' to client`);
 
 					ws?.send(JSON.stringify(message));
 
@@ -486,19 +362,13 @@ export default class Control {
 	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private async set_visibility(
-		visibility: boolean,
-		client_id?: string,
-		ws?: WebSocket
-	): Promise<void> {
+	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket) {
 		if (typeof visibility === "boolean") {
 			logger.log(`changed CasparCG-visibility: '${visibility ? "visible" : "hidden"}'`);
 
-			await this.playlist.set_visibility(visibility);
-
 			this.send_all_clients({
 				command: "state",
-				visibility: this.playlist.visibility
+				visibility: await this.playlist.set_visibility(visibility)
 			});
 
 			ws_send_response("visibility has been set", true, ws);
@@ -538,7 +408,7 @@ export default class Control {
 
 	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
 		logger.log(
-			`adding item: ${index !== undefined ? `position: '${index}'` : "append"}' ${JSON.stringify(props)}`
+			`adding item: ${index !== undefined ? `position: '${index}'` : "append"} ' ${JSON.stringify(props)}`
 		);
 
 		try {
@@ -565,7 +435,7 @@ export default class Control {
 		ws_send_response("added item to playlist", true, ws);
 	}
 
-	private update_item(index: number, props: ItemProps, ws: WebSocket) {
+	private update_item(index: number, props: ClientPlaylistItem, ws: WebSocket) {
 		let result: boolean;
 
 		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);
@@ -703,10 +573,61 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private async toggle_visibility(osc_feedback_path?: string): Promise<void> {
-		logger.log(
-			`toggling CasparCG-visibility: '${this.playlist.visibility ? "visible" : "hidden"}'`
-		);
+	private create_playlist_pdf(ws: WebSocket, type: JGCPRecv.CreatePlaylistPDF["type"]) {
+		const markdown = this.playlist.get_playlist_markdown(type === "full");
+
+		const markdown_file = tmp.fileSync({ postfix: ".md" });
+		const pdf_file = tmp.fileSync({ postfix: ".pdf" });
+
+		fs.writeFile(markdown_file.name, markdown, { encoding: "utf-8" }, () => {
+			// use different commands based on the operating system
+			let command: string;
+
+			switch (process.platform) {
+				case "win32":
+					command = `.\\pandoc\\pandoc.exe --pdf-engine pandoc/texlive/bin/windows/pdflatex.exe`;
+					break;
+				case "linux":
+					command = "pandoc";
+					break;
+			}
+
+			command += ` ${markdown_file.name} -o ${pdf_file.name} --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
+
+			let message: JGCPSend.PlaylistPDF;
+
+			try {
+				child_process.execSync(command);
+
+				logger.log(`creating ${type}-PDF`);
+
+				message = {
+					command: "playlist_pdf",
+					playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64")
+				};
+			} catch (e) {
+				let error_text: string;
+
+				if (e instanceof Error) {
+					error_text = `${e.name}: ${e.message}`;
+				} else {
+					error_text = `${e}`;
+				}
+
+				logger.error(`can't create PDF: ${error_text}`);
+
+				return;
+			} finally {
+				fs.rm(markdown_file.name, () => {});
+				fs.rm(pdf_file.name, () => {});
+			}
+
+			ws.send(JSON.stringify(message));
+		});
+	}
+
+	private async toggle_visibility(osc_feedback_path?: string) {
+		logger.log(`toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "true"}'`);
 
 		let visibility_feedback = false;
 
@@ -716,6 +637,11 @@ export default class Control {
 		if (osc_feedback_path !== undefined) {
 			this.osc_server.send_value(osc_feedback_path, visibility_feedback);
 		}
+
+		this.send_all_clients({
+			command: "state",
+			visibility: visibility_feedback
+		});
 	}
 
 	/**

@@ -53,7 +53,7 @@
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"
-				@template_load="template_loaded($event, index)"
+				@onLoaded="template_loaded($event, index)"
 				@click="emit('select_slide', index)"
 			/>
 		</div>

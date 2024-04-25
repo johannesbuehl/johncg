@@ -3,15 +3,15 @@
 
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
-	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ClientTemplateItem } from "@server/PlaylistItems/Template";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;
 		item_index: number;
 	}>();
 
-	const item_props = defineModel<TemplateProps>("item_props", { required: true });
+	const item_props = defineModel<ClientTemplateItem>("item_props", { required: true });
 	const template_data = ref<object>(item_props.value.template.data ?? {});
 
 	watch(

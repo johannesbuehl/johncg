@@ -1,27 +1,27 @@
 <script setup lang="ts">
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { ref } from "vue";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import BibleSelector, {
 		chapter_verse_selection_to_props,
 		get_book_from_id
-	} from "./BibleSelector.vue";
+	} from "@/ControlWindow/ItemDialogue/BibleSelector.vue";
+
+	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
+	import { create_bible_citation_string } from "@server/lib";
 
 	library.add(fas.faPlus);
 
-	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
-	import { ref } from "vue";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { create_bible_citation_string } from "@server/lib";
-
 	const props = defineProps<{
 		bible?: BibleFile;
-		ws: WebSocket;
 	}>();
 
 	const emit = defineEmits<{
 		add: [bible_props: BibleProps];
+		refresh: [];
 	}>();
 
 	const book_selection = defineModel<Book>("book_selection");
@@ -41,7 +41,7 @@
 					get_book_from_id(props.bible, book_selection.value.id).name,
 					chapters
 				),
-				color: "#ff0000",
+				color: "#0080FF",
 				book_id: book_selection.value.id,
 				chapters
 			};
@@ -55,8 +55,8 @@
 	<BibleSelector
 		v-model:book_selection="book_selection"
 		v-model:chapter_verse_selection="chapter_verse_selection"
-		:ws="ws"
 		:bible="bible"
+		@refresh="emit('refresh')"
 	>
 		<MenuButton @click="add_item()">
 			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Bible

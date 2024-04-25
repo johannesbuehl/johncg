@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface MediaProps extends ItemPropsBase {
 	type: "media";
 	media: string;
 	loop: boolean;
 }
+
+export type ClientMediaItem = MediaProps & ClientItemBase;
 
 export interface ClientMediaProps extends ClientItemSlidesBase {
 	type: "media";
@@ -89,5 +91,17 @@ export default class Media extends PlaylistItemBase {
 
 	get template(): undefined {
 		return undefined;
+	}
+
+	get_markdown_export_string(full: boolean): string {
+		let return_string = `# Media: "${this.props.caption}" (${this.props.media})`;
+
+		if (full) {
+			return_string += `\nLoop: \`${this.props.loop === true}\``;
+		}
+
+		return_string += "\n\n";
+
+		return return_string;
 	}
 }

@@ -12,14 +12,14 @@
 	import { ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import FileItem from "./FileItem.vue";
-	import MenuButton from "../MenuBar/MenuButton.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { File } from "@server/search_part";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faArrowsRotate);
 
@@ -91,7 +91,7 @@
 						:expand="
 							search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
 						"
-						@choose="(f, t) => emit('choose', f, t)"
+						@choose="(f, t) => (f !== undefined ? emit('choose', f, t) : undefined)"
 					/>
 					<div class="button_wrapper" v-if="!!slots.buttons">
 						<slot name="buttons"></slot>

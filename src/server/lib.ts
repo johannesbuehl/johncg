@@ -1,4 +1,5 @@
-import { BibleProps } from "./PlaylistItems/Bible";
+import type { BibleProps } from "./PlaylistItems/Bible";
+import type { CountdownMode } from "./PlaylistItems/Countdown";
 
 export function recurse_object_check(obj: unknown, template: unknown): boolean {
 	if (typeof obj === "object" && typeof template === "object") {
@@ -77,3 +78,10 @@ export function create_bible_citation_string(book_id: string, chapters: BiblePro
 
 	return `${book_id} ${chapter_strings.join("; ")}`;
 }
+
+export const countdown_title_map: Record<CountdownMode, string> = {
+	clock: "Clock",
+	stopwatch: "Stopwatch",
+	duration: "Countdown (duration)",
+	end_time: "Countdown (end time)"
+};

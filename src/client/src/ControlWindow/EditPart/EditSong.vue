@@ -1,11 +1,10 @@
 <script setup lang="ts">
-	import { nextTick, onMounted, ref, watch } from "vue";
+	import { onMounted, onUnmounted, ref, toRaw, watch } from "vue";
 
-	import SongPartSelector from "../AddPart/Parts/Song/SongPartSelector.vue";
+	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import type { SongProps } from "@server/PlaylistItems/Song";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type { ClientSongItem, SongProps } from "@server/PlaylistItems/Song";
 	import type { SongFile } from "@server/search_part";
 
 	const props = defineProps<{
@@ -17,15 +16,11 @@
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
-	const song_props = defineModel<SongProps>("item_props", { required: true });
-
-	let song_loaded = false;
+	const song_props = defineModel<ClientSongItem>("item_props", { required: true });
 
 	watch(
 		() => props.song_file,
 		(new_song_data) => {
-			song_loaded = false;
-
 			if (new_song_data !== undefined) {
 				verse_order.value =
 					song_props.value.verse_order ?? new_song_data[0].data?.parts.default ?? [];
@@ -45,28 +40,13 @@
 				} else {
 					languages.value = default_languages;
 				}
-
-				nextTick().then(() => {
-					song_loaded = true;
-				});
 			}
 		}
 	);
 
-	// when something gets changed, fire an update
-	watch(
-		(): [string[], [number, boolean][]] => [verse_order.value, languages.value],
-		([verse_order, languages]: [string[], [number, boolean][]]) => {
-			if (song_loaded) {
-				// store the new verse-order in the song-props
-				song_props.value.verse_order = verse_order;
-				song_props.value.languages = languages.filter((ele) => ele[1]).map((ele) => ele[0]);
-
-				update();
-			}
-		},
-		{ deep: true }
-	);
+	onUnmounted(() => {
+		update();
+	});
 
 	// whenever the song changes, request the SongResults
 	watch(() => song_props.value.file, request_song_data);
@@ -84,13 +64,53 @@
 	}
 
 	function update() {
-		const message: JGCPRecv.UpdateItem = {
-			command: "update_item",
-			index: props.item_index,
-			props: song_props.value
-		};
+		const return_props = create_props();
 
-		props.ws.send(JSON.stringify(message));
+		if (return_props !== undefined) {
+			const message: JGCPRecv.UpdateItem = {
+				command: "update_item",
+				index: props.item_index,
+				props: return_props
+			};
+
+			props.ws.send(JSON.stringify(message));
+		}
+	}
+
+	function create_props(): ClientSongItem | undefined {
+		if (
+			props.song_file !== undefined &&
+			props.song_file.length > 0 &&
+			props.song_file[0].data !== undefined
+		) {
+			const return_props = structuredClone(toRaw(song_props.value));
+
+			const default_parts = props.song_file[0].data.parts.default;
+			if (
+				default_parts.length !== verse_order.value.length ||
+				!verse_order.value.every((verse, index) => {
+					return verse === default_parts[index];
+				})
+			) {
+				return_props.verse_order = verse_order.value;
+			} else {
+				return_props.verse_order = undefined;
+			}
+
+			if (
+				languages.value.some((val, index) => {
+					return val[0] !== index || val[1] === false;
+				})
+			) {
+				return_props.languages = languages.value
+					.filter(([number, active]) => active)
+					.map(([number, active]) => number);
+			} else {
+				return_props.languages = undefined;
+			}
+
+			return return_props;
+		}
 	}
 </script>
 

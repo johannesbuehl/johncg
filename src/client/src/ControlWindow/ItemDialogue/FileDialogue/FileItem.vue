@@ -29,7 +29,7 @@
 	import Draggable from "vuedraggable";
 
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { File } from "@server/search_part";
 
 	library.add(fas.faPlus, fas.faMinus);

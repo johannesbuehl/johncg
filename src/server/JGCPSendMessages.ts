@@ -4,6 +4,7 @@ import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemFiles } from "./JGCPReceiveMessages.ts";
 import { File } from "./search_part.ts";
+import { CasparCGResolution } from "./CasparCG.ts";
 
 /**
  * Base interface for sent JGCP-messages
@@ -27,6 +28,7 @@ export interface Response {
 export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 	command: "playlist_items";
 	new_item_order: number[];
+	new?: boolean;
 }
 
 /**
@@ -42,7 +44,7 @@ interface ItemSlidesBase extends Base {
 	client_id: string;
 	item: number;
 	command: "item_slides";
-	resolution: PlaylistClass.CasparCGResolution;
+	resolution: CasparCGResolution;
 }
 
 export type ItemSlides = ClientItemSlides & ItemSlidesBase;
@@ -66,6 +68,11 @@ export interface Bible {
 	bible: BibleFile;
 }
 
+export interface PlaylistPDF {
+	command: "playlist_pdf";
+	playlist_pdf: string;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -77,4 +84,5 @@ export type Message =
 	| Clear
 	| PlaylistSave
 	| ItemFiles
-	| Bible;
+	| Bible
+	| PlaylistPDF;

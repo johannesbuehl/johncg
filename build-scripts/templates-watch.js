@@ -10,7 +10,7 @@ async function watch() {
 	});
 	
 	await ctx.watch();
-	console.log("watching...");
+	console.log("watching ...");
 }
 
 watch();

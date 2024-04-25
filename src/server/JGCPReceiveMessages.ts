@@ -1,4 +1,4 @@
-import { ItemProps } from "./PlaylistItems/PlaylistItem";
+import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 
 /**
  * Base interface for Received JGCP-messages
@@ -21,6 +21,11 @@ export interface OpenPlaylist extends Base {
 
 export interface SavePlaylist extends Base {
 	command: "save_playlist";
+}
+
+export interface CreatePlaylistPDF extends Base {
+	command: "create_playlist_pdf";
+	type: "full" | "small";
 }
 
 /**
@@ -89,7 +94,7 @@ export interface AddItem extends Base {
 
 export interface UpdateItem extends Base {
 	command: "update_item";
-	props: ItemProps;
+	props: ClientPlaylistItem;
 	index: number;
 }
 
@@ -115,4 +120,5 @@ export type Message =
 	| SavePlaylist
 	| GetItemFiles
 	| GetBible
-	| GetItemData;
+	| GetItemData
+	| CreatePlaylistPDF;

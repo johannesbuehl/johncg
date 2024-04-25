@@ -4,35 +4,23 @@
 	import EditTemplate from "./EditTemplate.vue";
 	import EditCountdown from "./EditCountdown.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import EditAMCP from "./EditAMCP.vue";
 
-	const props = defineProps<{
+	defineProps<{
 		ws: WebSocket;
 		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		item_index: number | null;
 		bible?: BibleFile;
 	}>();
 
-	const item_props = defineModel<ItemProps | undefined>("item_props", { required: true });
-
-	function update_item() {
-		if (item_props.value && props.item_index) {
-			const message: JGCPRecv.UpdateItem = {
-				command: "update_item",
-				index: props.item_index,
-				props: item_props.value
-			};
-
-			props.ws.send(JSON.stringify(message));
-		}
-	}
+	const item_props = defineModel<ClientPlaylistItem | undefined>("item_props", { required: true });
 </script>
 
 <template>
-	<div id="edit_item_wrapper">
+	<div id="edit_item_wrapper" v-if="item_index !== null">
 		<div v-if="item_props?.type !== undefined" id="item_editor_general">
 			<input
 				id="color_picker"
@@ -49,7 +37,7 @@
 			/>
 		</div>
 		<EditSong
-			v-if="item_props?.type === 'song' && item_index"
+			v-if="item_props?.type === 'song'"
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -57,7 +45,7 @@
 			:item_index="item_index"
 		/>
 		<EditBible
-			v-else-if="item_props?.type === 'bible' && item_index"
+			v-else-if="item_props?.type === 'bible'"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
 			:ws="ws"
@@ -65,15 +53,22 @@
 			:item_index="item_index"
 		/>
 		<EditTemplate
-			v-else-if="item_props?.type === 'template' && item_index"
+			v-else-if="item_props?.type === 'template'"
 			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditCountdown
-			v-else-if="item_props?.type === 'countdown' && item_index"
+			v-else-if="item_props?.type === 'countdown'"
 			:key="`${item_index}_countdown`"
+			v-model:item_props="item_props"
+			:ws="ws"
+			:item_index="item_index"
+		/>
+		<EditAMCP
+			v-else-if="item_props?.type === 'amcp'"
+			:key="`${item_index}_amcp`"
 			v-model:item_props="item_props"
 			:ws="ws"
 			:item_index="item_index"
@@ -107,8 +102,6 @@
 	}
 
 	#props_color {
-		display: block;
-
 		aspect-ratio: 1;
 
 		height: 100%;

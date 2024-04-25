@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	import SongPart from "./Parts/SongPart.vue";
@@ -87,6 +87,6 @@
 		flex-wrap: wrap;
 		align-content: flex-start;
 
-		gap: 0.5rem;
+		gap: 0.25rem;
 	}
 </style>

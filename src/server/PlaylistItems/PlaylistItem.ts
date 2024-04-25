@@ -1,20 +1,44 @@
 import type Song from "./Song.ts";
-import type { ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
+import type { ClientSongItem, ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
 import type Countdown from "./Countdown.ts";
-import type { ClientCountdownSlides, CountdownProps, CountdownTemplate } from "./Countdown.ts";
-import type { ClientCommentSlides, CommentProps } from "./Comment.ts";
+import type {
+	ClientCountdownItem,
+	ClientCountdownSlides,
+	CountdownProps,
+	CountdownTemplate
+} from "./Countdown.ts";
+import type { ClientCommentItem, ClientCommentSlides, CommentProps } from "./Comment.ts";
 import type Media from "./Media.ts";
-import type { ClientMediaProps, MediaProps } from "./Media.ts";
+import type { ClientMediaItem, ClientMediaProps, MediaProps } from "./Media.ts";
 import type TemplateItem from "./Template.ts";
-import type { ClientTemplateSlides, TemplateProps, TemplateTemplate } from "./Template.ts";
+import type {
+	ClientTemplateItem,
+	ClientTemplateSlides,
+	TemplateProps,
+	TemplateTemplate
+} from "./Template.ts";
 import type PDF from "./PDF.ts";
-import type { ClientPDFSlides, PDFProps } from "./PDF.ts";
+import type { ClientPDFItem, ClientPDFSlides, PDFProps } from "./PDF.ts";
 import type Comment from "./Comment.ts";
 import type Bible from "./Bible.ts";
-import type { BibleProps, BibleTemplate, ClientBibleSlides } from "./Bible.ts";
-import Psalm, { ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
+import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } from "./Bible.ts";
+import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
+import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
+import { PlayParameters } from "casparcg-connection";
+import { logger } from "../logger.ts";
+import { get_casparcg_transition } from "../config.ts";
+import { CasparCGConnection, casparcg } from "../CasparCG.ts";
 
-export type PlaylistItem = Song | Countdown | Comment | Media | TemplateItem | PDF | Bible | Psalm;
+export type PlaylistItem =
+	| Song
+	| Countdown
+	| Comment
+	| Media
+	| TemplateItem
+	| PDF
+	| Bible
+	| Psalm
+	| AMCP;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -28,6 +52,10 @@ export interface ItemPropsBase {
 	color: string;
 }
 
+export interface ClientItemBase {
+	displayable: boolean;
+}
+
 export type ItemProps =
 	| SongProps
 	| CountdownProps
@@ -36,7 +64,19 @@ export type ItemProps =
 	| TemplateProps
 	| PDFProps
 	| BibleProps
-	| PsalmProps;
+	| PsalmProps
+	| AMCPProps;
+
+export type ClientPlaylistItem =
+	| ClientSongItem
+	| ClientCountdownItem
+	| ClientCommentItem
+	| ClientMediaItem
+	| ClientTemplateItem
+	| ClientPDFItem
+	| ClientBibleItem
+	| ClientPsalmItem
+	| ClientAMCPItem;
 
 export interface CasparCGTemplate {
 	template: string;
@@ -46,7 +86,7 @@ export interface CasparCGTemplate {
 export interface ClientItemSlidesBase {
 	type: string;
 	caption: string;
-	media: string;
+	media?: string;
 	template?: CasparCGTemplate;
 }
 
@@ -58,7 +98,8 @@ export type ClientItemSlides =
 	| ClientTemplateSlides
 	| ClientPDFSlides
 	| ClientBibleSlides
-	| ClientPsalmSlides;
+	| ClientPsalmSlides
+	| ClientAMCPSlides;
 
 export interface FontFormat {
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -97,7 +138,9 @@ export abstract class PlaylistItemBase {
 		}
 
 		if (slide < -slide_count || slide >= slide_count) {
-			throw new RangeError(`slide-number is out of range (${-slide_count}-${slide_count - 1})`);
+			throw new RangeError(
+				`slide-number is out of range ('${-slide_count}' - '${slide_count - 1}')`
+			);
 		}
 
 		if (slide < 0) {
@@ -111,8 +154,6 @@ export abstract class PlaylistItemBase {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
 
-			this.is_displayable = true;
-
 			callback(this.item_props);
 
 			return true;
@@ -121,11 +162,201 @@ export abstract class PlaylistItemBase {
 		}
 	}
 
+	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
+
+		return Promise.allSettled(
+			connections.map((connection) => {
+				return Promise.all([this.play_media(connection), this.play_template(connection)]);
+			})
+		);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+	stop(_casparcg_connection?: CasparCGConnection) {}
+
+	protected play_media(casparcg_connection: CasparCGConnection) {
+		if (casparcg.visibility) {
+			const clip = this.media ?? "#00000000";
+
+			logger.log(`loading CasparCG-media: '${clip}'`);
+
+			const message: PlayParameters = {
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip,
+				loop: this.loop,
+				transition: get_casparcg_transition()
+			};
+
+			return casparcg_connection.connection.play(message);
+		} else {
+			logger.log(`loading CasparCG-media in the background: '${this.media}'`);
+
+			//  if the current stat is invisible, only load it in the background
+			return casparcg_connection.connection.loadbg({
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.media,
+				clip: this.media,
+				loop: this.loop,
+				transition: get_casparcg_transition()
+			});
+		}
+	}
+
+	private play_template(casparcg_connection: CasparCGConnection) {
+		const template = this.template;
+
+		// if a template was specified, load it
+		if (template !== undefined) {
+			logger.log(`loading CasparCG-template: '${template.template}'`);
+			logger.debug(`with data: ${JSON.stringify(template.data)}`);
+
+			return casparcg_connection.connection.cgAdd({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				cgLayer: 0,
+				playOnLoad: casparcg.visibility,
+				template: template.template,
+				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+				data: JSON.stringify(
+					JSON.stringify(template.data, (_key, val: unknown) => {
+						if (typeof val === "string") {
+							return val.replaceAll('"', "\\u0022");
+						} else {
+							return val;
+						}
+					})
+				)
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		} else {
+			logger.log("clearing CasparCG-template");
+
+			// if not, clear the previous template
+			return casparcg_connection.connection.play({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				clip: "EMPTY",
+				transition: get_casparcg_transition()
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
+	}
+
+	update_template(casparcg_connection: CasparCGConnection) {
+		const template = this.template;
+
+		if (template !== undefined) {
+			logger.log(
+				`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
+			);
+
+			void casparcg_connection.connection.cgUpdate({
+				/* eslint-disable @typescript-eslint/naming-convention */
+				channel: casparcg_connection.settings.channel,
+				layer: casparcg_connection.settings.layers.template,
+				cgLayer: 0,
+				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+				data: JSON.stringify(
+					JSON.stringify(template.data, (_key, val: unknown) => {
+						if (typeof val === "string") {
+							return val.replaceAll('"', "\\u0022");
+						} else {
+							return val;
+						}
+					})
+				)
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
+		}
+	}
+
+	set_visibility(visibility: boolean, casparcg_connection?: CasparCGConnection): Promise<unknown> {
+		casparcg.visibility = visibility;
+
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
+
+		return Promise.allSettled(
+			connections.map((connection) => {
+				if (visibility) {
+					return Promise.allSettled([
+						this.play_media(connection),
+
+						connection.connection.cgPlay({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: connection.settings.channel,
+							layer: connection.settings.layers.template,
+							cgLayer: 0
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					]);
+				} else {
+					const promises = [
+						// stop the template-layer
+						connection.connection.cgStop({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: connection.settings.channel,
+							layer: connection.settings.layers.template,
+							cgLayer: 0
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					];
+
+					if (connection.media !== undefined) {
+						promises.push(
+							// fade-out the media
+							connection.connection.play({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: connection.settings.channel,
+								layer: connection.settings.layers.media,
+								clip: "EMPTY",
+								transition: get_casparcg_transition()
+								/* eslint-enable @typescript-eslint/naming-convention */
+							})
+						);
+					}
+
+					return Promise.allSettled(promises);
+				}
+			})
+		);
+	}
+
+	protected casparcg_navigate(): Promise<unknown>[] {
+		logger.debug(`jumping CasparCG-template: slide '${this.active_slide}'`);
+
+		return casparcg.casparcg_connections.map((casparcg_connection) => {
+			const promises = [];
+
+			// if the item has multiple media-files, load the new one
+			if (this.multi_media) {
+				promises.push(this.play_media(casparcg_connection));
+			}
+
+			// jump to the slide-number in casparcg
+			promises.push(
+				casparcg_connection.connection.cgInvoke({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.template,
+					cgLayer: 0,
+					method: `jump(${this.active_slide})`
+					/* eslint-enable @typescript-eslint/naming-convention */
+				})
+			);
+
+			return Promise.all(promises);
+		});
+	}
+
 	protected abstract validate_props(props: ItemProps): boolean;
 
 	abstract get props(): ItemProps;
 
-	abstract get playlist_item(): ItemProps & { displayable: boolean };
+	abstract get playlist_item(): ClientPlaylistItem;
 
 	abstract get media(): string;
 
@@ -140,4 +371,6 @@ export abstract class PlaylistItemBase {
 	get displayable(): boolean {
 		return this.is_displayable;
 	}
+
+	abstract get_markdown_export_string(full: boolean): string;
 }

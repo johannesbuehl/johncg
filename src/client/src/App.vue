@@ -4,8 +4,8 @@
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
 
@@ -29,7 +29,7 @@
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		default: ControlWindowState.Playlist
+		default: ControlWindowState.Slides
 	});
 
 	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
@@ -47,7 +47,10 @@
 	// watch for changes in item-selection
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
-		if (control_window_state.value === ControlWindowState.Playlist && new_selection) {
+		if (
+			control_window_state.value === ControlWindowState.Slides &&
+			typeof new_selection === "number"
+		) {
 			request_item_slides(new_selection);
 		} else {
 			// else: delete the stored item-slides
@@ -57,7 +60,7 @@
 
 	watch(control_window_state, (new_state) => {
 		// if the new control-window-state is the playlist, request the slides
-		if (new_state === ControlWindowState.Playlist && selected_item.value) {
+		if (new_state === ControlWindowState.Slides && selected_item.value) {
 			request_item_slides(selected_item.value);
 		} else {
 			// else delete the stored slides
@@ -124,7 +127,8 @@
 				clear: init,
 				playlist_save: save_playlist_file,
 				item_files: parse_item_files,
-				bible: parse_bible
+				bible: parse_bible,
+				playlist_pdf: save_playlist_pdf
 			};
 
 			command_parser_map[data.command](data as never);
@@ -157,13 +161,28 @@
 	function load_playlist_items(data: JGCPSend.Playlist) {
 		playlist_items.value = data;
 
+		// if it is a new-playlist, reset the selected-item to the first one
+		if (data.new) {
+			selected_item.value = data.playlist_items.length > 0 ? 0 : null;
+		}
+
 		if (control_window_state.value === ControlWindowState.OpenPlaylist) {
-			control_window_state.value = ControlWindowState.Playlist;
+			control_window_state.value = ControlWindowState.Slides;
 		}
 
 		// if the playlist is empty, clear the slides-view
 		if (data.playlist_items.length === 0) {
 			item_slides.value = undefined;
+		} else {
+			// request new slides for the selected item
+			if (control_window_state.value === ControlWindowState.Slides && selected_item.value) {
+				const message: JGCPRecv.RequestItemSlides = {
+					command: "request_item_slides",
+					item: selected_item.value
+				};
+
+				ws?.send(JSON.stringify(message));
+			}
 		}
 	}
 
@@ -236,6 +255,22 @@
 
 	function parse_bible(data: JGCPSend.Bible) {
 		bible_file.value = data.bible;
+	}
+
+	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
+		// const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
+
+		// const blob = new Blob([Buffer.from(data.playlist_pdf, "base64")], { type: "application/pdf" });
+		// const url = URL.createObjectURL(blob);
+		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
+
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "playlist.pdf";
+
+		link.click();
+
+		URL.revokeObjectURL(url);
 	}
 
 	function handle_ws_response(response: JGCPSend.Response) {

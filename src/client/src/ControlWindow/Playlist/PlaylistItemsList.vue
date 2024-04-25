@@ -8,10 +8,10 @@
 	import ContextMenu from "./ContextMenu.vue";
 	import PlaylistItem from "./PlaylistItem.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import { type ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type { ClientItemBase, ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 
@@ -37,7 +37,6 @@
 	const playlist = defineModel<JGCPSend.Playlist>("playlist");
 
 	const context_menu_position = ref<{ x: number; y: number }>();
-	const color_picker = ref<HTMLInputElement>();
 
 	function on_end(evt: DragEndEvent) {
 		// send only, if the index has changed
@@ -46,7 +45,7 @@
 		}
 	}
 
-	function on_change(evt: { added: { element: ItemProps; newIndex: number } }) {
+	function on_change(evt: { added: { element: ClientPlaylistItem; newIndex: number } }) {
 		Object.entries(evt).forEach(([type, data]) => {
 			if (type === "added") {
 				const message: JGCPRecv.AddItem = {
@@ -83,9 +82,12 @@
 		}
 	}
 
-	const current_picked_item_index = ref<number>(0);
-	function show_context_menu(event: MouseEvent, index: number) {
-		current_picked_item_index.value = index;
+	const context_menu_picket_item = ref<{ element: ClientPlaylistItem; index: number }>();
+	function show_context_menu(event: MouseEvent, element: ClientPlaylistItem, index: number) {
+		context_menu_picket_item.value = {
+			element,
+			index
+		};
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -104,14 +106,16 @@
 		}
 	}
 
-	function duplicate_item(item_props: ItemProps) {
-		const message: JGCPRecv.AddItem = {
-			command: "add_item",
-			props: item_props,
-			index: current_picked_item_index.value + 1
-		};
+	function duplicate_item(item_props: number) {
+		if (context_menu_picket_item.value !== undefined) {
+			const message: JGCPRecv.AddItem = {
+				command: "add_item",
+				props: context_menu_picket_item.value.element,
+				index: context_menu_picket_item.value.index
+			};
 
-		props.ws.send(JSON.stringify(message));
+			props.ws.send(JSON.stringify(message));
+		}
 	}
 </script>
 
@@ -143,7 +147,7 @@
 					@set_active="emit('set_active', index)"
 					@keydown.up="navigate_selection($event.target, index, -1)"
 					@keydown.down="navigate_selection($event.target, index, 1)"
-					@contextmenu="show_context_menu($event, index)"
+					@contextmenu="show_context_menu($event, element, index)"
 				/>
 			</template>
 		</Draggable>
@@ -154,38 +158,29 @@
 		:position="context_menu_position ?? { x: 0, y: 0 }"
 		@close="context_menu_position = undefined"
 	>
-		<div @click="emit('edit', current_picked_item_index)">
+		<div
+			@click="context_menu_picket_item ? emit('edit', context_menu_picket_item.index) : undefined"
+		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 			Edit item
 		</div>
-		<input
-			ref="color_picker"
-			id="item_color_picker_context_menu"
-			type="color"
-			style="visibility: hidden; position: absolute"
-			v-model="items_list[current_picked_item_index].value.props.color"
-			@click="$event.stopPropagation()"
-		/>
-		<label
-			for="item_color_picker_context_menu"
-			@click.capture="
-				color_picker?.click();
-				$event.stopPropagation();
-				$event.preventDefault();
+		<div
+			@click="
+				context_menu_picket_item
+					? duplicate_item(items_list[context_menu_picket_item.index].value.props)
+					: undefined
 			"
 		>
-			<FontAwesomeIcon :icon="['fas', 'brush']" />
-			Change Color
-		</label>
-		<div @click="items_list[current_picked_item_index].value.edit_caption()">
-			<FontAwesomeIcon :icon="['fas', 'font']" />
-			Rename
-		</div>
-		<div @click="duplicate_item(items_list[current_picked_item_index].value.props)">
 			<FontAwesomeIcon :icon="['fas', 'clone']" />
 			Duplicate
 		</div>
-		<div @click="items_list[current_picked_item_index].value.delete_item()">
+		<div
+			@click="
+				context_menu_picket_item
+					? items_list[context_menu_picket_item.index].value.delete_item()
+					: undefined
+			"
+		>
 			<FontAwesomeIcon :icon="['fas', 'trash']" />
 			Delete
 		</div>

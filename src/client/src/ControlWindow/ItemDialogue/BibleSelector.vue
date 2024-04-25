@@ -34,9 +34,9 @@
 </script>
 
 <script setup lang="ts">
-	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick } from "vue";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { type BibleFile, type BibleProps, type Book } from "@server/PlaylistItems/Bible";
+	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick, toRaw } from "vue";
+
+	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
 		bible?: BibleFile;
@@ -61,21 +61,25 @@
 		() => props.bible,
 		(bible) => {
 			if (bible !== undefined) {
-				if (book_selection.value === undefined) {
-					book_selection.value = Object.values(Object.values(bible)[0])[0].books[0];
-				} else {
+				// if there is no book-selection, select the first one
+				if (book_selection.value !== undefined) {
+					// there is a book selection
+
+					// if there already is verse-selection-data, select the first chapter with data
 					if (
 						chapter_verse_selection.value !== undefined &&
 						Object.keys(chapter_verse_selection.value).length > 0
 					) {
 						chapter_selection.value = Number(Object.keys(chapter_verse_selection.value)[0]);
 					} else {
+						// else select the first chapter
 						chapter_selection.value = 0;
 						create_verse_selection();
 					}
 				}
 
 				nextTick(() => {
+					// if there is a book selected, scroll it into view
 					if (book_selection.value !== undefined) {
 						const ref_array = book_refs[book_selection.value.id].value;
 
@@ -177,12 +181,12 @@
 		}
 	}
 
-	function create_verse_selection(chapter: number = chapter_selection.value) {
+	function create_verse_selection(chapter: number = chapter_selection.value, book?: Book) {
 		if (
 			(book_selection.value?.chapters.length ?? 0 > 0) &&
 			typeof chapter_verse_selection.value === "object"
 		) {
-			const new_array = Array(book_selection.value?.chapters[chapter]).fill(false);
+			const new_array = Array((book ?? book_selection.value)?.chapters[chapter]).fill(false);
 
 			chapter_verse_selection.value[chapter] ??= new_array;
 		}

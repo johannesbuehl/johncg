@@ -7,15 +7,16 @@
 	import PartRadio from "./PartRadio.vue";
 	import AddMedia from "./Parts/AddMedia.vue";
 	import AddTemplate from "./Parts/AddTemplate.vue";
-	import AddBible from "./Parts/Bible/AddBible.vue";
-	import AddSong from "./Parts/Song/AddSong.vue";
+	import AddBible from "./Parts/AddBible.vue";
+	import AddSong from "./Parts/AddSong.vue";
 	import AddPDF from "./Parts/AddPDF.vue";
 	import AddPsalm from "./Parts/AddPsalm.vue";
+	import AddCountdown from "./Parts/AddCountdown.vue";
+	import AddAMCP from "./Parts/AddAMCP.vue";
 	import AddComment from "./Parts/AddComment.vue";
-	import AddCountdown from "./Parts/Countdown/AddCountdown.vue";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
@@ -28,6 +29,7 @@
 		fas.faPenRuler,
 		fas.faFilePdf,
 		fas.faClock,
+		fas.faTerminal,
 		fas.faMessage
 	);
 
@@ -49,6 +51,7 @@
 		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
 		{ text: "Countdown", value: "countdown", icon: "clock" },
+		{ text: "AMCP", value: "amcp", icon: "terminal" },
 		{ text: "Comment", value: "comment", icon: "message" }
 	];
 
@@ -62,11 +65,19 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
-	function get_files(type: JGCPRecv.GetItemFiles["type"]) {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type
-		};
+	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
+		let message: JGCPRecv.Message;
+
+		if (type === "bible") {
+			message = {
+				command: "get_bible"
+			};
+		} else {
+			message = {
+				command: "get_item_files",
+				type
+			};
+		}
 
 		props.ws.send(JSON.stringify(message));
 	}
@@ -96,7 +107,12 @@
 				@add="add_item"
 				@refresh="get_files('psalm')"
 			/>
-			<AddBible v-else-if="pick === 'bible'" :bible="bible" :ws="ws" @add="add_item" />
+			<AddBible
+				v-else-if="pick === 'bible'"
+				:bible="bible"
+				@add="add_item"
+				@refresh="get_files('bible')"
+			/>
 			<AddMedia
 				v-else-if="pick === 'media'"
 				:files="files[pick]"
@@ -121,6 +137,7 @@
 				@add="add_item"
 				@refresh="get_files('media')"
 			/>
+			<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" @refresh="get_files('media')" />
 			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 		</template>
 	</div>

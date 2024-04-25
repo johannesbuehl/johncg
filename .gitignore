@@ -1,11 +1,17 @@
 node_modules
 node_modules_windows
 node_modules_linux
-server_log.log
+logs
+miktex
+out
+dist
+pandoc/*
 
 casparcg/Templates/JohnCG/*.js
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
-out
-dist
 *.map
+install-tl.log
+
+!pandoc/install.py
+!pandoc/texlive.profile

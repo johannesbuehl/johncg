@@ -2,16 +2,15 @@
 	import { onMounted, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 
 	import type { PsalmFile } from "@server/search_part";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
-	import type Psalm from "@server/PlaylistItems/Psalm";
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	library.add(fas.faPlus);
 	const props = defineProps<{
@@ -67,7 +66,7 @@
 		return {
 			type: "psalm",
 			caption: file.name,
-			color: "#008800",
+			color: "#FFFF00",
 			file: file.path
 		};
 	}

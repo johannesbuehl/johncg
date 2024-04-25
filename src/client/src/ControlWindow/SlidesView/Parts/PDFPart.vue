@@ -2,7 +2,6 @@
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { Template } from "@server/PlaylistItems/PlaylistItem";
 	import type { ClientPDFSlides } from "@server/PlaylistItems/PDF";
 
 	defineProps<{
@@ -52,7 +51,7 @@
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"
-				@template_load="template_loaded($event, index)"
+				@onLoaded="template_loaded($event, index)"
 				@click="emit('select_slide', index)"
 			/>
 		</div>

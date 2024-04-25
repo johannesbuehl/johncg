@@ -3,15 +3,18 @@ import Canvas from "canvas";
 import tmp from "tmp";
 
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { get_pdf_path } from "../config.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
+import Config from "../config.ts";
+import { CasparCGResolution } from "../CasparCG.ts";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
 	file: string;
 }
+
+export type ClientPDFItem = PDFProps & ClientItemBase;
 
 export interface ClientPDFSlides extends ClientItemSlidesBase {
 	type: "pdf";
@@ -39,7 +42,7 @@ export default class PDF extends PlaylistItemBase {
 			void (async () => {
 				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-				const pth = get_pdf_path(this.props.file).replaceAll("/", "\\");
+				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
 
 				logger.debug(`loading PDF-file (${pth})`);
 
@@ -51,15 +54,36 @@ export default class PDF extends PlaylistItemBase {
 						[...Array(pdf.numPages).keys()].map(async (index) => {
 							// increase the counter by one, because the pages start at 1
 							const page = await pdf.getPage(index + 1);
+
 							// eslint-disable-next-line @typescript-eslint/naming-convention
 							const viewport = page.getViewport({ scale: 1 });
 
-							const canvas = Canvas.createCanvas(viewport.width, viewport.height);
+							const casparcg_resolution = Config.casparcg_resolution;
+
+							const scales: Partial<Record<keyof CasparCGResolution, number>> = {};
+							Object.entries(casparcg_resolution).forEach(
+								([key, res]: [keyof CasparCGResolution, number]) => {
+									scales[key] = res / viewport[key];
+								}
+							);
+							const scale = Math.min(...Object.values(scales));
+
+							const canvas = Canvas.createCanvas(
+								casparcg_resolution.width,
+								casparcg_resolution.height
+							);
 
 							await page.render({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
 								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
-								viewport
+								/* eslint-disable @typescript-eslint/naming-convention */
+								viewport: page.getViewport({
+									scale,
+									offsetY: (casparcg_resolution.height - scale * viewport.height) / 2,
+									offsetX: (casparcg_resolution.width - scale * viewport.width) / 2
+								}),
+								/* eslint-enable @typescript-eslint/naming-convention */
+								background: "#000000"
 							}).promise;
 
 							const image_buffer = canvas.toBuffer();
@@ -93,6 +117,9 @@ export default class PDF extends PlaylistItemBase {
 
 	set_active_slide(slide?: number): number {
 		this.active_slide_number = this.validate_slide_number(slide);
+
+		// display the slide
+		void this.casparcg_navigate();
 
 		return this.active_slide;
 	}
@@ -128,6 +155,9 @@ export default class PDF extends PlaylistItemBase {
 			slide_steps = 1;
 		} else {
 			this.active_slide_number = new_active_slide_number;
+
+			// display the slide
+			void this.casparcg_navigate();
 		}
 
 		return slide_steps;
@@ -177,5 +207,9 @@ export default class PDF extends PlaylistItemBase {
 
 	get template(): undefined {
 		return undefined;
+	}
+
+	get_markdown_export_string(): string {
+		return `# PDF: "${this.props.caption}"\n\n`;
 	}
 }

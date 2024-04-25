@@ -1,10 +1,12 @@
 import { recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 export interface CommentProps extends ItemPropsBase {
 	type: "comment";
 }
+
+export type ClientCommentItem = CommentProps & ClientItemBase;
 
 export interface ClientCommentSlides extends ClientItemSlidesBase {
 	type: "comment";
@@ -76,5 +78,9 @@ export default class Comment extends PlaylistItemBase {
 
 	get displayable(): boolean {
 		return false;
+	}
+
+	get_markdown_export_string(): string {
+		return `# Comment: "${this.props.caption}"\n\n`;
 	}
 }

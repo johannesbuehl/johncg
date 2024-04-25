@@ -3,11 +3,11 @@ import fs from "fs";
 
 import * as JGCPRecv from "./JGCPReceiveMessages";
 
-import Config, { get_psalm_path, get_song_path } from "./config";
+import Config from "./config";
 import SngFile, { SongParts } from "./PlaylistItems/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
-import { CasparCGConnection } from "./control";
 import { logger } from "./logger";
+import { casparcg } from "./CasparCG";
 
 export interface File {
 	name: string;
@@ -45,14 +45,10 @@ export type PDFFile = File;
 export type ItemFile = SongFile | PsalmFile | MediaFile | TemplateFile | PDFFile;
 
 export default class SearchPart {
-	private casparcg_connections: CasparCGConnection[];
-
-	constructor(casparcg_connections: CasparCGConnection[]) {
-		this.casparcg_connections = casparcg_connections;
-	}
+	constructor() {}
 
 	create_song_file(f: File): SongFile {
-		const song = new SngFile(get_song_path(f.path));
+		const song = new SngFile(Config.get_path("song", f.path));
 
 		const song_value: SongFile = {
 			...f,
@@ -78,7 +74,7 @@ export default class SearchPart {
 	}
 
 	create_psalm_file(f: File): PsalmFile {
-		const psalm = JSON.parse(fs.readFileSync(get_psalm_path(f.path), "utf-8")) as PsmFile;
+		const psalm = JSON.parse(fs.readFileSync(Config.get_path("psalm", f.path), "utf-8")) as PsmFile;
 
 		return {
 			...f,
@@ -149,31 +145,31 @@ export default class SearchPart {
 	}
 
 	async get_casparcg_media(): Promise<File[]> {
-		if (this.casparcg_connections.length === 0) {
-			logger.log("can't request CasparCG-media-list: no conneciton added");
+		if (casparcg.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-media-list: no connection added");
 			return;
 		}
 
 		logger.debug("requesting CasparCG-media-list");
 
-		this.casparcg_connections[0].media =
-			(await (await this.casparcg_connections[0].connection.cls()).request)?.data ?? [];
+		const media =
+			(await (await casparcg.casparcg_connections[0].connection.cls()).request)?.data ?? [];
 
-		return build_files(this.casparcg_connections[0].media.map((m) => m.clip.split("/")));
+		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
 	async get_casparcg_template(): Promise<File[]> {
-		if (this.casparcg_connections.length === 0) {
-			logger.log("can't request CasparCG-template-list: no conneciton added");
+		if (casparcg.casparcg_connections.length === 0) {
+			logger.log("can't request CasparCG-template-list: no connection added");
 			return;
 		}
 
 		logger.debug("requesting CasparCG-template-list");
 
-		this.casparcg_connections[0].template =
-			(await (await this.casparcg_connections[0].connection.tls()).request)?.data ?? [];
+		const template =
+			(await (await casparcg.casparcg_connections[0].connection.tls()).request)?.data ?? [];
 
-		return build_files(this.casparcg_connections[0].template.map((m) => m.split("/")));
+		return build_files(template.map((m) => m.split("/")));
 	}
 
 	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
@@ -190,7 +186,7 @@ export default class SearchPart {
 					return this.create_song_file(item_file);
 				} catch (e) {
 					if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-						console.error(`song '${path}' does not exist`);
+						logger.error(`can't open song: '${path}' does not exist`);
 
 						return;
 					} else {
