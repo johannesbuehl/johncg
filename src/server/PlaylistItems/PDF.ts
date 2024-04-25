@@ -68,20 +68,13 @@ export default class PDF extends PlaylistItemBase {
 							);
 							const scale = Math.min(...Object.values(scales));
 
-							const canvas = Canvas.createCanvas(
-								casparcg_resolution.width,
-								casparcg_resolution.height
-							);
+							const canvas = Canvas.createCanvas(viewport.width * scale, viewport.height * scale);
 
 							await page.render({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
 								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
 								/* eslint-disable @typescript-eslint/naming-convention */
-								viewport: page.getViewport({
-									scale,
-									offsetY: (casparcg_resolution.height - scale * viewport.height) / 2,
-									offsetX: (casparcg_resolution.width - scale * viewport.width) / 2
-								}),
+								viewport: page.getViewport({ scale }),
 								/* eslint-enable @typescript-eslint/naming-convention */
 								background: "#000000"
 							}).promise;
