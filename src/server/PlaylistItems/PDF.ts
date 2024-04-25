@@ -7,7 +7,7 @@ import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config, { get_casparcg_transition } from "../config.ts";
 import { CasparCGConnection, CasparCGResolution, casparcg } from "../CasparCG.ts";
-import { PlayHtmlParameters } from "casparcg-connection";
+import { APIRequest, Commands, PlayHtmlParameters } from "casparcg-connection";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -159,14 +159,39 @@ export default class PDF extends PlaylistItemBase {
 	}
 
 	async create_base64(img: sharp.Sharp): Promise<{ image: string; thumbnail: string }> {
-		img.png();
+		img.webp({ lossless: true });
 
 		const thumnb = img.clone();
 
 		thumnb.resize(240);
 
 		const img_to_base64 = async (img: sharp.Sharp) =>
-			"data:image/png;base64," + (await img.toBuffer()).toString("base64");
+			"data:image/webp;base64," + (await img.toBuffer()).toString("base64");
+
+		let image_string: string;
+		const options_array: sharp.WebpOptions[] = [
+			/* eslint-disable @typescript-eslint/naming-convention */
+			{ effort: 6, lossless: true },
+			{ effort: 6, lossless: false, nearLossless: true },
+			{ effort: 6, nearLossless: false, quality: 100, alphaQuality: 100 }
+			/* eslint-enable @typescript-eslint/naming-convention */
+		];
+
+		do {
+			let options: sharp.WebpOptions = {};
+			if (options_array.length === 1) {
+				options = structuredClone(options_array[0]);
+
+				options_array[0].alphaQuality -= 20;
+				options_array[0].quality -= 20;
+			} else {
+				options = options_array.shift();
+			}
+
+			img.webp(options);
+
+			image_string = await img_to_base64(img);
+		} while (image_string.length > 2097152);
 
 		return {
 			image: await img_to_base64(img),
@@ -185,25 +210,68 @@ export default class PDF extends PlaylistItemBase {
 		return props.type === "pdf" && recurse_object_check(props, template);
 	}
 
-	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
+	play(
+		casparcg_connection?: CasparCGConnection
+	): Promise<APIRequest<Commands.PlayHtml | Commands.LoadbgHtml>[]> {
 		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
 		return Promise.all(
-			connections.map((casparcg_connection) => {
-				const message: PlayHtmlParameters = {
+			connections.map(async (casparcg_connection) => {
+				// clear the previous template
+				await (
+					await casparcg_connection.connection.cgClear({
+						channel: casparcg_connection.settings.channel,
+						layer: casparcg_connection.settings.layers.template
+					})
+				).request;
+
+				return this.play_media(casparcg_connection);
+			})
+		);
+	}
+
+	protected async play_media(
+		casparcg_connection: CasparCGConnection
+	): Promise<APIRequest<Commands.PlayHtml>> {
+		const message: PlayHtmlParameters = {
+			channel: casparcg_connection.settings.channel,
+			layer: casparcg_connection.settings.layers.template,
+			url: this.media,
+			transition: get_casparcg_transition()
+		};
+
+		const media_logger_string = `${this.media.slice(0, 50)}${this.media.length > 20 ? "..." : ""}`;
+		if (casparcg.visibility) {
+			logger.log(`loading Base64-Image: '${media_logger_string}'`);
+
+			await (
+				await casparcg_connection.connection.clear({
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.media
+				})
+			).request;
+
+			await (
+				await casparcg_connection.connection.swap({
 					channel: casparcg_connection.settings.channel,
 					layer: casparcg_connection.settings.layers.media,
-					url: this.media,
-					transition: get_casparcg_transition()
-				};
+					channel2: casparcg_connection.settings.channel,
+					layer2: casparcg_connection.settings.layers.template,
+					transforms: false
+				})
+			).request;
 
-				const media_logger_string = `${this.media.slice(0, 20)}${this.media.length > 20 ? "..." : ""}`;
-				if (casparcg.visibility) {
-					logger.log(`loading CasparCG-media: '${media_logger_string}'`);
+			return casparcg_connection.connection.playHtml(message);
+		} else {
+			logger.log(`loading Base64-Image in the background: '${media_logger_string}'`);
 
-					return casparcg_connection.connection.play(message);
-				}
-			})
+			return casparcg_connection.connection.loadbgHtml(message);
+		}
+	}
+
+	protected casparcg_navigate(): Promise<APIRequest<Commands.PlayHtml | Commands.LoadbgHtml>>[] {
+		return casparcg.casparcg_connections.map((casparcg_connection) =>
+			this.play_media(casparcg_connection)
 		);
 	}
 

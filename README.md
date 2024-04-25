@@ -37,3 +37,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - parse chords in songfile in preparation for chord-view
 - casparcg: if no connection on startup possible: try periodically to reconnect
+- move dynamic import of PDF
