@@ -28,17 +28,19 @@ import { PlayParameters } from "casparcg-connection";
 import { logger } from "../logger.ts";
 import { get_casparcg_transition } from "../config.ts";
 import { CasparCGConnection, casparcg } from "../CasparCG.ts";
+import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text.ts";
 
 export type PlaylistItem =
 	| Song
-	| Countdown
-	| Comment
+	| Psalm
+	| Bible
+	| TextItem
 	| Media
 	| TemplateItem
 	| PDF
-	| Bible
-	| Psalm
-	| AMCP;
+	| Countdown
+	| AMCP
+	| Comment;
 
 export type DeepPartial<T> = {
 	[K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -60,6 +62,7 @@ export type ItemProps =
 	| SongProps
 	| CountdownProps
 	| CommentProps
+	| TextProps
 	| MediaProps
 	| TemplateProps
 	| PDFProps
@@ -71,6 +74,7 @@ export type ClientPlaylistItem =
 	| ClientSongItem
 	| ClientCountdownItem
 	| ClientCommentItem
+	| ClientTextItem
 	| ClientMediaItem
 	| ClientTemplateItem
 	| ClientPDFItem
@@ -94,6 +98,7 @@ export type ClientItemSlides =
 	| ClientSongSlides
 	| ClientCountdownSlides
 	| ClientCommentSlides
+	| ClientTextSlides
 	| ClientMediaProps
 	| ClientTemplateSlides
 	| ClientPDFSlides
@@ -223,7 +228,7 @@ export abstract class PlaylistItemBase {
 				data: JSON.stringify(
 					JSON.stringify(template.data, (_key, val: unknown) => {
 						if (typeof val === "string") {
-							return val.replaceAll('"', "\\u0022");
+							return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
 						} else {
 							return val;
 						}
@@ -259,17 +264,17 @@ export abstract class PlaylistItemBase {
 				channel: casparcg_connection.settings.channel,
 				layer: casparcg_connection.settings.layers.template,
 				cgLayer: 0,
-				// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+				// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
 				data: JSON.stringify(
 					JSON.stringify(template.data, (_key, val: unknown) => {
 						if (typeof val === "string") {
-							return val.replaceAll('"', "\\u0022");
+							return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
 						} else {
 							return val;
 						}
 					})
 				)
-				/* eslint-enable @typescript-eslint/naming-convention */
+				// /* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
 	}

@@ -19,6 +19,7 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import AddText from "./Parts/AddText.vue";
 
 	library.add(
 		fas.faMusic,
@@ -46,7 +47,7 @@
 		{ text: "Song", value: "song", icon: "music" },
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
 		{ text: "Bible", value: "bible", icon: "quote-left" },
-		// { text: "Text", value: "text", icon: "font" },
+		{ text: "Text", value: "text", icon: "font" },
 		{ text: "Media", value: "media", icon: "image" },
 		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
@@ -113,6 +114,7 @@
 				@add="add_item"
 				@refresh="get_files('bible')"
 			/>
+			<AddText v-else-if="pick === 'text'" @add="add_item" />
 			<AddMedia
 				v-else-if="pick === 'media'"
 				:files="files[pick]"

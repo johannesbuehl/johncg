@@ -8,6 +8,7 @@
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import EditAMCP from "./EditAMCP.vue";
+	import EditText from "./EditText.vue";
 
 	defineProps<{
 		ws: WebSocket;
@@ -50,6 +51,13 @@
 			v-model:item_props="item_props"
 			:ws="ws"
 			:bible="bible"
+			:item_index="item_index"
+		/>
+		<EditText
+			v-else-if="item_props?.type === 'text'"
+			:key="`${item_index}_text`"
+			v-model:item_props="item_props"
+			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditTemplate

@@ -18,7 +18,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## roadmap
-- implement more playlist-items: Text
 - client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
 - load files from disc always at item selection to stay up to date

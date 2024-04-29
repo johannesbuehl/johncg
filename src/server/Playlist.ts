@@ -24,6 +24,7 @@ import { logger } from "./logger.ts";
 import AMCP from "./PlaylistItems/AMCP.ts";
 import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
 import path from "path";
+import Text from "./PlaylistItems/Text.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -101,14 +102,15 @@ export default class Playlist {
 			[key in ItemProps["type"]]: new (props: ItemProps, callback: () => void) => PlaylistItem;
 		} = {
 			song: Song,
-			comment: Comment,
-			countdown: Countdown,
-			media: Media,
-			pdf: PDF,
-			template: TemplateItem,
-			bible: Bible,
 			psalm: Psalm,
-			amcp: AMCP
+			bible: Bible,
+			text: Text,
+			media: Media,
+			template: TemplateItem,
+			pdf: PDF,
+			countdown: Countdown,
+			amcp: AMCP,
+			comment: Comment
 		};
 
 		const new_item = new item_class_map[item.type](item, () => {
