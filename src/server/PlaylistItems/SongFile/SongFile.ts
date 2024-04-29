@@ -1,5 +1,6 @@
 import fs from "fs";
 import iconv from "iconv-lite";
+import Chord from "./Chord";
 
 export const verse_types = [
 	"refrain",
@@ -55,6 +56,7 @@ export interface SongFileMetadata {
 	Copyright?: string;
 	LangCount: number;
 	Chords?: Chords;
+	Transpose?: number;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -91,7 +93,7 @@ export type ItemPartClient = TitlePartClient | LyricPartClient;
 export type SongPart = string[][][];
 export type SongParts = Record<string, SongPart>;
 
-export type Chords = Record<number, Record<number, string>>;
+export type Chords = Record<number, Record<number, Chord>>;
 
 /**
  * processes and saves song-files (*.sng)
@@ -101,7 +103,7 @@ export default class SongFile {
 	private song_file_path?: string;
 
 	// private variables
-	private text_parts: SongParts = {};
+	private song_parts: SongParts = {};
 
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -160,6 +162,9 @@ export default class SongFile {
 				case "Chords":
 					this.metadata.Chords = this.parse_base64_chords(value);
 					break;
+				case "Transpose":
+					this.metadata.Transpose = Number(value);
+					break;
 				default:
 					break;
 			}
@@ -192,7 +197,7 @@ export default class SongFile {
 			if (line !== false && position !== false && typeof chord === "string") {
 				return_object[line] ??= {};
 
-				return_object[line][position] = chord;
+				return_object[line][position] = new Chord(chord);
 			}
 
 			match = chord_regex.exec(chords);
@@ -231,7 +236,7 @@ export default class SongFile {
 		// parse metadata of the header
 		this.parse_metadata(data[0]);
 
-		// remove the header the array
+		// remove the header of the array
 		data.splice(0, 1);
 
 		// go through all the text blocks and save them to the text-dictionary
@@ -254,7 +259,7 @@ export default class SongFile {
 				lines.splice(0, 1);
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
-				this.text_parts[key] = [];
+				this.song_parts[key] = [];
 			}
 
 			// pad the text with empty lines so that every language has an equal amount of lines
@@ -272,8 +277,8 @@ export default class SongFile {
 				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
 			});
 
-			if (this.text_parts[key] !== undefined) {
-				this.text_parts[key].push(slide);
+			if (this.song_parts[key] !== undefined) {
+				this.song_parts[key].push(slide);
 			}
 		}
 	}
@@ -300,7 +305,7 @@ export default class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text_parts[part]
+			slides: this.song_parts[part]
 		};
 	}
 
@@ -326,7 +331,7 @@ export default class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text_parts[part].length
+			slides: this.song_parts[part].length
 		};
 	}
 
@@ -338,11 +343,11 @@ export default class SongFile {
 	 * all the parts of the song in the order they are defined
 	 */
 	get avaliable_parts(): string[] {
-		return Object.keys(this.text_parts);
+		return Object.keys(this.song_parts);
 	}
 
 	get all_parts(): SongParts {
-		return this.text_parts;
+		return this.song_parts;
 	}
 
 	get languages(): number[] {
@@ -354,6 +359,6 @@ export default class SongFile {
 	}
 
 	get text(): Record<string, string[][][]> {
-		return this.text_parts;
+		return this.song_parts;
 	}
 }

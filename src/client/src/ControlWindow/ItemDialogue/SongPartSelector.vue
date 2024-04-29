@@ -8,7 +8,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import type { SongFile } from "@server/search_part";
-	import type { SongPart } from "@server/PlaylistItems/SongFile";
+	import type { SongPart } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 

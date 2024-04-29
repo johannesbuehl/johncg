@@ -9,6 +9,7 @@ esbuild.build({
 	sourcemap: true,
 	external: [
 		"pdfjs-dist",
-		"canvas"
+		"canvas",
+		"note-art"
 	]
 });

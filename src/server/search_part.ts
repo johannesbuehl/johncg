@@ -4,7 +4,7 @@ import fs from "fs";
 import * as JGCPRecv from "./JGCPReceiveMessages";
 
 import Config from "./config";
-import SngFile, { SongParts } from "./PlaylistItems/SongFile";
+import SngFile, { SongParts } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
 import { casparcg } from "./CasparCG";

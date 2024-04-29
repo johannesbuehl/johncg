@@ -3,8 +3,8 @@ import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import SongFile from "./SongFile.ts";
-import type { ItemPart, LyricPart } from "./SongFile.ts";
+import SongFile from "./SongFile/SongFile.ts";
+import type { Chords, ItemPart, LyricPart } from "./SongFile/SongFile.ts";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -23,6 +23,7 @@ export type ClientSongItem = SongProps & ClientItemBase;
 export interface SongTemplateData {
 	parts: ItemPart[];
 	languages?: number[];
+	chords?: Chords;
 	slide: number;
 }
 
