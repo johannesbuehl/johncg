@@ -69,11 +69,6 @@ export default class Control {
 		JGCP: {
 			open: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
-		},
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		"": {
-			open: (ws: WebSocket) => this.ws_on_connection(ws),
-			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
 		}
 	};
 
@@ -611,10 +606,6 @@ export default class Control {
 		};
 
 		this.send_all_clients(message);
-
-		this.ws_server.get_connections("").forEach((ws_client) => {
-			ws_client?.send(JSON.stringify(message));
-		});
 	}
 
 	/**
@@ -630,13 +621,6 @@ export default class Control {
 		ws_clients.forEach((ws_client) => {
 			ws_client.send(message_string);
 		});
-
-		// if the command is "state" and includes "visibility"
-		if (message.command === "state" && typeof message.visibility === "boolean") {
-			this.ws_server.get_connections("").forEach((ws) => {
-				ws.send(message_string);
-			});
-		}
 	}
 
 	/**
