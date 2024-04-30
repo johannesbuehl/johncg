@@ -1,20 +1,22 @@
-import type { BibleJSON } from "../server/PlaylistItems/Bible";
+import type { TextJSON } from "../server/PlaylistItems/Text";
 
 let mute_transition: boolean = false;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(str_args: string) {
-	let json_args: BibleJSON;
+	let json_args: TextJSON;
 	try {
-		json_args = JSON.parse(str_args) as BibleJSON;
+		json_args = JSON.parse(str_args) as TextJSON;
 	} catch (error) {
 		if (!(error instanceof SyntaxError)) {
 			throw error;
 		}
 	}
 
-	if (json_args.text !== undefined) {
-		document.querySelector("#text").innerHTML = json_args.text;
+	if (json_args?.text !== undefined) {
+		document.querySelector<HTMLDivElement>("div#text").innerText = json_args?.text;
+	} else {
+		console.log("args: ", json_args);
 	}
 
 	mute_transition = json_args?.mute_transition ?? false;
