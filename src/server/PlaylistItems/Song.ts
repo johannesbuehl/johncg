@@ -296,7 +296,7 @@ export default class Song extends PlaylistItemBase {
 				return_string += `**${part}**  `;
 
 				this.song_file.get_part(part).slides.forEach((slide) => {
-					slide.forEach((line) => {
+					slide.lyrics.forEach((line) => {
 						return_string += `\n${line[language_index]}  `;
 					});
 				});

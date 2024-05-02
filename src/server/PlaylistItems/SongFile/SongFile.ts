@@ -69,7 +69,7 @@ export interface TitlePart {
 export interface LyricPart {
 	type: "lyric";
 	part: string;
-	slides: string[][][];
+	slides: SongPart;
 }
 
 export type ItemPart = TitlePart | LyricPart;
@@ -90,7 +90,11 @@ export interface LyricPartClient extends BasePartClient {
 
 export type ItemPartClient = TitlePartClient | LyricPartClient;
 
-export type SongPart = string[][][];
+export type SongPart = {
+	lyrics: string[][];
+	chords: Record<number, Chords>;
+}[];
+
 export type SongParts = Record<string, SongPart>;
 
 export type Chords = Record<number, Record<number, Chord>>;
@@ -241,11 +245,22 @@ export default class SongFile {
 
 		// go through all the text blocks and save them to the text-dictionary
 		let key = "";
+		let line_counter_song = 0;
 		for (const data_block of data) {
+			let line_counter_slide = 0;
+
 			// split the block into the individual lines
 			const lines = data_block.split(/\r?\n/);
 
 			const first_line_items = lines[0].split(" ");
+
+			const slide: SongParts[string][number] = {
+				lyrics: Array.from(
+					Array(Math.ceil(lines.length / this.metadata.LangCount)),
+					(): string[] => []
+				),
+				chords: {}
+			};
 
 			// check if the first row describes the part
 			if (
@@ -260,26 +275,33 @@ export default class SongFile {
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
 				this.song_parts[key] = [];
-			}
 
-			// pad the text with empty lines so that every language has an equal amount of lines
-			while (lines.length % this.metadata.LangCount !== 0) {
-				lines.push("");
-			}
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				slide.chords[line_counter_slide] = { 0: this.metadata.Chords[line_counter_song] };
 
-			const slide: string[][] = Array.from(
-				Array(Math.ceil(lines.length / this.metadata.LangCount)),
-				(): string[] => []
-			);
+				// increase the line-counter by the part-description
+				line_counter_song++;
+				line_counter_slide++;
+			}
 
 			// split the lines into the different languages
 			lines.forEach((vv, ii) => {
-				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
+				slide.lyrics[Math.floor(ii / this.metadata.LangCount)].push(vv);
+
+				slide.chords[Math.floor(ii / this.metadata.LangCount)] ??= {};
+				slide.chords[Math.floor(ii / this.metadata.LangCount)][ii % this.metadata.LangCount] =
+					this.metadata.Chords[line_counter_song];
+
+				line_counter_song++;
+				line_counter_slide++;
 			});
 
 			if (this.song_parts[key] !== undefined) {
 				this.song_parts[key].push(slide);
 			}
+
+			// increase the line-counter by the data_block-seperator
+			line_counter_song++;
 		}
 	}
 
@@ -359,6 +381,12 @@ export default class SongFile {
 	}
 
 	get text(): Record<string, string[][][]> {
-		return this.song_parts;
+		const return_object = structuredClone(this.song_parts);
+
+		Object.values(return_object).map((song_part) => song_part.map((slide) => slide.lyrics));
+
+		return Object.fromEntries(
+			Object.values(return_object).map((song_part) => song_part.map((slide) => slide.lyrics))
+		) as Record<string, string[][][]>;
 	}
 }

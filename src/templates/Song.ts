@@ -221,7 +221,7 @@ function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
 				div_content.classList.add("lyric");
 
 				// add the individual text-lines
-				for (const line_package of slide) {
+				for (const line_package of slide.lyrics) {
 					// create a template for the line
 					const line_template = document.createElement("div");
 					line_template.classList.add("text_line");
@@ -230,7 +230,7 @@ function create_slide(part: ItemPart, languages: number[]): HTMLDivElement[] {
 					languages.forEach((language, index) => {
 						const line = line_template.cloneNode(true) as HTMLDivElement;
 						line.classList.add(`language_${index}`);
-						line.innerText = line_package[language];
+						line.innerText = line_package[language] ?? "";
 
 						div_content.append(line);
 					});
