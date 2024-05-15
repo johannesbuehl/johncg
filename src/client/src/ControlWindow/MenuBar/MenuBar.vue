@@ -171,7 +171,10 @@
 				type="text"
 				v-model="playlist_caption"
 				placeholder="Playlist-Name"
-				@keydown="update_playlist_caption()"
+				@keydown="
+					update_playlist_caption();
+					$event.stopPropagation();
+				"
 			/>
 		</template>
 		<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">

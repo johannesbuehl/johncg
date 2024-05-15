@@ -285,9 +285,10 @@ export default class Song extends PlaylistItemBase {
 			return_string += `${this.song_file.metadata.ChurchSongID}: `;
 		}
 
-		const language_index = this.props.languages ? this.props.languages[0] : 0;
+		// const language_index = this.props.languages ? this.props.languages[0] : 0;
+		const languages = this.props.languages ?? this.song_file.languages;
 
-		return_string += `${this.song_file.metadata.Title[language_index]})\n\n`;
+		return_string += `${this.song_file.metadata.Title[languages[0]]})\n\n`;
 
 		if (full) {
 			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
@@ -297,7 +298,15 @@ export default class Song extends PlaylistItemBase {
 
 				this.song_file.get_part(part).slides.forEach((slide) => {
 					slide.forEach((line) => {
-						return_string += `\n${line[language_index]}  `;
+						languages.forEach((language_index) => {
+							if (line[language_index].length > 0) {
+								if (language_index !== languages[0]) {
+									return_string += `\n*${line[language_index]}*  `;
+								} else {
+									return_string += `\n${line[language_index]}  `;
+								}
+							}
+						});
 					});
 				});
 
