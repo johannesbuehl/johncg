@@ -47,7 +47,7 @@ enum TransitionType {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export default class Playlist {
-	private caption: string = "";
+	caption: string;
 
 	// store the individual items of the playlist
 	playlist_items: PlaylistItem[] = [];
@@ -63,9 +63,10 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(playlist?: string, callback?: () => void) {
-		if (playlist !== undefined) {
-			this.load_playlist_file(playlist, callback);
+	constructor(playlist_path?: string, callback?: () => void) {
+		// if there is a playlist-path specified, try to load the file
+		if (playlist_path !== undefined) {
+			this.load_playlist_file(playlist_path, callback);
 
 			let first_item = 0;
 
@@ -78,6 +79,11 @@ export default class Playlist {
 			}
 
 			this.set_active_item(first_item, 0);
+		} else {
+			// else initialize the playlist-caption with the date of creation
+			const dt = new Date();
+
+			this.caption = `${dt.getFullYear()}-${String(dt.getMonth()).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}-${String(dt.getMinutes()).padStart(2, "0")}-${String(dt.getSeconds()).padStart(2, "0")}`;
 		}
 
 		// add a listener to send send the current-slide on connection

@@ -28,6 +28,7 @@
 	const selected_item = ref<number | null>(null);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
+	const playlist_caption = ref<string>("");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Slides
 	});
@@ -160,6 +161,7 @@
 
 	function load_playlist_items(data: JGCPSend.Playlist) {
 		playlist_items.value = data;
+		playlist_caption.value = data.caption;
 
 		// if it is a new-playlist, reset the selected-item to the first one
 		if (data.new) {
@@ -266,7 +268,7 @@
 
 		const link = document.createElement("a");
 		link.href = url;
-		link.download = "playlist.pdf";
+		link.download = `${playlist_caption.value}.pdf`;
 
 		link.click();
 
@@ -306,6 +308,7 @@
 			:selected="selected_item"
 			:files="files"
 			:bible_file="bible_file"
+			:playlist_caption="playlist_caption"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

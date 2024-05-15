@@ -102,6 +102,11 @@ export interface UpdateItem extends Base {
 	index: number;
 }
 
+export interface UpdatePlaylistCaption extends Base {
+	command: "update_playlist_caption";
+	caption: string;
+}
+
 export interface DeleteItem {
 	command: "delete_item";
 	position: number;
@@ -120,6 +125,7 @@ export type Message =
 	| MovePlaylistItem
 	| AddItem
 	| UpdateItem
+	| UpdatePlaylistCaption
 	| DeleteItem
 	| NewPlaylist
 	| SavePlaylist

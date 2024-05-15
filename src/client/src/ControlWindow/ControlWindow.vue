@@ -1,6 +1,4 @@
 <script setup lang="ts">
-	import { toRaw } from "vue";
-
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
@@ -24,6 +22,7 @@
 		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		bible_file?: BibleFile;
 		selected: number | null;
+		playlist_caption: string;
 	}>();
 
 	const emit = defineEmits<{
@@ -118,6 +117,7 @@
 		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
 		v-model="control_window_state"
+		:playlist_caption="playlist_caption"
 		@navigate="navigate"
 		@set_visibility="visibility"
 	/>

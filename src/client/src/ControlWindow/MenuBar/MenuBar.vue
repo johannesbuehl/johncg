@@ -30,14 +30,14 @@
 		ws: WebSocket;
 	}>();
 
+	const control_window_state = defineModel<ControlWindowState>();
+	const playlist_caption = defineModel<string>("playlist_caption", { required: true });
 	const visibility = defineModel<boolean>("visibility", { required: true });
 
 	const emit = defineEmits<{
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
 		set_visibility: [state: boolean];
 	}>();
-
-	const control_window_state = defineModel<ControlWindowState>();
 
 	// reference for the file-input
 	const load_playlist_input = ref<HTMLInputElement>();
@@ -81,6 +81,20 @@
 		props.ws.send(JSON.stringify(message));
 
 		pdf_popup.value = false;
+	}
+
+	let playlist_caption_timeout: NodeJS.Timeout;
+	function update_playlist_caption() {
+		clearTimeout(playlist_caption_timeout);
+
+		playlist_caption_timeout = setTimeout(() => {
+			const message: JGCPRecv.UpdatePlaylistCaption = {
+				command: "update_playlist_caption",
+				caption: playlist_caption.value
+			};
+
+			props.ws.send(JSON.stringify(message));
+		}, 1000);
 	}
 </script>
 
@@ -133,26 +147,37 @@
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 		</MenuButton>
 		<MenuDivider />
-		<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
-			<FontAwesomeIcon :icon="['fas', 'backward-step']" />
-		</MenuButton>
-		<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
-			<FontAwesomeIcon :icon="['fas', 'forward-step']" />
-		</MenuButton>
-		<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
-			<FontAwesomeIcon :icon="['fas', 'angle-left']" />
-		</MenuButton>
-		<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
-			<FontAwesomeIcon :icon="['fas', 'angle-right']" />
-		</MenuButton>
-		<MenuDivider />
-		<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
-			<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
-		</MenuButton>
+		<template v-if="control_window_state === ControlWindowState.Slides">
+			<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+				<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+				<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+				<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+				<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+			</MenuButton>
+			<MenuDivider />
+			<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
+				<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+			</MenuButton>
+		</template>
+		<template v-if="control_window_state === ControlWindowState.Edit">
+			<input
+				id="playlist_caption"
+				type="text"
+				v-model="playlist_caption"
+				placeholder="Playlist-Name"
+				@keydown="update_playlist_caption()"
+			/>
+		</template>
 		<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
 			<div class="popup_menu_buttons">
-				<MenuButton @click="create_playlist_pdf('full')"> With content </MenuButton>
-				<MenuButton @click="create_playlist_pdf('small')"> Only itemlist </MenuButton>
+				<MenuButton @click="create_playlist_pdf('full')">Content</MenuButton>
+				<MenuButton @click="create_playlist_pdf('small')">Itemlist</MenuButton>
 			</div>
 		</PopUp>
 	</div>
@@ -185,5 +210,39 @@
 		display: grid;
 
 		grid-template-columns: 1fr 1fr;
+	}
+
+	#playlist_caption {
+		flex: 1;
+
+		font-size: 1.5rem;
+
+		margin: 0.25rem;
+		padding: 0.25rem;
+
+		color: var(--text-color);
+		border-color: transparent;
+		border-style: solid;
+		border-radius: 0.25rem;
+		background-color: var(--color-item);
+	}
+
+	#playlist_caption:hover {
+		border-color: var(--color-item-hover);
+
+		box-shadow: none;
+	}
+
+	#playlist_caption::placeholder {
+		color: var(--color-text-disabled);
+	}
+
+	#playlist_caption:focus {
+		font-weight: unset;
+
+		border-color: var(--color-active);
+		background-color: var(--color-page-background);
+
+		outline: none;
 	}
 </style>

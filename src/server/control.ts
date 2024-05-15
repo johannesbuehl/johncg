@@ -61,7 +61,9 @@ export default class Control {
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_file(msg.type, msg.file, ws),
 		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
-			this.create_playlist_pdf(ws, msg.type)
+			this.create_playlist_pdf(ws, msg.type),
+		update_playlist_caption: (msg: JGCPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
+			this.update_playlist_caption(msg.caption, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -152,6 +154,7 @@ export default class Control {
 	) {
 		const response_playlist_items: JGCPSend.Playlist = {
 			command: "playlist_items",
+			caption: this.playlist.caption,
 			new_item_order,
 			...this.playlist.create_client_object_playlist(),
 			client_id,
@@ -440,6 +443,22 @@ export default class Control {
 			this.send_playlist();
 
 			ws_send_response("item has been updated", true, ws);
+		}
+	}
+
+	private update_playlist_caption(playlist_caption: string, ws: WebSocket) {
+		if (typeof playlist_caption === "string") {
+			logger.debug(`Updating playlist-name to '${playlist_caption}'`);
+
+			this.playlist.caption = playlist_caption;
+
+			this.send_playlist();
+
+			ws_send_response("playlist-name has been updated", true, ws);
+		} else {
+			logger.warn("Can't update playlist-name: 'name' is not of type 'string'");
+
+			ws_send_response("can't update playlist-name", false, ws);
 		}
 	}
 
