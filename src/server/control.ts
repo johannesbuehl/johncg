@@ -95,6 +95,8 @@ export default class Control {
 
 			this.playlist = new Playlist();
 
+			this.send_playlist(undefined, undefined, undefined, true);
+
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
 			logger.info("can't create new playlist: there are unsaved changes");

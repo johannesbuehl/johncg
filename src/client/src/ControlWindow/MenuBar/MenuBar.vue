@@ -39,6 +39,14 @@
 		set_visibility: [state: boolean];
 	}>();
 
+	function new_playlist() {
+		const message: JGCPRecv.NewPlaylist = {
+			command: "new_playlist"
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
+
 	// reference for the file-input
 	const load_playlist_input = ref<HTMLInputElement>();
 
@@ -100,7 +108,7 @@
 
 <template>
 	<div class="menubar">
-		<MenuButton :square="true">
+		<MenuButton :square="true" @click="new_playlist()">
 			<FontAwesomeIcon :icon="['fas', 'file']" />
 		</MenuButton>
 		<MenuButton

@@ -148,6 +148,7 @@
 					@keydown.up="navigate_selection($event.target, index, -1)"
 					@keydown.down="navigate_selection($event.target, index, 1)"
 					@contextmenu="show_context_menu($event, element, index)"
+					@keydown.ctrl.e="emit('edit', index)"
 				/>
 			</template>
 		</Draggable>

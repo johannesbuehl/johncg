@@ -9,6 +9,7 @@ interface Base {
 
 export interface NewPlaylist extends Base {
 	command: "new_playlist";
+	force?: boolean;
 }
 
 /**

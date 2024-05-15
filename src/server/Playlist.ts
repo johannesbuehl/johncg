@@ -223,6 +223,9 @@ export default class Playlist {
 		playlist.items.forEach((item) => {
 			this.add_item(item, false, callback);
 		});
+
+		// reset the changes
+		this.changes = false;
 	}
 
 	save(): PlaylistObject {
@@ -230,6 +233,8 @@ export default class Playlist {
 			caption: this.caption,
 			items: this.playlist_items.map((item) => item.props)
 		};
+
+		this.changes = false;
 
 		return save_object;
 	}
