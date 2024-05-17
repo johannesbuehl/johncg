@@ -15,7 +15,8 @@
 		fas.faEye,
 		fas.faList,
 		fas.faPlus,
-		fas.faPen
+		fas.faPen,
+		fas.faMessage
 	);
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -154,8 +155,8 @@
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 		</MenuButton>
-		<MenuDivider />
 		<template v-if="control_window_state === ControlWindowState.Slides">
+			<MenuDivider />
 			<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
 				<FontAwesomeIcon :icon="['fas', 'backward-step']" />
 			</MenuButton>
@@ -185,6 +186,14 @@
 				"
 			/>
 		</template>
+		<MenuButton
+			id="message_button"
+			:square="true"
+			@click="control_window_state = ControlWindowState.Message"
+			:active="control_window_state === ControlWindowState.Message"
+		>
+			<FontAwesomeIcon :icon="['fas', 'message']" />
+		</MenuButton>
 		<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
 			<div class="popup_menu_buttons">
 				<MenuButton @click="create_playlist_pdf('full')">Content</MenuButton>
@@ -255,5 +264,9 @@
 		background-color: var(--color-page-background);
 
 		outline: none;
+	}
+
+	#message_button {
+		margin-left: auto;
 	}
 </style>

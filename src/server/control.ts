@@ -334,7 +334,7 @@ export default class Control {
 			client_id: client_id
 		});
 
-		ws_send_response(`'${type}' has been navigated`, true, ws);
+		ws_send_response(`navigating ${type}: '${steps}' steps`, true, ws);
 	}
 
 	/**

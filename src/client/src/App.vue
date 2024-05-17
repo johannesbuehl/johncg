@@ -8,6 +8,7 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
+	import { LogLevel, type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
 
 	const Config = {
 		client_server: {
@@ -29,6 +30,8 @@
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
 	const playlist_caption = ref<string>("");
+	const messages = ref<LogMessage[]>([]);
+	const log_level = ref<Record<LogLevel, boolean>>({ error: true, warn: true, log: true, debug: false });
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Slides
 	});
@@ -113,7 +116,11 @@
 				data = JSON.parse(event.data as string);
 			} catch (e) {
 				if (e instanceof SyntaxError) {
-					console.error("received invalid JSON");
+					messages.value.push({
+						message: "received invalid JSON",
+						type: LogLevel.error,
+						timestamp: new Date()
+					});
 					return;
 				} else {
 					throw e;
@@ -138,15 +145,21 @@
 		ws.addEventListener("ping", () => {});
 
 		ws.addEventListener("error", (event: Event) => {
-			console.error(
-				`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`
-			);
+			messages.value.push({
+				message: `Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`,
+				type: LogLevel.error,
+				timestamp: new Date()
+			});
 
 			ws?.close();
 		});
 
 		ws.addEventListener("close", () => {
-			console.log("No connection to server. Retrying in 1s");
+			messages.value.push({
+				message: "No connection to server. Retrying in 1s",
+				type: LogLevel.log,
+				timestamp: new Date()
+			});
 
 			// delete the playlist and slides
 			init();
@@ -279,10 +292,18 @@
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
 				case 4:
-					console.error(response.message);
+					messages.value.push({
+						message: response.message,
+						type: LogLevel.error,
+						timestamp: new Date()
+					});
 					break;
 				default:
-					console.debug(response.message);
+					messages.value.push({
+						message: response.message,
+						type: LogLevel.debug,
+						timestamp: new Date()
+					});
 			}
 		}
 	}
@@ -309,6 +330,8 @@
 			:files="files"
 			:bible_file="bible_file"
 			:playlist_caption="playlist_caption"
+			:messages="messages"
+			:log_level="log_level"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

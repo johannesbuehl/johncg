@@ -11,6 +11,8 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import MessagePopup, { LogLevel, type LogMessage } from "./Message/MessagePopup.vue";
+import MessageView from "./Message/MessageView.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -23,6 +25,7 @@
 		bible_file?: BibleFile;
 		selected: number | null;
 		playlist_caption: string;
+		messages: LogMessage[];
 	}>();
 
 	const emit = defineEmits<{
@@ -33,6 +36,7 @@
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		required: true
 	});
+	const log_level = defineModel<Record<LogLevel, boolean>>("log_level", { required: true });
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
@@ -166,6 +170,16 @@
 			:item_index="selected"
 			:bible="bible_file"
 			:files="files"
+		/>
+		<MessageView
+			v-else-if="control_window_state === ControlWindowState.Message"
+			:messages="messages"
+			v-model:log_level="log_level"
+		/>
+		<MessagePopup
+			v-if="control_window_state !== ControlWindowState.Message"
+			:messages="messages"
+			:log_level="log_level"
 		/>
 	</div>
 </template>

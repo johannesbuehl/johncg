@@ -18,7 +18,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## roadmap
-- client-messages: create message-log, group same
 - fix "Buffer() is deprecated"
 - load files from disc always at item selection to stay up to date
 - create server-items at selection, delete after deselection to always stay up to date, but prevent multiple reloads (alternative: optional argument for accessing functions wether a reload should be done) / reload button in client
@@ -31,3 +30,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - casparcg: if no connection on startup possible: try periodically to reconnect
 - song-file: chords itself as chords and transpose them
+- make client-messages and log-message the same text
