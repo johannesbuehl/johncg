@@ -9,7 +9,7 @@
 		error = "error",
 		warn = "warn",
 		log = "log",
-		debug ="debug"
+		debug = "debug"
 	}
 
 	export const icons: Record<LogLevel, string> = {
@@ -27,34 +27,29 @@
 	};
 
 	export function get_time_string(date: Date): string {
-		return [date.getHours(), date.getMinutes(), date.getSeconds()].map((ele) => {
-			return String(ele).padStart(2, "0")
-		}).join(":");
+		return [date.getHours(), date.getMinutes(), date.getSeconds()]
+			.map((ele) => {
+				return String(ele).padStart(2, "0");
+			})
+			.join(":");
 	}
 </script>
 
 <script setup lang="ts">
-	import { ref, watch } from 'vue';
+	import { ref, watch } from "vue";
 
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	library.add(
-		fas.faExclamation,
-		fas.faXmark,
-		fas.faBug,
-		fas.faInfo
-	);
+	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 
 	const props = defineProps<{
 		messages: LogMessage[];
 		log_level: Record<LogLevel, boolean>;
 	}>();
 
-	const emit = defineEmits<{
-		
-	}>();
+	const emit = defineEmits<{}>();
 
 	const messages = ref<LogMessage[]>([]);
 
@@ -80,9 +75,9 @@
 
 	watch(props.messages, (messages) => {
 		const message = messages[messages.length - 1];
-		
+
 		console_command_map[message.type](message.message);
-		
+
 		if (props.log_level[message.type]) {
 			show_message(message);
 		}
@@ -91,8 +86,16 @@
 
 <template>
 	<TransitionGroup class="popup_parent" name="popup" tag="div">
-		<div v-for="(message, message_index) of messages" class="popup" :key="message.message" @click="messages.splice(message_index, 1)">
-			<FontAwesomeIcon :icon="['fas', icons[message.type]]" :style="{ color: colors[message.type] }" />
+		<div
+			v-for="(message, message_index) of messages"
+			class="popup"
+			:key="message.message"
+			@click="messages.splice(message_index, 1)"
+		>
+			<FontAwesomeIcon
+				:icon="['fas', icons[message.type]]"
+				:style="{ color: colors[message.type] }"
+			/>
 			<div class="popup_text">
 				<span class="message">{{ message.message }}</span>
 				<span class="date">{{ get_time_string(message.timestamp) }}</span>
@@ -148,7 +151,7 @@
 	.popup > :first-child {
 		width: 2ch;
 	}
-	
+
 	.popup > .popup_text {
 		flex: 1;
 

@@ -31,7 +31,12 @@
 	const bible_file = ref<BibleFile>();
 	const playlist_caption = ref<string>("");
 	const messages = ref<LogMessage[]>([]);
-	const log_level = ref<Record<LogLevel, boolean>>({ error: true, warn: true, log: true, debug: false });
+	const log_level = ref<Record<LogLevel, boolean>>({
+		error: true,
+		warn: true,
+		log: true,
+		debug: false
+	});
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		default: ControlWindowState.Slides
 	});

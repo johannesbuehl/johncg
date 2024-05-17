@@ -12,7 +12,7 @@
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import MessagePopup, { LogLevel, type LogMessage } from "./Message/MessagePopup.vue";
-import MessageView from "./Message/MessageView.vue";
+	import MessageView from "./Message/MessageView.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;

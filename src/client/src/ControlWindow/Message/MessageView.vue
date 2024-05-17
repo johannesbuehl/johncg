@@ -1,25 +1,18 @@
 <script setup lang="ts">
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	library.add(
-		fas.faExclamation,
-		fas.faXmark,
-		fas.faBug,
-		fas.faInfo
-	);
+	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 
-	import { LogLevel, type LogMessage } from './MessagePopup.vue';
+	import { LogLevel, type LogMessage } from "./MessagePopup.vue";
 	import { icons, colors, get_time_string } from "./MessagePopup.vue";
 
 	const props = defineProps<{
 		messages: LogMessage[];
 	}>();
 
-	const emit = defineEmits<{
-		
-	}>();
+	const emit = defineEmits<{}>();
 
 	const log_level = defineModel<Record<LogLevel, boolean>>("log_level", { required: true });
 </script>
@@ -29,15 +22,21 @@
 		<div id="type_selector">
 			<template v-for="[key, val] of Object.entries(log_level)">
 				<div :class="{ active: val }" @click="log_level[key as LogLevel] = !val">
-					<FontAwesomeIcon :icon="['fas', icons[key as LogLevel]]" :style="{ color: colors[key as LogLevel] }" />
+					<FontAwesomeIcon
+						:icon="['fas', icons[key as LogLevel]]"
+						:style="{ color: colors[key as LogLevel] }"
+					/>
 					{{ key }}
 				</div>
 			</template>
 		</div>
 		<div id="message_container">
 			<template v-for="message of messages">
-				<div class="message"  v-if="log_level[message.type]">
-					<FontAwesomeIcon :icon="['fas', icons[message.type]]" :style="{ color: colors[message.type] }" />
+				<div class="message" v-if="log_level[message.type]">
+					<FontAwesomeIcon
+						:icon="['fas', icons[message.type]]"
+						:style="{ color: colors[message.type] }"
+					/>
 					<div class="message_text">
 						<span class="message">{{ message.message }}</span>
 						<span class="date">{{ get_time_string(message.timestamp) }}</span>
@@ -110,12 +109,12 @@
 	#message_container > :first-child {
 		margin-bottom: auto;
 	}
-	
+
 	.message {
 		background-color: var(--color-item);
-		
+
 		display: flex;
-		
+
 		padding: 0.25rem;
 		padding-left: 0.5rem;
 
