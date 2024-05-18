@@ -73,7 +73,7 @@
 		background-color: var(--color-item);
 
 		padding: 0.25rem;
-		padding-left: 0.5rem;
+		padding-inline: 0.5rem;
 
 		cursor: pointer;
 

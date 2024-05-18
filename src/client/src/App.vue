@@ -112,6 +112,12 @@
 
 		ws.addEventListener("open", () => {
 			server_connection.value = ServerConnection.connected;
+
+			messages.value.push({
+				message: "Connected to JohnCG",
+				type: LogLevel.log,
+				timestamp: new Date()
+			});
 		});
 
 		ws.addEventListener("message", (event: MessageEvent) => {
@@ -253,6 +259,12 @@
 	}
 
 	function save_playlist_file(data: JGCPSend.PlaylistSave) {
+		messages.value.push({
+			message: "Received Playlist file",
+			type: LogLevel.log,
+			timestamp: new Date()
+		});
+
 		const json_string = JSON.stringify(data.playlist, null, "\t");
 
 		const blob = new Blob([json_string], { type: "application/json" });
@@ -278,10 +290,12 @@
 	}
 
 	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
-		// const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
+		messages.value.push({
+			message: "Received Playlist PDF",
+			type: LogLevel.log,
+			timestamp: new Date()
+		});
 
-		// const blob = new Blob([Buffer.from(data.playlist_pdf, "base64")], { type: "application/pdf" });
-		// const url = URL.createObjectURL(blob);
 		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
 
 		const link = document.createElement("a");
