@@ -22,6 +22,7 @@ export interface OpenPlaylist extends Base {
 
 export interface SavePlaylist extends Base {
 	command: "save_playlist";
+	playlist: string;
 }
 
 export interface CreatePlaylistPDF extends Base {

@@ -3,5 +3,6 @@ export enum ControlWindowState {
 	Add = 1,
 	Edit = 2,
 	OpenPlaylist = 3,
-	Message = 4
+	SavePlaylist = 4,
+	Message = 5
 }

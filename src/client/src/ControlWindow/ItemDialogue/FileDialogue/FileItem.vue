@@ -39,6 +39,7 @@
 		root?: boolean;
 		expand?: boolean;
 		files?: File[];
+		select_dirs?: boolean;
 		clone_callback?: (arg: JGCPSend.ItemFiles["files"][0]) => ItemProps;
 	}>();
 
@@ -79,7 +80,9 @@
 		:tabindex="root ? undefined : 0"
 		@keydown.enter="on_enter"
 		@click="
-			typeof files !== 'object' && file !== undefined ? (selection = file) : '';
+			if (file !== undefined && (typeof files !== 'object' || select_dirs === true)) {
+				selection = file;
+			}
 			$event.stopPropagation();
 			$event.preventDefault();
 		"
@@ -122,6 +125,7 @@
 				<template #item="{ element }">
 					<FileItem
 						v-show="expanded || root"
+						:select_dirs="select_dirs"
 						:file="element"
 						:expand="expand"
 						:files="element.children"

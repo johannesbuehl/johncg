@@ -228,15 +228,30 @@ export default class Playlist {
 		this.changes = false;
 	}
 
-	save(): PlaylistObject {
+	save(playlist: string): boolean {
 		const save_object: PlaylistObject = {
 			caption: this.caption,
 			items: this.playlist_items.map((item) => item.props)
 		};
 
+		try {
+			fs.writeFileSync(
+				path.join(Config.get_path("playlist"), playlist),
+				JSON.stringify(save_object, null, "\t"),
+				"utf-8"
+			);
+		} catch (e) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			if (e?.code !== "ENOENT") {
+				throw e;
+			}
+
+			return false;
+		}
+
 		this.changes = false;
 
-		return save_object;
+		return true;
 	}
 
 	create_client_object_playlist(): ClientPlaylistItems {

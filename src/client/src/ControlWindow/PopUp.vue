@@ -11,22 +11,43 @@
 	const emit = defineEmits<{}>();
 
 	const active = defineModel<boolean>("active", { required: true });
+
+	document.addEventListener("keydown", (event) => {
+		if (event.code === "Escape" && active.value === true) {
+			active.value = false;
+
+			event.preventDefault();
+			event.stopPropagation();
+		}
+	});
 </script>
 
 <template>
-	<div id="popup_wrapper" v-if="active">
-		<div id="popup_window">
-			<div id="header">
-				{{ title }}<FontAwesomeIcon :icon="['fas', 'xmark']" @click="active = false" />
-			</div>
-			<div id="popup_window_content">
-				<slot></slot>
+	<Transition>
+		<div id="popup_wrapper" v-if="active">
+			<div id="popup_window">
+				<div id="header">
+					{{ title }}<FontAwesomeIcon :icon="['fas', 'xmark']" @click="active = false" />
+				</div>
+				<div id="popup_window_content">
+					<slot></slot>
+				</div>
 			</div>
 		</div>
-	</div>
+	</Transition>
 </template>
 
 <style scoped>
+	.v-enter-active,
+	.v-leave-active {
+		transition: opacity 0.25s ease;
+	}
+
+	.v-enter-from,
+	.v-leave-to {
+		opacity: 0;
+	}
+
 	#popup_wrapper {
 		position: absolute;
 
@@ -34,7 +55,7 @@
 
 		z-index: 9999;
 
-		backdrop-filter: blur(0.5rem);
+		backdrop-filter: blur(0.5rem) brightness(75%);
 
 		display: flex;
 

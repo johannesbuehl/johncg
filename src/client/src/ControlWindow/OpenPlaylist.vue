@@ -11,6 +11,7 @@
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { File } from "@server/search_part";
+	import { ControlWindowState } from "@/Enums";
 
 	library.add(fas.faFolderOpen);
 
@@ -28,6 +29,9 @@
 	type SearchMapFile = File & { children?: SearchMapFile[]; search_data?: { name: string } };
 	let search_map: SearchMapFile[] = [];
 	const file_tree = defineModel<File[]>("file_tree");
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: true
+	});
 
 	onMounted(() => {
 		refresh_items();
@@ -60,6 +64,8 @@
 			};
 
 			props.ws.send(JSON.stringify(message));
+
+			control_window_state.value = ControlWindowState.Slides;
 		}
 	}
 
@@ -122,7 +128,7 @@
 <template>
 	<FileDialogue
 		:files="file_tree"
-		name="PlaylistFiles"
+		name="Playlist Files"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="load_playlist"

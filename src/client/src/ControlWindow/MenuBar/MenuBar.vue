@@ -31,7 +31,9 @@
 		ws: WebSocket;
 	}>();
 
-	const control_window_state = defineModel<ControlWindowState>();
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: true
+	});
 	const playlist_caption = defineModel<string>("playlist_caption", { required: true });
 	const visibility = defineModel<boolean>("visibility", { required: true });
 
@@ -70,14 +72,6 @@
 
 			reader.readAsText(input_event.files[0]);
 		}
-	}
-
-	function save_playlist() {
-		const message: JGCPRecv.SavePlaylist = {
-			command: "save_playlist"
-		};
-
-		props.ws.send(JSON.stringify(message));
 	}
 
 	const pdf_popup = ref<boolean>(false);
@@ -119,7 +113,11 @@
 		>
 			<FontAwesomeIcon :icon="['fas', 'folder-open']" />
 		</MenuButton>
-		<MenuButton :square="true" @click="save_playlist">
+		<MenuButton
+			:square="true"
+			@click="control_window_state = ControlWindowState.SavePlaylist"
+			:active="control_window_state === ControlWindowState.SavePlaylist"
+		>
 			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
 		</MenuButton>
 		<input

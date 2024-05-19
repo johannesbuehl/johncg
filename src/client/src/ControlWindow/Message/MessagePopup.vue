@@ -5,13 +5,6 @@
 		timestamp: Date;
 	}
 
-	export enum LogLevel {
-		error = "error",
-		warn = "warn",
-		log = "log",
-		debug = "debug"
-	}
-
 	export const icons: Record<LogLevel, string> = {
 		error: "exclamation",
 		warn: "xmark",
@@ -41,6 +34,7 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import type { LogLevel } from "@server/JGCPSendMessages";
 
 	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 
@@ -54,7 +48,7 @@
 	const messages = ref<LogMessage[]>([]);
 
 	function show_message(message: LogMessage) {
-		messages.value.unshift(message);
+		messages.value.splice(0, 0, message);
 
 		// remove an element
 		setTimeout(() => {

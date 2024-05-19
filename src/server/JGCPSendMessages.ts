@@ -1,5 +1,4 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import PlaylistObject from "./PlaylistFile.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemFiles } from "./JGCPReceiveMessages.ts";
@@ -53,10 +52,6 @@ export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 export interface Clear extends Base {
 	command: "clear";
 }
-export interface PlaylistSave {
-	command: "playlist_save";
-	playlist: PlaylistObject;
-}
 
 export interface ItemFiles {
 	command: "item_files";
@@ -74,6 +69,19 @@ export interface PlaylistPDF {
 	playlist_pdf: string;
 }
 
+export enum LogLevel {
+	error = "error",
+	warn = "warn",
+	log = "log",
+	debug = "debug"
+}
+
+export interface ClientMessage {
+	command: "client_mesage";
+	message: string;
+	type: LogLevel;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -83,7 +91,7 @@ export type Message =
 	| State
 	| ItemSlides
 	| Clear
-	| PlaylistSave
 	| ItemFiles
 	| Bible
-	| PlaylistPDF;
+	| PlaylistPDF
+	| ClientMessage;

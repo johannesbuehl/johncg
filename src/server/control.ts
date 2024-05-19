@@ -38,7 +38,8 @@ export default class Control {
 		new_playlist: (msg: JGCPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		load_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.load_playlist(msg?.playlist, ws),
-		save_playlist: (msg: JGCPRecv.SavePlaylist, ws: WebSocket) => this.save_playlist(ws),
+		save_playlist: (msg: JGCPRecv.SavePlaylist, ws: WebSocket) =>
+			this.save_playlist(msg.playlist, ws),
 		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) =>
 			this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) =>
@@ -135,17 +136,27 @@ export default class Control {
 		ws_send_response("playlist has been loaded", true, ws);
 	}
 
-	private save_playlist(ws: WebSocket) {
-		const message: JGCPSend.PlaylistSave = {
-			command: "playlist_save",
-			playlist: this.playlist.save()
-		};
+	private save_playlist(playlist: string, ws: WebSocket) {
+		logger.log(`saving playlist at ${playlist}`);
 
-		logger.debug("sending playlist to client");
+		let message: JGCPSend.ClientMessage;
+		if (this.playlist.save(playlist)) {
+			message = {
+				command: "client_mesage",
+				message: "Playlist has been saved",
+				type: JGCPSend.LogLevel.log
+			};
+		} else {
+			message = {
+				command: "client_mesage",
+				message: "Can't save playlist: invalid path",
+				type: JGCPSend.LogLevel.error
+			};
+
+			logger.error("Can't save playlist: invalid path");
+		}
 
 		ws?.send(JSON.stringify(message));
-
-		ws_send_response(`playlist has been send to client`, true, ws);
 	}
 
 	private send_playlist(

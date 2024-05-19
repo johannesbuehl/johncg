@@ -5,14 +5,15 @@
 	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
-	import PlaylistFile from "./PlaylistFile.vue";
+	import OpenPlaylist from "./OpenPlaylist.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import MessagePopup, { LogLevel, type LogMessage } from "./Message/MessagePopup.vue";
+	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
 	import MessageView from "./Message/MessageView.vue";
+	import SavePlaylist from "./SavePlaylist.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -36,7 +37,9 @@
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		required: true
 	});
-	const log_level = defineModel<Record<LogLevel, boolean>>("log_level", { required: true });
+	const log_level = defineModel<Record<JGCPSend.LogLevel, boolean>>("log_level", {
+		required: true
+	});
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
@@ -120,16 +123,24 @@
 		class="menu_bar"
 		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
-		v-model="control_window_state"
+		v-model:control_window_state="control_window_state"
 		:playlist_caption="playlist_caption"
 		@navigate="navigate"
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<PlaylistFile
+		<OpenPlaylist
 			v-if="control_window_state === ControlWindowState.OpenPlaylist"
 			:files="files.playlist"
 			:ws="ws"
+			v-model:control_window_state="control_window_state"
+		/>
+		<SavePlaylist
+			v-if="control_window_state === ControlWindowState.SavePlaylist"
+			:files="files.playlist"
+			:ws="ws"
+			:file_name="playlist_caption"
+			v-model:control_window_state="control_window_state"
 		/>
 		<PlaylistItemsList
 			v-if="

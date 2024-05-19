@@ -25,6 +25,7 @@
 
 	const props = defineProps<{
 		name: string;
+		select_dirs?: boolean;
 		files?: JGCPSend.ItemFiles["files"];
 		clone_callback?: (arg: JGCPSend.ItemFiles["files"][0]) => ItemProps;
 	}>();
@@ -85,6 +86,7 @@
 					<div class="header">{{ name }}</div>
 					<FileItem
 						v-model="selection"
+						:select_dirs="true"
 						:files="files"
 						:clone_callback="clone_callback"
 						:root="true"
@@ -143,7 +145,6 @@
 	.search_input_wrapper > input:first-child {
 		width: 8rem;
 	}
-
 	.search_box {
 		font-size: 1.5rem;
 

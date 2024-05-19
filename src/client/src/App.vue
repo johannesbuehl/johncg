@@ -4,11 +4,11 @@
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
-	import { LogLevel, type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
+	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
 
 	const Config = {
 		client_server: {
@@ -31,7 +31,7 @@
 	const bible_file = ref<BibleFile>();
 	const playlist_caption = ref<string>("");
 	const messages = ref<LogMessage[]>([]);
-	const log_level = ref<Record<LogLevel, boolean>>({
+	const log_level = ref<Record<JGCPSend.LogLevel, boolean>>({
 		error: true,
 		warn: true,
 		log: true,
@@ -115,7 +115,7 @@
 
 			messages.value.push({
 				message: "Connected to JohnCG",
-				type: LogLevel.log,
+				type: JGCPSend.LogLevel.log,
 				timestamp: new Date()
 			});
 		});
@@ -129,7 +129,7 @@
 				if (e instanceof SyntaxError) {
 					messages.value.push({
 						message: "received invalid JSON",
-						type: LogLevel.error,
+						type: JGCPSend.LogLevel.error,
 						timestamp: new Date()
 					});
 					return;
@@ -144,10 +144,10 @@
 				item_slides: load_item_slides,
 				response: handle_ws_response,
 				clear: init,
-				playlist_save: save_playlist_file,
 				item_files: parse_item_files,
 				bible: parse_bible,
-				playlist_pdf: save_playlist_pdf
+				playlist_pdf: save_playlist_pdf,
+				client_mesage: show_client_message
 			};
 
 			command_parser_map[data.command](data as never);
@@ -158,7 +158,7 @@
 		ws.addEventListener("error", (event: Event) => {
 			messages.value.push({
 				message: `Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`,
-				type: LogLevel.error,
+				type: JGCPSend.LogLevel.error,
 				timestamp: new Date()
 			});
 
@@ -168,7 +168,7 @@
 		ws.addEventListener("close", () => {
 			messages.value.push({
 				message: "No connection to server. Retrying in 1s",
-				type: LogLevel.log,
+				type: JGCPSend.LogLevel.log,
 				timestamp: new Date()
 			});
 
@@ -190,10 +190,6 @@
 		// if it is a new-playlist, reset the selected-item to the first one
 		if (data.new) {
 			selected_item.value = data.playlist_items.length > 0 ? 0 : null;
-		}
-
-		if (control_window_state.value === ControlWindowState.OpenPlaylist) {
-			control_window_state.value = ControlWindowState.Slides;
 		}
 
 		// if the playlist is empty, clear the slides-view
@@ -258,27 +254,6 @@
 		ws?.send(JSON.stringify(message));
 	}
 
-	function save_playlist_file(data: JGCPSend.PlaylistSave) {
-		messages.value.push({
-			message: "Received Playlist file",
-			type: LogLevel.log,
-			timestamp: new Date()
-		});
-
-		const json_string = JSON.stringify(data.playlist, null, "\t");
-
-		const blob = new Blob([json_string], { type: "application/json" });
-		const url = URL.createObjectURL(blob);
-
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = "playlist.jcg";
-
-		link.click();
-
-		URL.revokeObjectURL(url);
-	}
-
 	function parse_item_files(data: JGCPSend.ItemFiles) {
 		if (Object.keys(files.value).includes(data.type)) {
 			files.value[data.type] = data.files;
@@ -292,7 +267,7 @@
 	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
 		messages.value.push({
 			message: "Received Playlist PDF",
-			type: LogLevel.log,
+			type: JGCPSend.LogLevel.log,
 			timestamp: new Date()
 		});
 
@@ -307,20 +282,28 @@
 		URL.revokeObjectURL(url);
 	}
 
+	function show_client_message(data: JGCPSend.ClientMessage) {
+		messages.value.push({
+			message: data.message,
+			type: data.type,
+			timestamp: new Date()
+		});
+	}
+
 	function handle_ws_response(response: JGCPSend.Response) {
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
 				case 4:
 					messages.value.push({
 						message: response.message,
-						type: LogLevel.error,
+						type: JGCPSend.LogLevel.error,
 						timestamp: new Date()
 					});
 					break;
 				default:
 					messages.value.push({
 						message: response.message,
-						type: LogLevel.debug,
+						type: JGCPSend.LogLevel.debug,
 						timestamp: new Date()
 					});
 			}
