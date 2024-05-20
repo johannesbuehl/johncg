@@ -159,6 +159,8 @@
 		min-width: 100%;
 
 		max-width: 0;
+
+		transition: background-color 0.25s ease;
 	}
 
 	.header:hover {

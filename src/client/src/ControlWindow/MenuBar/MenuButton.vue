@@ -39,6 +39,8 @@
 		height: 2em;
 
 		margin: 0.25rem;
+
+		transition: background-color 0.25s ease;
 	}
 
 	div.button.square {

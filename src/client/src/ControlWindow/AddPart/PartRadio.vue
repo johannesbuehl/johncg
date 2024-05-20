@@ -50,6 +50,8 @@
 		flex: 1;
 
 		text-align: center;
+
+		transition: background-color 0.25s ease;
 	}
 
 	.add_part_radio:hover {

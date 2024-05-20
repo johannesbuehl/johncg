@@ -153,25 +153,33 @@
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 		</MenuButton>
-		<template v-if="control_window_state === ControlWindowState.Slides">
-			<MenuDivider />
-			<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
-				<FontAwesomeIcon :icon="['fas', 'backward-step']" />
-			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
-				<FontAwesomeIcon :icon="['fas', 'forward-step']" />
-			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
-				<FontAwesomeIcon :icon="['fas', 'angle-left']" />
-			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
-				<FontAwesomeIcon :icon="['fas', 'angle-right']" />
-			</MenuButton>
-			<MenuDivider />
-			<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
-				<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
-			</MenuButton>
-		</template>
+		<div id="navigation_buttons">
+			<Transition name="navigation_buttons">
+				<div id="navigation_buttons" v-if="control_window_state === ControlWindowState.Slides">
+					<MenuDivider />
+					<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+						<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+					</MenuButton>
+					<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+						<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+					</MenuButton>
+					<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+						<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+					</MenuButton>
+					<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+						<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+					</MenuButton>
+					<MenuDivider />
+					<MenuButton
+						:square="true"
+						v-model="visibility"
+						@click="emit('set_visibility', visibility)"
+					>
+						<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+					</MenuButton>
+				</div>
+			</Transition>
+		</div>
 		<template v-if="control_window_state === ControlWindowState.Edit">
 			<input
 				id="playlist_caption"
@@ -211,20 +219,17 @@
 		border-radius: 0.25rem;
 	}
 
-	.menubar > .button {
+	.button {
 		font-size: 1.5rem;
 	}
 
-	.menubar > .seperator {
+	.seperator {
 		margin-top: 0.625rem;
 		margin-bottom: 0.625rem;
+		margin-inline: 0.125rem;
 	}
 
-	.menubar > * {
-		margin: 0.125rem;
-	}
-
-	.popup_menu_buttons {
+	.navigation_buttons_menu_buttons {
 		display: grid;
 
 		grid-template-columns: 1fr 1fr;
@@ -266,5 +271,24 @@
 
 	#message_button {
 		margin-left: auto;
+	}
+
+	#navigation_buttons {
+		display: inherit;
+	}
+
+	.navigation_buttons-move,
+	.navigation_buttons-enter-active,
+	.navigation_buttons-leave-active {
+		transition: all 0.5s ease;
+		transform: translateX(0);
+
+		overflow: hidden;
+		position: relative;
+	}
+
+	.navigation_buttons-enter-from,
+	.navigation_buttons-leave-to {
+		transform: translateX(-100%);
 	}
 </style>

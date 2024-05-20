@@ -30,4 +30,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - casparcg: if no connection on startup possible: try periodically to reconnect
 - song-file: chords itself as chords and transpose them
-- save playlist through interface
+- support other browser than Chrome and phone / tablet resolution

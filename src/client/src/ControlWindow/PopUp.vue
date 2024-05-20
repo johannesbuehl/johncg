@@ -70,7 +70,7 @@
 	}
 
 	#header {
-		padding: 0.25rem;
+		padding: 0.5rem;
 
 		background-color: var(--color-active);
 
@@ -79,7 +79,7 @@
 	}
 
 	#header > svg {
-		margin-left: 0.5rem;
+		margin-left: 1rem;
 		cursor: pointer;
 
 		right: 0;

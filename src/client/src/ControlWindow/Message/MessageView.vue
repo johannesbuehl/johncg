@@ -5,8 +5,9 @@
 
 	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 
-	import { LogLevel, type LogMessage } from "./MessagePopup.vue";
+	import { type LogMessage } from "./MessagePopup.vue";
 	import { icons, colors, get_time_string } from "./MessagePopup.vue";
+	import type { LogLevel } from "@server/JGCPSendMessages";
 
 	const props = defineProps<{
 		messages: LogMessage[];
@@ -80,6 +81,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
+
+		transition: background-color 0.25s ease;
 	}
 
 	#type_selector > div:hover {

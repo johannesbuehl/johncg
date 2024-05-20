@@ -42,6 +42,8 @@
 		required: true
 	});
 
+	const rotate_button = ref<boolean>(false);
+
 	const selection = defineModel<File | undefined>("selection", { required: true });
 
 	const first_input_ref = ref<HTMLInputElement[]>([]);
@@ -77,7 +79,16 @@
 						@input="emit('search')"
 					/>
 				</div>
-				<MenuButton :square="true" @click="emit('refresh_files')">
+				<MenuButton
+					id="rotate_button"
+					:class="{ rotate_button: rotate_button }"
+					:square="true"
+					@click="
+						emit('refresh_files');
+						rotate_button = true;
+					"
+					@animationend="rotate_button = false"
+				>
 					<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
 				</MenuButton>
 			</div>
@@ -212,5 +223,19 @@
 
 	.button_wrapper {
 		display: flex;
+	}
+
+	.rotate_button > svg {
+		animation: 0.5s rotate;
+	}
+
+	@keyframes rotate {
+		from {
+			transform: rotate(0);
+		}
+
+		to {
+			transform: rotate(180deg);
+		}
 	}
 </style>

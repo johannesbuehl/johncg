@@ -64,6 +64,8 @@
 		padding-left: 0.75rem;
 
 		cursor: pointer;
+
+		transition: background-color 0.25s ease;
 	}
 
 	.header:hover {
