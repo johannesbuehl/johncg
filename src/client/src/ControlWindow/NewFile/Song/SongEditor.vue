@@ -1,43 +1,44 @@
 <script lang="ts">
-	interface TextPart {
+	export interface TextPart {
 		part: string;
 		text: [string, string, string, string][];
 	}
 </script>
 
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
-	import Draggable from "vuedraggable";
+	import { ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import Draggable from "vuedraggable";
 
-	import { get_song_part_color } from "../ItemDialogue/SongPartSelector.vue";
-	import MenuButton from "../MenuBar/MenuButton.vue";
-	import PopUp from "../PopUp.vue";
-	import FileDialogue, {
-		type SearchInputDefinitions
-	} from "../ItemDialogue/FileDialogue/FileDialogue.vue";
+	import type { SearchInputDefinitions } from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import { get_song_part_color } from "../../ItemDialogue/SongPartSelector.vue";
+	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import PopUp from "@/ControlWindow/PopUp.vue";
 
 	import type { File, MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import { type SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
-	library.add(fas.faXmark, fas.faTrash, fas.faFloppyDisk);
+	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk);
 
 	const props = defineProps<{
 		ws: WebSocket;
-		media_files: MediaFile[];
 		song_files: SongFile[];
+		media_files: MediaFile[];
 	}>();
 
 	const emit = defineEmits<{}>();
 
-	const lang_count = ref<number>(1);
-	const titles = ref<[string, string, string, string]>(["", "", "", ""]);
-	const church_song_id = ref<string>();
-	const text_parts = ref<TextPart[]>([{ part: "", text: [["", "", "", ""]] }]);
-	const verse_order = ref<string[]>([]);
+	const lang_count = defineModel<number>("lang_count", { default: 1 });
+	const titles = defineModel<[string, string, string, string]>("titles", {
+		default: ["", "", "", ""]
+	});
+	const church_song_id = defineModel<string>("church_song_id", { default: "" });
+	const verse_order = defineModel<string[]>("verse_order", { default: [] });
+	const text_parts = defineModel<TextPart[]>("text_parts", { default: [] });
 	const selected_verse_order_part = ref<number>();
 
 	const show_media_selector = ref<boolean>(false);
@@ -56,19 +57,93 @@
 	]);
 	const song_file_name = ref<string>("");
 
+	// watch for new media-files
 	watch(
-		() => [props.media_files, props.song_files],
+		() => props.media_files,
 		() => {
-			init_files();
+			media_search_map = create_search_map(props.media_files);
+
+			search_media();
 		}
 	);
 
-	function init_files() {
-		media_search_map = create_search_map(props.media_files);
-		song_search_map = create_search_map(props.song_files);
+	// watch for new song-files
+	watch(
+		() => props.song_files,
+		() => {
+			song_search_map = create_search_map(props.song_files);
 
-		search_media();
-		search_song();
+			search_song();
+		}
+	);
+
+	type SearchMapFile<K extends File> = K & {
+		children?: SearchMapFile<K>[];
+		search_data?: { name: string };
+	};
+	let media_search_map: SearchMapFile<MediaFile>[] = [];
+	let song_search_map: SearchMapFile<SongFile>[] = [];
+	function create_search_map(files: MediaFile[]): SearchMapFile<File>[] {
+		const return_map: SearchMapFile<File>[] = [];
+
+		files.forEach((f) => {
+			return_map.push({
+				...f,
+				search_data: {
+					name: f.name.toLowerCase()
+				},
+				children: f.children !== undefined ? create_search_map(f.children) : undefined
+			});
+		});
+
+		return return_map;
+	}
+
+	// process media-file-search-queries
+	function search_media() {
+		media_file_tree.value = search_string(media_search_map, media_search_strings.value);
+	}
+
+	// process song-file-search-queries
+	function search_song() {
+		song_file_tree.value = search_string(song_search_map, song_search_strings.value);
+	}
+
+	// create search-trees
+	function search_string(
+		files: SearchMapFile<File>[],
+		search_inputs: SearchInputDefinitions<"name">
+	): MediaFile[] {
+		const return_files: MediaFile[] = [];
+
+		files.forEach((f) => {
+			if (
+				search_inputs.every((search_string) => {
+					if (f.search_data !== undefined) {
+						if (f.search_data[search_string.id] !== undefined) {
+							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
+						} else {
+							return search_string.value === "";
+						}
+					} else {
+						return true;
+					}
+				})
+			) {
+				return_files.push(f);
+			} else if (f.children !== undefined) {
+				const children = search_string(f.children, search_inputs);
+
+				if (children.length > 0) {
+					return_files.push({
+						...f,
+						children: search_string(f.children, search_inputs)
+					});
+				}
+			}
+		});
+
+		return return_files;
 	}
 
 	function clamp_lang_count() {
@@ -110,69 +185,6 @@
 				selected_verse_order_part.value = undefined;
 			}
 		}
-	}
-
-	function search_media() {
-		media_file_tree.value = search_string(media_search_map, media_search_strings.value);
-	}
-
-	function search_song() {
-		song_file_tree.value = search_string(song_search_map, song_search_strings.value);
-	}
-
-	type SearchMapFile = MediaFile & { children?: SearchMapFile[]; search_data?: { name: string } };
-	let media_search_map: SearchMapFile[] = [];
-	let song_search_map: SearchMapFile[] = [];
-	function create_search_map(files: MediaFile[]): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			return_map.push({
-				...f,
-				search_data: {
-					name: f.name.toLowerCase()
-				},
-				children: f.children !== undefined ? create_search_map(f.children) : undefined
-			});
-		});
-
-		return return_map;
-	}
-
-	function search_string(
-		files: SearchMapFile[],
-		search_inputs: SearchInputDefinitions<"name">
-	): MediaFile[] {
-		const return_files: MediaFile[] = [];
-
-		files.forEach((f) => {
-			if (
-				search_inputs.every((search_string) => {
-					if (f.search_data !== undefined) {
-						if (f.search_data[search_string.id] !== undefined) {
-							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
-						} else {
-							return search_string.value === "";
-						}
-					} else {
-						return true;
-					}
-				})
-			) {
-				return_files.push(f);
-			} else if (f.children !== undefined) {
-				const children = search_string(f.children, search_inputs);
-
-				if (children.length > 0) {
-					return_files.push({
-						...f,
-						children: search_string(f.children, search_inputs)
-					});
-				}
-			}
-		});
-
-		return return_files;
 	}
 
 	function get_files(type: "media" | "song") {
@@ -245,7 +257,7 @@
 		const song_data_object: SongData = {
 			title: titles.value.slice(0, lang_count.value),
 			lang_count: lang_count.value,
-			church_song_id: church_song_id.value,
+			church_song_id: church_song_id.value !== "" ? church_song_id.value : undefined,
 			background_image: background_media.value?.path,
 			verse_order: verse_order.value,
 			text: {}
@@ -307,12 +319,6 @@
 
 		show_save_file_dialogue.value = true;
 	}
-
-	watch(song_selection, () => {
-		if (song_selection.value !== undefined && song_selection.value?.children === undefined) {
-			song_file_name.value = song_selection.value.name;
-		}
-	});
 </script>
 
 <template>

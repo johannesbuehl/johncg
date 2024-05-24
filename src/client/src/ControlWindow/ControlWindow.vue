@@ -2,14 +2,15 @@
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
-	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
 	import OpenPlaylist from "./OpenPlaylist.vue";
 	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
 	import MessageView from "./Message/MessageView.vue";
 	import SavePlaylist from "./SavePlaylist.vue";
-	import NewSong from "./NewFile/NewSong.vue";
+	import SongEditor from "./NewFile/Song/SongEditor.vue";
+	import { ControlWindowState } from "@/Enums";
+	import { stop_event } from "@/App.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -75,7 +76,7 @@
 		}
 
 		if (prevent_default) {
-			event.preventDefault();
+			stop_event(event);
 		}
 	});
 
@@ -183,7 +184,7 @@
 			:bible="bible_file"
 			:files="files"
 		/>
-		<NewSong
+		<SongEditor
 			v-else-if="control_window_state === ControlWindowState.NewSong"
 			:ws="ws"
 			:media_files="files.media"

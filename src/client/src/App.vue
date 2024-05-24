@@ -1,3 +1,10 @@
+<script lang="ts">
+	export function stop_event(event: Event) {
+		event.stopPropagation();
+		event.preventDefault();
+	}
+</script>
+
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 

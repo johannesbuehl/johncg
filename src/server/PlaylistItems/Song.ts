@@ -200,7 +200,7 @@ export default class Song extends PlaylistItemBase {
 		const props = structuredClone(this.item_props);
 
 		// if the languages are the same as in the song-file, remove them from the returned props
-		if (props.languages?.every((lang, index) => lang === this.song_file.languages[index])) {
+		if (props.languages?.every((lang, index) => lang === this.song_file?.languages[index])) {
 			delete props.languages;
 		}
 
