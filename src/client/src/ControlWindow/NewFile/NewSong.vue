@@ -57,7 +57,7 @@
 	const song_file_name = ref<string>("");
 
 	watch(
-		() => props.media_files,
+		() => [props.media_files, props.song_files],
 		() => {
 			init_files();
 		}
@@ -176,8 +176,6 @@
 	}
 
 	function get_files(type: "media" | "song") {
-		console.debug("get_files", type);
-
 		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
 			type: type
@@ -276,9 +274,6 @@
 				const slide_line_count_max = Math.max(
 					...slide.map((lang) => (lang.match(/\n/g) || []).length + 1)
 				);
-
-				console.debug("slide", slide);
-				console.debug("line_count", slide_line_count_max);
 
 				return Array.from(Array(lang_count.value).keys()).map((lang_index) => {
 					return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {

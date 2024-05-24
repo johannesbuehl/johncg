@@ -35,11 +35,9 @@
 		error: true,
 		warn: true,
 		log: true,
-		debug: false
+		debug: true
 	});
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		default: ControlWindowState.Slides
-	});
+	const control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
 
 	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
 		song: [],

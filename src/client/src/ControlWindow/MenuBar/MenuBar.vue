@@ -219,9 +219,9 @@
 		</div>
 	</PopUp>
 	<!-- abort-changes -->
-	<PopUp v-model:active="show_abort_changes" title="Unsaved changes">
+	<PopUp v-model:active="show_abort_changes" title="You have unsaved changes">
 		<MenuButton @click="show_abort_changes = false">
-			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+			<FontAwesomeIcon :icon="['fas', 'check']" />Ok
 		</MenuButton>
 		<MenuButton
 			@click="
