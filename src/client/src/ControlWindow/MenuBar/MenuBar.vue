@@ -16,7 +16,8 @@
 		fas.faList,
 		fas.faPlus,
 		fas.faPen,
-		fas.faMessage
+		fas.faMessage,
+		fas.faXmark
 	);
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -36,6 +37,8 @@
 	});
 	const playlist_caption = defineModel<string>("playlist_caption", { required: true });
 	const visibility = defineModel<boolean>("visibility", { required: true });
+
+	const show_abort_changes = ref<boolean>(false);
 
 	const emit = defineEmits<{
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
@@ -99,6 +102,21 @@
 			props.ws.send(JSON.stringify(message));
 		}, 1000);
 	}
+
+	let control_window_state_wish: ControlWindowState;
+	function set_window_state(state: ControlWindowState, force: boolean = false) {
+		if (
+			[ControlWindowState.NewSong, ControlWindowState.NewPsalm].includes(
+				control_window_state.value
+			) &&
+			!force
+		) {
+			show_abort_changes.value = true;
+			control_window_state_wish = state;
+		} else {
+			control_window_state.value = state;
+		}
+	}
 </script>
 
 <template>
@@ -108,14 +126,14 @@
 		</MenuButton>
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.OpenPlaylist"
+			@click="set_window_state(ControlWindowState.OpenPlaylist)"
 			:active="control_window_state === ControlWindowState.OpenPlaylist"
 		>
 			<FontAwesomeIcon :icon="['fas', 'folder-open']" />
 		</MenuButton>
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.SavePlaylist"
+			@click="set_window_state(ControlWindowState.SavePlaylist)"
 			:active="control_window_state === ControlWindowState.SavePlaylist"
 		>
 			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
@@ -134,51 +152,43 @@
 		<MenuDivider />
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.Slides"
+			@click="set_window_state(ControlWindowState.Slides)"
 			:active="control_window_state === ControlWindowState.Slides"
 		>
 			<FontAwesomeIcon :icon="['fas', 'list']" />
 		</MenuButton>
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.Add"
+			@click="set_window_state(ControlWindowState.Add)"
 			:active="control_window_state === ControlWindowState.Add"
 		>
 			<FontAwesomeIcon :icon="['fas', 'plus']" />
 		</MenuButton>
 		<MenuButton
 			:square="true"
-			@click="control_window_state = ControlWindowState.Edit"
+			@click="set_window_state(ControlWindowState.Edit)"
 			:active="control_window_state === ControlWindowState.Edit"
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 		</MenuButton>
-		<div id="navigation_buttons">
-			<Transition name="navigation_buttons">
-				<div id="navigation_buttons" v-if="control_window_state === ControlWindowState.Slides">
-					<MenuDivider />
-					<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
-						<FontAwesomeIcon :icon="['fas', 'backward-step']" />
-					</MenuButton>
-					<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
-						<FontAwesomeIcon :icon="['fas', 'forward-step']" />
-					</MenuButton>
-					<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
-						<FontAwesomeIcon :icon="['fas', 'angle-left']" />
-					</MenuButton>
-					<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
-						<FontAwesomeIcon :icon="['fas', 'angle-right']" />
-					</MenuButton>
-					<MenuDivider />
-					<MenuButton
-						:square="true"
-						v-model="visibility"
-						@click="emit('set_visibility', visibility)"
-					>
-						<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
-					</MenuButton>
-				</div>
-			</Transition>
+		<div v-if="control_window_state === ControlWindowState.Slides" class="button_container">
+			<MenuDivider />
+			<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+				<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+				<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+				<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+			</MenuButton>
+			<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+				<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+			</MenuButton>
+			<MenuDivider />
+			<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
+				<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+			</MenuButton>
 		</div>
 		<template v-if="control_window_state === ControlWindowState.Edit">
 			<input
@@ -195,18 +205,33 @@
 		<MenuButton
 			id="message_button"
 			:square="true"
-			@click="control_window_state = ControlWindowState.Message"
+			@click="set_window_state(ControlWindowState.Message)"
 			:active="control_window_state === ControlWindowState.Message"
 		>
 			<FontAwesomeIcon :icon="['fas', 'message']" />
 		</MenuButton>
-		<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
-			<div class="popup_menu_buttons">
-				<MenuButton @click="create_playlist_pdf('full')">Content</MenuButton>
-				<MenuButton @click="create_playlist_pdf('small')">Itemlist</MenuButton>
-			</div>
-		</PopUp>
 	</div>
+	<!-- PDF-save -->
+	<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
+		<div class="popup_menu_buttons">
+			<MenuButton @click="create_playlist_pdf('full')">Content</MenuButton>
+			<MenuButton @click="create_playlist_pdf('small')">Itemlist</MenuButton>
+		</div>
+	</PopUp>
+	<!-- abort-changes -->
+	<PopUp v-model:active="show_abort_changes" title="Unsaved changes">
+		<MenuButton @click="show_abort_changes = false">
+			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+		</MenuButton>
+		<MenuButton
+			@click="
+				show_abort_changes = false;
+				set_window_state(control_window_state_wish, true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'xmark']" />Discard
+		</MenuButton>
+	</PopUp>
 </template>
 
 <style scoped>
@@ -227,12 +252,6 @@
 		margin-top: 0.625rem;
 		margin-bottom: 0.625rem;
 		margin-inline: 0.125rem;
-	}
-
-	.navigation_buttons_menu_buttons {
-		display: grid;
-
-		grid-template-columns: 1fr 1fr;
 	}
 
 	#playlist_caption {
@@ -273,22 +292,7 @@
 		margin-left: auto;
 	}
 
-	#navigation_buttons {
+	.button_container {
 		display: inherit;
-	}
-
-	.navigation_buttons-move,
-	.navigation_buttons-enter-active,
-	.navigation_buttons-leave-active {
-		transition: all 0.5s ease;
-		transform: translateX(0);
-
-		overflow: hidden;
-		position: relative;
-	}
-
-	.navigation_buttons-enter-from,
-	.navigation_buttons-leave-to {
-		transform: translateX(-100%);
 	}
 </style>

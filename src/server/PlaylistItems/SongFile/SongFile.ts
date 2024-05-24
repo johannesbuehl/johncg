@@ -1,46 +1,7 @@
 import fs from "fs";
 import iconv from "iconv-lite";
 import Chord from "./Chord";
-
-export const verse_types = [
-	"refrain",
-	"chorus",
-	"vers",
-	"verse",
-	"strophe",
-	"intro",
-	"coda",
-	"ending",
-	"bridge",
-	"instrumental",
-	"interlude",
-	"zwischenspiel",
-	"pre-chorus",
-	"pre-refrain",
-	"misc",
-	"solo",
-	"outro",
-	"pre-bridge",
-	"pre-coda",
-	"part",
-	"teil",
-	"title",
-	"unbekannt",
-	"unknown",
-	"unbenannt"
-] as const;
-
-export type SongElement = (typeof verse_types)[number];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const is_song_element = (x: any): x is SongElement => {
-	if (typeof x !== "string") {
-		return false;
-	}
-
-	const stem = x.split(" ", 1)[0];
-
-	return verse_types.includes(stem.toLowerCase() as SongElement);
-};
+import { SongElement, is_song_element } from "./SongElements";
 
 // metadata of the songfile
 export interface SongFileMetadata {
@@ -48,7 +9,7 @@ export interface SongFileMetadata {
 	Title: string[];
 	ChurchSongID?: string;
 	Songbook?: string;
-	VerseOrder?: SongElement[];
+	VerseOrder?: string[];
 	BackgroundImage?: string;
 	Author?: string;
 	Melody?: string;
@@ -73,6 +34,15 @@ export interface LyricPart {
 }
 
 export type ItemPart = TitlePart | LyricPart;
+
+export interface SongData {
+	title: string[];
+	church_song_id?: string;
+	lang_count: number;
+	verse_order: string[];
+	text: SongParts;
+	background_image?: string;
+}
 
 interface BasePartClient {
 	type: string;
@@ -112,11 +82,15 @@ export default class SongFile {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(path?: string) {
-		this.song_file_path = path;
+	constructor(path: string);
+	constructor(data: SongData);
+	constructor(arg: string | SongData) {
+		if (typeof arg === "string") {
+			this.song_file_path = arg;
 
-		if (path !== undefined) {
 			this.parse_song_file();
+		} else {
+			this.load_song_data(arg);
 		}
 	}
 
@@ -160,7 +134,7 @@ export default class SongFile {
 					this.metadata[key] = Number(value);
 					break;
 				case "Chords":
-					this.metadata.Chords = this.parse_base64_chords(value);
+					this.metadata.Chords = parse_base64_chords(value);
 					break;
 				case "Transpose":
 					this.metadata.Transpose = Number(value);
@@ -169,41 +143,6 @@ export default class SongFile {
 					break;
 			}
 		});
-	}
-
-	private parse_base64_chords(base64: string): Chords {
-		const return_object: Chords = {};
-
-		const chords = Buffer.from(base64, "base64").toString();
-
-		const chord_regex = /(?<position>\d+),(?<line>\d+),(?<chord>.*)\r/g;
-
-		let match = chord_regex.exec(chords);
-		while (match !== null) {
-			const check_number = (val: string): number | false => {
-				const number = Number(val);
-
-				if (Number.isNaN(number) || !Number.isInteger(number) || number < -1) {
-					return false;
-				} else {
-					return number;
-				}
-			};
-
-			const line = check_number(match.groups?.line);
-			const position = check_number(match.groups?.position);
-			const chord = match.groups?.chord;
-
-			if (line !== false && position !== false && typeof chord === "string") {
-				return_object[line] ??= {};
-
-				return_object[line][position] = new Chord(chord);
-			}
-
-			match = chord_regex.exec(chords);
-		}
-
-		return return_object;
 	}
 
 	// parse the text-content
@@ -281,6 +220,16 @@ export default class SongFile {
 				this.song_parts[key].push(slide);
 			}
 		}
+	}
+
+	private load_song_data(data: SongData) {
+		this.metadata.Title = data.title;
+		this.metadata.ChurchSongID = data.church_song_id;
+		this.metadata.LangCount = data.lang_count;
+		this.metadata.VerseOrder = data.verse_order;
+		this.metadata.BackgroundImage = data.background_image;
+
+		this.song_parts = data.text;
 	}
 
 	get part_title(): TitlePart {
@@ -361,4 +310,97 @@ export default class SongFile {
 	get text(): Record<string, string[][][]> {
 		return this.song_parts;
 	}
+
+	get sng_file(): string {
+		let sng_file: string = Buffer.from([239, 187, 191]).toString("utf-8");
+
+		sng_file += Object.entries(this.metadata)
+			.filter(([, val]) => val !== undefined)
+			.map(([key, val]) => {
+				switch (key) {
+					case "Title":
+						return (val as SongFileMetadata["Title"])
+							.map((title, title_index) => {
+								if (title_index === 0) {
+									return `#Title=${title}`;
+								} else {
+									return `#TitleLang${title_index + 1}=${title}`;
+								}
+							})
+							.join("\n");
+
+					case "VerseOrder":
+						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;
+
+					case "Chords": {
+						const chord_string = Object.entries(val as SongFileMetadata["Chords"])
+							.map(([line, val2]) => {
+								Object.entries(val2).map(([char, chord]: [string, Chord]) => {
+									return `${char},${line},${chord.get_chord_string()}`;
+								});
+							})
+							.flat()
+							.join("\r");
+
+						return Buffer.from(chord_string).toString("base64");
+					}
+					default:
+						return `#${key}=${val}`;
+				}
+			})
+			.join("\n");
+
+		sng_file += "\n---\n";
+
+		sng_file += Object.entries(this.all_parts)
+			.map(([part, text]) => {
+				let part_text = `${part}\n`;
+
+				part_text += text
+					.map((slide) => {
+						return slide.flat().join("\n");
+					})
+					.join("\n---\n");
+
+				return part_text;
+			})
+			.join("\n---\n");
+
+		return sng_file;
+	}
+}
+
+function parse_base64_chords(base64: string): Chords {
+	const return_object: Chords = {};
+
+	const chords = Buffer.from(base64, "base64").toString();
+
+	const chord_regex = /(?<position>\d+),(?<line>\d+),(?<chord>.*)\r/g;
+
+	let match = chord_regex.exec(chords);
+	while (match !== null) {
+		const check_number = (val: string): number | false => {
+			const number = Number(val);
+
+			if (Number.isNaN(number) || !Number.isInteger(number) || number < -1) {
+				return false;
+			} else {
+				return number;
+			}
+		};
+
+		const line = check_number(match.groups?.line);
+		const position = check_number(match.groups?.position);
+		const chord = match.groups?.chord;
+
+		if (line !== false && position !== false && typeof chord === "string") {
+			return_object[line] ??= {};
+
+			return_object[line][position] = new Chord(chord);
+		}
+
+		match = chord_regex.exec(chords);
+	}
+
+	return return_object;
 }

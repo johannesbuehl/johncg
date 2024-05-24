@@ -1,3 +1,41 @@
+<script lang="ts">
+	export function create_song_part_type(part_name: string): string {
+		return part_name.split(" ", 1)[0].toLowerCase();
+	}
+
+	export function get_song_part_color(part_name: string): string | undefined {
+		const color_map: Record<string, string> = {
+			title: "hsl(0, 100%, 50%)",
+			intro: "hsl(0, 100%, 50%)",
+			vers: "hsl(23, 100%, 50%)",
+			verse: "hsl(23, 100%, 50%)",
+			strophe: "hsl(23, 100%, 50%)",
+			"pre-refrain": "hsl(46, 100%, 50%)",
+			"pre-chorus": "hsl(46, 100%, 50%)",
+			chorus: "hsl(69, 100%, 50%)",
+			refrain: "hsl(69, 100%, 50%)",
+			"pre-bridge": "hsl(92, 100%, 50%)",
+			bridge: "hsl(184, 100%, 50%)",
+			instrumental: "hsl(207, 100%, 50%)",
+			interlude: "hsl(207, 100%, 50%)",
+			zwischenspiel: "hsl(207, 100%, 50%)",
+			solo: "hsl(207, 100%, 50%)",
+			"pre-coda": "hsl(276, 100%, 50%)",
+			coda: "hsl(299, 100%, 50%)",
+			ending: "hsl(299, 100%, 50%)",
+			outro: "hsl(299, 100%, 50%)",
+			misc: "hsl(345, 100%, 50%)",
+			part: "hsl(345, 100%, 50%)",
+			teil: "hsl(345, 100%, 50%)",
+			unbekannt: "hsl(345, 100%, 50%)",
+			unknown: "hsl(345, 100%, 50%)",
+			unbenannt: "hsl(345, 100%, 50%)"
+		};
+
+		return color_map[create_song_part_type(part_name)];
+	}
+</script>
+
 <script setup lang="ts">
 	import { ref, type Ref, type VNodeRef } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
@@ -33,10 +71,6 @@
 
 			return re;
 		}
-	}
-
-	function create_song_part_type(part_name: string): string {
-		return part_name.split(" ", 1)[0].toLowerCase();
 	}
 
 	function add_song_part(name: string) {
@@ -133,7 +167,7 @@
 								:class="{ active: selected_available_song_part === index }"
 								@click="selected_available_song_part = index"
 							>
-								<div class="song_part_header" :class="[create_song_part_type(part_name)]">
+								<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
 									{{ part_name }}
 								</div>
 								<div class="song_slides_wrapper">
@@ -150,7 +184,7 @@
 					</Draggable>
 					<MenuButton
 						@click="
-							selected_available_song_part !== undefined
+							selected_available_song_part !== undefined && song_file?.data !== undefined
 								? add_song_part(song_file.data.parts.available[selected_available_song_part])
 								: undefined
 						"
@@ -392,60 +426,5 @@
 
 	.dragging > .song_part_header {
 		background-color: var(--color-item-hover);
-	}
-
-	.title,
-	.intro {
-		color: hsl(0, 100%, 50%);
-	}
-
-	.vers,
-	.verse,
-	.strophe {
-		color: hsl(23, 100%, 50%);
-	}
-
-	.pre-refrain,
-	.pre-chorus {
-		color: hsl(46, 100%, 50%);
-	}
-
-	.chorus,
-	.refrain {
-		color: hsl(69, 100%, 50%);
-	}
-
-	.pre-bridge {
-		color: hsl(92, 100%, 50%);
-	}
-
-	.bridge {
-		color: hsl(184, 100%, 50%);
-	}
-
-	.instrumental,
-	.interlude,
-	.zwischenspiel,
-	.solo {
-		color: hsl(207, 100%, 50%);
-	}
-
-	.pre-coda {
-		color: hsl(276, 100%, 50%);
-	}
-
-	.coda,
-	.ending,
-	.outro {
-		color: hsl(299, 100%, 50%);
-	}
-
-	.misc,
-	.part,
-	.teil,
-	.unbekannt,
-	.unknown,
-	.unbenannt {
-		color: hsl(345, 100%, 50%);
 	}
 </style>

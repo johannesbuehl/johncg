@@ -43,6 +43,10 @@
 
 	const pick = ref<ItemProps["type"]>("song");
 
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: true
+	});
+
 	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
 		{ text: "Song", value: "song", icon: "music" },
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
@@ -101,12 +105,14 @@
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files('song')"
+				@new_song="control_window_state = ControlWindowState.NewSong"
 			/>
 			<AddPsalm
 				v-else-if="pick === 'psalm'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files('psalm')"
+				@new_psalm="control_window_state = ControlWindowState.NewPsalm"
 			/>
 			<AddBible
 				v-else-if="pick === 'bible'"

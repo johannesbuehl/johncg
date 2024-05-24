@@ -40,7 +40,7 @@ export default class Song extends PlaylistItemBase {
 	// currently active slide-number
 	private active_slide_number: number = 0;
 
-	private song_file: SongFile = new SongFile();
+	private song_file: SongFile;
 
 	protected media_casparcg: string;
 

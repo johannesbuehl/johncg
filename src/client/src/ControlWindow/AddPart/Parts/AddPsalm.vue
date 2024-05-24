@@ -20,6 +20,7 @@
 	const emit = defineEmits<{
 		add: [item_props: PsalmProps];
 		refresh: [];
+		new_psalm: [];
 	}>();
 
 	const selection = defineModel<PsalmFile>({});
@@ -150,12 +151,14 @@
 	<FileDialogue
 		:files="file_tree"
 		:clone_callback="create_props"
+		:new_button="true"
 		name="Psalm"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_psalm"
 		@search="search_psalm"
 		@refresh_files="refresh_search_index"
+		@new_file="emit('new_psalm')"
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_psalm(selection, 'file')">

@@ -21,6 +21,7 @@
 	const emit = defineEmits<{
 		add: [item_props: SongProps];
 		refresh: [];
+		new_song: [];
 	}>();
 
 	// currently selected song
@@ -187,12 +188,14 @@
 	<FileDialogue
 		:files="file_tree"
 		:clone_callback="create_props"
+		:new_button="true"
 		name="Song"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_song"
 		@search="search_song"
 		@refresh_files="refresh_search_index"
+		@new_file="emit('new_song')"
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_song(selection, 'file')">

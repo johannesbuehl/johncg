@@ -1,11 +1,13 @@
 <script setup lang="ts">
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	library.add(fas.faXmark);
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
+	library.add(fas.faXmark);
 
 	const props = defineProps<{
 		title: string;
+		maximize?: boolean;
 	}>();
 
 	const emit = defineEmits<{}>();
@@ -24,8 +26,8 @@
 
 <template>
 	<Transition>
-		<div id="popup_wrapper" v-if="active">
-			<div id="popup_window">
+		<div id="popup_wrapper" v-if="active" @click.self="active = false">
+			<div id="popup_window" :class="{ maximize }">
 				<div id="header">
 					{{ title }}<FontAwesomeIcon :icon="['fas', 'xmark']" @click="active = false" />
 				</div>
@@ -64,9 +66,20 @@
 	}
 
 	#popup_window {
+		max-height: 95vh;
+		max-width: 95vw;
+
 		border-radius: 0.25rem;
 
 		background-color: var(--color-container);
+
+		display: flex;
+		flex-direction: column;
+	}
+
+	#popup_window.maximize {
+		height: 95vh;
+		width: 95vw;
 	}
 
 	#header {
@@ -76,6 +89,8 @@
 
 		display: flex;
 		justify-content: space-between;
+
+		overflow: visible;
 	}
 
 	#header > svg {
@@ -87,5 +102,8 @@
 
 	#popup_window_content {
 		margin: 0.25rem;
+
+		display: flex;
+		flex: 1;
 	}
 </style>

@@ -6,14 +6,15 @@
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
 	import OpenPlaylist from "./OpenPlaylist.vue";
+	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
+	import MessageView from "./Message/MessageView.vue";
+	import SavePlaylist from "./SavePlaylist.vue";
+	import NewSong from "./NewFile/NewSong.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
-	import MessageView from "./Message/MessageView.vue";
-	import SavePlaylist from "./SavePlaylist.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -120,7 +121,6 @@
 
 <template>
 	<MenuBar
-		class="menu_bar"
 		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
 		v-model:control_window_state="control_window_state"
@@ -173,6 +173,7 @@
 			:files="files"
 			:bible="bible_file"
 			:mode="control_window_state"
+			v-model:control_window_state="control_window_state"
 		/>
 		<EditPart
 			v-else-if="control_window_state === ControlWindowState.Edit"
@@ -181,6 +182,12 @@
 			:item_index="selected"
 			:bible="bible_file"
 			:files="files"
+		/>
+		<NewSong
+			v-else-if="control_window_state === ControlWindowState.NewSong"
+			:ws="ws"
+			:media_files="files.media"
+			:song_files="files.song"
 		/>
 		<MessageView
 			v-else-if="control_window_state === ControlWindowState.Message"

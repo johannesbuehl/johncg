@@ -71,8 +71,6 @@
 		} else {
 			// if the selection is a file, replace the file-name with the input-file-name
 			if (playlist.children === undefined) {
-				console.debug("index", playlist.path.lastIndexOf("/"));
-
 				save_path =
 					playlist.path.slice(0, playlist.path.lastIndexOf("/") + 1) + file_name.value + ".jcg";
 			} else {
@@ -80,7 +78,6 @@
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
-			// FIXME by really checking wether the path exists by iterating through the files array
 			const compare_file = (files: File[], path: string): boolean => {
 				return files.some((fil) => {
 					if (fil.path === path) {
@@ -94,6 +91,7 @@
 					return false;
 				});
 			};
+
 			if (overwrite === false && compare_file(props.files, save_path)) {
 				overwrite_path = save_path;
 

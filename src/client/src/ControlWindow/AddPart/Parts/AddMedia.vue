@@ -33,8 +33,6 @@
 
 	onMounted(() => {
 		// init
-		refresh_search_index();
-
 		init_files();
 	});
 

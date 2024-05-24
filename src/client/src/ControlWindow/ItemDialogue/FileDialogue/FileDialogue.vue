@@ -9,7 +9,7 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, useSlots, watch, type VNodeRef } from "vue";
+	import { onMounted, ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -21,16 +21,18 @@
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { File } from "@server/search_part";
 
-	library.add(fas.faArrowsRotate);
+	library.add(fas.faArrowsRotate, fas.faFileCirclePlus);
 
 	const props = defineProps<{
 		name: string;
 		select_dirs?: boolean;
 		files?: JGCPSend.ItemFiles["files"];
 		clone_callback?: (arg: JGCPSend.ItemFiles["files"][0]) => ItemProps;
+		new_button?: boolean;
 	}>();
 
 	const emit = defineEmits<{
+		new_file: [];
 		choose: [file: File, type: "dir" | "file"];
 		refresh_files: [];
 		search: [];
@@ -54,6 +56,10 @@
 		}
 	}
 
+	onMounted(() => {
+		emit("refresh_files");
+	});
+
 	watch(
 		() => first_input_ref.value,
 		(first_input_ref) => {
@@ -69,6 +75,9 @@
 	<div id="element_wrapper">
 		<div id="file_dialogue_wrapper">
 			<div id="search_wrapper">
+				<MenuButton v-if="new_button" :square="true" @click="emit('new_file')">
+					<FontAwesomeIcon :icon="['fas', 'file-circle-plus']" />
+				</MenuButton>
 				<div id="search_input_wrapper">
 					<input
 						v-for="({ placeholder }, index) in search_strings"
@@ -80,7 +89,6 @@
 					/>
 				</div>
 				<MenuButton
-					id="rotate_button"
 					:class="{ rotate_button: rotate_button }"
 					:square="true"
 					@click="

@@ -26,6 +26,7 @@
 <style scoped>
 	div.button {
 		background-color: rgb(60, 64, 75);
+		overflow: visible;
 
 		border-radius: 0.25rem;
 

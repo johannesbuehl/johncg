@@ -20,6 +20,8 @@ import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg } from "./CasparCG.ts";
+import { recurse_object_check } from "./lib.ts";
+import SongFile from "./PlaylistItems/SongFile/SongFile.ts";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -64,7 +66,8 @@ export default class Control {
 		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
 			this.create_playlist_pdf(ws, msg.type),
 		update_playlist_caption: (msg: JGCPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
-			this.update_playlist_caption(msg.caption, ws)
+			this.update_playlist_caption(msg.caption, ws),
+		save_song: (msg: JGCPRecv.SaveSong, ws: WebSocket) => this.save_song(msg.path, msg.data, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -157,6 +160,46 @@ export default class Control {
 		}
 
 		ws?.send(JSON.stringify(message));
+	}
+
+	private save_song(path: string, data: JGCPRecv.SaveSong["data"], ws: WebSocket) {
+		const data_template: JGCPRecv.SaveSong["data"] = {
+			title: ["template"],
+			lang_count: 0,
+			verse_order: ["template"],
+			text: { template: [[["template"]]] }
+		};
+
+		let test_result: boolean = recurse_object_check(data, data_template);
+
+		if (data.church_song_id !== undefined) {
+			test_result &&= typeof data.church_song_id === "string";
+		}
+
+		if (data.background_image !== undefined) {
+			test_result &&= typeof data.background_image === "string";
+		}
+
+		test_result &&= typeof path === "string";
+
+		if (test_result) {
+			fs.writeFile(
+				Config.get_path("song", path),
+				new SongFile(data).sng_file,
+				{ encoding: "utf-8" },
+				(err) => {
+					if (err) {
+						logger.error(`Can't save songfile '${path}': ${err.message}`);
+
+						ws_send_response(`Can't save songfile '${path}': ${err.message}`, false, ws);
+					} else {
+						logger.log(`Saved songfile '${path}'`);
+
+						ws_send_response(`Saved songfile '${path}'`, true, ws);
+					}
+				}
+			);
+		}
 	}
 
 	private send_playlist(
@@ -752,7 +795,7 @@ export default class Control {
 			ws_send_response("'command' is not of type 'string", false, ws);
 			return;
 		} else if (!Object.keys(this.client_ws_function_map).includes(data.command)) {
-			logger.error("Can't parse JGCP-message: 'comand' is not implemented");
+			logger.error("Can't parse JGCP-message: 'command' is not implemented");
 			ws_send_response(`Command '${data.command}' is not implemented`, false, ws);
 		} else {
 			void this.client_ws_function_map[data.command](data as never, ws);
