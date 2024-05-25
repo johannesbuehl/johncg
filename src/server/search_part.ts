@@ -4,7 +4,7 @@ import fs from "fs";
 import * as JGCPRecv from "./JGCPReceiveMessages";
 
 import Config from "./config";
-import SngFile, { SongParts } from "./PlaylistItems/SongFile/SongFile";
+import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
 import { casparcg } from "./CasparCG";
@@ -17,14 +17,8 @@ export interface File {
 
 export interface SongFile extends File {
 	data?: {
-		id?: string;
-		title?: string[];
-		text?: SongParts;
-		parts: {
-			available: string[];
-			default: string[];
-		};
-	};
+		path: string;
+	} & SongData;
 }
 
 export interface PsalmFile extends File {
@@ -44,6 +38,14 @@ export type PDFFile = File;
 // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
 export type ItemFile = SongFile | PsalmFile | MediaFile | TemplateFile | PDFFile;
 
+export interface ItemFileMap {
+	song: SongFile;
+	psalm: PsalmFile;
+	media: MediaFile;
+	template: TemplateFile;
+	pdf: PDFFile;
+}
+
 export default class SearchPart {
 	constructor() {}
 
@@ -53,13 +55,9 @@ export default class SearchPart {
 		const song_value: SongFile = {
 			...f,
 			data: {
-				title: song.metadata.Title,
-				id: song.metadata.ChurchSongID?.toLowerCase(),
 				text: song.all_parts,
-				parts: {
-					available: song.avaliable_parts,
-					default: song.metadata.VerseOrder
-				}
+				metadata: song.metadata,
+				path: f.path
 			}
 		};
 
@@ -79,8 +77,8 @@ export default class SearchPart {
 		return {
 			...f,
 			data: {
-				title: psalm.metadata.caption.toLowerCase(),
-				id: psalm.metadata.id?.toLowerCase()
+				title: psalm.metadata.caption,
+				id: psalm.metadata.id
 			}
 		};
 	}

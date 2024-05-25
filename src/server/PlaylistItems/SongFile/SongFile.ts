@@ -7,6 +7,7 @@ import { SongElement, is_song_element } from "./SongElements";
 export interface SongFileMetadata {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	Title: string[];
+	LangCount: number;
 	ChurchSongID?: string;
 	Songbook?: string;
 	VerseOrder?: string[];
@@ -15,7 +16,6 @@ export interface SongFileMetadata {
 	Melody?: string;
 	Translation?: string;
 	Copyright?: string;
-	LangCount: number;
 	Chords?: Chords;
 	Transpose?: number;
 	/* eslint-enable @typescript-eslint/naming-convention */
@@ -36,12 +36,8 @@ export interface LyricPart {
 export type ItemPart = TitlePart | LyricPart;
 
 export interface SongData {
-	title: string[];
-	church_song_id?: string;
-	lang_count: number;
-	verse_order: string[];
+	metadata: SongFileMetadata;
 	text: SongParts;
-	background_image?: string;
 }
 
 interface BasePartClient {
@@ -223,11 +219,7 @@ export default class SongFile {
 	}
 
 	private load_song_data(data: SongData) {
-		this.metadata.Title = data.title;
-		this.metadata.ChurchSongID = data.church_song_id;
-		this.metadata.LangCount = data.lang_count;
-		this.metadata.VerseOrder = data.verse_order;
-		this.metadata.BackgroundImage = data.background_image;
+		this.metadata = data.metadata;
 
 		this.song_parts = data.text;
 	}

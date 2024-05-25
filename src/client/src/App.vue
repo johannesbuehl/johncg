@@ -3,6 +3,8 @@
 		event.stopPropagation();
 		event.preventDefault();
 	}
+
+	export type ItemData = Partial<{ [key in JGCPSend.ItemData["type"]]: JGCPSend.ItemData["data"] }>;
 </script>
 
 <script setup lang="ts">
@@ -16,6 +18,7 @@
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
 	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
+	import { type SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const Config = {
 		client_server: {
@@ -54,6 +57,7 @@
 		template: [],
 		psalm: []
 	});
+	const item_data = ref<ItemData>({});
 
 	let ws: WebSocket | undefined;
 	ws_connect();
@@ -116,6 +120,9 @@
 		ws = new WebSocket(ws_url, "JGCP");
 
 		ws.addEventListener("open", () => {
+			// reset the window-state
+			control_window_state.value === ControlWindowState.Slides;
+
 			server_connection.value = ServerConnection.connected;
 
 			messages.value.push({
@@ -152,7 +159,8 @@
 				item_files: parse_item_files,
 				bible: parse_bible,
 				playlist_pdf: save_playlist_pdf,
-				client_mesage: show_client_message
+				client_mesage: show_client_message,
+				item_data: store_item_data
 			};
 
 			command_parser_map[data.command](data as never);
@@ -265,6 +273,10 @@
 		}
 	}
 
+	function store_item_data(data: JGCPSend.ItemData) {
+		item_data.value[data.type] = data.data;
+	}
+
 	function parse_bible(data: JGCPSend.Bible) {
 		bible_file.value = data.bible;
 	}
@@ -339,6 +351,7 @@
 			:playlist_caption="playlist_caption"
 			:messages="messages"
 			:log_level="log_level"
+			:item_data="item_data"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

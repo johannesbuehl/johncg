@@ -60,7 +60,7 @@
 		() => selection.value,
 		(selection) => {
 			if (selection?.data !== undefined) {
-				verse_order.value = structuredClone(toRaw(selection.data.parts.default));
+				verse_order.value = structuredClone(toRaw(Object.keys(selection.data.text)));
 				languages.value = Array(selection.data.title?.length)
 					.fill([])
 					.map((ele, index) => [index, true]);
@@ -89,7 +89,7 @@
 		};
 
 		// if the selected parts differ from the default ones, save them in the playlist
-		if (file.data?.parts.default.some((val, index) => val !== verse_order.value[index])) {
+		if (Object.keys(file.data?.text ?? {}).some((val, index) => val !== verse_order.value[index])) {
 			props.verse_order = verse_order.value;
 		}
 
@@ -206,7 +206,7 @@
 			<SongPartSelector
 				v-model:selected_parts="verse_order"
 				v-model:selected_languages="languages"
-				:song_file="selection"
+				:song_data="selection?.data"
 			/>
 		</template>
 	</FileDialogue>

@@ -21,7 +21,7 @@ import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg } from "./CasparCG.ts";
 import { recurse_object_check } from "./lib.ts";
-import SongFile from "./PlaylistItems/SongFile/SongFile.ts";
+import SongFile, { SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -62,7 +62,7 @@ export default class Control {
 			this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
-			this.get_item_file(msg.type, msg.file, ws),
+			this.get_item_data(msg.type, msg.file, ws),
 		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
 			this.create_playlist_pdf(ws, msg.type),
 		update_playlist_caption: (msg: JGCPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
@@ -164,20 +164,54 @@ export default class Control {
 
 	private save_song(path: string, data: JGCPRecv.SaveSong["data"], ws: WebSocket) {
 		const data_template: JGCPRecv.SaveSong["data"] = {
-			title: ["template"],
-			lang_count: 0,
-			verse_order: ["template"],
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			metadata: { Title: ["template"], LangCount: 1 },
 			text: { template: [[["template"]]] }
 		};
 
 		let test_result: boolean = recurse_object_check(data, data_template);
 
-		if (data.church_song_id !== undefined) {
-			test_result &&= typeof data.church_song_id === "string";
+		if (data.metadata.ChurchSongID !== undefined) {
+			test_result &&= typeof data.metadata.ChurchSongID === "string";
 		}
 
-		if (data.background_image !== undefined) {
-			test_result &&= typeof data.background_image === "string";
+		if (data.metadata.Songbook !== undefined) {
+			test_result &&= typeof data.metadata.Songbook === "string";
+		}
+
+		if (data.metadata.VerseOrder !== undefined) {
+			const verse_order_template: SongFileMetadata["VerseOrder"] = ["template"];
+
+			test_result &&= recurse_object_check(data.metadata.VerseOrder, verse_order_template);
+		}
+
+		if (data.metadata.BackgroundImage !== undefined) {
+			test_result &&= typeof data.metadata.BackgroundImage === "string";
+		}
+
+		if (data.metadata.Author !== undefined) {
+			test_result &&= typeof data.metadata.Author === "string";
+		}
+
+		if (data.metadata.Melody !== undefined) {
+			test_result &&= typeof data.metadata.Melody === "string";
+		}
+
+		if (data.metadata.Translation !== undefined) {
+			test_result &&= typeof data.metadata.Translation === "string";
+		}
+
+		if (data.metadata.Copyright !== undefined) {
+			test_result &&= typeof data.metadata.Copyright === "string";
+		}
+
+		// IMPLEMENT ME
+		// if (data.metadata.Chords !== undefined) {
+		// 	test_result &&= typeof data.metadata.Chords === "string";
+		// }
+
+		if (data.metadata.Transpose !== undefined) {
+			test_result &&= typeof data.metadata.Transpose === "number";
 		}
 
 		test_result &&= typeof path === "string";
@@ -627,15 +661,13 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
-	private get_item_file(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
+	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
-		const files = [this.search_part.get_item_file(type, path)];
-
-		const message: JGCPSend.ItemFiles = {
-			command: "item_files",
+		const message: JGCPSend.ItemData = {
+			command: "item_data",
 			type: "song",
-			files
+			data: this.search_part.get_item_file(type, path).data
 		};
 
 		ws?.send(JSON.stringify(message));

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+	import { ControlWindowState } from "@/Enums";
+	import { stop_event, type ItemData } from "@/App.vue";
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
@@ -8,9 +10,8 @@
 	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
 	import MessageView from "./Message/MessageView.vue";
 	import SavePlaylist from "./SavePlaylist.vue";
-	import SongEditor from "./NewFile/Song/SongEditor.vue";
-	import { ControlWindowState } from "@/Enums";
-	import { stop_event } from "@/App.vue";
+	import SongEditor from "./FileEditor/Song/SongEditor.vue";
+	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -29,6 +30,7 @@
 		selected: number | null;
 		playlist_caption: string;
 		messages: LogMessage[];
+		item_data: ItemData;
 	}>();
 
 	const emit = defineEmits<{
@@ -183,12 +185,21 @@
 			:item_index="selected"
 			:bible="bible_file"
 			:files="files"
+			:item_data="item_data"
+			v-model:control_window_state="control_window_state"
 		/>
 		<SongEditor
 			v-else-if="control_window_state === ControlWindowState.NewSong"
 			:ws="ws"
 			:media_files="files.media"
 			:song_files="files.song"
+		/>
+		<EditSongFile
+			v-else-if="control_window_state === ControlWindowState.EditSong"
+			:ws="ws"
+			:media_files="files.media"
+			:song_files="files.song"
+			:song_data="item_data.song"
 		/>
 		<MessageView
 			v-else-if="control_window_state === ControlWindowState.Message"

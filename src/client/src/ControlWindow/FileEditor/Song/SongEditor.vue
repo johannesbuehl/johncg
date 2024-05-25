@@ -3,6 +3,12 @@
 		part: string;
 		text: [string, string, string, string][];
 	}
+
+	export function is_slide_empty(part: TextPart["text"][number], lang_count: number): boolean {
+		return part.every((language, index) => {
+			return language.length === 0 || index >= lang_count;
+		});
+	}
 </script>
 
 <script setup lang="ts">
@@ -20,7 +26,7 @@
 
 	import type { File, MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import { type SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk);
 
@@ -32,14 +38,17 @@
 
 	const emit = defineEmits<{}>();
 
-	const lang_count = defineModel<number>("lang_count", { default: 1 });
-	const titles = defineModel<[string, string, string, string]>("titles", {
-		default: ["", "", "", ""]
-	});
-	const church_song_id = defineModel<string>("church_song_id", { default: "" });
-	const verse_order = defineModel<string[]>("verse_order", { default: [] });
 	const text_parts = defineModel<TextPart[]>("text_parts", { default: [] });
 	const selected_verse_order_part = ref<number>();
+
+	const metadata = defineModel<SongFileMetadata>("metadata", {
+		default: {
+			Title: ["", "", "", ""],
+			LangCount: 1,
+			ChurchSongID: "",
+			VerseOrder: []
+		}
+	});
 
 	const show_media_selector = ref<boolean>(false);
 	const media_file_tree = ref<MediaFile[]>();
@@ -55,7 +64,7 @@
 	const song_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
-	const song_file_name = ref<string>("");
+	const song_file_name = defineModel<string>("song_file_name", { default: "" });
 
 	// watch for new media-files
 	watch(
@@ -147,42 +156,41 @@
 	}
 
 	function clamp_lang_count() {
-		return Math.max(Math.min(Math.round(lang_count.value), 4), 1);
+		return Math.max(Math.min(Math.round(metadata.value.LangCount), 4), 1);
 	}
 
 	function on_text_change(part_index: number) {
 		const part_text = text_parts.value[part_index].text;
 
-		const is_slide_empty = (part: TextPart["text"][number]): boolean => {
-			return part.every((language, index) => {
-				return language.length === 0 || index >= lang_count.value;
-			});
-		};
-
 		// if the last slide isn't empty, add another one
-		if (!is_slide_empty(part_text[part_text.length - 1])) {
+		if (!is_slide_empty(part_text[part_text.length - 1], metadata.value.LangCount)) {
 			part_text.push(["", "", "", ""]);
 
 			// else if the second-last is also empty, remove the last one
-		} else if (is_slide_empty(part_text[part_text.length - 2])) {
+		} else if (
+			is_slide_empty(part_text[part_text.length - 2], metadata.value.LangCount) &&
+			part_text.length > 1
+		) {
 			part_text.pop();
 		}
 	}
 
 	function remove_verse_order_part(index: number | undefined = selected_verse_order_part.value) {
-		if (index !== undefined) {
-			verse_order.value.splice(index, 1);
-		}
-
-		// if the selection is higher than there are items, set it to the last item
-		if (selected_verse_order_part.value !== undefined) {
-			if (verse_order.value.length >= selected_verse_order_part.value + 1) {
-				selected_verse_order_part.value = verse_order.value.length - 1;
+		if (metadata.value.VerseOrder !== undefined) {
+			if (index !== undefined) {
+				metadata.value.VerseOrder.splice(index, 1);
 			}
 
-			// if the selection is negative, set it to undefined
-			if (selected_verse_order_part.value < 0) {
-				selected_verse_order_part.value = undefined;
+			// if the selection is higher than there are items, set it to the last item
+			if (selected_verse_order_part.value !== undefined) {
+				if (metadata.value.VerseOrder.length >= selected_verse_order_part.value + 1) {
+					selected_verse_order_part.value = metadata.value.VerseOrder.length - 1;
+				}
+
+				// if the selection is negative, set it to undefined
+				if (selected_verse_order_part.value < 0) {
+					selected_verse_order_part.value = undefined;
+				}
 			}
 		}
 	}
@@ -255,11 +263,7 @@
 
 	function create_song_data(): SongData {
 		const song_data_object: SongData = {
-			title: titles.value.slice(0, lang_count.value),
-			lang_count: lang_count.value,
-			church_song_id: church_song_id.value !== "" ? church_song_id.value : undefined,
-			background_image: background_media.value?.path,
-			verse_order: verse_order.value,
+			metadata: metadata.value,
 			text: {}
 		};
 
@@ -273,7 +277,7 @@
 
 				// check wether all used languages are empty
 				let is_empty = slide.every((lang, lang_index) => {
-					return lang_index >= lang_count.value || lang === "";
+					return lang_index >= metadata.value.LangCount || lang === "";
 				});
 
 				// if it is the last element and empty, don't use it
@@ -287,7 +291,7 @@
 					...slide.map((lang) => (lang.match(/\n/g) || []).length + 1)
 				);
 
-				return Array.from(Array(lang_count.value).keys()).map((lang_index) => {
+				return Array.from(Array(metadata.value.LangCount).keys()).map((lang_index) => {
 					return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {
 						return slide[lang_index].split("\n")[line_index] ?? "";
 					});
@@ -302,18 +306,18 @@
 		// if there currently is no file-name for the song, try to generate it from the song-data
 		if (song_file_name.value === "") {
 			// if the church-song-id is specified, use it
-			if (church_song_id.value !== undefined) {
-				song_file_name.value = church_song_id.value;
+			if (metadata.value.ChurchSongID !== undefined) {
+				song_file_name.value = metadata.value.ChurchSongID;
 
 				// if there is also a title defined, add an seperator
-				if (titles.value[0] !== "") {
+				if (metadata.value.Title[0] !== "") {
 					song_file_name.value += " - ";
 				}
 			}
 
 			// if a title is defined, use it
-			if (titles.value[0] !== "") {
-				song_file_name.value += titles.value[0];
+			if (metadata.value.Title[0] !== "") {
+				song_file_name.value += metadata.value.Title[0];
 			}
 		}
 
@@ -327,10 +331,10 @@
 			<div class="container">
 				<div class="header">Song-Title</div>
 				<div class="content" id="title_input_container">
-					<template v-for="(_, index) of titles" :key="`title_input_${index}`">
+					<template v-for="(_, index) of metadata.Title" :key="`title_input_${index}`">
 						<input
 							v-show="clamp_lang_count() > index"
-							v-model="titles[index]"
+							v-model="metadata.Title[index]"
 							:placeholder="`Title Language ${index + 1}`"
 						/>
 					</template>
@@ -349,7 +353,7 @@
 							<MenuButton @click="text_parts.splice(index, 1)">
 								<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
 							</MenuButton>
-							<MenuButton @click="verse_order.push(part.part)">
+							<MenuButton @click="metadata.VerseOrder?.push(part.part)">
 								<FontAwesomeIcon :icon="['fas', 'plus']" />Add to Verse Order
 							</MenuButton>
 						</div>
@@ -360,16 +364,19 @@
 									:rows="(language.match(/\n/g) || []).length + 1"
 									class="song_text_language"
 									v-model="part.text[slide_index][language_index]"
-									:placeholder="`Slide ${slide_index + 1} - Language ${language_index + 1}`"
+									:placeholder="
+										`Slide ${slide_index + 1}` +
+										(metadata.LangCount > 1 ? `- Language ${language_index + 1}` : '')
+									"
 									@change="on_text_change(index)"
 								/>
 							</template>
 						</div>
 					</div>
-					<MenuButton @click="text_parts.push({ part: '', text: [['', '', '', '']] })">
-						<FontAwesomeIcon :icon="['fas', 'plus']" />Add Part
-					</MenuButton>
 				</div>
+				<MenuButton @click="text_parts.push({ part: '', text: [['', '', '', '']] })">
+					<FontAwesomeIcon :icon="['fas', 'plus']" />Add Part
+				</MenuButton>
 			</div>
 		</div>
 		<div>
@@ -392,17 +399,17 @@
 					<input
 						id="lang_count_input"
 						type="number"
-						v-model="lang_count"
+						v-model="metadata.LangCount"
 						min="1"
 						max="4"
-						@change="lang_count = clamp_lang_count()"
+						@change="metadata.LangCount = clamp_lang_count()"
 					/>
 				</div>
 			</div>
 			<div class="container">
 				<div class="header">Song ID</div>
 				<div class="content">
-					<input v-model="church_song_id" placeholder="Song ID" />
+					<input v-model="metadata.ChurchSongID" placeholder="Song ID" />
 				</div>
 			</div>
 
@@ -412,7 +419,7 @@
 				<Draggable
 					class="content"
 					id="verse_order"
-					v-model="verse_order"
+					v-model="metadata.VerseOrder"
 					group="song_parts"
 					item-key="item"
 				>
@@ -591,6 +598,8 @@
 
 	#text_editor_container {
 		flex-direction: column;
+
+		overflow: auto;
 	}
 
 	.text_part {
@@ -598,6 +607,12 @@
 		flex-direction: column;
 
 		gap: inherit;
+
+		overflow: visible;
+	}
+
+	.text_part > * {
+		overflow: visible;
 	}
 
 	.text_part_title {

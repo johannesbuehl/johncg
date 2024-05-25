@@ -10,11 +10,14 @@
 	import EditAMCP from "./EditAMCP.vue";
 	import EditText from "./EditText.vue";
 	import MenuButton from "../MenuBar/MenuButton.vue";
+	import EditDummy from "./EditDummy.vue";
+	import { ControlWindowState } from "@/Enums";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import EditDummy from "./EditDummy.vue";
+	import type { ItemData } from "@/App.vue";
 
 	library.add(fas.faPen);
 
@@ -23,9 +26,34 @@
 		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		item_index: number | null;
 		bible?: BibleFile;
+		item_data: ItemData;
 	}>();
 
 	const item_props = defineModel<ClientPlaylistItem | undefined>("item_props", { required: true });
+	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
+		required: true
+	});
+
+	function edit_file() {
+		switch (item_props.value?.type) {
+			case "song":
+				control_window_state.value = ControlWindowState.EditSong;
+				break;
+			// case "psalm":
+			// 	control_window_state.value = ControlWindowState.EditPsalm;
+			// 	break;
+			default:
+				return;
+		}
+
+		const message: JGCPRecv.GetItemData = {
+			command: "get_item_data",
+			type: item_props.value.type,
+			file: item_props.value.file
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
@@ -44,9 +72,12 @@
 				v-model="item_props.caption"
 				placeholder="Item Caption"
 			/>
-			<MenuButton v-if="['song', 'psalm'].includes(item_props.type)">
+			<MenuButton
+				v-if="item_props.type === 'song' || item_props.type === 'psalm'"
+				@click="edit_file"
+			>
 				<FontAwesomeIcon :icon="['fas', 'pen']" />Edit
-				{{ item_props.type === "song" ? "Song" : item_props.type === "psalm" ? "Psalm" : null }}
+				{{ item_props.type === "song" ? "Song" : "Psalm" }}-File
 			</MenuButton>
 		</div>
 		<EditSong
@@ -54,7 +85,7 @@
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
-			:song_file="files?.song"
+			:song_data="item_data.song"
 			:item_index="item_index"
 		/>
 		<EditBible

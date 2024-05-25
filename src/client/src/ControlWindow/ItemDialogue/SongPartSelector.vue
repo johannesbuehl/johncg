@@ -45,13 +45,12 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import type { SongFile } from "@server/search_part";
-	import type { SongPart } from "@server/PlaylistItems/SongFile/SongFile";
+	import type { SongData, SongPart } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 
 	defineProps<{
-		song_file?: SongFile;
+		song_data: SongData | undefined;
 	}>();
 
 	// currently selected song
@@ -122,10 +121,10 @@
 </script>
 
 <template>
-	<template v-if="song_file?.data !== undefined">
+	<template v-if="song_data !== undefined">
 		<div id="song_editor_wrapper">
 			<div
-				v-if="song_file.data.title !== undefined && selected_languages.length > 1"
+				v-if="song_data.title !== undefined && selected_languages.length > 1"
 				id="language_selector"
 			>
 				<div class="header">Languages</div>
@@ -144,7 +143,7 @@
 								class="language_selected_icon"
 								:icon="['fas', state ? 'check' : 'xmark']"
 							/>
-							{{ song_file.data.title[language_index] }}
+							{{ song_data.title[language_index] }}
 						</div>
 					</template>
 				</Draggable>
@@ -156,7 +155,7 @@
 						id="result_text"
 						item-key="key"
 						tag="span"
-						:list="Object.entries(song_file.data.text ?? {})"
+						:list="Object.entries(song_data?.text ?? {})"
 						:group="{ name: 'song_part', pull: 'clone', put: false }"
 						:clone="on_clone"
 						:sort="false"
@@ -184,8 +183,8 @@
 					</Draggable>
 					<MenuButton
 						@click="
-							selected_available_song_part !== undefined && song_file?.data !== undefined
-								? add_song_part(song_file.data.parts.available[selected_available_song_part])
+							selected_available_song_part !== undefined && song_data !== undefined
+								? add_song_part(Object.keys(song_data.text)[selected_available_song_part])
 								: undefined
 						"
 					>

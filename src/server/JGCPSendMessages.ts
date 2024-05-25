@@ -1,8 +1,8 @@
 import * as PlaylistClass from "../server/Playlist.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
-import { GetItemFiles } from "./JGCPReceiveMessages.ts";
-import { File } from "./search_part.ts";
+import { GetItemData, GetItemFiles } from "./JGCPReceiveMessages.ts";
+import { File, ItemFileMap } from "./search_part.ts";
 import { CasparCGResolution } from "./CasparCG.ts";
 
 /**
@@ -59,6 +59,14 @@ export interface ItemFiles {
 	files: File[];
 }
 
+export type ItemData = {
+	[K in GetItemData["type"]]: {
+		command: "item_data";
+		type: K;
+		data: ItemFileMap[K]["data"];
+	};
+}[GetItemData["type"]];
+
 export interface Bible {
 	command: "bible";
 	bible: BibleFile;
@@ -94,6 +102,7 @@ export type Message =
 	| ItemSlides
 	| Clear
 	| ItemFiles
+	| ItemData
 	| Bible
 	| PlaylistPDF
 	| ClientMessage;

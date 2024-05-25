@@ -1,6 +1,6 @@
 import type { BibleProps } from "./PlaylistItems/Bible";
 
-export function recurse_object_check(obj: unknown, template: unknown): boolean {
+export function recurse_object_check<K>(obj: K, template: K): boolean {
 	if (typeof obj === "object" && typeof template === "object") {
 		const results: boolean[] = [];
 
