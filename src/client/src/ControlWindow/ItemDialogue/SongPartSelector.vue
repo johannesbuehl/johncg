@@ -208,10 +208,7 @@
 								tabindex="0"
 								class="song_part_name"
 								:ref="list_ref"
-								:class="{
-									[create_song_part_type(element)]: true,
-									active: selected_song_part === index
-								}"
+								:style="{ color: get_song_part_color(element) }"
 								:key="`${element}_${index}`"
 								@click="
 									selected_song_part = index;
