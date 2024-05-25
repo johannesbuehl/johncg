@@ -120,6 +120,7 @@ export default class PDF extends PlaylistItemBase {
 	async create_client_object_item_slides(): Promise<ClientPDFSlides> {
 		return Promise.resolve({
 			caption: this.props.caption,
+			title: this.props.file,
 			type: "pdf",
 			slides: await Promise.all(this.slides.map(async (m) => await this.create_thumbnail(m))),
 			media: undefined

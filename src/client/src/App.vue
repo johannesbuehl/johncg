@@ -42,7 +42,7 @@
 		error: true,
 		warn: true,
 		log: true,
-		debug: true
+		debug: false
 	});
 	const control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
 

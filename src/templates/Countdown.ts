@@ -1,4 +1,5 @@
 import { CountdownTemplateData } from "../server/PlaylistItems/Countdown";
+import { CountdownMode } from "../server/lib";
 
 let update_interval: NodeJS.Timeout;
 const spans: {
@@ -161,14 +162,14 @@ function update_time() {
 	let finished = false;
 
 	switch (data.mode) {
-		case "end_time":
-		case "duration":
+		case CountdownMode.EndTime:
+		case CountdownMode.Duration:
 			[time, finished] = get_remaining_time();
 			break;
-		case "clock":
+		case CountdownMode.Clock:
 			time = create_time_object(new Date());
 			break;
-		case "stopwatch":
+		case CountdownMode.Stopwatch:
 			time = get_stopwatch_time();
 			break;
 	}
@@ -177,7 +178,7 @@ function update_time() {
 		clearInterval(update_interval);
 	} else {
 		// if the mode isn't 'clock' and the hours are 00, don't show them anymore
-		if (data.mode !== "clock" && time.hours.join("") === "00") {
+		if (data.mode !== CountdownMode.Clock && time.hours.join("") === "00") {
 			if (spans.hours !== undefined) {
 				spans.hours[0].remove();
 				spans.hours[1].remove();

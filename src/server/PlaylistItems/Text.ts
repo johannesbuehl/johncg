@@ -43,6 +43,7 @@ export default class Text extends PlaylistItemBase {
 		return Promise.resolve({
 			type: "text",
 			caption: this.props.caption,
+			title: this.props.text.slice(0, 100),
 			media: undefined,
 			template: this.template
 		});

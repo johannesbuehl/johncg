@@ -1,16 +1,24 @@
 <script setup lang="ts">
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
+
 	import EditSong from "./EditSong.vue";
 	import EditBible from "./EditBible.vue";
 	import EditTemplate from "./EditTemplate.vue";
 	import EditCountdown from "./EditCountdown.vue";
+	import EditAMCP from "./EditAMCP.vue";
+	import EditText from "./EditText.vue";
+	import MenuButton from "../MenuBar/MenuButton.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import EditAMCP from "./EditAMCP.vue";
-	import EditText from "./EditText.vue";
+	import EditDummy from "./EditDummy.vue";
 
-	defineProps<{
+	library.add(fas.faPen);
+
+	const props = defineProps<{
 		ws: WebSocket;
 		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
 		item_index: number | null;
@@ -36,6 +44,10 @@
 				v-model="item_props.caption"
 				placeholder="Item Caption"
 			/>
+			<MenuButton v-if="['song', 'psalm'].includes(item_props.type)">
+				<FontAwesomeIcon :icon="['fas', 'pen']" />Edit
+				{{ item_props.type === "song" ? "Song" : item_props.type === "psalm" ? "Psalm" : null }}
+			</MenuButton>
 		</div>
 		<EditSong
 			v-if="item_props?.type === 'song'"
@@ -81,9 +93,16 @@
 			:ws="ws"
 			:item_index="item_index"
 		/>
-		<div v-if="item_props?.type === undefined" id="edit_part_placeholder">
+		<div v-else-if="item_props?.type === undefined" id="edit_part_placeholder">
 			Select an item in the playlist for editing
 		</div>
+		<EditDummy
+			v-else
+			:key="`${item_index}_dummy`"
+			v-model:item_props="item_props"
+			:ws="ws"
+			:item_index="item_index"
+		/>
 	</div>
 </template>
 

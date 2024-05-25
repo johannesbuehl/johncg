@@ -3,11 +3,13 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
-
 	import { type LogMessage } from "./MessagePopup.vue";
-	import { icons, colors, get_time_string } from "./MessagePopup.vue";
+	import { icons, colors } from "./MessagePopup.vue";
+
 	import type { LogLevel } from "@server/JGCPSendMessages";
+	import { get_time_string } from "@server/lib";
+
+	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 
 	const props = defineProps<{
 		messages: LogMessage[];

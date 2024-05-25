@@ -155,9 +155,18 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientSongSlides> {
+		let title: string = "";
+
+		if (this.song_file.metadata.ChurchSongID !== undefined) {
+			title += `${this.song_file.metadata.ChurchSongID} - `;
+		}
+
+		title += this.song_file.metadata.Title[this.props.languages?.[0] ?? 0];
+
 		return Promise.resolve({
 			type: "song",
 			caption: this.item_props.caption,
+			title,
 			media: this.media,
 			template: this.template
 		});

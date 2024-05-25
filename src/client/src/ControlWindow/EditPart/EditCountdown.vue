@@ -4,11 +4,7 @@
 	import CountdownEditor from "../ItemDialogue/CountdownEditor.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type {
-		ClientCountdownItem,
-		CountdownMode,
-		CountdownProps
-	} from "@server/PlaylistItems/Countdown";
+	import type { ClientCountdownItem, CountdownMode } from "@server/PlaylistItems/Countdown";
 
 	const props = defineProps<{
 		ws: WebSocket;

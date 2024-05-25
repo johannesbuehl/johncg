@@ -38,6 +38,7 @@ export default class Media extends PlaylistItemBase {
 	create_client_object_item_slides(): Promise<ClientMediaProps> {
 		return Promise.resolve({
 			caption: this.props.caption,
+			title: this.media,
 			type: "media",
 			media: this.media
 		});

@@ -83,7 +83,7 @@ export default class Playlist {
 			// else initialize the playlist-caption with the date of creation
 			const dt = new Date();
 
-			this.caption = `${dt.getFullYear()}-${String(dt.getMonth()).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}-${String(dt.getMinutes()).padStart(2, "0")}-${String(dt.getSeconds()).padStart(2, "0")}`;
+			this.caption = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}-${String(dt.getMinutes()).padStart(2, "0")}-${String(dt.getSeconds()).padStart(2, "0")}`;
 		}
 
 		// add a listener to send send the current-slide on connection

@@ -95,7 +95,7 @@
 				}"
 				@click="emit('select_slide', part_slide_map[part_index][0])"
 			>
-				{{ slides.caption }}
+				{{ slides.title }}
 			</div>
 			<div class="thumbnails">
 				<ItemSlide

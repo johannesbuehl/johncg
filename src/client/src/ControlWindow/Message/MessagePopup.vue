@@ -18,14 +18,6 @@
 		warn: "#ffff00",
 		debug: "#888888"
 	};
-
-	export function get_time_string(date: Date): string {
-		return [date.getHours(), date.getMinutes(), date.getSeconds()]
-			.map((ele) => {
-				return String(ele).padStart(2, "0");
-			})
-			.join(":");
-	}
 </script>
 
 <script setup lang="ts">
@@ -34,7 +26,9 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+
 	import type { LogLevel } from "@server/JGCPSendMessages";
+	import { get_time_string } from "@server/lib";
 
 	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 

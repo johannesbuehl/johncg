@@ -4,7 +4,7 @@
 	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ClientSongItem, SongProps } from "@server/PlaylistItems/Song";
+	import type { ClientSongItem } from "@server/PlaylistItems/Song";
 	import type { SongFile } from "@server/search_part";
 
 	const props = defineProps<{

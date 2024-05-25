@@ -70,10 +70,12 @@ export interface PlaylistPDF {
 }
 
 export enum LogLevel {
+	/* eslint-disable @typescript-eslint/naming-convention */
 	error = "error",
 	warn = "warn",
 	log = "log",
 	debug = "debug"
+	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
 export interface ClientMessage {

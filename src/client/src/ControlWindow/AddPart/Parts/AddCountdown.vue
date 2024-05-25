@@ -11,8 +11,8 @@
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 
 	import type { MediaFile } from "@server/search_part";
-	import type { CountdownMode, CountdownProps } from "@server/PlaylistItems/Countdown";
-	import { countdown_title_map } from "@server/lib";
+	import { type CountdownProps } from "@server/PlaylistItems/Countdown";
+	import { CountdownMode, countdown_title_map } from "@server/lib";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
@@ -24,7 +24,7 @@
 		refresh: [];
 	}>();
 
-	const countdown_mode = ref<CountdownMode>("end_time");
+	const countdown_mode = ref<CountdownMode>(CountdownMode.EndTime);
 	const time = ref<string>(new Date(Date.now()).toLocaleTimeString());
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
@@ -69,9 +69,18 @@
 
 	function create_props(): CountdownProps | undefined {
 		if (media_selection.value !== undefined) {
+			let caption = countdown_title_map[countdown_mode.value];
+
+			if (
+				countdown_mode.value === CountdownMode.Duration ||
+				countdown_mode.value === CountdownMode.EndTime
+			) {
+				caption += `: ${time.value}`;
+			}
+
 			return {
 				type: "countdown",
-				caption: `${countdown_title_map[countdown_mode.value]}: ${time.value}`,
+				caption,
 				color: "#FF0080",
 				media: media_selection.value.path,
 				font_size: font_size.value,
