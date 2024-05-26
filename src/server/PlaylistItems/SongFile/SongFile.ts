@@ -1,7 +1,8 @@
 import fs from "fs";
 import iconv from "iconv-lite";
 import Chord from "./Chord";
-import { SongElement, is_song_element } from "./SongElements";
+
+import { type SongElement, is_song_element } from "./SongElements";
 
 // metadata of the songfile
 export interface SongFileMetadata {

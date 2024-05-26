@@ -18,7 +18,6 @@
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { File } from "@server/search_part";
 	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
-	import { type SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const Config = {
 		client_server: {

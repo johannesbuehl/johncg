@@ -14,12 +14,12 @@
 	import AddCountdown from "./Parts/AddCountdown.vue";
 	import AddAMCP from "./Parts/AddAMCP.vue";
 	import AddComment from "./Parts/AddComment.vue";
+	import AddText from "./Parts/AddText.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import AddText from "./Parts/AddText.vue";
 
 	library.add(
 		fas.faMusic,

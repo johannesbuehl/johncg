@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { onUnmounted } from "vue";
 
-	import { type ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{

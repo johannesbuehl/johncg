@@ -24,7 +24,7 @@
 			if (song_data !== undefined) {
 				verse_order.value = song_props.value.verse_order ?? Object.keys(song_data.text ?? {});
 
-				const default_languages: [number, boolean][] = Array(song_data.title?.length)
+				const default_languages: [number, boolean][] = Array(song_data.metadata.Title?.length)
 					.fill([])
 					.map((ele, index) => [index, true]);
 

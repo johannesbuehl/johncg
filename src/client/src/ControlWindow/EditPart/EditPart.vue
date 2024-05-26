@@ -14,7 +14,7 @@
 	import { ControlWindowState } from "@/Enums";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import type { ItemData } from "@/App.vue";

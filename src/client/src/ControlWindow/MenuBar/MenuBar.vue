@@ -160,7 +160,11 @@
 		<MenuButton
 			:square="true"
 			@click="set_window_state(ControlWindowState.Add)"
-			:active="control_window_state === ControlWindowState.Add"
+			:active="
+				control_window_state === ControlWindowState.Add ||
+				control_window_state === ControlWindowState.NewSong ||
+				control_window_state === ControlWindowState.NewPsalm
+			"
 		>
 			<FontAwesomeIcon :icon="['fas', 'plus']" />
 		</MenuButton>

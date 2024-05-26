@@ -12,7 +12,7 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { reactive, ref, watch, type Ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -38,7 +38,9 @@
 
 	const emit = defineEmits<{}>();
 
-	const text_parts = defineModel<TextPart[]>("text_parts", { default: [] });
+	const text_parts = defineModel<TextPart[]>("text_parts", {
+		default: reactive([{ part: "", text: [["", "", "", ""]] }])
+	});
 	const selected_verse_order_part = ref<number>();
 
 	const metadata = defineModel<SongFileMetadata>("metadata", {
@@ -252,8 +254,9 @@
 			}
 		}
 
-		const message: JGCPRecv.SaveSong = {
-			command: "save_song",
+		const message: JGCPRecv.SaveFile = {
+			command: "save_file",
+			type: "song",
 			path: save_path,
 			data: create_song_data()
 		};
@@ -277,27 +280,31 @@
 
 				// check wether all used languages are empty
 				let is_empty = slide.every((lang, lang_index) => {
-					return lang_index >= metadata.value.LangCount || lang === "";
+					return lang_index < metadata.value.LangCount || lang === "";
 				});
 
 				// if it is the last element and empty, don't use it
-				if (slide_index === text_part.length - 1 && is_empty) {
-					return false;
-				}
+				return !(slide_index === text_part.length - 1 && is_empty);
 			});
+
+			console.debug("text_parts", text_parts);
 
 			song_data_object.text[part.part] = text_parts.map((slide) => {
 				const slide_line_count_max = Math.max(
 					...slide.map((lang) => (lang.match(/\n/g) || []).length + 1)
 				);
 
-				return Array.from(Array(metadata.value.LangCount).keys()).map((lang_index) => {
-					return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {
+				console.debug("line_count_max", slide_line_count_max);
+
+				return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {
+					return Array.from(Array(metadata.value.LangCount).keys()).map((lang_index) => {
 						return slide[lang_index].split("\n")[line_index] ?? "";
 					});
 				});
 			});
 		});
+
+		console.debug(song_data_object.text);
 
 		return song_data_object;
 	}
@@ -590,10 +597,6 @@
 
 	#text_container > .content {
 		flex: 1;
-	}
-
-	#text_container > .content > :last-child {
-		margin-top: auto;
 	}
 
 	#text_editor_container {

@@ -12,6 +12,7 @@
 	import SavePlaylist from "./SavePlaylist.vue";
 	import SongEditor from "./FileEditor/Song/SongEditor.vue";
 	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
+	import PsalmEditor from "./FileEditor/Psalm/PsalmEditor.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -193,6 +194,11 @@
 			:ws="ws"
 			:media_files="files.media"
 			:song_files="files.song"
+		/>
+		<PsalmEditor
+			v-else-if="control_window_state === ControlWindowState.NewPsalm"
+			:ws="ws"
+			:psalm_files="files.psalm"
 		/>
 		<EditSongFile
 			v-else-if="control_window_state === ControlWindowState.EditSong"

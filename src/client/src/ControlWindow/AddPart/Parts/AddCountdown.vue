@@ -11,7 +11,7 @@
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 
 	import type { MediaFile } from "@server/search_part";
-	import { type CountdownProps } from "@server/PlaylistItems/Countdown";
+	import type { CountdownProps } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode, countdown_title_map } from "@server/lib";
 
 	library.add(fas.faPlus, fas.faRepeat);

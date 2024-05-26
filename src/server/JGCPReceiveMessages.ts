@@ -1,4 +1,5 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
+import { PsalmFile } from "./PlaylistItems/Psalm";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
 
 /**
@@ -115,11 +116,10 @@ export interface DeleteItem extends Base {
 	position: number;
 }
 
-export interface SaveSong extends Base {
-	command: "save_song";
-	path: string;
-	data: SongData;
-}
+export type SaveFile = Base & { command: "save_file"; path: string } & (
+		| { type: "song"; data: SongData }
+		| { type: "psalm"; data: PsalmFile }
+	);
 
 /**
  * Uniun of the different JGCP-messages
@@ -142,4 +142,4 @@ export type Message =
 	| GetBible
 	| GetItemData
 	| CreatePlaylistPDF
-	| SaveSong;
+	| SaveFile;

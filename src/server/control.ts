@@ -21,7 +21,8 @@ import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg } from "./CasparCG.ts";
 import { recurse_object_check } from "./lib.ts";
-import SongFile, { SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
+import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
+import { PsalmFile } from "./PlaylistItems/Psalm.ts";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -67,7 +68,7 @@ export default class Control {
 			this.create_playlist_pdf(ws, msg.type),
 		update_playlist_caption: (msg: JGCPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
 			this.update_playlist_caption(msg.caption, ws),
-		save_song: (msg: JGCPRecv.SaveSong, ws: WebSocket) => this.save_song(msg.path, msg.data, ws)
+		save_file: (msg: JGCPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -162,77 +163,55 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
-	private save_song(path: string, data: JGCPRecv.SaveSong["data"], ws: WebSocket) {
-		const data_template: JGCPRecv.SaveSong["data"] = {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			metadata: { Title: ["template"], LangCount: 1 },
-			text: { template: [[["template"]]] }
-		};
+	private save_file(path: string, message: JGCPRecv.SaveFile, ws: WebSocket) {
+		let test_result: boolean = typeof path === "string";
 
-		let test_result: boolean = recurse_object_check(data, data_template);
-
-		if (data.metadata.ChurchSongID !== undefined) {
-			test_result &&= typeof data.metadata.ChurchSongID === "string";
+		switch (message.type) {
+			case "song":
+				test_result &&= check_song_data(message.data);
+				break;
+			case "psalm":
+				test_result &&= check_psalm_data(message.data);
 		}
-
-		if (data.metadata.Songbook !== undefined) {
-			test_result &&= typeof data.metadata.Songbook === "string";
-		}
-
-		if (data.metadata.VerseOrder !== undefined) {
-			const verse_order_template: SongFileMetadata["VerseOrder"] = ["template"];
-
-			test_result &&= recurse_object_check(data.metadata.VerseOrder, verse_order_template);
-		}
-
-		if (data.metadata.BackgroundImage !== undefined) {
-			test_result &&= typeof data.metadata.BackgroundImage === "string";
-		}
-
-		if (data.metadata.Author !== undefined) {
-			test_result &&= typeof data.metadata.Author === "string";
-		}
-
-		if (data.metadata.Melody !== undefined) {
-			test_result &&= typeof data.metadata.Melody === "string";
-		}
-
-		if (data.metadata.Translation !== undefined) {
-			test_result &&= typeof data.metadata.Translation === "string";
-		}
-
-		if (data.metadata.Copyright !== undefined) {
-			test_result &&= typeof data.metadata.Copyright === "string";
-		}
-
-		// IMPLEMENT ME
-		// if (data.metadata.Chords !== undefined) {
-		// 	test_result &&= typeof data.metadata.Chords === "string";
-		// }
-
-		if (data.metadata.Transpose !== undefined) {
-			test_result &&= typeof data.metadata.Transpose === "number";
-		}
-
-		test_result &&= typeof path === "string";
 
 		if (test_result) {
-			fs.writeFile(
-				Config.get_path("song", path),
-				new SongFile(data).sng_file,
-				{ encoding: "utf-8" },
-				(err) => {
-					if (err) {
-						logger.error(`Can't save songfile '${path}': ${err.message}`);
+			switch (message.type) {
+				case "song":
+					fs.writeFile(
+						Config.get_path("song", path),
+						new SongFile(message.data).sng_file,
+						{ encoding: "utf-8" },
+						(err) => {
+							if (err) {
+								logger.error(`Can't save songfile '${path}': ${err.message}`);
 
-						ws_send_response(`Can't save songfile '${path}': ${err.message}`, false, ws);
-					} else {
-						logger.log(`Saved songfile '${path}'`);
+								ws_send_response(`Can't save songfile '${path}': ${err.message}`, false, ws);
+							} else {
+								logger.log(`Saved songfile '${path}'`);
 
-						ws_send_response(`Saved songfile '${path}'`, true, ws);
-					}
-				}
-			);
+								ws_send_response(`Saved songfile '${path}'`, true, ws);
+							}
+						}
+					);
+					break;
+				case "psalm":
+					fs.writeFile(
+						Config.get_path("psalm", path),
+						JSON.stringify(message.data, undefined, "\t"),
+						{ encoding: "utf-8" },
+						(err) => {
+							if (err) {
+								logger.error(`Can't save psalmfile '${path}': ${err.message}`);
+
+								ws_send_response(`Can't save psalmfile '${path}': ${err.message}`, false, ws);
+							} else {
+								logger.log(`Saved psalmfile '${path}'`);
+
+								ws_send_response(`Saved psalmfile '${path}'`, true, ws);
+							}
+						}
+					);
+			}
 		}
 	}
 
@@ -859,4 +838,83 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	};
 
 	ws?.send(JSON.stringify(response));
+}
+
+function check_song_data(song_data: SongData): boolean {
+	const data_template: JGCPRecv.SaveFile["data"] = {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		metadata: { Title: ["template"], LangCount: 1 },
+		text: { template: [[["template"]]] }
+	};
+
+	let test_result: boolean = recurse_object_check(song_data, data_template);
+
+	if (song_data.metadata.ChurchSongID !== undefined) {
+		test_result &&= typeof song_data.metadata.ChurchSongID === "string";
+	}
+
+	if (song_data.metadata.Songbook !== undefined) {
+		test_result &&= typeof song_data.metadata.Songbook === "string";
+	}
+
+	if (song_data.metadata.VerseOrder !== undefined) {
+		const verse_order_template: SongFileMetadata["VerseOrder"] = ["template"];
+
+		test_result &&= recurse_object_check(song_data.metadata.VerseOrder, verse_order_template);
+	}
+
+	if (song_data.metadata.BackgroundImage !== undefined) {
+		test_result &&= typeof song_data.metadata.BackgroundImage === "string";
+	}
+
+	if (song_data.metadata.Author !== undefined) {
+		test_result &&= typeof song_data.metadata.Author === "string";
+	}
+
+	if (song_data.metadata.Melody !== undefined) {
+		test_result &&= typeof song_data.metadata.Melody === "string";
+	}
+
+	if (song_data.metadata.Translation !== undefined) {
+		test_result &&= typeof song_data.metadata.Translation === "string";
+	}
+
+	if (song_data.metadata.Copyright !== undefined) {
+		test_result &&= typeof song_data.metadata.Copyright === "string";
+	}
+
+	// IMPLEMENT ME
+	// if (data.metadata.Chords !== undefined) {
+	// 	test_result &&= typeof data.metadata.Chords === "string";
+	// }
+
+	if (song_data.metadata.Transpose !== undefined) {
+		test_result &&= typeof song_data.metadata.Transpose === "number";
+	}
+
+	return test_result;
+}
+
+function check_psalm_data(psalm_data: PsalmFile): boolean {
+	const data_template: JGCPRecv.SaveFile["data"] = {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		metadata: { caption: "template" },
+		text: [[["template"]]]
+	};
+
+	let test_result: boolean = recurse_object_check(psalm_data, data_template);
+
+	if (psalm_data.metadata.id !== undefined) {
+		test_result &&= typeof psalm_data.metadata.id === "string";
+	}
+
+	if (psalm_data.metadata.book !== undefined) {
+		test_result &&= typeof psalm_data.metadata.book === "string";
+	}
+
+	if (psalm_data.metadata.indent !== undefined) {
+		test_result &&= typeof psalm_data.metadata.indent === "boolean";
+	}
+
+	return test_result;
 }

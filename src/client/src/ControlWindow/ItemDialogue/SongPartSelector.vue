@@ -123,10 +123,7 @@
 <template>
 	<template v-if="song_data !== undefined">
 		<div id="song_editor_wrapper">
-			<div
-				v-if="song_data.title !== undefined && selected_languages.length > 1"
-				id="language_selector"
-			>
+			<div v-if="selected_languages.length > 1" id="language_selector">
 				<div class="header">Languages</div>
 				<Draggable
 					id="language_wrapper"
@@ -143,7 +140,7 @@
 								class="language_selected_icon"
 								:icon="['fas', state ? 'check' : 'xmark']"
 							/>
-							{{ song_data.title[language_index] }}
+							{{ song_data.metadata.Title[language_index] }}
 						</div>
 					</template>
 				</Draggable>
