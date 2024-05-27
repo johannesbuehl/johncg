@@ -1,11 +1,9 @@
 import path from "path";
 import fs from "fs";
 
-import * as JGCPRecv from "./JGCPReceiveMessages";
-
 import Config from "./config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
-import { PsalmFile as PsmFile } from "./PlaylistItems/Psalm";
+import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
 import { casparcg } from "./CasparCG";
 
@@ -16,16 +14,11 @@ export interface File {
 }
 
 export interface SongFile extends File {
-	data?: {
-		path: string;
-	} & SongData;
+	data?: SongData;
 }
 
 export interface PsalmFile extends File {
-	data?: {
-		id?: string;
-		title?: string;
-	};
+	data?: PsalmData;
 }
 
 // export interface BibleFile extends File {
@@ -56,8 +49,7 @@ export default class SearchPart {
 			...f,
 			data: {
 				text: song.all_parts,
-				metadata: song.metadata,
-				path: f.path
+				metadata: song.metadata
 			}
 		};
 
@@ -72,14 +64,13 @@ export default class SearchPart {
 	}
 
 	create_psalm_file(f: File): PsalmFile {
-		const psalm = JSON.parse(fs.readFileSync(Config.get_path("psalm", f.path), "utf-8")) as PsmFile;
+		const psalm = JSON.parse(
+			fs.readFileSync(Config.get_path("psalm", f.path), "utf-8")
+		) as PsalmData;
 
 		return {
 			...f,
-			data: {
-				title: psalm.metadata.caption,
-				id: psalm.metadata.id
-			}
+			data: psalm
 		};
 	}
 
@@ -170,30 +161,83 @@ export default class SearchPart {
 		return build_files(template.map((m) => m.split("/")));
 	}
 
-	get_item_file(type: JGCPRecv.GetItemData["type"], path: string): SongFile | undefined {
-		logger.log(`reading single ${type}-file (${path})`);
-
+	get_song_file(path: string): SongFile | undefined {
 		const item_file: ItemFile = {
 			name: path,
 			path
 		};
 
-		switch (type) {
-			case "song": {
-				try {
-					return this.create_song_file(item_file);
-				} catch (e) {
-					if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-						logger.error(`can't open song: '${path}' does not exist`);
+		try {
+			return this.create_song_file(item_file);
+		} catch (e) {
+			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+				logger.error(`can't open song: '${path}' does not exist`);
 
-						return;
-					} else {
-						throw e;
-					}
-				}
+				return undefined;
+			} else {
+				throw e;
 			}
 		}
 	}
+
+	get_psalm_file(path: string): PsalmFile | undefined {
+		const item_file: ItemFile = {
+			name: path,
+			path
+		};
+
+		try {
+			return this.create_psalm_file(item_file);
+		} catch (e) {
+			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+				logger.error(`can't open psalm: '${path}' does not exist`);
+
+				return undefined;
+			} else {
+				throw e;
+			}
+		}
+	}
+
+	// get_item_file<K extends JGCPRecv.GetItemData["type"]>(type: K, path: string): ItemFileMap[K] | undefined {
+	// 	logger.log(`reading single ${type}-file (${path})`);
+
+	// 	const item_file: ItemFileMap[K] = {
+	// 		name: path,
+	// 		path
+	// 	};
+
+	// 	switch (type) {
+	// 		case "song": {
+	// 			try {
+	// 				return this.create_song_file(item_file);
+	// 			} catch (e) {
+	// 				if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+	// 					logger.error(`can't open song: '${path}' does not exist`);
+
+	// 					return undefined;
+	// 				} else {
+	// 					throw e;
+	// 				}
+	// 			}
+	// 		}
+	// 		case "psalm": {
+	// 			try {
+	// 				return this.create_psalm_file(item_file);
+	// 			} catch (e) {
+	// 				if (e instanceof Error && "code" in e && e.code === "ENOENT") {
+	// 					logger.error(`can't open psalm: '${path}' does not exist`);
+
+	// 					return;
+	// 				} else {
+	// 					throw e;
+	// 				}
+	// 			}
+	// 		}
+	// 		default:
+	// 			return undefined;
+	// 	}
+	// }
 }
 
 function build_files(media_array: string[][], root?: string): File[] {

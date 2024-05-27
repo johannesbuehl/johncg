@@ -18,6 +18,7 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -201,11 +202,21 @@
 			:psalm_files="files.psalm"
 		/>
 		<EditSongFile
-			v-else-if="control_window_state === ControlWindowState.EditSong"
+			v-else-if="
+				control_window_state === ControlWindowState.EditSong && item_data.song !== undefined
+			"
 			:ws="ws"
 			:media_files="files.media"
 			:song_files="files.song"
-			:song_data="item_data.song"
+			:song_file="item_data.song"
+		/>
+		<EditPsalmFile
+			v-else-if="
+				control_window_state === ControlWindowState.EditPsalm && item_data.psalm !== undefined
+			"
+			:ws="ws"
+			:psalm_files="files.psalm"
+			:psalm_file="item_data.psalm"
 		/>
 		<MessageView
 			v-else-if="control_window_state === ControlWindowState.Message"

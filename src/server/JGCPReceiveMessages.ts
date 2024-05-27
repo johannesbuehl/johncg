@@ -1,6 +1,6 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
-import { PsalmFile } from "./PlaylistItems/Psalm";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
+import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 
 /**
  * Base interface for Received JGCP-messages
@@ -89,7 +89,7 @@ export interface GetBible extends Base {
 
 export interface GetItemData extends Base {
 	command: "get_item_data";
-	type: "song";
+	type: "song" | "psalm";
 	file: string;
 }
 
@@ -118,7 +118,7 @@ export interface DeleteItem extends Base {
 
 export type SaveFile = Base & { command: "save_file"; path: string } & (
 		| { type: "song"; data: SongData }
-		| { type: "psalm"; data: PsalmFile }
+		| { type: "psalm"; data: PsalmData }
 	);
 
 /**

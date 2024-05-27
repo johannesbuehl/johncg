@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, watch } from "vue";
+	import { onMounted, ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -23,19 +23,14 @@
 		new_psalm: [];
 	}>();
 
-	const selection = defineModel<PsalmFile>({});
+	const selection = ref<PsalmFile>();
 
-	const search_strings = defineModel<SearchInputDefinitions<keyof NonNullable<PsalmFile["data"]>>>(
-		"search_strings",
-		{
-			default: [
-				{ id: "id", placeholder: "Psalm ID", value: "" },
-				{ id: "title", placeholder: "Title", value: "" }
-			]
-		}
-	);
+	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
+		{ id: "id", placeholder: "Psalm ID", value: "" },
+		{ id: "caption", placeholder: "Title", value: "" }
+	]);
 
-	const file_tree = defineModel<PsalmFile[]>("file_tree");
+	const file_tree = ref<PsalmFile[]>();
 
 	onMounted(() => {
 		// init
@@ -76,7 +71,11 @@
 		file_tree.value = search_string();
 	}
 
-	type SearchMapFile = PsalmFile & { children?: SearchMapFile[]; search_data?: PsalmFile["data"] };
+	interface SearchMapData {
+		id: string;
+		caption: string;
+	}
+	type SearchMapFile = PsalmFile & { children?: SearchMapFile[]; search_data?: SearchMapData };
 	let search_map: SearchMapFile[] = [];
 	function create_search_map(files: PsalmFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
@@ -92,8 +91,8 @@
 					return_map.push({
 						...f,
 						search_data: {
-							id: f.data?.id?.toLowerCase(),
-							title: f.data?.title?.toLowerCase()
+							id: f.data?.metadata.id?.toLowerCase() ?? "",
+							caption: f.data?.metadata?.caption?.toLowerCase() ?? ""
 						}
 					});
 				}

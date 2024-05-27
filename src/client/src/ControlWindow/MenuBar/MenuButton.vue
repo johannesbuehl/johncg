@@ -42,6 +42,8 @@
 		margin: 0.25rem;
 
 		transition: background-color 0.25s ease;
+
+		text-wrap: nowrap;
 	}
 
 	div.button.square {

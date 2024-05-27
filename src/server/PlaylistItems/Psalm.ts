@@ -11,7 +11,7 @@ export interface PsalmFile {
 		caption: string;
 		id?: string;
 		book?: string;
-		indent?: boolean;
+		indent: boolean;
 	};
 	text: string[][][];
 }
@@ -158,7 +158,8 @@ export default class Psalm extends PlaylistItemBase {
 
 		const template: PsalmFile = {
 			metadata: {
-				caption: "Template"
+				caption: "Template",
+				indent: false
 			},
 			text: [[["Template"]]]
 		};

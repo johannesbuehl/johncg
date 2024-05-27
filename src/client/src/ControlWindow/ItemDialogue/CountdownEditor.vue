@@ -4,8 +4,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-
-	import type { CountdownMode } from "@server/PlaylistItems/Countdown";
+	import type { CountdownMode } from "@server/lib";
 
 	library.add(
 		fas.faCalendarXmark,

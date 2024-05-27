@@ -643,10 +643,21 @@ export default class Control {
 	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
-		const message: JGCPSend.ItemData = {
+		let data: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]>["data"];
+
+		switch (type) {
+			case "song":
+				data = this.search_part.get_song_file(path);
+				break;
+			case "psalm":
+				data = this.search_part.get_psalm_file(path);
+				break;
+		}
+
+		const message: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]> = {
 			command: "item_data",
-			type: "song",
-			data: this.search_part.get_item_file(type, path).data
+			type,
+			data
 		};
 
 		ws?.send(JSON.stringify(message));
@@ -898,7 +909,7 @@ function check_song_data(song_data: SongData): boolean {
 function check_psalm_data(psalm_data: PsalmFile): boolean {
 	const data_template: JGCPRecv.SaveFile["data"] = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		metadata: { caption: "template" },
+		metadata: { caption: "template", indent: true },
 		text: [[["template"]]]
 	};
 

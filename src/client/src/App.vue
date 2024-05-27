@@ -4,7 +4,7 @@
 		event.preventDefault();
 	}
 
-	export type ItemData = Partial<{ [key in JGCPSend.ItemData["type"]]: JGCPSend.ItemData["data"] }>;
+	export type ItemData = { [key in JGCPRecv.GetItemData["type"]]?: JGCPSend.ItemData<key> };
 </script>
 
 <script setup lang="ts">
@@ -272,8 +272,16 @@
 		}
 	}
 
-	function store_item_data(data: JGCPSend.ItemData) {
-		item_data.value[data.type] = data.data;
+	function store_item_data(data: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]>) {
+		// work around typescripts conservative type-system
+		switch (data.type) {
+			case "song":
+				item_data.value.song = data as JGCPSend.ItemData<"song">;
+				break;
+			case "psalm":
+				item_data.value.psalm = data as JGCPSend.ItemData<"psalm">;
+				break;
+		}
 	}
 
 	function parse_bible(data: JGCPSend.Bible) {

@@ -171,7 +171,11 @@
 		<MenuButton
 			:square="true"
 			@click="set_window_state(ControlWindowState.Edit)"
-			:active="control_window_state === ControlWindowState.Edit"
+			:active="
+				control_window_state === ControlWindowState.Edit ||
+				control_window_state === ControlWindowState.EditSong ||
+				control_window_state === ControlWindowState.EditPsalm
+			"
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 		</MenuButton>

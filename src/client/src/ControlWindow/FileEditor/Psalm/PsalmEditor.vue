@@ -1,3 +1,10 @@
+<script lang="ts">
+	export interface PsalmTextBlock {
+		text: string;
+		indent: boolean;
+	}
+</script>
+
 <script setup lang="ts">
 	import { reactive, ref, watch, type Ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -13,7 +20,7 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
-	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk);
+	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faIndent);
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -30,9 +37,11 @@
 	]);
 	const psalm_file_name = defineModel<string>("psalm_file_name", { default: "" });
 	const metadata = defineModel<PsalmData["metadata"]>("metadata", {
-		default: { caption: "", id: "", book: "", indent: "" }
+		default: reactive({ caption: "", id: "", book: "", indent: true })
 	});
-	const psalm_text = defineModel<string[][]>("psalm_text", { default: reactive([[""]]) });
+	const psalm_text = defineModel<PsalmTextBlock[][]>("psalm_text", {
+		default: reactive([[{ text: "", indent: false }]])
+	});
 
 	// watch for new psalm-files
 	watch(
@@ -106,18 +115,38 @@
 		return return_files;
 	}
 
-	function on_text_change(slide_index: number) {
-		const slide_text = psalm_text.value[slide_index];
+	function on_text_change() {
+		let indent_state: boolean = false;
 
-		// if the last slide isn't empty, add another one
-		if (slide_text[slide_text.length - 1] !== "") {
-			slide_text.push("");
+		psalm_text.value.forEach((slide) => {
+			// if the last slide isn't empty, add another one
+			if (slide[slide.length - 1].text !== "") {
+				slide.push({ text: "", indent: indent_state });
 
-			// else if the second-last is also empty, remove the last one
-		} else if (slide_text[slide_text.length - 2] === "" && slide_text.length > 1) {
-			slide_text.pop();
-		}
+				// else if the second-last is also empty, remove the last one
+			} else if (slide[slide.length - 2]?.text === "" && slide.length > 1) {
+				slide.pop();
+			}
+
+			// set the indentation for all blocks
+			slide.forEach((block) => {
+				block.indent = indent_state;
+
+				// only flip the indentation, if the block isn't empty
+				if (block.text !== "") {
+					indent_state = !indent_state;
+				}
+			});
+		});
 	}
+
+	watch(
+		() => psalm_text.value,
+		() => {
+			on_text_change();
+		},
+		{ deep: true }
+	);
 
 	function get_psalm_files() {
 		const message: JGCPRecv.GetItemFiles = {
@@ -128,22 +157,32 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
+	function add_slide() {
+		const last_slide = psalm_text.value[psalm_text.value.length - 1];
+
+		psalm_text.value.push([
+			{ text: "", indent: last_slide[last_slide.length - 1].indent && metadata.value.indent }
+		]);
+
+		console.debug(psalm_text.value);
+	}
+
 	const overwrite_dialog = ref<boolean>(false);
 	let overwrite_path: string = "";
 	function save_psalm(overwrite: boolean = false) {
 		// if no file is selected, save at the root dir
 		let save_path: string;
 		if (psalm_selection.value === undefined) {
-			save_path = psalm_file_name.value + ".sng";
+			save_path = psalm_file_name.value + ".psm";
 		} else {
 			// if the selection is a file, replace the file-name with the file-name
 			if (psalm_selection.value.children === undefined) {
 				save_path =
 					psalm_selection.value.path.slice(0, psalm_selection.value.path.lastIndexOf("/") + 1) +
 					psalm_file_name.value +
-					".sng";
+					".psm";
 			} else {
-				save_path = psalm_selection.value.path + "/" + psalm_file_name.value + ".sng";
+				save_path = psalm_selection.value.path + "/" + psalm_file_name.value + ".psm";
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
@@ -187,7 +226,18 @@
 		};
 
 		psalm_data.text = psalm_text.value.map((slide) => {
-			return slide.map((part) => part.split("\n"));
+			// filter out the empty, last elements meant for the next slide to be inputted (but keep it if it is the first)
+			const slide_blocks = slide.filter((block, block_index, text_block) => {
+				// if it is the first element use it always
+				if (block_index === 0) {
+					return true;
+				}
+
+				// if it is the last element and empty, don't use it
+				return !(block_index === text_block.length - 1 && block.text === "");
+			});
+
+			return slide_blocks.map((part) => part.text.split("\n"));
 		});
 
 		return psalm_data;
@@ -218,38 +268,27 @@
 
 <template>
 	<div id="new_psalm_container">
-		<div>
+		<div id="metadata_container">
 			<div class="container">
 				<div class="header">Psalm-Caption</div>
 				<div class="content" id="title_input_container">
 					<input v-model="metadata.caption" placeholder="Caption" />
 				</div>
 			</div>
-			<div class="container" id="text_container">
-				<div class="header">Text</div>
-				<div class="content" id="text_editor_container">
-					<div v-for="(slide, slide_index) of psalm_text" class="psalm_slide">
-						<MenuButton @click="psalm_text.splice(slide_index, 1)" :square="true">
-							<FontAwesomeIcon :icon="['fas', 'trash']" />
-						</MenuButton>
-						<div class="psalm_text_block">
-							<template v-for="(block, block_index) of slide">
-								<textarea
-									:rows="(block.match(/\n/g) || []).length + 1"
-									v-model="psalm_text[slide_index][block_index]"
-									placeholder="Textblock"
-									@change="on_text_change(slide_index)"
-								/>
-							</template>
-						</div>
-					</div>
+			<div class="container">
+				<div class="header">Psalm ID</div>
+				<div class="content">
+					<input v-model="metadata.id" placeholder="Psalm ID" />
 				</div>
-				<MenuButton @click="psalm_text.push([''])">
-					<FontAwesomeIcon :icon="['fas', 'plus']" />Add Slide
-				</MenuButton>
 			</div>
-		</div>
-		<div>
+			<div class="container">
+				<div class="header">Indentation</div>
+				<div class="content">
+					<MenuButton v-model="metadata.indent">
+						<FontAwesomeIcon :icon="['fas', 'indent']" />Indent
+					</MenuButton>
+				</div>
+			</div>
 			<div class="container">
 				<div class="header">Psalm-File</div>
 				<div class="content">
@@ -263,12 +302,29 @@
 					</div>
 				</div>
 			</div>
-			<div class="container">
-				<div class="header">Psalm ID</div>
-				<div class="content">
-					<input v-model="metadata.id" placeholder="Psalm ID" />
+		</div>
+		<div class="container" id="text_container">
+			<div class="header">Text</div>
+			<div class="content" id="text_editor_container">
+				<div v-for="(slide, slide_index) of psalm_text" class="psalm_slide">
+					<MenuButton @click="psalm_text.splice(slide_index, 1)" :square="true">
+						<FontAwesomeIcon :icon="['fas', 'trash']" />
+					</MenuButton>
+					<div class="psalm_text_block">
+						<template v-for="(block, block_index) of slide">
+							<textarea
+								:class="{ indent: block.indent && metadata.indent }"
+								:rows="(block.text.match(/\n/g) || []).length + 1"
+								v-model="psalm_text[slide_index][block_index].text"
+								placeholder="Textblock"
+							/>
+						</template>
+					</div>
 				</div>
 			</div>
+			<MenuButton @click="add_slide()">
+				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Slide
+			</MenuButton>
 		</div>
 	</div>
 	<PopUp title="Save Psalm" v-model:active="show_save_file_dialogue" :maximize="true">
@@ -296,19 +352,17 @@
 	#new_psalm_container {
 		flex: 1;
 		display: flex;
-		/* flex-direction: column; */
+		flex-direction: column;
 		gap: 0.25rem;
-
-		display: grid;
-
-		grid-template-columns: 7fr 3fr;
 	}
 
-	#new_psalm_container > * {
-		flex: 1;
+	#metadata_container {
 		display: flex;
-		flex-direction: column;
 		gap: inherit;
+	}
+
+	#metadata_container > :first-child {
+		flex: 1;
 	}
 
 	.container {
@@ -370,6 +424,8 @@
 	textarea {
 		background-color: transparent;
 		border: var(--color-item) 0.0625rem solid;
+
+		transition: padding 0.5s ease;
 	}
 
 	input:focus,
@@ -378,6 +434,10 @@
 		background-color: var(--color-page-background);
 
 		outline: none;
+	}
+
+	textarea.indent {
+		padding-left: 2rem;
 	}
 
 	#lang_count_input {
@@ -402,12 +462,14 @@
 		flex-direction: column;
 
 		overflow: auto;
+
+		gap: 1rem;
 	}
 
 	.psalm_slide {
 		display: flex;
 
-		gap: inherit;
+		gap: 0.25rem;
 
 		overflow: visible;
 	}

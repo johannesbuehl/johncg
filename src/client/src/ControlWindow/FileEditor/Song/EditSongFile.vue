@@ -1,8 +1,9 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 
-	import SongEditor, { is_slide_empty, type TextPart } from "./SongEditor.vue";
+	import SongEditor, { is_slide_empty, type SongTextPart } from "./SongEditor.vue";
 
+	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { MediaFile, SongFile } from "@server/search_part";
 	import type { SongFileMetadata } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -10,22 +11,22 @@
 		ws: WebSocket;
 		song_files: SongFile[];
 		media_files: MediaFile[];
-		song_data: SongFile["data"];
+		song_file: JGCPSend.ItemData<"song">;
 	}>();
 
 	const emit = defineEmits<{}>();
 
 	const metadata = ref<SongFileMetadata>();
-	const text_parts = ref<TextPart[]>([]);
+	const text_parts = ref<SongTextPart[]>([]);
 
 	watch(
-		() => props.song_data,
+		() => props.song_file,
 		() => {
-			if (props.song_data !== undefined) {
-				metadata.value = props.song_data.metadata;
+			if (props.song_file.data.data !== undefined) {
+				metadata.value = props.song_file.data.data.metadata;
 
-				text_parts.value = Object.entries(props.song_data.text).map(([part, text]) => {
-					const part_text: TextPart["text"] = text.map((slide) => {
+				text_parts.value = Object.entries(props.song_file.data.data.text).map(([part, text]) => {
+					const part_text: SongTextPart["text"] = text.map((slide) => {
 						return Array.apply(null, Array(4)).map((_, lang_index) => {
 							return slide
 								.map((line) => {
@@ -33,7 +34,7 @@
 								})
 								.join("\n");
 						});
-					}) as TextPart["text"];
+					}) as SongTextPart["text"];
 
 					// if the last line is empty and it isn't the only one, append an empty one
 					if (
@@ -58,7 +59,7 @@
 		:ws="ws"
 		:song_files="song_files"
 		:media_files="media_files"
-		:song_file_name="song_data?.path.replace(/\.sng$/, '')"
+		:song_file_name="song_file?.data.path.replace(/\.sng$/, '')"
 		v-model:metadata="metadata"
 		v-model:text_parts="text_parts"
 	/>

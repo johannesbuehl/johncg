@@ -4,14 +4,15 @@
 	import CountdownEditor from "../ItemDialogue/CountdownEditor.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ClientCountdownItem, CountdownMode } from "@server/PlaylistItems/Countdown";
+	import type { ClientCountdownItem } from "@server/PlaylistItems/Countdown";
+	import { CountdownMode } from "@server/lib";
 
 	const props = defineProps<{
 		ws: WebSocket;
 		item_index: number;
 	}>();
 
-	const countdown_mode = ref<CountdownMode>("end_time");
+	const countdown_mode = ref<CountdownMode>(CountdownMode.EndTime);
 	const time = ref<string>(new Date(Date.now()).toLocaleTimeString());
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });

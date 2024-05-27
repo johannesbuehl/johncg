@@ -59,13 +59,11 @@ export interface ItemFiles {
 	files: File[];
 }
 
-export type ItemData = {
-	[K in GetItemData["type"]]: {
-		command: "item_data";
-		type: K;
-		data: ItemFileMap[K]["data"];
-	};
-}[GetItemData["type"]];
+export type ItemData<K extends GetItemData["type"]> = {
+	command: "item_data";
+	type: K;
+	data: ItemFileMap[K];
+};
 
 export interface Bible {
 	command: "bible";
@@ -102,7 +100,7 @@ export type Message =
 	| ItemSlides
 	| Clear
 	| ItemFiles
-	| ItemData
+	| ItemData<GetItemData["type"]>
 	| Bible
 	| PlaylistPDF
 	| ClientMessage;

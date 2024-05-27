@@ -1,11 +1,11 @@
 <script lang="ts">
-	export interface TextPart {
+	export interface SongTextPart {
 		part: string;
 		text: [string, string, string, string][];
 	}
 
-	export function is_slide_empty(part: TextPart["text"][number], lang_count: number): boolean {
-		return part.every((language, index) => {
+	export function is_slide_empty(part: SongTextPart["text"][number], lang_count: number): boolean {
+		return part?.every((language, index) => {
 			return language.length === 0 || index >= lang_count;
 		});
 	}
@@ -38,7 +38,7 @@
 
 	const emit = defineEmits<{}>();
 
-	const text_parts = defineModel<TextPart[]>("text_parts", {
+	const text_parts = defineModel<SongTextPart[]>("text_parts", {
 		default: reactive([{ part: "", text: [["", "", "", ""]] }])
 	});
 	const selected_verse_order_part = ref<number>();
@@ -161,21 +161,31 @@
 		return Math.max(Math.min(Math.round(metadata.value.LangCount), 4), 1);
 	}
 
-	function on_text_change(part_index: number) {
-		const part_text = text_parts.value[part_index].text;
+	function on_text_change() {
+		text_parts.value.forEach((part) => {
+			const part_text = part.text;
 
-		// if the last slide isn't empty, add another one
-		if (!is_slide_empty(part_text[part_text.length - 1], metadata.value.LangCount)) {
-			part_text.push(["", "", "", ""]);
+			// if the last slide isn't empty, add another one
+			if (!is_slide_empty(part_text[part_text.length - 1], metadata.value.LangCount)) {
+				part_text.push(["", "", "", ""]);
 
-			// else if the second-last is also empty, remove the last one
-		} else if (
-			is_slide_empty(part_text[part_text.length - 2], metadata.value.LangCount) &&
-			part_text.length > 1
-		) {
-			part_text.pop();
-		}
+				// else if the second-last is also empty, remove the last one
+			} else if (
+				is_slide_empty(part_text[part_text.length - 2], metadata.value.LangCount) &&
+				part_text.length > 1
+			) {
+				part_text.pop();
+			}
+		});
 	}
+
+	watch(
+		() => text_parts.value,
+		() => {
+			on_text_change();
+		},
+		{ deep: true }
+	);
 
 	function remove_verse_order_part(index: number | undefined = selected_verse_order_part.value) {
 		if (metadata.value.VerseOrder !== undefined) {
@@ -375,7 +385,6 @@
 										`Slide ${slide_index + 1}` +
 										(metadata.LangCount > 1 ? `- Language ${language_index + 1}` : '')
 									"
-									@change="on_text_change(index)"
 								/>
 							</template>
 						</div>

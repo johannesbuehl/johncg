@@ -25,20 +25,15 @@
 	}>();
 
 	// currently selected song
-	const selection = defineModel<SongFile>("selection");
+	const selection = ref<SongFile>();
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
-	const search_strings = defineModel<SearchInputDefinitions<keyof SearchMapData>>(
-		"search_strings",
-		{
-			default: [
-				{ id: "id", placeholder: "Song ID", value: "" },
-				{ id: "title", placeholder: "Title", value: "" },
-				{ id: "text", placeholder: "Text", value: "" }
-			]
-		}
-	);
+	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
+		{ id: "id", placeholder: "Song ID", value: "" },
+		{ id: "title", placeholder: "Title", value: "" },
+		{ id: "text", placeholder: "Text", value: "" }
+	]);
 
 	const file_tree = defineModel<SongFile[]>("file_tree");
 
@@ -61,7 +56,7 @@
 		(selection) => {
 			if (selection?.data !== undefined) {
 				verse_order.value = structuredClone(toRaw(Object.keys(selection.data.text)));
-				languages.value = Array(selection.data.title?.length)
+				languages.value = Array(selection.data.metadata.Title?.length)
 					.fill([])
 					.map((ele, index) => [index, true]);
 			}
@@ -125,8 +120,8 @@
 					return_map.push({
 						...f,
 						search_data: {
-							id: f.data?.id?.toLowerCase(),
-							title: f.data?.title?.join("\n").toLowerCase(),
+							id: f.data?.metadata.ChurchSongID?.toLowerCase(),
+							title: f.data?.metadata.Title?.join("\n").toLowerCase(),
 							text: Object.values((f as SongFile).data?.text ?? {})
 								.map((p) => p.map((s) => s.map((l) => l.join("\n")).join("\n")).join("\n"))
 								.join("\n")

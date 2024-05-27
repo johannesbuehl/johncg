@@ -39,9 +39,9 @@
 			case "song":
 				control_window_state.value = ControlWindowState.EditSong;
 				break;
-			// case "psalm":
-			// 	control_window_state.value = ControlWindowState.EditPsalm;
-			// 	break;
+			case "psalm":
+				control_window_state.value = ControlWindowState.EditPsalm;
+				break;
 			default:
 				return;
 		}
@@ -85,7 +85,7 @@
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
-			:song_data="item_data.song"
+			:song_data="item_data.song?.data.data"
 			:item_index="item_index"
 		/>
 		<EditBible
