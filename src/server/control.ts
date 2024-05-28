@@ -150,6 +150,9 @@ export default class Control {
 				message: "Playlist has been saved",
 				type: JGCPSend.LogLevel.log
 			};
+
+			// send the playlist-path to the clients
+			this.send_playlist();
 		} else {
 			message = {
 				command: "client_mesage",
@@ -224,6 +227,7 @@ export default class Control {
 		const response_playlist_items: JGCPSend.Playlist = {
 			command: "playlist_items",
 			caption: this.playlist.caption,
+			path: this.playlist.path,
 			new_item_order,
 			...this.playlist.create_client_object_playlist(),
 			client_id,

@@ -32,14 +32,13 @@
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type { File } from "@server/search_part";
 
-	library.add(fas.faPlus, fas.faMinus);
+	library.add(fas.faMinus);
 
 	const props = defineProps<{
 		file?: File;
 		root?: boolean;
 		expand?: boolean;
 		files?: File[];
-		select_dirs?: boolean;
 		clone_callback?: (arg: JGCPSend.ItemFiles["files"][0]) => ItemProps;
 	}>();
 
@@ -80,27 +79,18 @@
 		:tabindex="root ? undefined : 0"
 		@keydown.enter="on_enter"
 		@click="
-			if (file !== undefined && (typeof files !== 'object' || select_dirs === true)) {
+			if (file !== undefined) {
 				selection = file;
 			}
 			$event.stopPropagation();
 			$event.preventDefault();
 		"
 		@dblclick="
-			typeof files === 'object'
-				? (expanded = !expanded)
-				: emit('choose', file, files === undefined ? 'file' : 'dir');
+			emit('choose', file, files === undefined ? 'file' : 'dir');
 			$event.stopPropagation();
 			$event.preventDefault();
 		"
 	>
-		<div v-if="!root" class="button" @click="expanded = !expanded">
-			<FontAwesomeIcon
-				v-if="typeof files === 'object'"
-				class="expand_icon"
-				:icon="['fas', expanded ? 'minus' : 'plus']"
-			/>
-		</div>
 		<div class="file_item" ref="files_draggable">
 			<span
 				v-if="!root"
@@ -125,7 +115,6 @@
 				<template #item="{ element }">
 					<FileItem
 						v-show="expanded || root"
-						:select_dirs="select_dirs"
 						:file="element"
 						:expand="expand"
 						:files="element.children"

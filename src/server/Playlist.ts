@@ -48,6 +48,7 @@ enum TransitionType {
 
 export default class Playlist {
 	caption: string;
+	path: string;
 
 	// store the individual items of the playlist
 	playlist_items: PlaylistItem[] = [];
@@ -198,13 +199,15 @@ export default class Playlist {
 	}
 
 	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
+		this.path = path.relative(Config.path.playlist, playlist_path);
+
 		let playlist_string: string;
 
 		try {
-			playlist_string = fs.readFileSync(playlist_path, "utf-8");
+			playlist_string = fs.readFileSync(Config.get_path("playlist", this.path), "utf-8");
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				logger.error(`can't load playlist: playlist does not exist (${playlist_path})`);
+				logger.error(`can't load playlist: playlist does not exist (${this.path})`);
 
 				return;
 			} else {
@@ -217,7 +220,7 @@ export default class Playlist {
 		this.caption = playlist.caption;
 
 		if (this.caption === undefined || this.caption === "") {
-			this.caption = path.basename(playlist_path).replace(/\.jcg$/, "");
+			this.caption = path.basename(this.path).replace(/\.jcg$/, "");
 		}
 
 		playlist.items.forEach((item) => {
@@ -228,7 +231,11 @@ export default class Playlist {
 		this.changes = false;
 	}
 
-	save(playlist: string): boolean {
+	save(playlist?: string): boolean {
+		if (playlist !== undefined) {
+			this.path = playlist;
+		}
+
 		const save_object: PlaylistObject = {
 			caption: this.caption,
 			items: this.playlist_items.map((item) => item.props)
@@ -236,7 +243,7 @@ export default class Playlist {
 
 		try {
 			fs.writeFileSync(
-				path.join(Config.get_path("playlist"), playlist),
+				path.join(Config.get_path("playlist"), this.path),
 				JSON.stringify(save_object, null, "\t"),
 				"utf-8"
 			);

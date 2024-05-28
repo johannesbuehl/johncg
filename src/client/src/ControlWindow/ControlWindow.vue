@@ -130,6 +130,7 @@
 		:visibility="server_state?.visibility ?? false"
 		v-model:control_window_state="control_window_state"
 		:playlist_caption="playlist_caption"
+		:playlist_path="playlist?.path"
 		@navigate="navigate"
 		@set_visibility="visibility"
 	/>

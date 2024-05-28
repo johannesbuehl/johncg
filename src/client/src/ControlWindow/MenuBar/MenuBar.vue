@@ -30,6 +30,7 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
+		playlist_path: string | undefined;
 	}>();
 
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
@@ -117,6 +118,17 @@
 			control_window_state.value = state;
 		}
 	}
+
+	function save_playlist() {
+		if (props.playlist_path !== undefined) {
+			const message: JGCPRecv.SavePlaylist = {
+				command: "save_playlist",
+				playlist: props.playlist_path
+			};
+
+			props.ws.send(JSON.stringify(message));
+		}
+	}
 </script>
 
 <template>
@@ -133,8 +145,13 @@
 		</MenuButton>
 		<MenuButton
 			:square="true"
-			@click="set_window_state(ControlWindowState.SavePlaylist)"
 			:active="control_window_state === ControlWindowState.SavePlaylist"
+			@click="set_window_state(ControlWindowState.SavePlaylist)"
+			@dblclick="
+				playlist_path !== undefined
+					? save_playlist()
+					: set_window_state(ControlWindowState.SavePlaylist)
+			"
 		>
 			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
 		</MenuButton>

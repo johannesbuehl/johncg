@@ -21,7 +21,7 @@
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { File } from "@server/search_part";
 
-	library.add(fas.faArrowsRotate, fas.faFileCirclePlus);
+	library.add(fas.faHouse, fas.faChevronRight, fas.faArrowsRotate, fas.faFileCirclePlus);
 
 	const props = defineProps<{
 		name: string;
@@ -45,6 +45,7 @@
 	});
 
 	const rotate_button = ref<boolean>(false);
+	const directory_stack = ref<File[]>([]);
 
 	const selection = defineModel<File | undefined>("selection", { required: true });
 
@@ -69,6 +70,18 @@
 		},
 		{ deep: true }
 	);
+
+	function on_choose(file: File | undefined, type: "file" | "dir") {
+		console.debug("on-choose");
+
+		if (file !== undefined) {
+			if (type === "dir") {
+				directory_stack.value.push(file);
+			}
+		}
+
+		file !== undefined ? emit("choose", file, type) : undefined;
+	}
 </script>
 
 <template>
@@ -103,16 +116,38 @@
 			<div id="selection_wrapper">
 				<div class="file_view">
 					<div class="header">{{ name }}</div>
+					<div id="directory_stack">
+						<MenuButton :square="true" @click="directory_stack = []">
+							<FontAwesomeIcon :icon="['fas', 'house']" />
+						</MenuButton>
+						<template v-for="(dir, dir_index) of directory_stack">
+							<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
+							<div
+								class="directory_stack_dir"
+								@click="
+									directory_stack.splice(dir_index + 1, directory_stack.length);
+									$event.stopPropagation();
+									$event.preventDefault();
+								"
+							>
+								{{ dir.name }}
+							</div>
+						</template>
+					</div>
 					<FileItem
 						v-model="selection"
 						:select_dirs="true"
-						:files="files"
+						:files="
+							directory_stack.length > 0
+								? directory_stack[directory_stack.length - 1].children
+								: files
+						"
 						:clone_callback="clone_callback"
 						:root="true"
 						:expand="
 							search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
 						"
-						@choose="(f, t) => (f !== undefined ? emit('choose', f, t) : undefined)"
+						@choose="on_choose"
 					/>
 					<div class="button_wrapper" v-if="!!slots.buttons">
 						<slot name="buttons"></slot>
@@ -193,6 +228,27 @@
 		background-color: var(--color-page-background);
 
 		outline: none;
+	}
+
+	#directory_stack {
+		display: flex;
+
+		align-items: center;
+
+		gap: 0.25rem;
+	}
+
+	.directory_stack_dir {
+		cursor: pointer;
+
+		padding: 0.5rem;
+
+		border-radius: 0.25rem;
+		background-color: var(--color-item);
+	}
+
+	.directory_stack_dir:hover {
+		background-color: var(--color-item-hover);
 	}
 
 	#selection_wrapper {

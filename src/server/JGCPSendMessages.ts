@@ -27,6 +27,7 @@ export interface Response {
 export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 	command: "playlist_items";
 	caption: string;
+	path: string;
 	new_item_order: number[];
 	new?: boolean;
 }
