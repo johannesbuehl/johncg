@@ -22,7 +22,6 @@
 </script>
 
 <script setup lang="ts">
-	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { ref, watch } from "vue";
@@ -44,17 +43,7 @@
 
 	const files_draggable = ref<HTMLDivElement>();
 
-	const expanded = ref<boolean>(props.expand ?? false);
 	const selection = defineModel<File>();
-
-	watch(
-		() => props.expand,
-		(expand) => {
-			if (expand !== undefined) {
-				expanded.value = expand;
-			}
-		}
-	);
 
 	const emit = defineEmits<{
 		choose: [file: File | undefined, type: "dir" | "file"];
@@ -62,7 +51,7 @@
 
 	function on_enter(event: Event) {
 		if (typeof props.files === "object") {
-			expanded.value = !expanded.value;
+			emit("choose", props.file, "dir");
 		} else {
 			selection.value = props.file;
 		}
@@ -100,7 +89,7 @@
 				{{ file?.name }}
 			</span>
 			<Draggable
-				v-if="((files?.length ?? 0 > 0) && expanded) || root"
+				v-if="(files?.length ?? 0 > 0) && root"
 				:list="sort_files(files)"
 				:group="{
 					name: 'playlist',
@@ -114,7 +103,7 @@
 			>
 				<template #item="{ element }">
 					<FileItem
-						v-show="expanded || root"
+						v-show="!element.hidden"
 						:file="element"
 						:expand="expand"
 						:files="element.children"
@@ -144,10 +133,6 @@
 
 	.file_item_wrapper.indent {
 		margin-left: 0.25rem;
-	}
-
-	.expand_icon {
-		cursor: pointer;
 	}
 
 	.file_item {

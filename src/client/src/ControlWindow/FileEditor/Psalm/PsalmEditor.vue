@@ -163,8 +163,6 @@
 		psalm_text.value.push([
 			{ text: "", indent: last_slide[last_slide.length - 1].indent && metadata.value.indent }
 		]);
-
-		console.debug(psalm_text.value);
 	}
 
 	const overwrite_dialog = ref<boolean>(false);

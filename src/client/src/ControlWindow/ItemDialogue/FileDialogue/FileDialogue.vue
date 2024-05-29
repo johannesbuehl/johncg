@@ -9,7 +9,7 @@
 </script>
 
 <script setup lang="ts">
-	import { onMounted, ref, useSlots, watch, type VNodeRef } from "vue";
+	import { onMounted, reactive, ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -72,8 +72,6 @@
 	);
 
 	function on_choose(file: File | undefined, type: "file" | "dir") {
-		console.debug("on-choose");
-
 		if (file !== undefined) {
 			if (type === "dir") {
 				directory_stack.value.push(file);
@@ -144,9 +142,6 @@
 						"
 						:clone_callback="clone_callback"
 						:root="true"
-						:expand="
-							search_strings.reduce((partial_sum, ele) => partial_sum + ele.value.length, 0) > 0
-						"
 						@choose="on_choose"
 					/>
 					<div class="button_wrapper" v-if="!!slots.buttons">

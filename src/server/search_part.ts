@@ -11,6 +11,7 @@ export interface File {
 	name: string;
 	path: string;
 	children?: File[];
+	hidden?: boolean;
 }
 
 export interface SongFile extends File {

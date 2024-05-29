@@ -297,14 +297,10 @@
 				return !(slide_index === text_part.length - 1 && is_empty);
 			});
 
-			console.debug("text_parts", text_parts);
-
 			song_data_object.text[part.part] = text_parts.map((slide) => {
 				const slide_line_count_max = Math.max(
 					...slide.map((lang) => (lang.match(/\n/g) || []).length + 1)
 				);
-
-				console.debug("line_count_max", slide_line_count_max);
 
 				return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {
 					return Array.from(Array(metadata.value.LangCount).keys()).map((lang_index) => {
@@ -313,8 +309,6 @@
 				});
 			});
 		});
-
-		console.debug(song_data_object.text);
 
 		return song_data_object;
 	}

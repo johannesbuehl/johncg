@@ -126,13 +126,17 @@
 					search_strings.value.every((search_string) => {
 						if (f.search_data !== undefined) {
 							if (f.search_data[search_string.id] !== undefined) {
-								return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
+								f.hidden = !f.search_data[search_string.id]?.includes(
+									search_string.value.toLowerCase()
+								);
 							} else {
-								return search_string.value === "";
+								f.hidden = search_string.value !== "";
 							}
 						} else {
-							return true;
+							f.hidden = false;
 						}
+
+						return f.hidden !== true;
 					})
 				) {
 					return_files.push(f);
