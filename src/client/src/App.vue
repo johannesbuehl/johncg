@@ -16,7 +16,7 @@
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import type { File } from "@server/search_part";
+	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
 
 	const Config = {
@@ -48,7 +48,7 @@
 	});
 	const control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
 
-	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
+	const files = ref<{ [key in keyof ItemFileType]: ItemFileMapped<key>[] }>({
 		song: [],
 		media: [],
 		pdf: [],
@@ -57,6 +57,7 @@
 		psalm: []
 	});
 	const item_data = ref<ItemData>({});
+	const thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
 
 	let ws: WebSocket | undefined;
 	ws_connect();
@@ -159,7 +160,8 @@
 				bible: parse_bible,
 				playlist_pdf: save_playlist_pdf,
 				client_mesage: show_client_message,
-				item_data: store_item_data
+				item_data: store_item_data,
+				media_thumbnails: store_thumbnails
 			};
 
 			command_parser_map[data.command](data as never);
@@ -266,7 +268,7 @@
 		ws?.send(JSON.stringify(message));
 	}
 
-	function parse_item_files(data: JGCPSend.ItemFiles) {
+	function parse_item_files(data: JGCPSend.ItemFiles<keyof ItemFileType>) {
 		if (Object.keys(files.value).includes(data.type)) {
 			files.value[data.type] = data.files;
 		}
@@ -281,6 +283,19 @@
 			case "psalm":
 				item_data.value.psalm = data as JGCPSend.ItemData<"psalm">;
 				break;
+		}
+	}
+
+	function store_thumbnails(data: JGCPSend.MediaThumbnails) {
+		if (typeof data.thumbnails === "object") {
+			const thumbnails_object = Object.fromEntries(
+				Object.entries(data.thumbnails).filter(
+					([path, thumbnail]) =>
+						typeof thumbnail === "string" && thumbnail.indexOf("data:image/png;base64,") === 0
+				)
+			);
+
+			thumbnails.value = thumbnails_object;
 		}
 	}
 
@@ -359,6 +374,7 @@
 			:messages="messages"
 			:log_level="log_level"
 			:item_data="item_data"
+			:media_thumbnails="thumbnails"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

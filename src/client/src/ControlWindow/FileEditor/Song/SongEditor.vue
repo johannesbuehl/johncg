@@ -24,7 +24,14 @@
 	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 
-	import type { File, MediaFile, SongFile } from "@server/search_part";
+	import type {
+		FileBase,
+		ItemFile,
+		ItemFileMapped,
+		ItemFileType,
+		MediaFile,
+		SongFile
+	} from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -54,15 +61,15 @@
 
 	const show_media_selector = ref<boolean>(false);
 	const media_file_tree = ref<MediaFile[]>();
-	const media_selection = ref<File>();
-	const background_media = ref<File>();
+	const media_selection = ref<MediaFile>();
+	const background_media = ref<MediaFile>();
 	const media_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const song_file_tree = ref<SongFile[]>();
-	const song_selection = ref<File>();
+	const song_selection = ref<SongFile>();
 	const song_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
@@ -88,14 +95,14 @@
 		}
 	);
 
-	type SearchMapFile<K extends File> = K & {
+	type SearchMapFile<K extends MediaFile | SongFile> = K & {
 		children?: SearchMapFile<K>[];
 		search_data?: { name: string };
 	};
 	let media_search_map: SearchMapFile<MediaFile>[] = [];
 	let song_search_map: SearchMapFile<SongFile>[] = [];
-	function create_search_map(files: MediaFile[]): SearchMapFile<File>[] {
-		const return_map: SearchMapFile<File>[] = [];
+	function create_search_map<K extends MediaFile | SongFile>(files: K[]): SearchMapFile<K>[] {
+		const return_map: SearchMapFile<K>[] = [];
 
 		files.forEach((f) => {
 			return_map.push({
@@ -104,7 +111,7 @@
 					name: f.name.toLowerCase()
 				},
 				children: f.children !== undefined ? create_search_map(f.children) : undefined
-			});
+			} as SearchMapFile<K>);
 		});
 
 		return return_map;
@@ -121,11 +128,11 @@
 	}
 
 	// create search-trees
-	function search_string(
-		files: SearchMapFile<File>[],
+	function search_string<K extends MediaFile | SongFile>(
+		files: SearchMapFile<K>[],
 		search_inputs: SearchInputDefinitions<"name">
-	): MediaFile[] {
-		const return_files: MediaFile[] = [];
+	): K[] {
+		const return_files: K[] = [];
 
 		files.forEach((f) => {
 			if (
@@ -216,7 +223,7 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
-	function select_media(selection: File) {
+	function select_media(selection: MediaFile) {
 		background_media.value = selection;
 		media_selection.value = selection;
 		show_media_selector.value = false;
@@ -241,7 +248,7 @@
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: File[], path: string): boolean => {
+			const compare_file = (files: SongFile[], path: string): boolean => {
 				return files.some((fil) => {
 					if (fil.path === path) {
 						return true;
@@ -464,7 +471,7 @@
 			:files="media_file_tree"
 			v-model:selection="media_selection"
 			v-model:search_strings="media_search_strings"
-			@choose="select_media"
+			@choose="(ff) => select_media(ff as MediaFile)"
 			@search="search_media"
 			@refresh_files="get_files('media')"
 		>

@@ -8,27 +8,30 @@
 		type SearchInputDefinitions
 	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
+	import { ControlWindowState } from "@/Enums";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { File } from "@server/search_part";
-	import { ControlWindowState } from "@/Enums";
+	import type { PlaylistFile } from "@server/search_part";
 
 	library.add(fas.faFolderOpen);
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files: File[];
+		files: PlaylistFile[];
 	}>();
 
-	const selection = ref<File>();
+	const selection = ref<PlaylistFile>();
 
 	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
 		default: [{ id: "name", placeholder: "Name", value: "" }]
 	});
 
-	type SearchMapFile = File & { children?: SearchMapFile[]; search_data?: { name: string } };
+	type SearchMapFile = PlaylistFile & {
+		children?: SearchMapFile[];
+		search_data?: { name: string };
+	};
 	let search_map: SearchMapFile[] = [];
-	const file_tree = defineModel<File[]>("file_tree");
+	const file_tree = defineModel<PlaylistFile[]>("file_tree");
 	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
 		required: true
 	});
@@ -56,7 +59,7 @@
 		props.ws.send(JSON.stringify(message));
 	}
 
-	function load_playlist(playlist?: File) {
+	function load_playlist(playlist?: PlaylistFile) {
 		if (playlist !== undefined) {
 			const message: JGCPRecv.OpenPlaylist = {
 				command: "load_playlist",
@@ -73,7 +76,7 @@
 		file_tree.value = search_string();
 	}
 
-	function create_search_map(files: File[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: PlaylistFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
 		if (files !== undefined) {
@@ -91,8 +94,8 @@
 		return return_map;
 	}
 
-	function search_string(files: SearchMapFile[] | undefined = search_map): File[] {
-		const return_files: File[] = [];
+	function search_string(files: SearchMapFile[] | undefined = search_map): PlaylistFile[] {
+		const return_files: PlaylistFile[] = [];
 
 		files?.forEach((f) => {
 			if (

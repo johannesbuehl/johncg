@@ -15,7 +15,7 @@ import * as JGCPSend from "./JGCPSendMessages.ts";
 import * as JGCPRecv from "./JGCPReceiveMessages.ts";
 
 import Config, { CasparCGConnectionSettings } from "./config.ts";
-import SearchPart, { ItemFile } from "./search_part.ts";
+import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_part.ts";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
@@ -62,6 +62,8 @@ export default class Control {
 		get_item_files: (msg: JGCPRecv.GetItemFiles, ws: WebSocket) =>
 			this.get_item_files(msg.type, ws),
 		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+		get_media_thumbnails: (msg: JGCPRecv.GetMediaThumbnails, ws: WebSocket) =>
+			this.get_media_thumbnails(msg.files, ws),
 		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_data(msg.type, msg.file, ws),
 		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
@@ -585,34 +587,22 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private async get_item_files(type: JGCPRecv.GetItemFiles["type"], ws: WebSocket) {
+	private async get_item_files<K extends keyof ItemFileType>(type: K, ws: WebSocket) {
 		logger.debug(`retrieving item-files: '${type}'`);
 
-		let files: ItemFile[];
+		const search_map: { [T in keyof ItemFileType]: () => Promise<ItemFileMapped<T>[]> } = {
+			media: async () => await this.search_part.get_casparcg_media(),
+			template: async () => await this.search_part.get_casparcg_template(),
+			song: () => Promise.resolve(this.search_part.find_sng_files()),
+			playlist: () => Promise.resolve(this.search_part.find_jcg_files()),
+			pdf: () => Promise.resolve(this.search_part.find_pdf_files()),
+			psalm: () => Promise.resolve(this.search_part.find_psalm_files())
+		};
 
-		switch (type) {
-			case "media":
-				files = await this.search_part.get_casparcg_media();
-				break;
-			case "template":
-				files = await this.search_part.get_casparcg_template();
-				break;
-			case "song":
-				files = this.search_part.find_sng_files();
-				break;
-			case "playlist":
-				files = this.search_part.find_jcg_files();
-				break;
-			case "pdf":
-				files = this.search_part.find_pdf_files();
-				break;
-			case "psalm":
-				files = this.search_part.find_psalm_files();
-				break;
-		}
+		const files = await search_map[type]();
 
 		if (files !== undefined) {
-			const message: JGCPSend.ItemFiles = {
+			const message: JGCPSend.ItemFiles<K> = {
 				command: "item_files",
 				type,
 				files
@@ -642,6 +632,50 @@ export default class Control {
 		};
 
 		ws?.send(JSON.stringify(message));
+	}
+
+	private async get_media_thumbnails(files: MediaFile[], ws: WebSocket) {
+		// const thumbnails = files.map(async (file): Promise<[string, string]> => {
+		// 	const thumbnail = (await (await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({ filename: file.path })).request)?.data as string[];
+
+		// 	return [file.path, thumbnail ? "data:image/png;base64," + thumbnail[0] : ""];
+		// });
+
+		const thumbnails: Record<string, string> = {};
+
+		for (const file of files) {
+			let thumbnail: string[] = (
+				await (
+					await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
+						filename: '"' + file.path + '"'
+					})
+				).request
+			)?.data as string[];
+
+			if (thumbnail === undefined) {
+				await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
+					filename: '"' + file.path + '"'
+				});
+
+				thumbnail = (
+					await (
+						await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
+							filename: '"' + file.path + '"'
+						})
+					).request
+				)?.data as string[];
+			}
+
+			thumbnails[file.path] = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+		}
+
+		const message: JGCPSend.MediaThumbnails = {
+			command: "media_thumbnails",
+			// thumbnails: Object.fromEntries(await Promise.all(thumbnails))
+			thumbnails: thumbnails
+		};
+
+		ws.send(JSON.stringify(message));
 	}
 
 	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {

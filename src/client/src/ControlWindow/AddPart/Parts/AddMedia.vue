@@ -10,11 +10,14 @@
 	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { MediaFile } from "@server/search_part";
+	import type { Directory, ItemFile, MediaFile } from "@server/search_part";
+	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
+		ws: WebSocket;
 		files: MediaFile[];
+		thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
@@ -29,7 +32,7 @@
 		default: [{ id: "name", placeholder: "Name", value: "" }]
 	});
 
-	const file_tree = defineModel<MediaFile[]>("file_tree");
+	const file_tree = ref<MediaFile[]>([]);
 
 	onMounted(() => {
 		// init
@@ -47,14 +50,19 @@
 		search_map = create_search_map();
 
 		search_media();
+
+		get_media_thumbnails(props.files);
 	}
 
-	function add_media(file?: MediaFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
+	function add_media(file: MediaFile | undefined) {
+		if (file && file.children === undefined) {
 			emit("add", create_props(file));
+		} else {
+			get_media_thumbnails(file?.children);
 		}
 	}
 
+	// function create_props(file: ItemFile): MediaProps {
 	function create_props(file: MediaFile): MediaProps {
 		return {
 			type: "media",
@@ -131,12 +139,24 @@
 	function refresh_search_index() {
 		emit("refresh");
 	}
+
+	function get_media_thumbnails(files: MediaFile[] | undefined) {
+		files = (files ?? props.files).filter((ff) => ff.children === undefined);
+
+		const message: JGCPRecv.GetMediaThumbnails = {
+			command: "get_media_thumbnails",
+			files
+		};
+
+		props.ws.send(JSON.stringify(message));
+	}
 </script>
 
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:clone_callback="create_props"
+		:thumbnails="thumbnails"
+		:clone_callback="(file: ItemFile) => create_props(file as MediaFile)"
 		name="Media"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
@@ -148,7 +168,13 @@
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop
 			</MenuButton>
-			<MenuButton @click="add_media(selection, 'file')">
+			<MenuButton
+				@click="
+					selection !== undefined && selection.children === undefined
+						? add_media(selection)
+						: undefined
+				"
+			>
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Media
 			</MenuButton>
 		</template>

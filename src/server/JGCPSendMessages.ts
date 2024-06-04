@@ -2,7 +2,7 @@ import * as PlaylistClass from "../server/Playlist.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemData, GetItemFiles } from "./JGCPReceiveMessages.ts";
-import { File, ItemFileMap } from "./search_part.ts";
+import { ItemFileMapped, ItemFileType } from "./search_part.ts";
 import { CasparCGResolution } from "./CasparCG.ts";
 
 /**
@@ -54,16 +54,16 @@ export interface Clear extends Base {
 	command: "clear";
 }
 
-export interface ItemFiles {
+export interface ItemFiles<K extends keyof ItemFileType> {
 	command: "item_files";
 	type: GetItemFiles["type"];
-	files: File[];
+	files: ItemFileMapped<K>[];
 }
 
 export type ItemData<K extends GetItemData["type"]> = {
 	command: "item_data";
 	type: K;
-	data: ItemFileMap[K];
+	data: ItemFileMapped<K>;
 };
 
 export interface Bible {
@@ -91,6 +91,11 @@ export interface ClientMessage {
 	type: LogLevel;
 }
 
+export interface MediaThumbnails {
+	command: "media_thumbnails";
+	thumbnails: Record<string, string>;
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -100,8 +105,9 @@ export type Message =
 	| State
 	| ItemSlides
 	| Clear
-	| ItemFiles
+	| ItemFiles<keyof ItemFileType>
 	| ItemData<GetItemData["type"]>
 	| Bible
 	| PlaylistPDF
-	| ClientMessage;
+	| ClientMessage
+	| MediaThumbnails;

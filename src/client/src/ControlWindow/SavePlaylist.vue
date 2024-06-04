@@ -10,7 +10,7 @@
 	import MenuButton from "./MenuBar/MenuButton.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { File } from "@server/search_part";
+	import type { PlaylistFile } from "@server/search_part";
 	import PopUp from "./PopUp.vue";
 	import { ControlWindowState } from "@/Enums";
 
@@ -18,10 +18,10 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files: File[];
+		files: PlaylistFile[];
 	}>();
 
-	const selection = ref<File>();
+	const selection = ref<PlaylistFile>();
 
 	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
 		default: [{ id: "name", placeholder: "Name", value: "" }]
@@ -31,9 +31,12 @@
 		required: true
 	});
 
-	type SearchMapFile = File & { children?: SearchMapFile[]; search_data?: { name: string } };
+	type SearchMapFile = PlaylistFile & {
+		children?: SearchMapFile[];
+		search_data?: { name: string };
+	};
 	let search_map: SearchMapFile[] = [];
-	const file_tree = defineModel<File[]>("file_tree");
+	const file_tree = defineModel<PlaylistFile[]>("file_tree");
 
 	onMounted(() => {
 		refresh_items();
@@ -60,7 +63,7 @@
 
 	const overwrite_dialog = ref<boolean>(false);
 	let overwrite_path: string = "";
-	function save_playlist(playlist?: File, overwrite: boolean = false) {
+	function save_playlist(playlist?: PlaylistFile, overwrite: boolean = false) {
 		// close the overwrite-dialog
 		overwrite_dialog.value = false;
 
@@ -78,7 +81,7 @@
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: File[], path: string): boolean => {
+			const compare_file = (files: PlaylistFile[], path: string): boolean => {
 				return files.some((fil) => {
 					if (fil.path === path) {
 						return true;
@@ -121,7 +124,7 @@
 		file_tree.value = search_string();
 	}
 
-	function create_search_map(files: File[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: PlaylistFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
 		if (files !== undefined) {
@@ -139,8 +142,8 @@
 		return return_map;
 	}
 
-	function search_string(files: SearchMapFile[] | undefined = search_map): File[] {
-		const return_files: File[] = [];
+	function search_string(files: SearchMapFile[] | undefined = search_map): PlaylistFile[] {
+		const return_files: PlaylistFile[] = [];
 
 		files?.forEach((f) => {
 			if (

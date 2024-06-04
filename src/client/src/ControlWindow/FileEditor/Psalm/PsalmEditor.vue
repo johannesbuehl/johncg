@@ -16,7 +16,7 @@
 	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 
-	import type { File, PsalmFile } from "@server/search_part";
+	import type { FileBase, ItemFile, PsalmFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
@@ -31,7 +31,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const psalm_file_tree = ref<PsalmFile[]>();
-	const psalm_selection = ref<File>();
+	const psalm_selection = ref<PsalmFile>();
 	const psalm_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
@@ -53,13 +53,13 @@
 		}
 	);
 
-	type SearchMapFile<K extends File> = K & {
-		children?: SearchMapFile<K>[];
+	type SearchMapFile = PsalmFile & {
+		children?: PsalmFile[];
 		search_data?: { name: string };
 	};
-	let psalm_search_map: SearchMapFile<PsalmFile>[] = [];
-	function create_search_map(files: PsalmFile[]): SearchMapFile<File>[] {
-		const return_map: SearchMapFile<File>[] = [];
+	let psalm_search_map: SearchMapFile[] = [];
+	function create_search_map(files: PsalmFile[]): SearchMapFile[] {
+		const return_map: SearchMapFile[] = [];
 
 		files.forEach((f) => {
 			return_map.push({
@@ -80,7 +80,7 @@
 
 	// create search-trees
 	function search_string(
-		files: SearchMapFile<File>[],
+		files: SearchMapFile[],
 		search_inputs: SearchInputDefinitions<"name">
 	): PsalmFile[] {
 		const return_files: PsalmFile[] = [];
@@ -184,7 +184,7 @@
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: File[], path: string): boolean => {
+			const compare_file = (files: PsalmFile[], path: string): boolean => {
 				return files.some((fil) => {
 					if (fil.path === path) {
 						return true;

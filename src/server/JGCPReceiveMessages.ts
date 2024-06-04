@@ -1,6 +1,7 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
+import type { ItemFileType, MediaFile } from "./search_part";
 
 /**
  * Base interface for Received JGCP-messages
@@ -80,7 +81,7 @@ export interface MovePlaylistItem extends Base {
 
 export interface GetItemFiles extends Base {
 	command: "get_item_files";
-	type: "song" | "media" | "template" | "playlist" | "pdf" | "psalm";
+	type: keyof ItemFileType;
 }
 
 export interface GetBible extends Base {
@@ -121,6 +122,11 @@ export type SaveFile = Base & { command: "save_file"; path: string } & (
 		| { type: "psalm"; data: PsalmData }
 	);
 
+export interface GetMediaThumbnails extends Base {
+	command: "get_media_thumbnails";
+	files: MediaFile[];
+}
+
 /**
  * Uniun of the different JGCP-messages
  */
@@ -142,4 +148,5 @@ export type Message =
 	| GetBible
 	| GetItemData
 	| CreatePlaylistPDF
-	| SaveFile;
+	| SaveFile
+	| GetMediaThumbnails;

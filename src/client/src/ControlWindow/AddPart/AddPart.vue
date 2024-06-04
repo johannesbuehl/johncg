@@ -16,10 +16,10 @@
 	import AddComment from "./Parts/AddComment.vue";
 	import AddText from "./Parts/AddText.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
+	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	library.add(
 		fas.faMusic,
@@ -36,9 +36,10 @@
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
+		files?: { [K in keyof ItemFileType]: ItemFileMapped<K>[] };
 		bible?: BibleFile;
 		mode: ControlWindowState;
+		media_thumbnails: Record<string, string>;
 	}>();
 
 	const pick = ref<ItemProps["type"]>("song");
@@ -123,7 +124,9 @@
 			<AddText v-else-if="pick === 'text'" @add="add_item" />
 			<AddMedia
 				v-else-if="pick === 'media'"
+				:ws="ws"
 				:files="files[pick]"
+				:thumbnails="media_thumbnails"
 				@add="add_item"
 				@refresh="get_files('media')"
 			/>
@@ -141,7 +144,7 @@
 			/>
 			<AddCountdown
 				v-else-if="pick === 'countdown'"
-				:files="files['media']"
+				:files="files.media"
 				@add="add_item"
 				@refresh="get_files('media')"
 			/>

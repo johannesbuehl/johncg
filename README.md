@@ -30,3 +30,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - song-file: chords itself as chords and transpose them
 - support other browser than Chrome and phone / tablet resolution
 - show thumbnail of CasparCG-media
+- SongEditor / PsalmEditor: Confirm to abort unsaved changes
+- save_song(): check, wether "chords" is valid
+- launch casparcg automatically

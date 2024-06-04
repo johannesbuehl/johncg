@@ -13,12 +13,13 @@
 	import SongEditor from "./FileEditor/Song/SongEditor.vue";
 	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
 	import PsalmEditor from "./FileEditor/Psalm/PsalmEditor.vue";
+	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
+	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 
 	const props = defineProps<{
 		ws: WebSocket;
@@ -27,12 +28,13 @@
 		playlist?: JGCPSend.Playlist;
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
-		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
+		files: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
 		bible_file?: BibleFile;
 		selected: number | null;
 		playlist_caption: string;
 		messages: LogMessage[];
 		item_data: ItemData;
+		media_thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
@@ -179,6 +181,7 @@
 			:files="files"
 			:bible="bible_file"
 			:mode="control_window_state"
+			:media_thumbnails="media_thumbnails"
 			v-model:control_window_state="control_window_state"
 		/>
 		<EditPart
