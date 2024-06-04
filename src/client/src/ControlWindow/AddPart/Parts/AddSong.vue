@@ -184,7 +184,7 @@
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:clone_callback="create_props"
+		:clone_callback="(ff) => create_props(ff as SongFile)"
 		:new_button="true"
 		name="Song"
 		v-model:selection="selection"

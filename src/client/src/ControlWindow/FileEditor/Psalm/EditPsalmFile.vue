@@ -6,12 +6,11 @@
 
 	import type { PsalmFile } from "@server/search_part";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
-	import type * as JGCPSend from "@server/JGCPSendMessages";
 
 	const props = defineProps<{
 		ws: WebSocket;
 		psalm_files: PsalmFile[];
-		psalm_file: JGCPSend.ItemData<"psalm">;
+		psalm_file: PsalmFile;
 	}>();
 
 	const emit = defineEmits<{}>();
@@ -22,12 +21,12 @@
 	watch(
 		() => props.psalm_file,
 		() => {
-			if (props.psalm_file.data.data !== undefined) {
-				metadata.value = props.psalm_file.data.data.metadata;
+			if (props.psalm_file.data !== undefined) {
+				metadata.value = props.psalm_file.data.metadata;
 
 				let indent_state: boolean = false;
 
-				psalm_text.value = props.psalm_file.data.data.text.map((slide) => {
+				psalm_text.value = props.psalm_file.data.text.map((slide) => {
 					const slide_blocks = slide.map((block) => {
 						const block_object = { text: block.join("\n"), indent: indent_state };
 
@@ -63,7 +62,7 @@
 	<PsalmEditor
 		:ws="ws"
 		:psalm_files="psalm_files"
-		:psalm_file_name="psalm_file?.data.path.replace(/\.psm$/, '')"
+		:psalm_file_name="psalm_file?.path.replace(/\.psm$/, '')"
 		v-model:metadata="metadata"
 		v-model:psalm_text="psalm_text"
 	/>

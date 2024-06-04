@@ -4,7 +4,7 @@
 		event.preventDefault();
 	}
 
-	export type ItemData = { [key in JGCPRecv.GetItemData["type"]]?: JGCPSend.ItemData<key> };
+	export type ItemData = { [key in JGCPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
 </script>
 
 <script setup lang="ts">
@@ -278,10 +278,10 @@
 		// work around typescripts conservative type-system
 		switch (data.type) {
 			case "song":
-				item_data.value.song = data as JGCPSend.ItemData<"song">;
+				item_data.value.song = data.data;
 				break;
 			case "psalm":
-				item_data.value.psalm = data as JGCPSend.ItemData<"psalm">;
+				item_data.value.psalm = data.data;
 				break;
 		}
 	}

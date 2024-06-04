@@ -197,8 +197,9 @@
 		<SongEditor
 			v-else-if="control_window_state === ControlWindowState.NewSong"
 			:ws="ws"
-			:media_files="files.media"
 			:song_files="files.song"
+			:media_files="files.media"
+			:thumbnails="media_thumbnails"
 		/>
 		<PsalmEditor
 			v-else-if="control_window_state === ControlWindowState.NewPsalm"
@@ -210,9 +211,10 @@
 				control_window_state === ControlWindowState.EditSong && item_data.song !== undefined
 			"
 			:ws="ws"
-			:media_files="files.media"
 			:song_files="files.song"
 			:song_file="item_data.song"
+			:media_files="files.media"
+			:thumbnails="media_thumbnails"
 		/>
 		<EditPsalmFile
 			v-else-if="

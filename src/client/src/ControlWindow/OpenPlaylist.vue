@@ -130,6 +130,7 @@
 
 <template>
 	<FileDialogue
+		key="playlist"
 		:files="file_tree"
 		name="Playlist Files"
 		v-model:selection="selection"

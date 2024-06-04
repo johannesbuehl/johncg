@@ -12,7 +12,7 @@
 </script>
 
 <script setup lang="ts">
-	import { reactive, ref, watch, type Ref } from "vue";
+	import { reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -24,14 +24,7 @@
 	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 
-	import type {
-		FileBase,
-		ItemFile,
-		ItemFileMapped,
-		ItemFileType,
-		MediaFile,
-		SongFile
-	} from "@server/search_part";
+	import type { MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -41,6 +34,7 @@
 		ws: WebSocket;
 		song_files: SongFile[];
 		media_files: MediaFile[];
+		thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{}>();
@@ -82,6 +76,8 @@
 			media_search_map = create_search_map(props.media_files);
 
 			search_media();
+			create_directory_stack();
+			get_media_thumbnails();
 		}
 	);
 
@@ -94,6 +90,37 @@
 			search_song();
 		}
 	);
+
+	const directory_stack = ref<MediaFile[]>([]);
+	watch(
+		() => metadata.value.BackgroundImage,
+		() => {
+			create_directory_stack();
+		},
+		{ immediate: true }
+	);
+
+	function create_directory_stack() {
+		if (metadata.value.BackgroundImage !== undefined) {
+			const dir_stack = metadata.value.BackgroundImage.toLowerCase().split(/[\\/]/g);
+
+			while (dir_stack.length > 0) {
+				const files = (
+					directory_stack.value?.[directory_stack.value.length - 1]?.children ?? props.media_files
+				).filter((ff) => {
+					return ff.children !== undefined && ff.name.toLowerCase() === dir_stack[0];
+				});
+
+				if (files.length === 1 && files[0].children !== undefined) {
+					directory_stack.value.push(files[0]);
+
+					dir_stack.shift();
+				} else {
+					break;
+				}
+			}
+		}
+	}
 
 	type SearchMapFile<K extends MediaFile | SongFile> = K & {
 		children?: SearchMapFile<K>[];
@@ -110,7 +137,7 @@
 				search_data: {
 					name: f.name.toLowerCase()
 				},
-				children: f.children !== undefined ? create_search_map(f.children) : undefined
+				children: f.children !== undefined ? create_search_map(f.children as K[]) : undefined
 			} as SearchMapFile<K>);
 		});
 
@@ -224,9 +251,28 @@
 	}
 
 	function select_media(selection: MediaFile) {
-		background_media.value = selection;
-		media_selection.value = selection;
-		show_media_selector.value = false;
+		if (selection && selection.children === undefined) {
+			background_media.value = selection;
+			media_selection.value = selection;
+			show_media_selector.value = false;
+		} else {
+			get_media_thumbnails(selection?.children);
+		}
+	}
+
+	function get_media_thumbnails(files?: MediaFile[]) {
+		files = (
+			directory_stack.value[directory_stack.value.length - 1]?.children ??
+			files ??
+			props.media_files
+		).filter((ff) => ff.children === undefined);
+
+		const message: JGCPRecv.GetMediaThumbnails = {
+			command: "get_media_thumbnails",
+			files
+		};
+
+		props.ws.send(JSON.stringify(message));
 	}
 
 	const overwrite_dialog = ref<boolean>(false);
@@ -283,7 +329,10 @@
 
 	function create_song_data(): SongData {
 		const song_data_object: SongData = {
-			metadata: metadata.value,
+			metadata: {
+				...metadata.value,
+				BackgroundImage: background_media.value?.path
+			},
 			text: {}
 		};
 
@@ -463,14 +512,17 @@
 				</MenuButton>
 			</div>
 		</div>
+		media_selection{{ media_selection?.path }}
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
 		<FileDialogue
 			class="file_dialogue"
 			name="Background Media"
 			:files="media_file_tree"
+			:thumbnails="thumbnails"
 			v-model:selection="media_selection"
 			v-model:search_strings="media_search_strings"
+			v-model:directory_stack="directory_stack"
 			@choose="(ff) => select_media(ff as MediaFile)"
 			@search="search_media"
 			@refresh_files="get_files('media')"

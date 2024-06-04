@@ -12,18 +12,18 @@
 	import MenuButton from "../MenuBar/MenuButton.vue";
 	import EditDummy from "./EditDummy.vue";
 	import { ControlWindowState } from "@/Enums";
+	import type { ItemData } from "@/App.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import type { ItemData } from "@/App.vue";
+	import type { ItemFileType, SongFile } from "@server/search_part";
 
 	library.add(fas.faPen);
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
+		files?: { [key in keyof ItemFileType]: ItemFileType[key] };
 		item_index: number | null;
 		bible?: BibleFile;
 		item_data: ItemData;
@@ -85,7 +85,7 @@
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
 			:ws="ws"
-			:song_data="item_data.song?.data.data"
+			:song_data="(item_data.song as SongFile | undefined)?.data"
 			:item_index="item_index"
 		/>
 		<EditBible

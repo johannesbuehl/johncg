@@ -49,7 +49,7 @@
 </script>
 
 <script setup lang="ts" generic="T extends keyof ItemFileType">
-	import { onMounted, ref, useSlots, watch, type VNodeRef } from "vue";
+	import { onMounted, reactive, ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -86,7 +86,9 @@
 	});
 
 	const rotate_button = ref<boolean>(false);
-	const directory_stack = ref<ItemFileMapped<T>[]>([]);
+	const directory_stack = defineModel<ItemFileMapped<T>[]>("directory_stack", {
+		default: () => reactive([])
+	});
 
 	const selection = defineModel<ItemFileMapped<T> | undefined>("selection", { required: true });
 
@@ -468,6 +470,8 @@
 
 	#file_draggable_wrapper > div {
 		display: flex;
+
+		overflow: visible;
 	}
 
 	#file_thumbnail_wrapper {
