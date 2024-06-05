@@ -8,6 +8,7 @@
 		type SearchInputDefinitions
 	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
+	import Globals from "@/Globals";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PlaylistFile } from "@server/search_part";
@@ -27,9 +28,6 @@
 		default: [{ id: "name", placeholder: "Name", value: "" }]
 	});
 	const file_name = defineModel<string>("file_name", { required: true });
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 
 	type SearchMapFile = PlaylistFile & {
 		children?: SearchMapFile[];
@@ -111,7 +109,7 @@
 
 		props.ws.send(JSON.stringify(message));
 
-		control_window_state.value = ControlWindowState.Slides;
+		Globals.ControlWindowState = ControlWindowState.Slides;
 	}
 
 	watch(selection, () => {

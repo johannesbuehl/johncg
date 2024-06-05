@@ -13,34 +13,32 @@
 	import EditDummy from "./EditDummy.vue";
 	import { ControlWindowState } from "@/Enums";
 	import type { ItemData } from "@/App.vue";
+	import Globals from "@/Globals";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import type { ItemFileType, SongFile } from "@server/search_part";
+	import type { ItemFileMapped, ItemFileType, SongFile } from "@server/search_part";
 
 	library.add(fas.faPen);
 
 	const props = defineProps<{
 		ws: WebSocket;
-		files?: { [key in keyof ItemFileType]: ItemFileType[key] };
+		files?: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
 		item_index: number | null;
 		bible?: BibleFile;
 		item_data: ItemData;
 	}>();
 
 	const item_props = defineModel<ClientPlaylistItem | undefined>("item_props", { required: true });
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 
 	function edit_file() {
 		switch (item_props.value?.type) {
 			case "song":
-				control_window_state.value = ControlWindowState.EditSong;
+				Globals.ControlWindowState = ControlWindowState.EditSong;
 				break;
 			case "psalm":
-				control_window_state.value = ControlWindowState.EditPsalm;
+				Globals.ControlWindowState = ControlWindowState.EditPsalm;
 				break;
 			default:
 				return;

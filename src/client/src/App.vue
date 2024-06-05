@@ -18,6 +18,7 @@
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
+	import Globals from "./Globals";
 
 	const Config = {
 		client_server: {
@@ -46,7 +47,6 @@
 		log: true,
 		debug: false
 	});
-	const control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
 
 	const files = ref<{ [key in keyof ItemFileType]: ItemFileMapped<key>[] }>({
 		song: [],
@@ -66,7 +66,7 @@
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
 		if (
-			control_window_state.value === ControlWindowState.Slides &&
+			Globals.ControlWindowState === ControlWindowState.Slides &&
 			typeof new_selection === "number"
 		) {
 			request_item_slides(new_selection);
@@ -76,15 +76,18 @@
 		}
 	});
 
-	watch(control_window_state, (new_state) => {
-		// if the new control-window-state is the playlist, request the slides
-		if (new_state === ControlWindowState.Slides && selected_item.value) {
-			request_item_slides(selected_item.value);
-		} else {
-			// else delete the stored slides
-			item_slides.value = undefined;
+	watch(
+		() => Globals.ControlWindowState,
+		() => {
+			// if the new control-window-state is the playlist, request the slides
+			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
+				request_item_slides(selected_item.value);
+			} else {
+				// else delete the stored slides
+				item_slides.value = undefined;
+			}
 		}
-	});
+	);
 
 	function request_item_slides(index: number) {
 		const message: JGCPRecv.RequestItemSlides = {
@@ -106,7 +109,7 @@
 	function select_item(item: number) {
 		if (
 			playlist_items.value?.playlist_items[item].displayable ||
-			control_window_state.value === ControlWindowState.Edit
+			Globals.ControlWindowState === ControlWindowState.Edit
 		) {
 			selected_item.value = item;
 		}
@@ -121,7 +124,7 @@
 
 		ws.addEventListener("open", () => {
 			// reset the window-state
-			control_window_state.value === ControlWindowState.Slides;
+			Globals.ControlWindowState === ControlWindowState.Slides;
 
 			server_connection.value = ServerConnection.connected;
 
@@ -211,7 +214,7 @@
 			item_slides.value = undefined;
 		} else {
 			// request new slides for the selected item
-			if (control_window_state.value === ControlWindowState.Slides && selected_item.value) {
+			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
 				const message: JGCPRecv.RequestItemSlides = {
 					command: "request_item_slides",
 					item: selected_item.value
@@ -360,7 +363,6 @@
 	<div id="main_window">
 		<ControlWindow
 			v-if="server_connection === ServerConnection.connected"
-			v-model:control_window_state="control_window_state"
 			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"

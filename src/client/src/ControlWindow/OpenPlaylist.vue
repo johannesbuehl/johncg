@@ -9,6 +9,7 @@
 	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import { ControlWindowState } from "@/Enums";
+	import Globals from "@/Globals";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PlaylistFile } from "@server/search_part";
@@ -32,9 +33,6 @@
 	};
 	let search_map: SearchMapFile[] = [];
 	const file_tree = defineModel<PlaylistFile[]>("file_tree");
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 
 	onMounted(() => {
 		refresh_items();
@@ -68,7 +66,7 @@
 
 			props.ws.send(JSON.stringify(message));
 
-			control_window_state.value = ControlWindowState.Slides;
+			Globals.ControlWindowState = ControlWindowState.Slides;
 		}
 	}
 

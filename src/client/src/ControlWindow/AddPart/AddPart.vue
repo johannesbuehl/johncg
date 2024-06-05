@@ -15,6 +15,7 @@
 	import AddAMCP from "./Parts/AddAMCP.vue";
 	import AddComment from "./Parts/AddComment.vue";
 	import AddText from "./Parts/AddText.vue";
+	import Globals from "@/Globals";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
@@ -38,15 +39,10 @@
 		ws: WebSocket;
 		files?: { [K in keyof ItemFileType]: ItemFileMapped<K>[] };
 		bible?: BibleFile;
-		mode: ControlWindowState;
 		media_thumbnails: Record<string, string>;
 	}>();
 
 	const pick = ref<ItemProps["type"]>("song");
-
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 
 	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
 		{ text: "Song", value: "song", icon: "music" },
@@ -91,7 +87,7 @@
 
 <template>
 	<div class="add_part_wrapper">
-		<div class="song_part_selector" v-if="mode === ControlWindowState.Add">
+		<div class="song_part_selector">
 			<PartRadio
 				v-for="type in part_types"
 				v-model="pick"
@@ -106,14 +102,14 @@
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files('song')"
-				@new_song="control_window_state = ControlWindowState.NewSong"
+				@new_song="Globals.ControlWindowState = ControlWindowState.NewSong"
 			/>
 			<AddPsalm
 				v-else-if="pick === 'psalm'"
 				:files="files[pick]"
 				@add="add_item"
 				@refresh="get_files('psalm')"
-				@new_psalm="control_window_state = ControlWindowState.NewPsalm"
+				@new_psalm="Globals.ControlWindowState = ControlWindowState.NewPsalm"
 			/>
 			<AddBible
 				v-else-if="pick === 'bible'"

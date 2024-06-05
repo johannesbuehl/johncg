@@ -14,6 +14,7 @@
 	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
 	import PsalmEditor from "./FileEditor/Psalm/PsalmEditor.vue";
 	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
+	import Globals from "@/Globals";
 
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -42,9 +43,6 @@
 		select_slide: [item: number, slide: number];
 	}>();
 
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 	const log_level = defineModel<Record<JGCPSend.LogLevel, boolean>>("log_level", {
 		required: true
 	});
@@ -58,7 +56,7 @@
 		let prevent_default = false;
 
 		// execute the navigation-keys only if the slides are visible
-		if (control_window_state.value === ControlWindowState.Slides && !event.repeat) {
+		if (Globals.ControlWindowState === ControlWindowState.Slides && !event.repeat) {
 			prevent_default = true;
 
 			switch (event.code) {
@@ -121,7 +119,7 @@
 	}
 
 	function edit_item(index: number) {
-		control_window_state.value = ControlWindowState.Edit;
+		Globals.ControlWindowState = ControlWindowState.Edit;
 		emit("select_item", index);
 	}
 </script>
@@ -130,7 +128,6 @@
 	<MenuBar
 		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
-		v-model:control_window_state="control_window_state"
 		:playlist_caption="playlist_caption"
 		:playlist_path="playlist?.path"
 		@navigate="navigate"
@@ -138,23 +135,21 @@
 	/>
 	<div id="main_view">
 		<OpenPlaylist
-			v-if="control_window_state === ControlWindowState.OpenPlaylist"
+			v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
 			:files="files.playlist"
 			:ws="ws"
-			v-model:control_window_state="control_window_state"
 		/>
 		<SavePlaylist
-			v-if="control_window_state === ControlWindowState.SavePlaylist"
+			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
 			:files="files.playlist"
 			:ws="ws"
 			:file_name="playlist_caption"
-			v-model:control_window_state="control_window_state"
 		/>
 		<PlaylistItemsList
 			v-if="
-				control_window_state === ControlWindowState.Slides ||
-				control_window_state === ControlWindowState.Add ||
-				control_window_state === ControlWindowState.Edit
+				Globals.ControlWindowState === ControlWindowState.Slides ||
+				Globals.ControlWindowState === ControlWindowState.Add ||
+				Globals.ControlWindowState === ControlWindowState.Edit
 			"
 			:playlist="playlist"
 			:selected="selected"
@@ -167,7 +162,9 @@
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="typeof slides?.item === 'number' && control_window_state === ControlWindowState.Slides"
+			v-if="
+				typeof slides?.item === 'number' && Globals.ControlWindowState === ControlWindowState.Slides
+			"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
@@ -176,39 +173,36 @@
 			"
 		/>
 		<AddPart
-			v-else-if="control_window_state === ControlWindowState.Add"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.Add"
 			:ws="ws"
 			:files="files"
 			:bible="bible_file"
-			:mode="control_window_state"
 			:media_thumbnails="media_thumbnails"
-			v-model:control_window_state="control_window_state"
 		/>
 		<EditPart
-			v-else-if="control_window_state === ControlWindowState.Edit"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
 			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
 			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"
 			:files="files"
 			:item_data="item_data"
-			v-model:control_window_state="control_window_state"
 		/>
 		<SongEditor
-			v-else-if="control_window_state === ControlWindowState.NewSong"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong"
 			:ws="ws"
 			:song_files="files.song"
 			:media_files="files.media"
 			:thumbnails="media_thumbnails"
 		/>
 		<PsalmEditor
-			v-else-if="control_window_state === ControlWindowState.NewPsalm"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm"
 			:ws="ws"
 			:psalm_files="files.psalm"
 		/>
 		<EditSongFile
 			v-else-if="
-				control_window_state === ControlWindowState.EditSong && item_data.song !== undefined
+				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
 			"
 			:ws="ws"
 			:song_files="files.song"
@@ -218,19 +212,19 @@
 		/>
 		<EditPsalmFile
 			v-else-if="
-				control_window_state === ControlWindowState.EditPsalm && item_data.psalm !== undefined
+				Globals.ControlWindowState === ControlWindowState.EditPsalm && item_data.psalm !== undefined
 			"
 			:ws="ws"
 			:psalm_files="files.psalm"
 			:psalm_file="item_data.psalm"
 		/>
 		<MessageView
-			v-else-if="control_window_state === ControlWindowState.Message"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.Message"
 			:messages="messages"
 			v-model:log_level="log_level"
 		/>
 		<MessagePopup
-			v-if="control_window_state !== ControlWindowState.Message"
+			v-if="Globals.ControlWindowState !== ControlWindowState.Message"
 			:messages="messages"
 			:log_level="log_level"
 		/>
