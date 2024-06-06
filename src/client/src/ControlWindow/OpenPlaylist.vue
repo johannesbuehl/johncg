@@ -17,7 +17,6 @@
 	library.add(fas.faFolderOpen);
 
 	const props = defineProps<{
-		ws: WebSocket;
 		files: PlaylistFile[];
 	}>();
 
@@ -54,7 +53,7 @@
 			type: "playlist"
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function load_playlist(playlist?: PlaylistFile) {
@@ -64,7 +63,7 @@
 				playlist: playlist.path
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 
 			Globals.ControlWindowState = ControlWindowState.Slides;
 		}

@@ -8,7 +8,6 @@
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		psalm_files: PsalmFile[];
 		psalm_file: PsalmFile;
 	}>();
@@ -60,7 +59,6 @@
 
 <template>
 	<PsalmEditor
-		:ws="ws"
 		:psalm_files="psalm_files"
 		:psalm_file_name="psalm_file?.path.replace(/\.psm$/, '')"
 		v-model:metadata="metadata"

@@ -12,10 +12,10 @@
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { Directory, ItemFile, MediaFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
-		ws: WebSocket;
 		files: MediaFile[];
 		thumbnails: Record<string, string>;
 	}>();
@@ -148,7 +148,7 @@
 			files
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 </script>
 

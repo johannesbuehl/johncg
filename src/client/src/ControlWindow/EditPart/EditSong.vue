@@ -6,9 +6,9 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ClientSongItem } from "@server/PlaylistItems/Song";
 	import type { SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		song_data: SongData | undefined;
 		item_index: number;
 	}>();
@@ -59,7 +59,7 @@
 			file: file
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function update() {
@@ -72,7 +72,7 @@
 				props: return_props
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 		}
 	}
 

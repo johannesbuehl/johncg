@@ -23,7 +23,6 @@
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		client_id: string;
 		server_state: JGCPSend.State;
 		playlist?: JGCPSend.Playlist;
@@ -93,7 +92,7 @@
 			client_id: props.client_id
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	// send visibility changes over the websocket
@@ -104,7 +103,7 @@
 			client_id: props.client_id
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function dragged(from: number, to: number) {
@@ -115,7 +114,7 @@
 			client_id: props.client_id
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function edit_item(index: number) {
@@ -126,7 +125,6 @@
 
 <template>
 	<MenuBar
-		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
 		:playlist_caption="playlist_caption"
 		:playlist_path="playlist?.path"
@@ -137,12 +135,10 @@
 		<OpenPlaylist
 			v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
 			:files="files.playlist"
-			:ws="ws"
 		/>
 		<SavePlaylist
 			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
 			:files="files.playlist"
-			:ws="ws"
 			:file_name="playlist_caption"
 		/>
 		<PlaylistItemsList
@@ -155,7 +151,6 @@
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			:ws="ws"
 			@selection="emit('select_item', $event)"
 			@dragged="dragged"
 			@set_active="emit('select_slide', $event, 0)"
@@ -174,7 +169,6 @@
 		/>
 		<AddPart
 			v-else-if="Globals.ControlWindowState === ControlWindowState.Add"
-			:ws="ws"
 			:files="files"
 			:bible="bible_file"
 			:media_thumbnails="media_thumbnails"
@@ -182,7 +176,6 @@
 		<EditPart
 			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
 			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
-			:ws="ws"
 			:item_index="selected"
 			:bible="bible_file"
 			:files="files"
@@ -190,21 +183,18 @@
 		/>
 		<SongEditor
 			v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong"
-			:ws="ws"
 			:song_files="files.song"
 			:media_files="files.media"
 			:thumbnails="media_thumbnails"
 		/>
 		<PsalmEditor
 			v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm"
-			:ws="ws"
 			:psalm_files="files.psalm"
 		/>
 		<EditSongFile
 			v-else-if="
 				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
 			"
-			:ws="ws"
 			:song_files="files.song"
 			:song_file="item_data.song"
 			:media_files="files.media"
@@ -214,7 +204,6 @@
 			v-else-if="
 				Globals.ControlWindowState === ControlWindowState.EditPsalm && item_data.psalm !== undefined
 			"
-			:ws="ws"
 			:psalm_files="files.psalm"
 			:psalm_file="item_data.psalm"
 		/>

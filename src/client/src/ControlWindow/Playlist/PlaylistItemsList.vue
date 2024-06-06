@@ -12,6 +12,7 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientItemBase, ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import Globals from "@/Globals";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 
@@ -21,7 +22,6 @@
 	}
 
 	const props = defineProps<{
-		ws: WebSocket;
 		selected: number | null;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
@@ -55,7 +55,7 @@
 					set_active: true
 				};
 
-				props.ws.send(JSON.stringify(message));
+				Globals.ws?.send(JSON.stringify(message));
 			}
 		});
 
@@ -114,7 +114,7 @@
 				index: context_menu_picket_item.value.index
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 		}
 	}
 </script>
@@ -137,7 +137,6 @@
 				<PlaylistItem
 					:ref="list_ref"
 					:index="index"
-					:ws="ws"
 					:item_props="element"
 					:selected="selected === index"
 					:active="active_item_slide?.item === index"

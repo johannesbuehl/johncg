@@ -6,9 +6,9 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ClientCountdownItem } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode } from "@server/lib";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
@@ -44,7 +44,7 @@
 			}
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	});
 </script>
 

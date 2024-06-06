@@ -7,7 +7,6 @@
 	import type { SongFileMetadata } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		song_files: SongFile[];
 		media_files: MediaFile[];
 		thumbnails: Record<string, string>;
@@ -56,7 +55,6 @@
 
 <template>
 	<SongEditor
-		:ws="ws"
 		:song_files="song_files"
 		:media_files="media_files"
 		:thumbnails="thumbnails"

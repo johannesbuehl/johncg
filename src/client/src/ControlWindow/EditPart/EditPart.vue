@@ -23,7 +23,6 @@
 	library.add(fas.faPen);
 
 	const props = defineProps<{
-		ws: WebSocket;
 		files?: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
 		item_index: number | null;
 		bible?: BibleFile;
@@ -50,7 +49,7 @@
 			file: item_props.value.file
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 </script>
 
@@ -82,7 +81,6 @@
 			v-if="item_props?.type === 'song'"
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:song_data="(item_data.song as SongFile | undefined)?.data"
 			:item_index="item_index"
 		/>
@@ -90,7 +88,6 @@
 			v-else-if="item_props?.type === 'bible'"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:bible="bible"
 			:item_index="item_index"
 		/>
@@ -98,28 +95,24 @@
 			v-else-if="item_props?.type === 'text'"
 			:key="`${item_index}_text`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditTemplate
 			v-else-if="item_props?.type === 'template'"
 			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditCountdown
 			v-else-if="item_props?.type === 'countdown'"
 			:key="`${item_index}_countdown`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditAMCP
 			v-else-if="item_props?.type === 'amcp'"
 			:key="`${item_index}_amcp`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<div v-else-if="item_props?.type === undefined" id="edit_part_placeholder">
@@ -129,7 +122,6 @@
 			v-else
 			:key="`${item_index}_dummy`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 	</div>

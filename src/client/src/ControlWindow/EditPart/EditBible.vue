@@ -8,9 +8,9 @@
 
 	import type { Book, BibleFile, ClientBibleItem } from "@server/PlaylistItems/Bible";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		bible?: BibleFile;
 		item_index: number;
 	}>();
@@ -43,7 +43,7 @@
 			command: "get_bible"
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	});
 
 	onUnmounted(() => {
@@ -77,7 +77,7 @@
 				}
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 		}
 	}
 </script>
@@ -87,7 +87,6 @@
 		ref="bible_selector"
 		v-model:book_selection="book_selection"
 		v-model:chapter_verse_selection="chapter_verse_selection"
-		:ws="ws"
 		:bible="bible"
 	/>
 </template>

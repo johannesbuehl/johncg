@@ -30,14 +30,11 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		playlist_path: string | undefined;
 	}>();
 
 	const playlist_caption = defineModel<string>("playlist_caption", { required: true });
 	const visibility = defineModel<boolean>("visibility", { required: true });
-
-	const show_abort_changes = ref<boolean>(false);
 
 	const emit = defineEmits<{
 		navigate: [type: JGCPRecv.NavigateType, steps: number];
@@ -49,7 +46,7 @@
 			command: "new_playlist"
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	// reference for the file-input
@@ -69,7 +66,7 @@
 					playlist: e.target?.result as string
 				};
 
-				props.ws.send(JSON.stringify(message));
+				Globals.ws?.send(JSON.stringify(message));
 			});
 
 			reader.readAsText(input_event.files[0]);
@@ -83,7 +80,7 @@
 			type
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 
 		pdf_popup.value = false;
 	}
@@ -98,7 +95,7 @@
 				caption: playlist_caption.value
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 		}, 1000);
 	}
 
@@ -109,7 +106,7 @@
 				playlist: props.playlist_path
 			};
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ws?.send(JSON.stringify(message));
 		}
 	}
 </script>

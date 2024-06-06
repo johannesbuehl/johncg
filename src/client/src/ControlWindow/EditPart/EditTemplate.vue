@@ -5,9 +5,9 @@
 
 	import type { ClientTemplateItem } from "@server/PlaylistItems/Template";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
@@ -35,7 +35,7 @@
 			props: item_props.value
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	});
 </script>
 

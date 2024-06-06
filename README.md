@@ -33,3 +33,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - SongEditor / PsalmEditor: Confirm to abort unsaved changes
 - save_song(): check, wether "chords" is valid
 - launch casparcg automatically
+- save_song: only write non empty languages
+- rethink searching after rewrite of FileDialogue

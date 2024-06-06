@@ -19,11 +19,11 @@
 	import type { FileBase, ItemFile, PsalmFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faIndent);
 
 	const props = defineProps<{
-		ws: WebSocket;
 		psalm_files: PsalmFile[];
 	}>();
 
@@ -154,7 +154,7 @@
 			type: "psalm"
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function add_slide() {
@@ -214,7 +214,7 @@
 			data: create_psalm_data()
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function create_psalm_data(): PsalmData {

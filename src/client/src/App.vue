@@ -59,7 +59,6 @@
 	const item_data = ref<ItemData>({});
 	const thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
 
-	let ws: WebSocket | undefined;
 	ws_connect();
 
 	// watch for changes in item-selection
@@ -96,7 +95,7 @@
 			client_id
 		};
 
-		ws?.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function init() {
@@ -120,9 +119,9 @@
 
 		const ws_url: string = `ws://${url.hostname}:${Config.client_server.websocket.port}`;
 
-		ws = new WebSocket(ws_url, "JGCP");
+		Globals._ws = new WebSocket(ws_url, "JGCP");
 
-		ws.addEventListener("open", () => {
+		Globals.ws?.addEventListener("open", () => {
 			// reset the window-state
 			Globals.ControlWindowState === ControlWindowState.Slides;
 
@@ -135,7 +134,7 @@
 			});
 		});
 
-		ws.addEventListener("message", (event: MessageEvent) => {
+		Globals.ws?.addEventListener("message", (event: MessageEvent) => {
 			let data: JGCPSend.Message;
 
 			try {
@@ -170,19 +169,19 @@
 			command_parser_map[data.command](data as never);
 		});
 
-		ws.addEventListener("ping", () => {});
+		Globals.ws?.addEventListener("ping", () => {});
 
-		ws.addEventListener("error", (event: Event) => {
+		Globals.ws?.addEventListener("error", (event: Event) => {
 			messages.value.push({
 				message: `Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`,
 				type: JGCPSend.LogLevel.error,
 				timestamp: new Date()
 			});
 
-			ws?.close();
+			Globals.ws?.close();
 		});
 
-		ws.addEventListener("close", () => {
+		Globals.ws?.addEventListener("close", () => {
 			messages.value.push({
 				message: "No connection to server. Retrying in 1s",
 				type: JGCPSend.LogLevel.log,
@@ -220,7 +219,7 @@
 					item: selected_item.value
 				};
 
-				ws?.send(JSON.stringify(message));
+				Globals.ws?.send(JSON.stringify(message));
 			}
 		}
 	}
@@ -268,7 +267,7 @@
 			client_id: client_id
 		};
 
-		ws?.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function parse_item_files(data: JGCPSend.ItemFiles<keyof ItemFileType>) {
@@ -363,7 +362,6 @@
 	<div id="main_window">
 		<ControlWindow
 			v-if="server_connection === ServerConnection.connected"
-			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"
 			:playlist="playlist_items"

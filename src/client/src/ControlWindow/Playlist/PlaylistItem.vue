@@ -3,9 +3,9 @@
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		index: number;
 		selected?: boolean;
 		active?: boolean;
@@ -45,7 +45,7 @@
 			position: props.index
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	defineExpose({

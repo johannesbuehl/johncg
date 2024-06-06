@@ -27,11 +27,11 @@
 	import type { MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import Globals from "@/Globals";
 
-	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk);
+	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
 	const props = defineProps<{
-		ws: WebSocket;
 		song_files: SongFile[];
 		media_files: MediaFile[];
 		thumbnails: Record<string, string>;
@@ -44,14 +44,17 @@
 	});
 	const selected_verse_order_part = ref<number>();
 
-	const metadata = defineModel<SongFileMetadata>("metadata", {
-		default: {
-			Title: ["", "", "", ""],
-			LangCount: 1,
-			ChurchSongID: "",
-			VerseOrder: []
-		}
-	});
+	const metadata = defineModel<SongFileMetadata>(
+		"metadata",
+		reactive({
+			default: {
+				Title: ["", "", "", ""],
+				LangCount: 1,
+				ChurchSongID: "",
+				VerseOrder: []
+			}
+		})
+	);
 
 	const show_media_selector = ref<boolean>(false);
 	const media_file_tree = ref<MediaFile[]>();
@@ -247,7 +250,7 @@
 			type: type
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function select_media(selection: MediaFile) {
@@ -272,7 +275,7 @@
 			files
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	const overwrite_dialog = ref<boolean>(false);
@@ -324,7 +327,7 @@
 			data: create_song_data()
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function create_song_data(): SongData {
@@ -389,6 +392,22 @@
 		}
 
 		show_save_file_dialogue.value = true;
+	}
+
+	// watch for any property changes to store
+	let save_callback: (change_state: boolean) => void | undefined;
+	const show_save_confirm = ref<boolean>(false);
+	watch(
+		() => [metadata, text_parts, background_media],
+		() => {
+			Globals.ControlWindowStateConfirm = confirm_dialog;
+		},
+		{ deep: true }
+	);
+
+	function confirm_dialog(callback: (change_state: boolean) => void) {
+		save_callback = callback;
+		show_save_confirm.value = true;
 	}
 </script>
 
@@ -512,7 +531,6 @@
 				</MenuButton>
 			</div>
 		</div>
-		media_selection{{ media_selection?.path }}
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
 		<FileDialogue
@@ -552,6 +570,33 @@
 				</MenuButton>
 			</template>
 		</FileDialogue>
+	</PopUp>
+	<PopUp title="Save Changes" v-model:active="show_save_confirm">
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_song();
+				save_callback(true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+		</MenuButton>
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_callback(true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+		</MenuButton>
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_callback(false);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+		</MenuButton>
 	</PopUp>
 </template>
 

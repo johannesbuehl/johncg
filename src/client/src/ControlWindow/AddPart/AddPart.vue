@@ -36,7 +36,6 @@
 	);
 
 	const props = defineProps<{
-		ws: WebSocket;
 		files?: { [K in keyof ItemFileType]: ItemFileMapped<K>[] };
 		bible?: BibleFile;
 		media_thumbnails: Record<string, string>;
@@ -64,7 +63,7 @@
 			set_active: true
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
@@ -81,7 +80,7 @@
 			};
 		}
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	}
 </script>
 
@@ -120,7 +119,6 @@
 			<AddText v-else-if="pick === 'text'" @add="add_item" />
 			<AddMedia
 				v-else-if="pick === 'media'"
-				:ws="ws"
 				:files="files[pick]"
 				:thumbnails="media_thumbnails"
 				@add="add_item"

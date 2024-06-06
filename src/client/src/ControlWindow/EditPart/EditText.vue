@@ -4,9 +4,9 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ClientTextItem } from "@server/PlaylistItems/Text";
 	import TextEditor from "../ItemDialogue/TextEditor.vue";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
@@ -31,7 +31,7 @@
 			props: item_props.value
 		};
 
-		props.ws.send(JSON.stringify(message));
+		Globals.ws?.send(JSON.stringify(message));
 	});
 </script>
 
