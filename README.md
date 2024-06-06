@@ -33,5 +33,11 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - SongEditor / PsalmEditor: Confirm to abort unsaved changes
 - save_song(): check, wether "chords" is valid
 - launch casparcg automatically
-- rethink searching after rewrite of FileDialogue
 - reload psalm and song after file-edit
+- add clear-button to filedialogue-search
+- move file-refresh to directory-stack
+- make media- and song-dialogue components with searching etc
+- FileDialogue: integrate side-pane below search-bars
+- FileDialogue Thumbnails: make like songbeamer for easy switching
+- Add Countdown: show thumbnails
+- FileDialogue: Create directories

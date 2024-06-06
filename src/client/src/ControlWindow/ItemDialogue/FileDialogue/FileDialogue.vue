@@ -70,6 +70,7 @@
 		thumbnails?: Record<string, string>;
 		clone_callback?: (arg: JGCPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
 		new_button?: boolean;
+		search_disabled?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -147,7 +148,7 @@
 <template>
 	<div id="element_wrapper">
 		<div id="file_dialogue_wrapper">
-			<div id="search_wrapper">
+			<div id="search_wrapper" v-if="!search_disabled">
 				<MenuButton v-if="new_button" :square="true" @click="emit('new_file')">
 					<FontAwesomeIcon :icon="['fas', 'file-circle-plus']" />
 				</MenuButton>

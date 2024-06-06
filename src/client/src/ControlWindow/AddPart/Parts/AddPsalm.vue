@@ -75,7 +75,7 @@
 		id: string;
 		caption: string;
 	}
-	type SearchMapFile = PsalmFile & { children?: SearchMapFile[]; search_data?: SearchMapData };
+	type SearchMapFile = PsalmFile & { search_data?: SearchMapData };
 	let search_map: SearchMapFile[] = [];
 	function create_search_map(files: PsalmFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
@@ -83,10 +83,7 @@
 		if (files !== undefined) {
 			files.forEach((f) => {
 				if (f.children !== undefined) {
-					return_map.push({
-						...f,
-						children: create_search_map(f.children)
-					});
+					return_map.push(...create_search_map(f.children));
 				} else {
 					return_map.push({
 						...f,
@@ -103,6 +100,11 @@
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): PsalmFile[] {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return props.files;
+		}
+
 		const return_files: PsalmFile[] = [];
 
 		if (files !== undefined) {
@@ -151,7 +153,7 @@
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:clone_callback="create_props"
+		:clone_callback="(ff) => create_props(ff as PsalmFile)"
 		:new_button="true"
 		name="Psalm"
 		v-model:selection="selection"

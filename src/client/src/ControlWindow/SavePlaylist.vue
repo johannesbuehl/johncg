@@ -28,26 +28,9 @@
 	});
 	const file_name = defineModel<string>("file_name", { required: true });
 
-	type SearchMapFile = PlaylistFile & {
-		children?: SearchMapFile[];
-		search_data?: { name: string };
-	};
-	let search_map: SearchMapFile[] = [];
-	const file_tree = defineModel<PlaylistFile[]>("file_tree");
-
 	onMounted(() => {
 		refresh_items();
 	});
-
-	watch(
-		() => props.files,
-		() => {
-			search_map = create_search_map();
-
-			search_file();
-		},
-		{ immediate: true, deep: true }
-	);
 
 	function refresh_items() {
 		const message: JGCPRecv.GetItemFiles = {
@@ -116,72 +99,17 @@
 			file_name.value = selection.value.name;
 		}
 	});
-
-	function search_file() {
-		file_tree.value = search_string();
-	}
-
-	function create_search_map(files: PlaylistFile[] | undefined = props.files): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					},
-					children: f.children !== undefined ? create_search_map(f.children) : undefined
-				});
-			});
-		}
-
-		return return_map;
-	}
-
-	function search_string(files: SearchMapFile[] | undefined = search_map): PlaylistFile[] {
-		const return_files: PlaylistFile[] = [];
-
-		files?.forEach((f) => {
-			if (
-				search_strings.value.every((search_string) => {
-					if (f.search_data !== undefined) {
-						if (f.search_data[search_string.id] !== undefined) {
-							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
-						} else {
-							return search_string.value === "";
-						}
-					} else {
-						return true;
-					}
-				})
-			) {
-				return_files.push(f);
-			} else if (f.children !== undefined) {
-				const children = search_string(f.children);
-
-				if (children.length > 0) {
-					return_files.push({
-						...f,
-						children: search_string(f.children)
-					});
-				}
-			}
-		});
-
-		return return_files;
-	}
 </script>
 
 <template>
 	<FileDialogue
-		:files="file_tree"
 		name="Playlist Files"
+		:files="files"
+		:search_disabled="true"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		:select_dirs="true"
 		@choose="(playlist) => save_playlist(playlist)"
-		@search="search_file"
 		@refresh_files="refresh_items"
 	>
 		<template v-slot:buttons>

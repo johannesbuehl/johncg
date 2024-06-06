@@ -75,7 +75,6 @@
 	}
 
 	type SearchMapFile = TemplateFile & {
-		children?: SearchMapFile[];
 		search_data?: { name: string };
 	};
 	let search_map: SearchMapFile[] = [];
@@ -88,9 +87,12 @@
 					...f,
 					search_data: {
 						name: f.name.toLowerCase()
-					},
-					children: f.children !== undefined ? create_search_map(f.children) : undefined
+					}
 				});
+
+				if (f.children !== undefined) {
+					return_map.push(...create_search_map(f.children));
+				}
 			});
 		}
 
@@ -98,6 +100,11 @@
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): TemplateFile[] {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return props.files;
+		}
+
 		const return_files: TemplateFile[] = [];
 
 		if (files !== undefined) {
@@ -144,7 +151,7 @@
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:clone_callback="create_props"
+		:clone_callback="(ff) => create_props(ff as TemplateFile)"
 		name="Template"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"

@@ -35,7 +35,7 @@
 		{ id: "text", placeholder: "Text", value: "" }
 	]);
 
-	const file_tree = defineModel<SongFile[]>("file_tree");
+	const file_tree = ref<SongFile[]>();
 
 	onMounted(() => {
 		// init
@@ -108,7 +108,7 @@
 	}
 
 	type SearchMapData = { id?: string; title?: string; text?: string };
-	type SearchMapFile = SongFile & { children?: SearchMapFile[]; search_data?: SearchMapData };
+	type SearchMapFile = SongFile & { search_data?: SearchMapData };
 	let search_map: SearchMapFile[] = [];
 	function create_search_map(files: SongFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
@@ -116,10 +116,7 @@
 		if (files !== undefined) {
 			files.forEach((f) => {
 				if (f.children !== undefined) {
-					return_map.push({
-						...f,
-						children: create_search_map(f.children)
-					});
+					return_map.push(...create_search_map(f.children));
 				} else {
 					return_map.push({
 						...f,
@@ -140,6 +137,11 @@
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): SongFile[] {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return props.files;
+		}
+
 		const return_files: SongFile[] = [];
 
 		if (files !== undefined) {

@@ -97,7 +97,7 @@
 		file_tree.value = search_string();
 	}
 
-	type SearchMapFile = MediaFile & { children?: SearchMapFile[]; search_data?: { name: string } };
+	type SearchMapFile = MediaFile & { search_data?: { name: string } };
 	let search_map: SearchMapFile[] = [];
 	function create_search_map(files: MediaFile[] | undefined = props.files): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
@@ -108,9 +108,12 @@
 					...f,
 					search_data: {
 						name: f.name.toLowerCase()
-					},
-					children: f.children !== undefined ? create_search_map(f.children) : undefined
+					}
 				});
+
+				if (f.children !== undefined) {
+					return_map.push(...create_search_map(f.children));
+				}
 			});
 		}
 
@@ -118,6 +121,11 @@
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): MediaFile[] {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return props.files;
+		}
+
 		const return_files: MediaFile[] = [];
 
 		if (files !== undefined) {

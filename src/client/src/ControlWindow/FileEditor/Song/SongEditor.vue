@@ -384,7 +384,7 @@
 		// if there currently is no file-name for the song, try to generate it from the song-data
 		if (song_file_name.value === "") {
 			// if the church-song-id is specified, use it
-			if (metadata.value.ChurchSongID !== undefined) {
+			if (metadata.value.ChurchSongID !== undefined && metadata.value.ChurchSongID !== "") {
 				song_file_name.value = metadata.value.ChurchSongID;
 
 				// if there is also a title defined, add an seperator
