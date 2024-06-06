@@ -30,7 +30,9 @@ class Global {
 	private control_window_state_change_confirm:
 		| ((callback: (change_state: boolean) => void) => void)
 		| undefined = undefined;
-	set ControlWindowStateConfirm(callback: (callback: (change_state: boolean) => void) => void) {
+	set ControlWindowStateConfirm(
+		callback: ((callback: (change_state: boolean) => void) => void) | undefined
+	) {
 		this.control_window_state_change_confirm = callback;
 	}
 }

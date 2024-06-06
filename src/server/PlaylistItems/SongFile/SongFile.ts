@@ -129,6 +129,11 @@ export default class SongFile {
 					break;
 				case "LangCount":
 					this.metadata[key] = Number(value);
+
+					// populate titles
+					Array.from(Array(Number(value)).keys()).forEach((lang_index) => {
+						this.metadata.Title[lang_index] ??= "";
+					});
 					break;
 				case "Chords":
 					this.metadata.Chords = parse_base64_chords(value);
@@ -311,8 +316,13 @@ export default class SongFile {
 			.filter(([, val]) => val !== undefined)
 			.map(([key, val]) => {
 				switch (key) {
-					case "Title":
-						return (val as SongFileMetadata["Title"])
+					case "Title": {
+						// only save used languages
+						const titles = (val as SongFileMetadata["Title"]).filter((title, title_index) => {
+							return title !== "" && title_index < this.language_count;
+						});
+
+						return titles
 							.map((title, title_index) => {
 								if (title_index === 0) {
 									return `#Title=${title}`;
@@ -321,6 +331,7 @@ export default class SongFile {
 								}
 							})
 							.join("\n");
+					}
 
 					case "VerseOrder":
 						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;

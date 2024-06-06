@@ -277,7 +277,6 @@
 	}
 
 	const overwrite_dialog = ref<boolean>(false);
-	let overwrite_path: string = "";
 	function save_song(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
 
@@ -319,8 +318,6 @@
 			};
 
 			if (overwrite === false && compare_file(props.song_files, save_path)) {
-				overwrite_path = save_path;
-
 				overwrite_dialog.value = true;
 
 				return false;
@@ -335,6 +332,8 @@
 		};
 
 		Globals.ws?.send(JSON.stringify(message));
+
+		Globals.ControlWindowStateConfirm = undefined;
 
 		return true;
 	}
@@ -461,7 +460,7 @@
 									v-model="part.text[slide_index][language_index]"
 									:placeholder="
 										`Slide ${slide_index + 1}` +
-										(metadata.LangCount > 1 ? `- Language ${language_index + 1}` : '')
+										(metadata.LangCount > 1 ? ` - Language ${language_index + 1}` : '')
 									"
 								/>
 							</template>
@@ -478,7 +477,7 @@
 				<div class="header">Song-File</div>
 				<div class="content">
 					<div class="row_container">
-						<MenuButton @click="save_song()">
+						<MenuButton :disabled="song_file_name === ''" @click="save_song()">
 							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">
@@ -574,7 +573,7 @@
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />
-				<MenuButton id="select_song_button" @click="save_song()">
+				<MenuButton id="select_song_button" :disabled="song_file_name === ''" @click="save_song()">
 					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Song
 				</MenuButton>
 			</template>

@@ -110,6 +110,10 @@
 			playlist_items.value?.playlist_items[item].displayable ||
 			Globals.ControlWindowState === ControlWindowState.Edit
 		) {
+			if (selected_item.value === item) {
+				request_item_slides(item);
+			}
+
 			selected_item.value = item;
 		}
 	}

@@ -55,7 +55,9 @@
 		() => selection.value,
 		(selection) => {
 			if (selection?.data !== undefined) {
-				verse_order.value = structuredClone(toRaw(Object.keys(selection.data.text)));
+				verse_order.value = structuredClone(
+					toRaw(selection.data.metadata.VerseOrder ?? Object.keys(selection.data.text))
+				);
 				languages.value = Array(selection.data.metadata.Title?.length)
 					.fill([])
 					.map((ele, index) => [index, true]);
@@ -69,8 +71,10 @@
 		search_song();
 	}
 
-	function add_song(file?: SongFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
+	function add_song(file?: SongFile) {
+		console.debug("add_song", file);
+
+		if (file !== undefined && file?.children === undefined) {
 			emit("add", create_props(file));
 		}
 	}
@@ -195,7 +199,7 @@
 		@new_file="emit('new_song')"
 	>
 		<template v-slot:buttons>
-			<MenuButton @click="add_song(selection, 'file')">
+			<MenuButton @click="add_song(selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Song
 			</MenuButton>
 		</template>
