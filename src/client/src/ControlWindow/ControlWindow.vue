@@ -7,7 +7,7 @@
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
 	import OpenPlaylist from "./OpenPlaylist.vue";
-	import MessagePopup, { type LogMessage } from "./Message/MessagePopup.vue";
+	import MessagePopup from "./Message/MessagePopup.vue";
 	import MessageView from "./Message/MessageView.vue";
 	import SavePlaylist from "./SavePlaylist.vue";
 	import SongEditor from "./FileEditor/Song/SongEditor.vue";
@@ -32,7 +32,6 @@
 		bible_file?: BibleFile;
 		selected: number | null;
 		playlist_caption: string;
-		messages: LogMessage[];
 		item_data: ItemData;
 		media_thumbnails: Record<string, string>;
 	}>();
@@ -41,10 +40,6 @@
 		select_item: [item: number];
 		select_slide: [item: number, slide: number];
 	}>();
-
-	const log_level = defineModel<Record<JGCPSend.LogLevel, boolean>>("log_level", {
-		required: true
-	});
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
@@ -207,16 +202,8 @@
 			:psalm_files="files.psalm"
 			:psalm_file="item_data.psalm"
 		/>
-		<MessageView
-			v-else-if="Globals.ControlWindowState === ControlWindowState.Message"
-			:messages="messages"
-			v-model:log_level="log_level"
-		/>
-		<MessagePopup
-			v-if="Globals.ControlWindowState !== ControlWindowState.Message"
-			:messages="messages"
-			:log_level="log_level"
-		/>
+		<MessageView v-else-if="Globals.ControlWindowState === ControlWindowState.Message" />
+		<MessagePopup v-if="Globals.ControlWindowState !== ControlWindowState.Message" />
 	</div>
 </template>
 

@@ -1,10 +1,4 @@
 <script lang="ts">
-	export interface LogMessage {
-		message: string;
-		type: LogLevel;
-		timestamp: Date;
-	}
-
 	export const icons: Record<LogLevel, string> = {
 		error: "exclamation",
 		warn: "xmark",
@@ -27,17 +21,13 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
+	import type { LogMessage } from "@/Globals";
+
 	import type { LogLevel } from "@server/JGCPSendMessages";
 	import { get_time_string } from "@server/lib";
+	import Globals from "@/Globals";
 
 	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
-
-	const props = defineProps<{
-		messages: LogMessage[];
-		log_level: Record<LogLevel, boolean>;
-	}>();
-
-	const emit = defineEmits<{}>();
 
 	const messages = ref<LogMessage[]>([]);
 
@@ -61,12 +51,12 @@
 		debug: console.debug
 	};
 
-	watch(props.messages, (messages) => {
+	watch(Globals.message.messages, (messages) => {
 		const message = messages[messages.length - 1];
 
 		console_command_map[message.type](message.message);
 
-		if (props.log_level[message.type]) {
+		if (Globals.message.log_level[message.type]) {
 			show_message(message);
 		}
 	});

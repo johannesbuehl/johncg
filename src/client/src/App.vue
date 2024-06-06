@@ -17,7 +17,6 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
-	import { type LogMessage } from "./ControlWindow/Message/MessagePopup.vue";
 	import Globals from "./Globals";
 
 	const Config = {
@@ -40,13 +39,6 @@
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const bible_file = ref<BibleFile>();
 	const playlist_caption = ref<string>("");
-	const messages = ref<LogMessage[]>([]);
-	const log_level = ref<Record<JGCPSend.LogLevel, boolean>>({
-		error: true,
-		warn: true,
-		log: true,
-		debug: false
-	});
 
 	const files = ref<{ [key in keyof ItemFileType]: ItemFileMapped<key>[] }>({
 		song: [],
@@ -131,11 +123,7 @@
 
 			server_connection.value = ServerConnection.connected;
 
-			messages.value.push({
-				message: "Connected to JohnCG",
-				type: JGCPSend.LogLevel.log,
-				timestamp: new Date()
-			});
+			Globals.message.log("Connected to JohnCG");
 		});
 
 		Globals.ws?.addEventListener("message", (event: MessageEvent) => {
@@ -145,11 +133,7 @@
 				data = JSON.parse(event.data as string);
 			} catch (e) {
 				if (e instanceof SyntaxError) {
-					messages.value.push({
-						message: "received invalid JSON",
-						type: JGCPSend.LogLevel.error,
-						timestamp: new Date()
-					});
+					Globals.message.error("received invalid JSON");
 					return;
 				} else {
 					throw e;
@@ -176,21 +160,15 @@
 		Globals.ws?.addEventListener("ping", () => {});
 
 		Globals.ws?.addEventListener("error", (event: Event) => {
-			messages.value.push({
-				message: `Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`,
-				type: JGCPSend.LogLevel.error,
-				timestamp: new Date()
-			});
+			Globals.message.error(
+				`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`
+			);
 
 			Globals.ws?.close();
 		});
 
 		Globals.ws?.addEventListener("close", () => {
-			messages.value.push({
-				message: "No connection to server. Retrying in 1s",
-				type: JGCPSend.LogLevel.log,
-				timestamp: new Date()
-			});
+			Globals.message.log("No connection to server. Retrying in 1s");
 
 			// delete the playlist and slides
 			init();
@@ -310,11 +288,7 @@
 	}
 
 	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
-		messages.value.push({
-			message: "Received Playlist PDF",
-			type: JGCPSend.LogLevel.log,
-			timestamp: new Date()
-		});
+		Globals.message.log("Received Playlist PDF");
 
 		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
 
@@ -328,29 +302,17 @@
 	}
 
 	function show_client_message(data: JGCPSend.ClientMessage) {
-		messages.value.push({
-			message: data.message,
-			type: data.type,
-			timestamp: new Date()
-		});
+		Globals.message.add(data.message, data.type);
 	}
 
 	function handle_ws_response(response: JGCPSend.Response) {
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
 				case 4:
-					messages.value.push({
-						message: response.message,
-						type: JGCPSend.LogLevel.error,
-						timestamp: new Date()
-					});
+					Globals.message.error(response.message);
 					break;
 				default:
-					messages.value.push({
-						message: response.message,
-						type: JGCPSend.LogLevel.debug,
-						timestamp: new Date()
-					});
+					Globals.message.debug(response.message);
 			}
 		}
 	}
@@ -375,8 +337,6 @@
 			:files="files"
 			:bible_file="bible_file"
 			:playlist_caption="playlist_caption"
-			:messages="messages"
-			:log_level="log_level"
 			:item_data="item_data"
 			:media_thumbnails="thumbnails"
 			@select_item="select_item"

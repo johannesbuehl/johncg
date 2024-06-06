@@ -1,5 +1,55 @@
-import { ref } from "vue";
+import { reactive, ref } from "vue";
+
 import { ControlWindowState } from "./Enums";
+
+import { LogLevel } from "@server/JGCPSendMessages";
+
+export interface LogMessage {
+	message: string;
+	type: LogLevel;
+	timestamp: Date;
+}
+
+class Log {
+	private _messages = ref<LogMessage[]>([]);
+	get messages(): LogMessage[] {
+		return this._messages.value;
+	}
+
+	private _log_level = ref<Record<LogLevel, boolean>>({
+		debug: false,
+		log: true,
+		warn: true,
+		error: true
+	});
+	get log_level(): Record<LogLevel, boolean> {
+		return this._log_level.value;
+	}
+
+	add(message: string, level: LogLevel = LogLevel.log) {
+		this._messages.value.push({
+			message,
+			type: level,
+			timestamp: new Date()
+		});
+	}
+
+	debug(message: string) {
+		this.add(message, LogLevel.debug);
+	}
+
+	log(message: string) {
+		this.add(message, LogLevel.log);
+	}
+
+	warn(message: string) {
+		this.add(message, LogLevel.warn);
+	}
+
+	error(message: string) {
+		this.add(message, LogLevel.error);
+	}
+}
 
 class Global {
 	// WebSocket
@@ -34,6 +84,12 @@ class Global {
 		callback: ((callback: (change_state: boolean) => void) => void) | undefined
 	) {
 		this.control_window_state_change_confirm = callback;
+	}
+
+	// Log
+	private message_log = new Log();
+	get message(): Log {
+		return this.message_log;
 	}
 }
 
