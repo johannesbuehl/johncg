@@ -40,21 +40,19 @@
 	const emit = defineEmits<{}>();
 
 	const text_parts = defineModel<SongTextPart[]>("text_parts", {
-		default: reactive([{ part: "", text: [["", "", "", ""]] }])
+		default: () => reactive([{ part: "", text: [["", "", "", ""]] }])
 	});
 	const selected_verse_order_part = ref<number>();
 
-	const metadata = defineModel<SongFileMetadata>(
-		"metadata",
-		reactive({
-			default: {
+	const metadata = defineModel<SongFileMetadata>("metadata", {
+		default: () =>
+			reactive({
 				Title: ["", "", "", ""],
 				LangCount: 1,
 				ChurchSongID: "",
 				VerseOrder: []
-			}
-		})
-	);
+			})
+	});
 
 	const show_media_selector = ref<boolean>(false);
 	const media_file_tree = ref<MediaFile[]>();
@@ -280,7 +278,16 @@
 
 	const overwrite_dialog = ref<boolean>(false);
 	let overwrite_path: string = "";
-	function save_song(overwrite: boolean = false) {
+	function save_song(overwrite: boolean = false): boolean {
+		show_save_file_dialogue.value = false;
+
+		// if there is no file-name, open the save-dialogue
+		if (song_file_name.value === "") {
+			show_save_file_dialogue.value = true;
+
+			return false;
+		}
+
 		// if no file is selected, save at the root dir
 		let save_path: string;
 		if (song_selection.value === undefined) {
@@ -316,7 +323,7 @@
 
 				overwrite_dialog.value = true;
 
-				return;
+				return false;
 			}
 		}
 
@@ -328,6 +335,8 @@
 		};
 
 		Globals.ws?.send(JSON.stringify(message));
+
+		return true;
 	}
 
 	function create_song_data(): SongData {
@@ -575,8 +584,7 @@
 		<MenuButton
 			@click="
 				show_save_confirm = false;
-				save_song();
-				save_callback(true);
+				save_callback(save_song());
 			"
 		>
 			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save

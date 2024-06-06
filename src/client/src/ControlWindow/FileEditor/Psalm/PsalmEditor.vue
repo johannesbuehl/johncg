@@ -37,10 +37,10 @@
 	]);
 	const psalm_file_name = defineModel<string>("psalm_file_name", { default: "" });
 	const metadata = defineModel<PsalmData["metadata"]>("metadata", {
-		default: reactive({ caption: "", id: "", book: "", indent: true })
+		default: () => reactive({ caption: "", id: "", book: "", indent: true })
 	});
 	const psalm_text = defineModel<PsalmTextBlock[][]>("psalm_text", {
-		default: reactive([[{ text: "", indent: false }]])
+		default: () => reactive([[{ text: "", indent: false }]])
 	});
 
 	// watch for new psalm-files
@@ -167,7 +167,16 @@
 
 	const overwrite_dialog = ref<boolean>(false);
 	let overwrite_path: string = "";
-	function save_psalm(overwrite: boolean = false) {
+	function save_psalm(overwrite: boolean = false): boolean {
+		show_save_file_dialogue.value = false;
+
+		// if there is no file-name, open the save-dialogue
+		if (psalm_file_name.value === "") {
+			show_save_file_dialogue.value = true;
+
+			return false;
+		}
+
 		// if no file is selected, save at the root dir
 		let save_path: string;
 		if (psalm_selection.value === undefined) {
@@ -203,7 +212,7 @@
 
 				overwrite_dialog.value = true;
 
-				return;
+				return false;
 			}
 		}
 
@@ -215,6 +224,8 @@
 		};
 
 		Globals.ws?.send(JSON.stringify(message));
+
+		return true;
 	}
 
 	function create_psalm_data(): PsalmData {
@@ -262,6 +273,22 @@
 
 		show_save_file_dialogue.value = true;
 	}
+
+	// watch for any property changes to store
+	let save_callback: (change_state: boolean) => void | undefined;
+	const show_save_confirm = ref<boolean>(false);
+	watch(
+		() => [metadata, psalm_text],
+		() => {
+			Globals.ControlWindowStateConfirm = confirm_dialog;
+		},
+		{ deep: true }
+	);
+
+	function confirm_dialog(callback: (change_state: boolean) => void) {
+		save_callback = callback;
+		show_save_confirm.value = true;
+	}
 </script>
 
 <template>
@@ -291,7 +318,7 @@
 				<div class="header">Psalm-File</div>
 				<div class="content">
 					<div class="row_container">
-						<MenuButton @click="save_psalm()">
+						<MenuButton :disabled="psalm_file_name === ''" @click="save_psalm()">
 							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">
@@ -338,11 +365,41 @@
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="psalm_file_name" placeholder="Filename" @input="" />
-				<MenuButton id="select_psalm_button" @click="save_psalm()">
+				<MenuButton
+					id="select_psalm_button"
+					:disabled="psalm_file_name === ''"
+					@click="save_psalm()"
+				>
 					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Psalm
 				</MenuButton>
 			</template>
 		</FileDialogue>
+	</PopUp>
+	<PopUp title="Save Changes" v-model:active="show_save_confirm">
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_callback(save_psalm());
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+		</MenuButton>
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_callback(true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+		</MenuButton>
+		<MenuButton
+			@click="
+				show_save_confirm = false;
+				save_callback(false);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+		</MenuButton>
 	</PopUp>
 </template>
 
