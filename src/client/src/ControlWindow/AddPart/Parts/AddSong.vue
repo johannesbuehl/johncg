@@ -30,7 +30,7 @@
 	const languages = ref<[number, boolean][]>([]);
 
 	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
-		{ id: "id", placeholder: "Song ID", value: "" },
+		{ id: "id", placeholder: "Song ID", value: "", size: 5 },
 		{ id: "title", placeholder: "Title", value: "" },
 		{ id: "text", placeholder: "Text", value: "" }
 	]);
@@ -72,8 +72,6 @@
 	}
 
 	function add_song(file?: SongFile) {
-		console.debug("add_song", file);
-
 		if (file !== undefined && file?.children === undefined) {
 			emit("add", create_props(file));
 		}
@@ -220,8 +218,8 @@
 		flex: 1;
 	}
 
-	:deep(.search_box:first-child) {
-		width: 8rem;
+	:deep(.search_input_container:first-child) {
+		/* width: 11ch; */
 		flex: none;
 	}
 </style>

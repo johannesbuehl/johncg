@@ -26,7 +26,7 @@
 	const selection = ref<PsalmFile>();
 
 	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
-		{ id: "id", placeholder: "Psalm ID", value: "" },
+		{ id: "id", placeholder: "Psalm ID", value: "", size: 5 },
 		{ id: "caption", placeholder: "Title", value: "" }
 	]);
 
@@ -176,8 +176,7 @@
 		flex: 1;
 	}
 
-	:deep(.search_box:first-child) {
-		width: 8rem;
+	:deep(.search_input_container:first-child) {
 		flex: none;
 	}
 </style>

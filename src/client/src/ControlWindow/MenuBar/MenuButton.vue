@@ -71,7 +71,7 @@
 	div.button.disabled {
 		cursor: unset;
 
-		color: var(--color-item-hover);
+		color: var(--color-text-disabled);
 	}
 
 	div.button.disabled:hover {
