@@ -18,13 +18,12 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import Draggable from "vuedraggable";
 
-	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import { get_song_part_color } from "../../ItemDialogue/SongPartSelector.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 	import Globals from "@/Globals";
+	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 
 	import type { MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -60,11 +59,7 @@
 	const background_media = ref<MediaFile>();
 
 	const show_save_file_dialogue = ref<boolean>(false);
-	const song_file_tree = ref<SongFile[]>();
 	const song_selection = ref<SongFile>();
-	const song_search_strings = ref<SearchInputDefinitions<"name">>([
-		{ id: "name", placeholder: "Name", value: "" }
-	]);
 	const song_file_name = defineModel<string>("song_file_name", { default: "" });
 
 	// watch for new media-files
@@ -72,16 +67,6 @@
 		() => props.media_files,
 		() => {
 			create_directory_stack();
-		}
-	);
-
-	// watch for new song-files
-	watch(
-		() => props.song_files,
-		() => {
-			song_search_map = create_search_map(props.song_files);
-
-			search_song();
 		}
 	);
 
@@ -114,71 +99,6 @@
 				}
 			}
 		}
-	}
-
-	type SearchMapFile = SongFile & {
-		search_data?: { name: string };
-	};
-	let song_search_map: SearchMapFile[] = [];
-	function create_search_map(files: SongFile[]): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			return_map.push({
-				...f,
-				search_data: {
-					name: f.name.toLowerCase()
-				}
-			});
-
-			if (f.children !== undefined) {
-				return_map.push(...create_search_map(f.children));
-			}
-		});
-
-		return return_map;
-	}
-
-	// process song-file-search-queries
-	function search_song() {
-		song_file_tree.value = search_string(song_search_map, song_search_strings.value);
-	}
-
-	// create search-trees
-	function search_string(
-		files: SearchMapFile[],
-		search_inputs: SearchInputDefinitions<"name">
-	): SongFile[] {
-		const return_files: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			if (
-				search_inputs.every((search_string) => {
-					if (f.search_data !== undefined) {
-						if (f.search_data[search_string.id] !== undefined) {
-							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
-						} else {
-							return search_string.value === "";
-						}
-					} else {
-						return true;
-					}
-				})
-			) {
-				return_files.push(f);
-			} else if (f.children !== undefined) {
-				const children = search_string(f.children, search_inputs);
-
-				if (children.length > 0) {
-					return_files.push({
-						...f,
-						children: search_string(f.children, search_inputs)
-					});
-				}
-			}
-		});
-
-		return return_files;
 	}
 
 	function clamp_lang_count() {
@@ -528,23 +448,14 @@
 		</MediaDialogue>
 	</PopUp>
 	<PopUp title="Save Song" v-model:active="show_save_file_dialogue" :maximize="true">
-		<FileDialogue
-			class="file_dialogue"
-			name="Save Path"
-			:files="song_file_tree"
-			:select_dirs="true"
-			v-model:selection="song_selection"
-			v-model:search_strings="song_search_strings"
-			@search="search_song"
-			@refresh_files="get_song_files"
-		>
+		<SongDialogue :files="song_files" :select_dirs="true" :hide_header="true" @choose="save_song()">
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />
 				<MenuButton id="select_song_button" :disabled="song_file_name === ''" @click="save_song()">
 					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Song
 				</MenuButton>
 			</template>
-		</FileDialogue>
+		</SongDialogue>
 	</PopUp>
 	<PopUp title="Save Changes" v-model:active="show_save_confirm">
 		<MenuButton

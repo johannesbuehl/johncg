@@ -71,7 +71,7 @@
 
 		border-radius: 0.25rem;
 
-		background-color: var(--color-container);
+		background-color: var(--color-page-background);
 
 		display: flex;
 		flex-direction: column;
