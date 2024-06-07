@@ -7,7 +7,8 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 
 	import type { MediaFile } from "@server/search_part";
@@ -17,6 +18,7 @@
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
 		files: MediaFile[];
+		thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
@@ -32,32 +34,6 @@
 	const font_color = ref<string>("#FFFFFF");
 
 	const media_selection = defineModel<MediaFile>({});
-
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
-
-	const file_tree = defineModel<MediaFile[]>("file_tree");
-
-	onMounted(() => {
-		// init
-		refresh_search_index();
-
-		init_files();
-	});
-
-	watch(
-		() => props.files,
-		() => {
-			init_files();
-		}
-	);
-
-	function init_files() {
-		search_map = create_search_map();
-
-		search_media();
-	}
 
 	function add_countdown() {
 		const return_props = create_props();
@@ -92,93 +68,10 @@
 			};
 		}
 	}
-
-	function search_media() {
-		file_tree.value = search_string();
-	}
-
-	type SearchMapFile = MediaFile & { search_data?: { name: string } };
-	let search_map: SearchMapFile[] = [];
-	function create_search_map(files: MediaFile[] | undefined = props.files): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					}
-				});
-
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
-				}
-			});
-		}
-
-		return return_map;
-	}
-
-	function search_string(files: SearchMapFile[] | undefined = search_map): MediaFile[] {
-		// if there are no search-strings, return the default files
-		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
-		}
-
-		const return_files: MediaFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (
-					search_strings.value.every((search_string) => {
-						if (f.search_data !== undefined) {
-							if (f.search_data[search_string.id] !== undefined) {
-								f.hidden = !f.search_data[search_string.id]?.includes(
-									search_string.value.toLowerCase()
-								);
-							} else {
-								f.hidden = search_string.value !== "";
-							}
-						} else {
-							f.hidden = false;
-						}
-
-						return f.hidden !== true;
-					})
-				) {
-					return_files.push(f);
-				} else if (f.children !== undefined) {
-					const children = search_string(f.children);
-
-					if (children.length > 0) {
-						return_files.push({
-							...f,
-							children: search_string(f.children)
-						});
-					}
-				}
-			});
-		}
-
-		return return_files;
-	}
-
-	function refresh_search_index() {
-		emit("refresh");
-	}
 </script>
 
 <template>
-	<FileDialogue
-		:files="file_tree"
-		name="Media"
-		v-model:selection="media_selection"
-		v-model:search_strings="search_strings"
-		@choose="add_countdown"
-		@search="search_media"
-		@refresh_files="refresh_search_index"
-	>
+	<MediaDialogue :files="files" :thumbnails="thumbnails" @choose="add_countdown">
 		<template v-slot:buttons>
 			<MenuButton @click="add_countdown">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown
@@ -194,7 +87,7 @@
 				v-model:font_color="font_color"
 			/>
 		</template>
-	</FileDialogue>
+	</MediaDialogue>
 </template>
 
 <style scoped>

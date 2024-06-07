@@ -3,6 +3,7 @@ import { reactive, ref } from "vue";
 import { ControlWindowState } from "./Enums";
 
 import { LogLevel } from "@server/JGCPSendMessages";
+import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 export interface LogMessage {
 	message: string;
@@ -51,10 +52,27 @@ class Log {
 	}
 }
 
+export class WSWrapper {
+	private _ws: WebSocket;
+	get ws(): WebSocket {
+		return this._ws;
+	}
+
+	constructor(hostname: string, port: number) {
+		const ws_url: string = `ws://${hostname}:${port}`;
+
+		this._ws = new WebSocket(ws_url, "JGCP");
+	}
+
+	send(message: JGCPRecv.Message) {
+		this._ws.send(JSON.stringify(message));
+	}
+}
+
 class Global {
 	// WebSocket
-	_ws: WebSocket | undefined;
-	get ws(): WebSocket | undefined {
+	_ws: WSWrapper | undefined;
+	get ws(): WSWrapper | undefined {
 		return this._ws;
 	}
 

@@ -11,9 +11,9 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import type { SearchInputDefinitions } from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 
 	import type { FileBase, ItemFile, PsalmFile } from "@server/search_part";
@@ -154,7 +154,7 @@
 			type: "psalm"
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function add_slide() {
@@ -223,7 +223,7 @@
 			data: create_psalm_data()
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 
 		return true;
 	}

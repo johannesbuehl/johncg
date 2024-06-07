@@ -31,7 +31,7 @@
 			props: item_props.value
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	});
 </script>
 

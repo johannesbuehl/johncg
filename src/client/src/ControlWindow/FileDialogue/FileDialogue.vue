@@ -75,6 +75,7 @@
 		select_dirs?: boolean;
 		files?: JGCPSend.ItemFiles<keyof ItemFileType>["files"];
 		thumbnails?: Record<string, string>;
+		hide_header?: boolean;
 		clone_callback?: (arg: JGCPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
 		new_button?: boolean;
 		search_disabled?: boolean;
@@ -84,7 +85,6 @@
 		new_file: [];
 		choose: [file: ItemFileMapped<T> | undefined];
 		refresh_files: [];
-		search: [];
 	}>();
 
 	const slots = useSlots();
@@ -155,7 +155,9 @@
 <template>
 	<div id="element_wrapper">
 		<div id="file_dialogue_wrapper">
-			<div class="header">{{ name }}</div>
+			<div class="header" v-if="!hide_header">
+				{{ name }}
+			</div>
 			<div class="content">
 				<div id="search_wrapper" v-if="!search_disabled">
 					<MenuButton v-if="new_button" :square="true" @click="emit('new_file')">
@@ -172,7 +174,6 @@
 								:ref="create_first_input_ref($el, index)"
 								:placeholder="placeholder"
 								:size="size ?? undefined"
-								@input="emit('search')"
 							/>
 							<span class="button_clear_search" @click="search_strings[index].value = ''">
 								<FontAwesomeIcon :icon="['fas', 'xmark']" />

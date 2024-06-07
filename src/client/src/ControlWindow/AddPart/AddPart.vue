@@ -63,7 +63,7 @@
 			set_active: true
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
@@ -80,7 +80,7 @@
 			};
 		}
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 </script>
 
@@ -139,6 +139,7 @@
 			<AddCountdown
 				v-else-if="pick === 'countdown'"
 				:files="files.media"
+				:thumbnails="media_thumbnails"
 				@add="add_item"
 				@refresh="get_files('media')"
 			/>

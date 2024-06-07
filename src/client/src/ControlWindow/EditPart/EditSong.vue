@@ -59,7 +59,7 @@
 			file: file
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function update() {
@@ -72,7 +72,7 @@
 				props: return_props
 			};
 
-			Globals.ws?.send(JSON.stringify(message));
+			Globals.ws?.send(message);
 		}
 	}
 

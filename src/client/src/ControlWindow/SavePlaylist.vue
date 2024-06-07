@@ -4,9 +4,7 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import FileDialogue, {
-		type SearchInputDefinitions
-	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
+	import FileDialogue, { type SearchInputDefinitions } from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import Globals from "@/Globals";
 
@@ -38,7 +36,7 @@
 			type: "playlist"
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	const overwrite_dialog = ref<boolean>(false);
@@ -89,7 +87,7 @@
 			playlist: save_path
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 
 		Globals.ControlWindowState = ControlWindowState.Slides;
 	}

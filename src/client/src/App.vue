@@ -17,12 +17,12 @@
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
-	import Globals from "./Globals";
+	import Globals, { WSWrapper } from "./Globals";
 
 	const Config = {
 		client_server: {
 			websocket: {
-				port: "8765"
+				port: 8765
 			}
 		}
 	};
@@ -87,7 +87,7 @@
 			client_id
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function init() {
@@ -113,11 +113,9 @@
 	function ws_connect() {
 		const url = new URL(document.URL);
 
-		const ws_url: string = `ws://${url.hostname}:${Config.client_server.websocket.port}`;
+		Globals._ws = new WSWrapper(url.hostname, Config.client_server.websocket.port);
 
-		Globals._ws = new WebSocket(ws_url, "JGCP");
-
-		Globals.ws?.addEventListener("open", () => {
+		Globals.ws?.ws.addEventListener("open", () => {
 			// reset the window-state
 			Globals.ControlWindowState === ControlWindowState.Slides;
 
@@ -126,7 +124,7 @@
 			Globals.message.log("Connected to JohnCG");
 		});
 
-		Globals.ws?.addEventListener("message", (event: MessageEvent) => {
+		Globals.ws?.ws.addEventListener("message", (event: MessageEvent) => {
 			let data: JGCPSend.Message;
 
 			try {
@@ -157,17 +155,17 @@
 			command_parser_map[data.command](data as never);
 		});
 
-		Globals.ws?.addEventListener("ping", () => {});
+		Globals.ws?.ws.addEventListener("ping", () => {});
 
-		Globals.ws?.addEventListener("error", (event: Event) => {
+		Globals.ws?.ws.addEventListener("error", (event: Event) => {
 			Globals.message.error(
 				`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`
 			);
 
-			Globals.ws?.close();
+			Globals.ws?.ws.close();
 		});
 
-		Globals.ws?.addEventListener("close", () => {
+		Globals.ws?.ws.addEventListener("close", () => {
 			Globals.message.log("No connection to server. Retrying in 1s");
 
 			// delete the playlist and slides
@@ -201,7 +199,7 @@
 					item: selected_item.value
 				};
 
-				Globals.ws?.send(JSON.stringify(message));
+				Globals.ws?.send(message);
 			}
 		}
 	}
@@ -249,7 +247,7 @@
 			client_id: client_id
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function parse_item_files(data: JGCPSend.ItemFiles<keyof ItemFileType>) {

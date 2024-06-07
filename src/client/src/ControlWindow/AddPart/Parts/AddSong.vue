@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import SongPartSelector from "@/ControlWindow/ItemDialogue/SongPartSelector.vue";
 
 	import type { SongFile } from "@server/search_part";

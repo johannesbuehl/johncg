@@ -34,7 +34,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - save_song(): check, wether "chords" is valid
 - launch casparcg automatically
 - reload psalm and song after file-edit
-- make media- and song-dialogue components with searching etc
+- make song-dialogue components with searching etc
 - FileDialogue Thumbnails: make like songbeamer for easy switching
 - Add Countdown: show thumbnails
 - FileDialogue: Create directories
+- Fix style of AddPart-Draggable-Drag-n-drop Placeholder
+- Fix FileDialogue-Searching after removal of @search

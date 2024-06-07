@@ -45,7 +45,7 @@
 			position: props.index
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	defineExpose({

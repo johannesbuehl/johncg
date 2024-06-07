@@ -18,16 +18,17 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import Draggable from "vuedraggable";
 
-	import type { SearchInputDefinitions } from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import { get_song_part_color } from "../../ItemDialogue/SongPartSelector.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import FileDialogue from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
+	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
+	import Globals from "@/Globals";
 
 	import type { MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
-	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
@@ -55,12 +56,8 @@
 	});
 
 	const show_media_selector = ref<boolean>(false);
-	const media_file_tree = ref<MediaFile[]>();
 	const media_selection = ref<MediaFile>();
 	const background_media = ref<MediaFile>();
-	const media_search_strings = ref<SearchInputDefinitions<"name">>([
-		{ id: "name", placeholder: "Name", value: "" }
-	]);
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const song_file_tree = ref<SongFile[]>();
@@ -74,11 +71,7 @@
 	watch(
 		() => props.media_files,
 		() => {
-			media_search_map = create_search_map(props.media_files);
-
-			search_media();
 			create_directory_stack();
-			get_media_thumbnails();
 		}
 	);
 
@@ -123,31 +116,27 @@
 		}
 	}
 
-	type SearchMapFile<K extends MediaFile | SongFile> = K & {
-		children?: SearchMapFile<K>[];
+	type SearchMapFile = SongFile & {
 		search_data?: { name: string };
 	};
-	let media_search_map: SearchMapFile<MediaFile>[] = [];
-	let song_search_map: SearchMapFile<SongFile>[] = [];
-	function create_search_map<K extends MediaFile | SongFile>(files: K[]): SearchMapFile<K>[] {
-		const return_map: SearchMapFile<K>[] = [];
+	let song_search_map: SearchMapFile[] = [];
+	function create_search_map(files: SongFile[]): SearchMapFile[] {
+		const return_map: SearchMapFile[] = [];
 
 		files.forEach((f) => {
 			return_map.push({
 				...f,
 				search_data: {
 					name: f.name.toLowerCase()
-				},
-				children: f.children !== undefined ? create_search_map(f.children as K[]) : undefined
-			} as SearchMapFile<K>);
+				}
+			});
+
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			}
 		});
 
 		return return_map;
-	}
-
-	// process media-file-search-queries
-	function search_media() {
-		media_file_tree.value = search_string(media_search_map, media_search_strings.value);
 	}
 
 	// process song-file-search-queries
@@ -156,11 +145,11 @@
 	}
 
 	// create search-trees
-	function search_string<K extends MediaFile | SongFile>(
-		files: SearchMapFile<K>[],
+	function search_string(
+		files: SearchMapFile[],
 		search_inputs: SearchInputDefinitions<"name">
-	): K[] {
-		const return_files: K[] = [];
+	): SongFile[] {
+		const return_files: SearchMapFile[] = [];
 
 		files.forEach((f) => {
 			if (
@@ -242,13 +231,13 @@
 		}
 	}
 
-	function get_files(type: "media" | "song") {
+	function get_song_files() {
 		const message: JGCPRecv.GetItemFiles = {
 			command: "get_item_files",
-			type: type
+			type: "song"
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function select_media(selection: MediaFile) {
@@ -256,24 +245,7 @@
 			background_media.value = selection;
 			media_selection.value = selection;
 			show_media_selector.value = false;
-		} else {
-			get_media_thumbnails(selection?.children);
 		}
-	}
-
-	function get_media_thumbnails(files?: MediaFile[]) {
-		files = (
-			directory_stack.value[directory_stack.value.length - 1]?.children ??
-			files ??
-			props.media_files
-		).filter((ff) => ff.children === undefined);
-
-		const message: JGCPRecv.GetMediaThumbnails = {
-			command: "get_media_thumbnails",
-			files
-		};
-
-		Globals.ws?.send(JSON.stringify(message));
 	}
 
 	const overwrite_dialog = ref<boolean>(false);
@@ -331,7 +303,7 @@
 			data: create_song_data()
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 
 		Globals.ControlWindowStateConfirm = undefined;
 
@@ -541,24 +513,19 @@
 		</div>
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
-		<FileDialogue
-			class="file_dialogue"
-			name="Background Media"
-			:files="media_file_tree"
+		<MediaDialogue
+			:files="media_files"
 			:thumbnails="thumbnails"
-			v-model:selection="media_selection"
-			v-model:search_strings="media_search_strings"
-			v-model:directory_stack="directory_stack"
+			:hide_header="true"
+			:directory_stack="directory_stack"
 			@choose="(ff) => select_media(ff as MediaFile)"
-			@search="search_media"
-			@refresh_files="get_files('media')"
 		>
 			<template v-slot:buttons>
 				<MenuButton class="file_dialogue_button" @click="select_media">
 					<FontAwesomeIcon :icon="['fas', 'plus']" />Select Media
 				</MenuButton>
 			</template>
-		</FileDialogue>
+		</MediaDialogue>
 	</PopUp>
 	<PopUp title="Save Song" v-model:active="show_save_file_dialogue" :maximize="true">
 		<FileDialogue
@@ -569,7 +536,7 @@
 			v-model:selection="song_selection"
 			v-model:search_strings="song_search_strings"
 			@search="search_song"
-			@refresh_files="get_files('song')"
+			@refresh_files="get_song_files"
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />

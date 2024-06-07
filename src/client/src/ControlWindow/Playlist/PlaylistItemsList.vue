@@ -55,7 +55,7 @@
 					set_active: true
 				};
 
-				Globals.ws?.send(JSON.stringify(message));
+				Globals.ws?.send(message);
 			}
 		});
 
@@ -114,7 +114,7 @@
 				index: context_menu_picket_item.value.index
 			};
 
-			Globals.ws?.send(JSON.stringify(message));
+			Globals.ws?.send(message);
 		}
 	}
 </script>

@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
 	import type { PDFFile } from "@server/search_part";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";

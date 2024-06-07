@@ -87,7 +87,7 @@
 			client_id: props.client_id
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	// send visibility changes over the websocket
@@ -98,7 +98,7 @@
 			client_id: props.client_id
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function dragged(from: number, to: number) {
@@ -109,7 +109,7 @@
 			client_id: props.client_id
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	function edit_item(index: number) {

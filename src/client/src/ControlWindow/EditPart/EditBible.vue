@@ -43,7 +43,7 @@
 			command: "get_bible"
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	});
 
 	onUnmounted(() => {
@@ -77,7 +77,7 @@
 				}
 			};
 
-			Globals.ws?.send(JSON.stringify(message));
+			Globals.ws?.send(message);
 		}
 	}
 </script>

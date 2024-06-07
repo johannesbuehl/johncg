@@ -46,7 +46,7 @@
 			command: "new_playlist"
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 
 	// reference for the file-input
@@ -66,7 +66,7 @@
 					playlist: e.target?.result as string
 				};
 
-				Globals.ws?.send(JSON.stringify(message));
+				Globals.ws?.send(message);
 			});
 
 			reader.readAsText(input_event.files[0]);
@@ -80,7 +80,7 @@
 			type
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 
 		pdf_popup.value = false;
 	}
@@ -95,7 +95,7 @@
 				caption: playlist_caption.value
 			};
 
-			Globals.ws?.send(JSON.stringify(message));
+			Globals.ws?.send(message);
 		}, 1000);
 	}
 
@@ -106,7 +106,7 @@
 				playlist: props.playlist_path
 			};
 
-			Globals.ws?.send(JSON.stringify(message));
+			Globals.ws?.send(message);
 		}
 	}
 </script>

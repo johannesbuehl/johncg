@@ -7,7 +7,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
 		type SearchInputDefinitions
-	} from "@/ControlWindow/ItemDialogue/FileDialogue/FileDialogue.vue";
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";

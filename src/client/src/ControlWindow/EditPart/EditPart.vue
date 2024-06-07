@@ -49,7 +49,7 @@
 			file: item_props.value.file
 		};
 
-		Globals.ws?.send(JSON.stringify(message));
+		Globals.ws?.send(message);
 	}
 </script>
 
