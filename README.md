@@ -37,6 +37,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - FileDialogue: Create directories
 - FileDialogue Thumbnails: make like songbeamer for easy switching
 - Fix style of AddPart-Draggable-Drag-n-drop Placeholder
-- SongEditor & PsalmEditor: create directory-stack for song- / psalm-file
 - check all stopropagation / preventdefault if really needed after bug fix in global evenlistener
 - only fetch new files / bible / etc. when entering "AddPart" by checking wether it is already there and if not fetching it. Selectiong "AddPart" deletes the cache

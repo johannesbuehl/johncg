@@ -58,7 +58,7 @@
 		:song_files="song_files"
 		:media_files="media_files"
 		:thumbnails="thumbnails"
-		:song_file_name="song_file?.path.replace(/\.sng$/, '')"
+		:song_file="song_file"
 		v-model:metadata="metadata"
 		v-model:text_parts="text_parts"
 	/>

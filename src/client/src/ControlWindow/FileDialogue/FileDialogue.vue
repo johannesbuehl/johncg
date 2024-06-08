@@ -47,6 +47,31 @@
 				}
 			});
 	}
+
+	export function create_directory_stack<T extends keyof ItemFileType>(
+		item_files: ItemFileMapped<T>[],
+		path_stack: string[]
+	) {
+		const directory_stack: ItemFileMapped<T>[] = [];
+
+		while (path_stack.length > 0) {
+			const files = (directory_stack[directory_stack.length - 1]?.children ?? item_files).filter(
+				(ff) => {
+					return ff.children !== undefined && ff.name.toLowerCase() === path_stack[0].toLowerCase();
+				}
+			);
+
+			if (files.length === 1 && files[0].children !== undefined) {
+				directory_stack.push(files[0] as ItemFileMapped<T>);
+
+				path_stack.shift();
+			} else {
+				break;
+			}
+		}
+
+		return directory_stack;
+	}
 </script>
 
 <script setup lang="ts" generic="T extends keyof ItemFileType">

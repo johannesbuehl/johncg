@@ -24,6 +24,7 @@
 	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 	import Globals from "@/Globals";
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
+	import { create_directory_stack } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
 	import type { MediaFile, SongFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
@@ -59,45 +60,48 @@
 	const background_media = ref<MediaFile>();
 
 	const show_save_file_dialogue = ref<boolean>(false);
-	const song_selection = ref<SongFile>();
-	const song_file_name = defineModel<string>("song_file_name", { default: "" });
+	const song_file_name = ref<string>("");
+	const song_selection = defineModel<SongFile>("song_file", { default: undefined });
 
-	// watch for new media-files
 	watch(
-		() => props.media_files,
+		() => song_selection.value,
 		() => {
-			create_directory_stack();
+			if (song_selection.value !== undefined && song_selection.value.children === undefined) {
+				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
+			}
 		}
 	);
 
-	const directory_stack = ref<MediaFile[]>([]);
+	const media_directory_stack = ref<MediaFile[]>([]);
 	watch(
-		() => metadata.value.BackgroundImage,
+		() => [metadata.value.BackgroundImage, props.media_files],
 		() => {
-			create_directory_stack();
+			create_media_directory_stack();
 		},
 		{ immediate: true }
 	);
 
-	function create_directory_stack() {
+	const song_directory_stack = ref<SongFile[]>([]);
+	watch(
+		() => [song_selection.value, props.song_files],
+		() => {
+			create_song_directory_stack();
+		},
+		{ immediate: true }
+	);
+
+	function create_media_directory_stack() {
 		if (metadata.value.BackgroundImage !== undefined) {
-			const dir_stack = metadata.value.BackgroundImage.toLowerCase().split(/[\\/]/g);
+			const dir_stack = metadata.value.BackgroundImage.split(/[\\/]/g);
+			media_directory_stack.value = create_directory_stack(props.media_files, dir_stack);
+		}
+	}
 
-			while (dir_stack.length > 0) {
-				const files = (
-					directory_stack.value?.[directory_stack.value.length - 1]?.children ?? props.media_files
-				).filter((ff) => {
-					return ff.children !== undefined && ff.name.toLowerCase() === dir_stack[0];
-				});
+	function create_song_directory_stack() {
+		if (song_selection.value !== undefined) {
+			const dir_stack = song_selection.value.path.split(/[\\/]/g);
 
-				if (files.length === 1 && files[0].children !== undefined) {
-					directory_stack.value.push(files[0]);
-
-					dir_stack.shift();
-				} else {
-					break;
-				}
-			}
+			song_directory_stack.value = create_directory_stack(props.song_files, dir_stack);
 		}
 	}
 
@@ -149,15 +153,6 @@
 				}
 			}
 		}
-	}
-
-	function get_song_files() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "song"
-		};
-
-		Globals.ws?.send(message);
 	}
 
 	function select_media(selection: MediaFile) {
@@ -437,7 +432,7 @@
 			:files="media_files"
 			:thumbnails="thumbnails"
 			:hide_header="true"
-			:directory_stack="directory_stack"
+			v-model:directory_stack="media_directory_stack"
 			@choose="(ff) => select_media(ff as MediaFile)"
 		>
 			<template v-slot:buttons>
@@ -452,6 +447,7 @@
 			:files="song_files"
 			:select_dirs="true"
 			:hide_header="true"
+			v-model:directory_stack="song_directory_stack"
 			v-model:selection="song_selection"
 		>
 			<template v-slot:buttons>

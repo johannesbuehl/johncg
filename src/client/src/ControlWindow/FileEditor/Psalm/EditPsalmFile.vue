@@ -60,7 +60,7 @@
 <template>
 	<PsalmEditor
 		:psalm_files="psalm_files"
-		:psalm_file_name="psalm_file?.path.replace(/\.psm$/, '')"
+		:psalm_file="psalm_file"
 		v-model:metadata="metadata"
 		v-model:psalm_text="psalm_text"
 	/>

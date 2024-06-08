@@ -13,10 +13,12 @@
 
 	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import FileDialogue from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import FileDialogue, {
+		create_directory_stack
+	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
 
-	import type { FileBase, ItemFile, PsalmFile } from "@server/search_part";
+	import type { PsalmFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 	import Globals from "@/Globals";
@@ -31,17 +33,26 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const psalm_file_tree = ref<PsalmFile[]>();
-	const psalm_selection = ref<PsalmFile>();
+	const file_selection = defineModel<PsalmFile>("psalm_file");
 	const psalm_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
-	const psalm_file_name = defineModel<string>("psalm_file_name", { default: "" });
+	const psalm_file_name = ref<string>("");
 	const metadata = defineModel<PsalmData["metadata"]>("metadata", {
 		default: () => reactive({ caption: "", id: "", book: "", indent: true })
 	});
 	const psalm_text = defineModel<PsalmTextBlock[][]>("psalm_text", {
 		default: () => reactive([[{ text: "", indent: false }]])
 	});
+
+	watch(
+		() => file_selection,
+		() => {
+			if (file_selection.value !== undefined && file_selection.value.children === undefined) {
+				psalm_file_name.value = file_selection.value.name.replace(/\.psm$/, "");
+			}
+		}
+	);
 
 	// watch for new psalm-files
 	watch(
@@ -51,6 +62,19 @@
 
 			search_psalm();
 		}
+	);
+
+	const directory_stack = ref<PsalmFile[]>([]);
+	watch(
+		() => [file_selection.value, props.psalm_files],
+		() => {
+			if (file_selection.value !== undefined) {
+				const dir_stack = file_selection.value.path.split(/[\\/]/g);
+
+				directory_stack.value = create_directory_stack(props.psalm_files, dir_stack);
+			}
+		},
+		{ immediate: true }
 	);
 
 	type SearchMapFile = PsalmFile & {
@@ -179,17 +203,17 @@
 
 		// if no file is selected, save at the root dir
 		let save_path: string;
-		if (psalm_selection.value === undefined) {
+		if (file_selection.value === undefined) {
 			save_path = psalm_file_name.value + ".psm";
 		} else {
 			// if the selection is a file, replace the file-name with the file-name
-			if (psalm_selection.value.children === undefined) {
+			if (file_selection.value.children === undefined) {
 				save_path =
-					psalm_selection.value.path.slice(0, psalm_selection.value.path.lastIndexOf("/") + 1) +
+					file_selection.value.path.slice(0, file_selection.value.path.lastIndexOf("/") + 1) +
 					psalm_file_name.value +
 					".psm";
 			} else {
-				save_path = psalm_selection.value.path + "/" + psalm_file_name.value + ".psm";
+				save_path = file_selection.value.path + "/" + psalm_file_name.value + ".psm";
 			}
 
 			// if the save file exists already, ask wether it should be overwritten
@@ -358,8 +382,9 @@
 			name="Save Path"
 			:files="psalm_file_tree"
 			:select_dirs="true"
-			v-model:selection="psalm_selection"
+			v-model:selection="file_selection"
 			v-model:search_strings="psalm_search_strings"
+			v-model:directory_stack="directory_stack"
 			@refresh_files="get_psalm_files()"
 		>
 			<template v-slot:buttons>

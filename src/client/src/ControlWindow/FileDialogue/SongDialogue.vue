@@ -24,6 +24,11 @@
 
 	// currently selected song
 	const selection = defineModel<SongFile>("selection");
+
+	const directory_stack = defineModel<SongFile[]>("directory_stack", {
+		default: () => reactive([])
+	});
+
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
@@ -195,6 +200,7 @@
 		:new_button="new_button"
 		:select_dirs="select_dirs"
 		:hide_header="hide_header"
+		v-model:directory_stack="directory_stack"
 		name="Song"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
