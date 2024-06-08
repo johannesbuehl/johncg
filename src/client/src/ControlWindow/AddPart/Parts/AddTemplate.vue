@@ -26,9 +26,9 @@
 	const selection = defineModel<TemplateFile>("selection", {});
 	const template_data = defineModel<object>("template_data", { default: {} });
 
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
+	const search_strings = ref<SearchInputDefinitions<"name">>([
+		{ id: "name", placeholder: "Name", value: "" }
+	]);
 
 	const file_tree = defineModel<TemplateFile[]>("file_tree");
 
@@ -52,8 +52,12 @@
 		search_template();
 	}
 
-	function add_template(file?: TemplateFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
+	watch(search_strings.value, () => {
+		search_template();
+	});
+
+	function add_template(file?: TemplateFile) {
+		if (file !== undefined && file.children === undefined) {
 			emit("add", create_props(file));
 		}
 	}
@@ -156,11 +160,10 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_template"
-		@search="search_template"
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton @click="add_template(selection, 'file')">
+			<MenuButton @click="add_template(selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Template
 			</MenuButton>
 		</template>

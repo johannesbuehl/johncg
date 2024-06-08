@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { onMounted, onUnmounted, ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
@@ -42,6 +42,43 @@
 	}>();
 
 	const pick = ref<ItemProps["type"]>("song");
+
+	onMounted(() => {
+		window.addEventListener("keydown", key_part_navigation);
+	});
+
+	onUnmounted(() => {
+		window.removeEventListener("keydown", key_part_navigation);
+	});
+
+	function key_part_navigation(event: KeyboardEvent) {
+		// exit on composing
+		if (event.isComposing) {
+			return;
+		}
+
+		let prevent_default = false;
+
+		// execute the navigation-keys only if the slides are visible
+		prevent_default = true;
+
+		if (event.ctrlKey && event.code === "Tab") {
+			let pick_index = part_types.findIndex((part) => part.value === pick.value);
+
+			if (event.shiftKey) {
+				pick_index--;
+			} else {
+				pick_index++;
+			}
+
+			pick.value = part_types[(pick_index + part_types.length) % part_types.length].value;
+
+			if (prevent_default) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
+		}
+	}
 
 	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
 		{ text: "Song", value: "song", icon: "music" },

@@ -20,9 +20,9 @@
 
 	const selection = ref<PlaylistFile>();
 
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
+	const search_strings = ref<SearchInputDefinitions<"name">>([
+		{ id: "name", placeholder: "Name", value: "" }
+	]);
 
 	type SearchMapFile = PlaylistFile & {
 		search_data?: { name: string };
@@ -43,6 +43,10 @@
 		},
 		{ immediate: true, deep: true }
 	);
+
+	watch(search_strings.value, () => {
+		search_file();
+	});
 
 	function refresh_items() {
 		const message: JGCPRecv.GetItemFiles = {
@@ -138,7 +142,6 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="load_playlist"
-		@search="search_file"
 		@refresh_files="refresh_items"
 	>
 		<template v-slot:buttons>

@@ -24,9 +24,9 @@
 
 	const selection = defineModel<PDFFile>({});
 
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
+	const search_strings = ref<SearchInputDefinitions<"name">>([
+		{ id: "name", placeholder: "Name", value: "" }
+	]);
 
 	const file_tree = defineModel<PDFFile[]>("file_tree");
 
@@ -50,8 +50,12 @@
 		search_pdf();
 	}
 
-	function add_pdf(file?: PDFFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
+	watch(search_strings.value, () => {
+		search_pdf();
+	});
+
+	function add_pdf(file?: PDFFile) {
+		if (file !== undefined && file.children === undefined) {
 			emit("add", create_props(file));
 		}
 	}
@@ -149,11 +153,10 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_pdf"
-		@search="search_pdf"
 		@refresh_files="refresh_search_index"
 	>
 		<template v-slot:buttons>
-			<MenuButton @click="add_pdf(selection, 'file')">
+			<MenuButton @click="add_pdf(selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add PDF
 			</MenuButton>
 		</template>

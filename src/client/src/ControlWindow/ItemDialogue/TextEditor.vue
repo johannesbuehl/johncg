@@ -21,10 +21,7 @@
 				class="text_box"
 				v-model="command_active"
 				placeholder="Text"
-				@keydown="
-					$event.stopPropagation();
-					emit('update');
-				"
+				@keydown="emit('update')"
 			/>
 		</div>
 		<slot></slot>

@@ -448,7 +448,12 @@
 		</MediaDialogue>
 	</PopUp>
 	<PopUp title="Save Song" v-model:active="show_save_file_dialogue" :maximize="true">
-		<SongDialogue :files="song_files" :select_dirs="true" :hide_header="true" @choose="save_song()">
+		<SongDialogue
+			:files="song_files"
+			:select_dirs="true"
+			:hide_header="true"
+			v-model:selection="song_selection"
+		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />
 				<MenuButton id="select_song_button" :disabled="song_file_name === ''" @click="save_song()">

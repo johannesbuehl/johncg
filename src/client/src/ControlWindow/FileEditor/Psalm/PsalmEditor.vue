@@ -360,7 +360,6 @@
 			:select_dirs="true"
 			v-model:selection="psalm_selection"
 			v-model:search_strings="psalm_search_strings"
-			@search="search_psalm"
 			@refresh_files="get_psalm_files()"
 		>
 			<template v-slot:buttons>

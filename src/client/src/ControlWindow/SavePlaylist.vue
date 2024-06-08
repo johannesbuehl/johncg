@@ -21,9 +21,6 @@
 
 	const selection = ref<PlaylistFile>();
 
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
 	const file_name = defineModel<string>("file_name", { required: true });
 
 	onMounted(() => {
@@ -105,7 +102,6 @@
 		:files="files"
 		:search_disabled="true"
 		v-model:selection="selection"
-		v-model:search_strings="search_strings"
 		:select_dirs="true"
 		@choose="(playlist) => save_playlist(playlist)"
 		@refresh_files="refresh_items"

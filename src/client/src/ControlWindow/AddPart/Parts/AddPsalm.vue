@@ -52,8 +52,12 @@
 		search_psalm();
 	}
 
-	function add_psalm(file?: PsalmFile, type?: "dir" | "file") {
-		if (file !== undefined && type === "file") {
+	watch(search_strings.value, () => {
+		search_psalm();
+	});
+
+	function add_psalm(file?: PsalmFile) {
+		if (file !== undefined && file.children === undefined) {
 			emit("add", create_props(file));
 		}
 	}
@@ -107,40 +111,38 @@
 
 		const return_files: PsalmFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (f.children !== undefined) {
-					const children = search_string(f.children);
+		files.forEach((f) => {
+			if (f.children !== undefined) {
+				const children = search_string(f.children);
 
-					if (children.length > 0) {
-						return_files.push({
-							...f,
-							children: search_string(f.children)
-						});
-					}
-				} else {
-					if (
-						search_strings.value.every((search_string) => {
-							if (f.search_data !== undefined) {
-								if (f.search_data[search_string.id] !== undefined) {
-									f.hidden = !f.search_data[search_string.id]?.includes(
-										search_string.value.toLowerCase()
-									);
-								} else {
-									f.hidden = search_string.value !== "";
-								}
-							} else {
-								f.hidden = false;
-							}
-
-							return f.hidden;
-						})
-					) {
-						return_files.push(f);
-					}
+				if (children.length > 0) {
+					return_files.push({
+						...f,
+						children: search_string(f.children)
+					});
 				}
-			});
-		}
+			} else {
+				if (
+					search_strings.value.every((search_string) => {
+						if (f.search_data !== undefined && search_string) {
+							if (f.search_data[search_string.id] !== undefined) {
+								f.hidden = !f.search_data[search_string.id]?.includes(
+									search_string.value.toLowerCase()
+								);
+							} else {
+								f.hidden = search_string.value !== "";
+							}
+						} else {
+							f.hidden = false;
+						}
+
+						return f.hidden !== true;
+					})
+				) {
+					return_files.push(f);
+				}
+			}
+		});
 
 		return return_files;
 	}
@@ -159,12 +161,11 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_psalm"
-		@search="search_psalm"
 		@refresh_files="refresh_search_index"
 		@new_file="emit('new_psalm')"
 	>
 		<template v-slot:buttons>
-			<MenuButton @click="add_psalm(selection, 'file')">
+			<MenuButton @click="add_psalm(selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Psalm
 			</MenuButton>
 		</template>

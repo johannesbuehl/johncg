@@ -118,9 +118,7 @@
 				) {
 					return_files.push(f);
 				} else if (f.children !== undefined) {
-					const children = search_string(f.children);
-
-					if (children.length > 0) {
+					if (f.children.length > 0) {
 						return_files.push({
 							...f,
 							children: search_string(f.children)
@@ -143,8 +141,6 @@
 	}
 
 	function get_media_thumbnails(files: MediaFile[] | undefined) {
-		console.debug("get_media_thumbnails");
-
 		files = (files ?? props.files).filter((ff) => ff.children === undefined);
 
 		const message: JGCPRecv.GetMediaThumbnails = {
@@ -173,7 +169,10 @@
 		@refresh_files="refresh_search_index"
 		@choose="
 			(file) => {
-				get_media_thumbnails(file?.children);
+				if (file?.children !== undefined) {
+					get_media_thumbnails(file?.children);
+				}
+
 				$emit('choose', file as MediaFile);
 			}
 		"

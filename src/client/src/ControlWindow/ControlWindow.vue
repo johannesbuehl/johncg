@@ -71,10 +71,10 @@
 					prevent_default = false;
 					break;
 			}
-		}
 
-		if (prevent_default) {
-			stop_event(event);
+			if (prevent_default) {
+				stop_event(event);
+			}
 		}
 	});
 

@@ -25,12 +25,11 @@
 	const loop = ref<boolean>(false);
 
 	function add_media(file: MediaFile | undefined) {
-		if (file && file.children === undefined) {
+		if (file !== undefined && file.children === undefined) {
 			emit("add", create_props(file));
 		}
 	}
 
-	// function create_props(file: ItemFile): MediaProps {
 	function create_props(file: MediaFile): MediaProps {
 		return {
 			type: "media",
@@ -43,7 +42,12 @@
 </script>
 
 <template>
-	<MediaDialogue :files="files" :thumbnails="thumbnails" :create_props_callback="create_props">
+	<MediaDialogue
+		:files="files"
+		:thumbnails="thumbnails"
+		:create_props_callback="create_props"
+		@choose="add_media"
+	>
 		<template v-slot:buttons>
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop

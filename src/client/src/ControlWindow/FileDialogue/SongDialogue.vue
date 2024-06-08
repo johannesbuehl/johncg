@@ -69,6 +69,10 @@
 		search_song();
 	}
 
+	watch(search_strings.value, () => {
+		search_song();
+	});
+
 	function add_song(file?: SongFile) {
 		if (file !== undefined && file?.children === undefined) {
 			emit("add", create_props(file));
@@ -133,6 +137,8 @@
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): SongFile[] {
+		console.debug("searching");
+
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
 			return props.files;
@@ -140,40 +146,34 @@
 
 		const return_files: SongFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (f.children !== undefined) {
-					const children = search_string(f.children);
-
-					if (children.length > 0) {
-						return_files.push({
-							...f,
-							children: search_string(f.children)
-						});
+		files.forEach((f) => {
+			if (
+				search_strings.value.every((search_string) => {
+					if (f.search_data !== undefined) {
+						if (f.search_data[search_string.id] !== undefined) {
+							f.hidden = !f.search_data[search_string.id]?.includes(
+								search_string.value.toLowerCase()
+							);
+						} else {
+							f.hidden = search_string.value !== "";
+						}
+					} else {
+						f.hidden = false;
 					}
-				} else {
-					if (
-						search_strings.value.every((search_string) => {
-							if (f.search_data !== undefined && search_string) {
-								if (f.search_data[search_string.id] !== undefined) {
-									f.hidden = !f.search_data[search_string.id]?.includes(
-										search_string.value.toLowerCase()
-									);
-								} else {
-									f.hidden = search_string.value !== "";
-								}
-							} else {
-								f.hidden = false;
-							}
 
-							return f.hidden !== true;
-						})
-					) {
-						return_files.push(f);
-					}
+					return f.hidden !== true;
+				})
+			) {
+				return_files.push(f);
+			} else if (f.children !== undefined) {
+				if (f.children.length > 0) {
+					return_files.push({
+						...f,
+						children: search_string(f.children)
+					});
 				}
-			});
-		}
+			}
+		});
 
 		return return_files;
 	}
@@ -199,7 +199,6 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_song"
-		@search="search_song"
 		@refresh_files="refresh_search_index"
 		@new_file="emit('new_song')"
 	>

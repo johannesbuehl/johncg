@@ -56,7 +56,7 @@
 		};
 
 		// if the selected parts differ from the default ones, save them in the playlist
-		if (Object.keys(file.data?.text ?? {}).some((val, index) => val !== verse_order.value[index])) {
+		if (file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])) {
 			props.verse_order = verse_order.value;
 		}
 

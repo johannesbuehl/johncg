@@ -89,9 +89,7 @@
 
 	const slots = useSlots();
 
-	const search_strings = defineModel<SearchInputDefinition<unknown>[]>("search_strings", {
-		required: true
-	});
+	const search_strings = defineModel<SearchInputDefinition<unknown>[]>("search_strings");
 
 	const rotate_button = ref<boolean>(false);
 	const directory_stack = defineModel<ItemFileMapped<T>[]>("directory_stack", {
@@ -165,6 +163,7 @@
 					</MenuButton>
 					<div id="search_input_wrapper">
 						<div
+							v-if="search_strings !== undefined"
 							class="search_input_container"
 							v-for="({ placeholder, size }, index) in search_strings"
 						>
@@ -175,7 +174,10 @@
 								:placeholder="placeholder"
 								:size="size ?? undefined"
 							/>
-							<span class="button_clear_search" @click="search_strings[index].value = ''">
+							<span
+								class="button_clear_search"
+								@click="search_strings ? (search_strings[index].value = '') : search_strings"
+							>
 								<FontAwesomeIcon :icon="['fas', 'xmark']" />
 							</span>
 						</div>
