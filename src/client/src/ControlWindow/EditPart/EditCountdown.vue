@@ -31,7 +31,7 @@
 	});
 
 	onUnmounted(() => {
-		const message: JGCPRecv.UpdateItem = {
+		Globals.ws?.send<JGCPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: {
@@ -42,9 +42,7 @@
 				show_seconds: show_seconds.value,
 				time: time.value
 			}
-		};
-
-		Globals.ws?.send(message);
+		});
 	});
 </script>
 

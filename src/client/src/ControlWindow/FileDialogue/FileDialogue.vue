@@ -75,7 +75,7 @@
 </script>
 
 <script setup lang="ts" generic="T extends keyof ItemFileType">
-	import { onMounted, reactive, ref, useSlots, watch, type VNodeRef } from "vue";
+	import { reactive, ref, useSlots, watch, type VNodeRef } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -130,10 +130,6 @@
 			return first_input_ref;
 		}
 	}
-
-	onMounted(() => {
-		emit("refresh_files");
-	});
 
 	watch(
 		() => first_input_ref.value,

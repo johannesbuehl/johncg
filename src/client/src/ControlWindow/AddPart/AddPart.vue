@@ -19,8 +19,6 @@
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	library.add(
 		fas.faMusic,
@@ -36,8 +34,6 @@
 	);
 
 	const props = defineProps<{
-		files?: { [K in keyof ItemFileType]: ItemFileMapped<K>[] };
-		bible?: BibleFile;
 		media_thumbnails: Record<string, string>;
 	}>();
 
@@ -94,30 +90,11 @@
 	];
 
 	function add_item(item_props: ItemProps) {
-		const message: JGCPRecv.AddItem = {
+		Globals.ws?.send<JGCPRecv.AddItem>({
 			command: "add_item",
 			props: item_props,
 			set_active: true
-		};
-
-		Globals.ws?.send(message);
-	}
-
-	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
-		let message: JGCPRecv.Message;
-
-		if (type === "bible") {
-			message = {
-				command: "get_bible"
-			};
-		} else {
-			message = {
-				command: "get_item_files",
-				type
-			};
-		}
-
-		Globals.ws?.send(message);
+		});
 	}
 </script>
 
@@ -132,57 +109,24 @@
 				:text="type.text"
 			/>
 		</div>
-		<template v-if="files !== undefined">
-			<AddSong
-				v-if="pick === 'song'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('song')"
-				@new_song="Globals.ControlWindowState = ControlWindowState.NewSong"
-			/>
-			<AddPsalm
-				v-else-if="pick === 'psalm'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('psalm')"
-				@new_psalm="Globals.ControlWindowState = ControlWindowState.NewPsalm"
-			/>
-			<AddBible
-				v-else-if="pick === 'bible'"
-				:bible="bible"
-				@add="add_item"
-				@refresh="get_files('bible')"
-			/>
-			<AddText v-else-if="pick === 'text'" @add="add_item" />
-			<AddMedia
-				v-else-if="pick === 'media'"
-				:files="files[pick]"
-				:thumbnails="media_thumbnails"
-				@add="add_item"
-				@refresh="get_files('media')"
-			/>
-			<AddTemplate
-				v-else-if="pick === 'template'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('template')"
-			/>
-			<AddPDF
-				v-else-if="pick === 'pdf'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('pdf')"
-			/>
-			<AddCountdown
-				v-else-if="pick === 'countdown'"
-				:files="files.media"
-				:thumbnails="media_thumbnails"
-				@add="add_item"
-				@refresh="get_files('media')"
-			/>
-			<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" @refresh="get_files('media')" />
-			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
-		</template>
+		<AddSong
+			v-if="pick === 'song'"
+			@add="add_item"
+			@new_song="Globals.ControlWindowState = ControlWindowState.NewSong"
+		/>
+		<AddPsalm
+			v-else-if="pick === 'psalm'"
+			@add="add_item"
+			@new_psalm="Globals.ControlWindowState = ControlWindowState.NewPsalm"
+		/>
+		<AddBible v-else-if="pick === 'bible'" @add="add_item" />
+		<AddText v-else-if="pick === 'text'" @add="add_item" />
+		<AddMedia v-else-if="pick === 'media'" :thumbnails="media_thumbnails" @add="add_item" />
+		<AddTemplate v-else-if="pick === 'template'" @add="add_item" />
+		<AddPDF v-else-if="pick === 'pdf'" @add="add_item" />
+		<AddCountdown v-else-if="pick === 'countdown'" :thumbnails="media_thumbnails" @add="add_item" />
+		<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" />
+		<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 	</div>
 </template>
 

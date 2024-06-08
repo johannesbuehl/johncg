@@ -6,12 +6,11 @@
 		get_book_from_id
 	} from "../ItemDialogue/BibleSelector.vue";
 
-	import type { Book, BibleFile, ClientBibleItem } from "@server/PlaylistItems/Bible";
+	import type { Book, ClientBibleItem } from "@server/PlaylistItems/Bible";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		bible?: BibleFile;
 		item_index: number;
 	}>();
 
@@ -29,30 +28,24 @@
 	);
 
 	watch(
-		() => props.bible,
-		(bible) => {
+		() => Globals.get_bible_file(),
+		() => {
 			if (book_selection.value === undefined) {
 				load_props();
 			}
 		},
-		{}
+		{ immediate: true }
 	);
-
-	onMounted(() => {
-		const message: JGCPRecv.GetBible = {
-			command: "get_bible"
-		};
-
-		Globals.ws?.send(message);
-	});
 
 	onUnmounted(() => {
 		update();
 	});
 
 	function load_props() {
-		if (props.bible !== undefined && bible_props.value !== undefined) {
-			book_selection.value = get_book_from_id(props.bible, bible_props.value.book_id);
+		const bible_file = Globals.get_bible_file();
+
+		if (bible_file !== undefined && bible_props.value !== undefined) {
+			book_selection.value = get_book_from_id(bible_file, bible_props.value.book_id);
 
 			chapter_verse_selection.value = Object.fromEntries(
 				Object.entries(bible_props.value.chapters).map(([chapter, verses]) => [
@@ -67,7 +60,7 @@
 
 	function update() {
 		if (book_selection.value !== undefined && bible_props.value !== undefined) {
-			const message: JGCPRecv.UpdateItem = {
+			Globals.ws?.send<JGCPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: {
@@ -75,9 +68,7 @@
 					book_id: book_selection.value.id,
 					chapters: chapter_verse_selection_to_props(chapter_verse_selection.value)
 				}
-			};
-
-			Globals.ws?.send(message);
+			});
 		}
 	}
 </script>
@@ -87,7 +78,6 @@
 		ref="bible_selector"
 		v-model:book_selection="book_selection"
 		v-model:chapter_verse_selection="chapter_verse_selection"
-		:bible="bible"
 	/>
 </template>
 

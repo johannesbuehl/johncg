@@ -14,10 +14,6 @@
 
 	library.add(fas.faFolderOpen);
 
-	const props = defineProps<{
-		files: PlaylistFile[];
-	}>();
-
 	const selection = ref<PlaylistFile>();
 
 	const search_strings = ref<SearchInputDefinitions<"name">>([
@@ -30,14 +26,10 @@
 	let search_map: SearchMapFile[] = [];
 	const file_tree = defineModel<PlaylistFile[]>("file_tree");
 
-	onMounted(() => {
-		refresh_items();
-	});
-
 	watch(
-		() => props.files,
+		() => Globals.get_playlist_files(),
 		() => {
-			search_map = create_search_map();
+			search_map = create_search_map(Globals.get_playlist_files());
 
 			search_file();
 		},
@@ -48,23 +40,12 @@
 		search_file();
 	});
 
-	function refresh_items() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "playlist"
-		};
-
-		Globals.ws?.send(message);
-	}
-
 	function load_playlist(playlist?: PlaylistFile) {
 		if (playlist !== undefined) {
-			const message: JGCPRecv.OpenPlaylist = {
+			Globals.ws?.send<JGCPRecv.OpenPlaylist>({
 				command: "load_playlist",
 				playlist: playlist.path
-			};
-
-			Globals.ws?.send(message);
+			});
 
 			Globals.ControlWindowState = ControlWindowState.Slides;
 		}
@@ -74,23 +55,21 @@
 		file_tree.value = search_string();
 	}
 
-	function create_search_map(files: PlaylistFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: PlaylistFile[]): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					}
-				});
-
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
+		files.forEach((f) => {
+			return_map.push({
+				...f,
+				search_data: {
+					name: f.name.toLowerCase()
 				}
 			});
-		}
+
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			}
+		});
 
 		return return_map;
 	}
@@ -98,7 +77,7 @@
 	function search_string(files: SearchMapFile[] | undefined = search_map): PlaylistFile[] {
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
+			return Globals.get_playlist_files();
 		}
 
 		const return_files: PlaylistFile[] = [];
@@ -142,7 +121,7 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="load_playlist"
-		@refresh_files="refresh_items"
+		@refresh_files="() => Globals.get_playlist_files(true)"
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="load_playlist(selection)">

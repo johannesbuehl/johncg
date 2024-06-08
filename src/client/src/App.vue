@@ -15,7 +15,6 @@
 
 	import * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 	import Globals, { WSWrapper } from "./Globals";
 
@@ -24,6 +23,10 @@
 			websocket: {
 				port: 8765
 			}
+		},
+		timeouts: {
+			item_file_getters: 5000, // 5 seconds
+			item_file_invalidation: 300000 // 5 minutes
 		}
 	};
 
@@ -37,17 +40,8 @@
 	const item_slides = ref<JGCPSend.ItemSlides>();
 	const selected_item = ref<number | null>(null);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
-	const bible_file = ref<BibleFile>();
 	const playlist_caption = ref<string>("");
 
-	const files = ref<{ [key in keyof ItemFileType]: ItemFileMapped<key>[] }>({
-		song: [],
-		media: [],
-		pdf: [],
-		playlist: [],
-		template: [],
-		psalm: []
-	});
 	const item_data = ref<ItemData>({});
 	const thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
 
@@ -81,13 +75,11 @@
 	);
 
 	function request_item_slides(index: number) {
-		const message: JGCPRecv.RequestItemSlides = {
+		Globals.ws?.send<JGCPRecv.RequestItemSlides>({
 			command: "request_item_slides",
 			item: index,
 			client_id
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	function init() {
@@ -194,12 +186,10 @@
 		} else {
 			// request new slides for the selected item
 			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
-				const message: JGCPRecv.RequestItemSlides = {
+				Globals.ws?.send<JGCPRecv.RequestItemSlides>({
 					command: "request_item_slides",
 					item: selected_item.value
-				};
-
-				Globals.ws?.send(message);
+				});
 			}
 		}
 	}
@@ -240,19 +230,17 @@
 	}
 
 	function set_active_slide(item: number, slide: number) {
-		const message: JGCPRecv.SelectItemSlide = {
+		Globals.ws?.send<JGCPRecv.SelectItemSlide>({
 			command: "select_item_slide",
 			item: item,
 			slide,
 			client_id: client_id
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	function parse_item_files(data: JGCPSend.ItemFiles<keyof ItemFileType>) {
-		if (Object.keys(files.value).includes(data.type)) {
-			files.value[data.type] = data.files;
+		if (Object.keys(Globals.item_files.value).includes(data.type)) {
+			Globals.item_files.value[data.type] = data.files;
 		}
 	}
 
@@ -282,7 +270,7 @@
 	}
 
 	function parse_bible(data: JGCPSend.Bible) {
-		bible_file.value = data.bible;
+		Globals.bible_file.value = data.bible;
 	}
 
 	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
@@ -332,8 +320,6 @@
 			:slides="item_slides"
 			:active_item_slide="server_state.active_item_slide"
 			:selected="selected_item"
-			:files="files"
-			:bible_file="bible_file"
 			:playlist_caption="playlist_caption"
 			:item_data="item_data"
 			:media_thumbnails="thumbnails"

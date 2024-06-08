@@ -40,12 +40,10 @@
 	}
 
 	function delete_item() {
-		const message: JGCPRecv.DeleteItem = {
+		Globals.ws?.send<JGCPRecv.DeleteItem>({
 			command: "delete_item",
 			position: props.index
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	defineExpose({

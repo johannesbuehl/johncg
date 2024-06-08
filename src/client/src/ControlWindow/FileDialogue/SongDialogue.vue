@@ -8,10 +8,8 @@
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
-		files: SongFile[];
 		select_dirs?: boolean;
 		new_button?: boolean;
 		hide_header?: boolean;
@@ -40,18 +38,17 @@
 
 	const file_tree = ref<SongFile[]>();
 
-	onMounted(() => {
-		// init
-		refresh_search_index();
-
-		init_files();
-	});
-
+	type SearchMapData = { id?: string; title?: string; text?: string };
+	type SearchMapFile = SongFile & { search_data?: SearchMapData };
+	let search_map: SearchMapFile[] = [];
 	watch(
-		() => props.files,
+		() => Globals.get_song_files(),
 		() => {
-			init_files();
-		}
+			search_map = create_search_map(Globals.get_song_files());
+
+			search_song();
+		},
+		{ immediate: true }
 	);
 
 	watch(
@@ -67,12 +64,6 @@
 			}
 		}
 	);
-
-	function init_files() {
-		search_map = create_search_map();
-
-		search_song();
-	}
 
 	watch(search_strings.value, () => {
 		search_song();
@@ -112,41 +103,34 @@
 		file_tree.value = search_string();
 	}
 
-	type SearchMapData = { id?: string; title?: string; text?: string };
-	type SearchMapFile = SongFile & { search_data?: SearchMapData };
-	let search_map: SearchMapFile[] = [];
-	function create_search_map(files: SongFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: SongFile[]): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
-				} else {
-					return_map.push({
-						...f,
-						search_data: {
-							id: f.data?.metadata.ChurchSongID?.toLowerCase(),
-							title: f.data?.metadata.Title?.join("\n").toLowerCase(),
-							text: Object.values((f as SongFile).data?.text ?? {})
-								.map((p) => p.map((s) => s.map((l) => l.join("\n")).join("\n")).join("\n"))
-								.join("\n")
-								.toLowerCase()
-						}
-					});
-				}
-			});
-		}
+		files.forEach((f) => {
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			} else {
+				return_map.push({
+					...f,
+					search_data: {
+						id: f.data?.metadata.ChurchSongID?.toLowerCase(),
+						title: f.data?.metadata.Title?.join("\n").toLowerCase(),
+						text: Object.values((f as SongFile).data?.text ?? {})
+							.map((p) => p.map((s) => s.map((l) => l.join("\n")).join("\n")).join("\n"))
+							.join("\n")
+							.toLowerCase()
+					}
+				});
+			}
+		});
 
 		return return_map;
 	}
 
 	function search_string(files: SearchMapFile[] | undefined = search_map): SongFile[] {
-		console.debug("searching");
-
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
+			return Globals.get_song_files();
 		}
 
 		const return_files: SongFile[] = [];
@@ -182,15 +166,6 @@
 
 		return return_files;
 	}
-
-	function refresh_search_index() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "song"
-		};
-
-		Globals.ws?.send(message);
-	}
 </script>
 
 <template>
@@ -205,7 +180,7 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_song"
-		@refresh_files="refresh_search_index"
+		@refresh_files="() => Globals.get_song_files(true)"
 		@new_file="emit('new_song')"
 	>
 		<template v-slot:buttons>

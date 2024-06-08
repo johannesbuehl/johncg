@@ -1,17 +1,16 @@
 <script setup lang="ts">
-	import { onMounted, reactive, ref, watch } from "vue";
+	import { reactive, ref, watch } from "vue";
 
 	import FileDialogue, {
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import Globals from "@/Globals";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { MediaFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		files: MediaFile[];
 		thumbnails: Record<string, string>;
 		hide_header?: boolean;
 		create_props_callback?: (file: MediaFile) => MediaProps;
@@ -37,7 +36,7 @@
 	let search_map: SearchMapFile[] = [];
 
 	watch(
-		() => props.files,
+		() => Globals.get_media_files(),
 		() => {
 			init_files();
 		},
@@ -52,11 +51,11 @@
 		// if there are no fitting thumbnails , retriefe them also
 		const thumbnail_files = Object.keys(props.thumbnails);
 		if (
-			!props.files
+			!Globals.get_media_files()
 				.filter((ff) => ff.children === undefined)
 				.every((ff) => thumbnail_files.includes(ff.path))
 		) {
-			get_media_thumbnails(props.files);
+			get_media_thumbnails(Globals.get_media_files());
 		}
 	}
 
@@ -68,7 +67,9 @@
 		file_tree.value = search_string();
 	}
 
-	function create_search_map(files: MediaFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(
+		files: MediaFile[] | undefined = Globals.get_media_files()
+	): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
 		if (files !== undefined) {
@@ -92,7 +93,7 @@
 	function search_string(files: SearchMapFile[] | undefined = search_map): MediaFile[] {
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
+			return Globals.get_media_files();
 		}
 
 		const return_files: MediaFile[] = [];
@@ -131,24 +132,13 @@
 		return return_files;
 	}
 
-	function refresh_search_index() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "media"
-		};
-
-		Globals.ws?.send(message);
-	}
-
 	function get_media_thumbnails(files: MediaFile[] | undefined) {
-		files = (files ?? props.files).filter((ff) => ff.children === undefined);
+		files = (files ?? Globals.get_media_files()).filter((ff) => ff.children === undefined);
 
-		const message: JGCPRecv.GetMediaThumbnails = {
+		Globals.ws?.send<JGCPRecv.GetMediaThumbnails>({
 			command: "get_media_thumbnails",
 			files
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 </script>
 
@@ -166,7 +156,7 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		v-model:directory_stack="directory_stack"
-		@refresh_files="refresh_search_index"
+		@refresh_files="() => Globals.get_media_files(true)"
 		@choose="
 			(file) => {
 				if (file?.children !== undefined) {

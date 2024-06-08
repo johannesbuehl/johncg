@@ -33,12 +33,8 @@
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
 	const props = defineProps<{
-		song_files: SongFile[];
-		media_files: MediaFile[];
 		thumbnails: Record<string, string>;
 	}>();
-
-	const emit = defineEmits<{}>();
 
 	const text_parts = defineModel<SongTextPart[]>("text_parts", {
 		default: () => reactive([{ part: "", text: [["", "", "", ""]] }])
@@ -74,7 +70,7 @@
 
 	const media_directory_stack = ref<MediaFile[]>([]);
 	watch(
-		() => [metadata.value.BackgroundImage, props.media_files],
+		() => [metadata.value.BackgroundImage, Globals.get_media_files()],
 		() => {
 			create_media_directory_stack();
 		},
@@ -83,7 +79,7 @@
 
 	const song_directory_stack = ref<SongFile[]>([]);
 	watch(
-		() => [song_selection.value, props.song_files],
+		() => [song_selection.value, Globals.get_song_files()],
 		() => {
 			create_song_directory_stack();
 		},
@@ -93,7 +89,7 @@
 	function create_media_directory_stack() {
 		if (metadata.value.BackgroundImage !== undefined) {
 			const dir_stack = metadata.value.BackgroundImage.split(/[\\/]/g);
-			media_directory_stack.value = create_directory_stack(props.media_files, dir_stack);
+			media_directory_stack.value = create_directory_stack(Globals.get_media_files(), dir_stack);
 		}
 	}
 
@@ -101,7 +97,7 @@
 		if (song_selection.value !== undefined) {
 			const dir_stack = song_selection.value.path.split(/[\\/]/g);
 
-			song_directory_stack.value = create_directory_stack(props.song_files, dir_stack);
+			song_directory_stack.value = create_directory_stack(Globals.get_song_files(), dir_stack);
 		}
 	}
 
@@ -204,23 +200,24 @@
 				});
 			};
 
-			if (overwrite === false && compare_file(props.song_files, save_path)) {
+			if (overwrite === false && compare_file(Globals.get_song_files(), save_path)) {
 				overwrite_dialog.value = true;
 
 				return false;
 			}
 		}
 
-		const message: JGCPRecv.SaveFile = {
+		Globals.ws?.send<JGCPRecv.SaveFile>({
 			command: "save_file",
 			type: "song",
 			path: save_path,
 			data: create_song_data()
-		};
-
-		Globals.ws?.send(message);
+		});
 
 		Globals.ControlWindowStateConfirm = undefined;
+
+		// reset the psalm item-files
+		Globals.item_files.value.psalm = [];
 
 		return true;
 	}
@@ -429,7 +426,6 @@
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
 		<MediaDialogue
-			:files="media_files"
 			:thumbnails="thumbnails"
 			:hide_header="true"
 			v-model:directory_stack="media_directory_stack"
@@ -444,7 +440,6 @@
 	</PopUp>
 	<PopUp title="Save Song" v-model:active="show_save_file_dialogue" :maximize="true">
 		<SongDialogue
-			:files="song_files"
 			:select_dirs="true"
 			:hide_header="true"
 			v-model:directory_stack="song_directory_stack"

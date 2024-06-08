@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -9,18 +9,15 @@
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
+	import Globals from "@/Globals";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
 	import type { TemplateFile } from "@server/search_part";
 
 	library.add(fas.faPlus);
-	const props = defineProps<{
-		files: TemplateFile[];
-	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: TemplateProps];
-		refresh: [];
 	}>();
 
 	const selection = defineModel<TemplateFile>("selection", {});
@@ -32,25 +29,19 @@
 
 	const file_tree = defineModel<TemplateFile[]>("file_tree");
 
-	onMounted(() => {
-		// init
-		refresh_search_index();
-
-		init_files();
-	});
-
+	type SearchMapFile = TemplateFile & {
+		search_data?: { name: string };
+	};
+	let search_map: SearchMapFile[] = [];
 	watch(
-		() => props.files,
+		() => Globals.get_template_files(),
 		() => {
-			init_files();
-		}
+			search_map = create_search_map(Globals.get_template_files());
+
+			search_template();
+		},
+		{ immediate: true }
 	);
-
-	function init_files() {
-		search_map = create_search_map();
-
-		search_template();
-	}
 
 	watch(search_strings.value, () => {
 		search_template();
@@ -78,27 +69,21 @@
 		file_tree.value = search_string();
 	}
 
-	type SearchMapFile = TemplateFile & {
-		search_data?: { name: string };
-	};
-	let search_map: SearchMapFile[] = [];
-	function create_search_map(files: TemplateFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: TemplateFile[]): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					}
-				});
-
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
+		files.forEach((f) => {
+			return_map.push({
+				...f,
+				search_data: {
+					name: f.name.toLowerCase()
 				}
 			});
-		}
+
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			}
+		});
 
 		return return_map;
 	}
@@ -106,7 +91,7 @@
 	function search_string(files: SearchMapFile[] | undefined = search_map): TemplateFile[] {
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
+			return Globals.get_template_files();
 		}
 
 		const return_files: TemplateFile[] = [];
@@ -146,10 +131,6 @@
 
 		return return_files;
 	}
-
-	function refresh_search_index() {
-		emit("refresh");
-	}
 </script>
 
 <template>
@@ -160,7 +141,7 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_template"
-		@refresh_files="refresh_search_index"
+		@refresh_files="() => Globals.get_template_files(true)"
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_template(selection)">

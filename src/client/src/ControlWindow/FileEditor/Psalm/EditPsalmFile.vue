@@ -8,7 +8,6 @@
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
 	const props = defineProps<{
-		psalm_files: PsalmFile[];
 		psalm_file: PsalmFile;
 	}>();
 
@@ -59,7 +58,6 @@
 
 <template>
 	<PsalmEditor
-		:psalm_files="psalm_files"
 		:psalm_file="psalm_file"
 		v-model:metadata="metadata"
 		v-model:psalm_text="psalm_text"

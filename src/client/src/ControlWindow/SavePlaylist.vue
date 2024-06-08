@@ -4,7 +4,7 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import FileDialogue, { type SearchInputDefinitions } from "./FileDialogue/FileDialogue.vue";
+	import FileDialogue from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import Globals from "@/Globals";
 
@@ -15,26 +15,13 @@
 
 	library.add(fas.faFolderOpen);
 
-	const props = defineProps<{
-		files: PlaylistFile[];
-	}>();
-
 	const selection = ref<PlaylistFile>();
 
 	const file_name = defineModel<string>("file_name", { required: true });
 
 	onMounted(() => {
-		refresh_items();
+		Globals.get_playlist_files();
 	});
-
-	function refresh_items() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "playlist"
-		};
-
-		Globals.ws?.send(message);
-	}
 
 	const overwrite_dialog = ref<boolean>(false);
 	let overwrite_path: string = "";
@@ -70,7 +57,7 @@
 				});
 			};
 
-			if (overwrite === false && compare_file(props.files, save_path)) {
+			if (overwrite === false && compare_file(Globals.get_playlist_files(), save_path)) {
 				overwrite_path = save_path;
 
 				overwrite_dialog.value = true;
@@ -79,12 +66,10 @@
 			}
 		}
 
-		const message: JGCPRecv.SavePlaylist = {
+		Globals.ws?.send<JGCPRecv.SavePlaylist>({
 			command: "save_playlist",
 			playlist: save_path
-		};
-
-		Globals.ws?.send(message);
+		});
 
 		Globals.ControlWindowState = ControlWindowState.Slides;
 	}
@@ -99,12 +84,12 @@
 <template>
 	<FileDialogue
 		name="Playlist Files"
-		:files="files"
+		:files="Globals.get_playlist_files()"
 		:search_disabled="true"
 		v-model:selection="selection"
 		:select_dirs="true"
 		@choose="(playlist) => save_playlist(playlist)"
-		@refresh_files="refresh_items"
+		@refresh_files="() => Globals.get_playlist_files(true)"
 	>
 		<template v-slot:buttons>
 			<input class="file_name_box" v-model="file_name" placeholder="Filename" @input="" />

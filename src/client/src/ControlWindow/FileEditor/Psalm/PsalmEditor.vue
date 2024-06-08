@@ -17,17 +17,13 @@
 		create_directory_stack
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import PopUp from "@/ControlWindow/PopUp.vue";
+	import Globals from "@/Globals";
 
 	import type { PsalmFile } from "@server/search_part";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
-	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faIndent);
-
-	const props = defineProps<{
-		psalm_files: PsalmFile[];
-	}>();
 
 	const emit = defineEmits<{}>();
 
@@ -56,9 +52,9 @@
 
 	// watch for new psalm-files
 	watch(
-		() => props.psalm_files,
+		() => Globals.get_psalm_files(),
 		() => {
-			psalm_search_map = create_search_map(props.psalm_files);
+			psalm_search_map = create_search_map(Globals.get_psalm_files());
 
 			search_psalm();
 		}
@@ -66,12 +62,12 @@
 
 	const directory_stack = ref<PsalmFile[]>([]);
 	watch(
-		() => [file_selection.value, props.psalm_files],
+		() => [file_selection.value, Globals.get_psalm_files()],
 		() => {
 			if (file_selection.value !== undefined) {
 				const dir_stack = file_selection.value.path.split(/[\\/]/g);
 
-				directory_stack.value = create_directory_stack(props.psalm_files, dir_stack);
+				directory_stack.value = create_directory_stack(Globals.get_psalm_files(), dir_stack);
 			}
 		},
 		{ immediate: true }
@@ -172,15 +168,6 @@
 		{ deep: true }
 	);
 
-	function get_psalm_files() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "psalm"
-		};
-
-		Globals.ws?.send(message);
-	}
-
 	function add_slide() {
 		const last_slide = psalm_text.value[psalm_text.value.length - 1];
 
@@ -231,7 +218,7 @@
 				});
 			};
 
-			if (overwrite === false && compare_file(props.psalm_files, save_path)) {
+			if (overwrite === false && compare_file(Globals.get_psalm_files(), save_path)) {
 				overwrite_path = save_path;
 
 				overwrite_dialog.value = true;
@@ -240,14 +227,17 @@
 			}
 		}
 
-		const message: JGCPRecv.SaveFile = {
+		Globals.ws?.send<JGCPRecv.SaveFile>({
 			command: "save_file",
 			path: save_path,
 			type: "psalm",
 			data: create_psalm_data()
-		};
+		});
 
-		Globals.ws?.send(message);
+		Globals.ControlWindowStateConfirm = undefined;
+
+		// reset the psalm item-files
+		Globals.item_files.value.psalm = [];
 
 		return true;
 	}
@@ -385,7 +375,7 @@
 			v-model:selection="file_selection"
 			v-model:search_strings="psalm_search_strings"
 			v-model:directory_stack="directory_stack"
-			@refresh_files="get_psalm_files()"
+			@refresh_files="() => Globals.get_psalm_files(true)"
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="psalm_file_name" placeholder="Filename" @input="" />

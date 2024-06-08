@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, toRaw, watch } from "vue";
+	import { ref, toRaw, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -12,13 +12,9 @@
 	import type { SongProps } from "@server/PlaylistItems/Song";
 
 	library.add(fas.faPlus);
-	const props = defineProps<{
-		files: SongFile[];
-	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: SongProps];
-		refresh: [];
 		new_song: [];
 	}>();
 
@@ -74,7 +70,6 @@
 
 <template>
 	<SongDialogue
-		:files="files"
 		:new_button="true"
 		v-model:selection="selection"
 		@choose="add_song"

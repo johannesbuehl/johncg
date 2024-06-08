@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -12,13 +12,11 @@
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
-		files: MediaFile[];
 		thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: MediaProps];
-		refresh: [];
 	}>();
 
 	const selection = defineModel<MediaFile>({});
@@ -42,12 +40,7 @@
 </script>
 
 <template>
-	<MediaDialogue
-		:files="files"
-		:thumbnails="thumbnails"
-		:create_props_callback="create_props"
-		@choose="add_media"
-	>
+	<MediaDialogue :thumbnails="thumbnails" :create_props_callback="create_props" @choose="add_media">
 		<template v-slot:buttons>
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop

@@ -42,11 +42,9 @@
 	}>();
 
 	function new_playlist() {
-		const message: JGCPRecv.NewPlaylist = {
+		Globals.ws?.send<JGCPRecv.NewPlaylist>({
 			command: "new_playlist"
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	// reference for the file-input
@@ -61,12 +59,10 @@
 			const reader = new FileReader();
 
 			reader.addEventListener("load", (e) => {
-				const message: JGCPRecv.OpenPlaylist = {
+				Globals.ws?.send<JGCPRecv.OpenPlaylist>({
 					command: "load_playlist",
 					playlist: e.target?.result as string
-				};
-
-				Globals.ws?.send(message);
+				});
 			});
 
 			reader.readAsText(input_event.files[0]);
@@ -75,12 +71,10 @@
 
 	const pdf_popup = ref<boolean>(false);
 	function create_playlist_pdf(type: "full" | "small") {
-		const message: JGCPRecv.CreatePlaylistPDF = {
+		Globals.ws?.send<JGCPRecv.CreatePlaylistPDF>({
 			command: "create_playlist_pdf",
 			type
-		};
-
-		Globals.ws?.send(message);
+		});
 
 		pdf_popup.value = false;
 	}
@@ -90,23 +84,19 @@
 		clearTimeout(playlist_caption_timeout);
 
 		playlist_caption_timeout = setTimeout(() => {
-			const message: JGCPRecv.UpdatePlaylistCaption = {
+			Globals.ws?.send<JGCPRecv.UpdatePlaylistCaption>({
 				command: "update_playlist_caption",
 				caption: playlist_caption.value
-			};
-
-			Globals.ws?.send(message);
+			});
 		}, 1000);
 	}
 
 	function save_playlist() {
 		if (props.playlist_path !== undefined) {
-			const message: JGCPRecv.SavePlaylist = {
+			Globals.ws?.send<JGCPRecv.SavePlaylist>({
 				command: "save_playlist",
 				playlist: props.playlist_path
-			};
-
-			Globals.ws?.send(message);
+			});
 		}
 	}
 </script>

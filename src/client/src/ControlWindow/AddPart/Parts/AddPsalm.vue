@@ -8,23 +8,26 @@
 	import FileDialogue, {
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import Globals from "@/Globals";
 
 	import type { PsalmFile } from "@server/search_part";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 
 	library.add(fas.faPlus);
-	const props = defineProps<{
-		files: PsalmFile[];
-	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: PsalmProps];
-		refresh: [];
 		new_psalm: [];
 	}>();
 
 	const selection = ref<PsalmFile>();
 
+	interface SearchMapData {
+		id: string;
+		caption: string;
+	}
+	type SearchMapFile = PsalmFile & { search_data?: SearchMapData };
+	let search_map: SearchMapFile[] = [];
 	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
 		{ id: "id", placeholder: "Psalm ID", value: "", size: 5 },
 		{ id: "caption", placeholder: "Title", value: "" }
@@ -32,25 +35,15 @@
 
 	const file_tree = ref<PsalmFile[]>();
 
-	onMounted(() => {
-		// init
-		refresh_search_index();
-
-		init_files();
-	});
-
 	watch(
-		() => props.files,
+		() => Globals.get_psalm_files(),
 		() => {
-			init_files();
-		}
+			search_map = create_search_map(Globals.get_psalm_files());
+
+			search_psalm();
+		},
+		{ immediate: true }
 	);
-
-	function init_files() {
-		search_map = create_search_map();
-
-		search_psalm();
-	}
 
 	watch(search_strings.value, () => {
 		search_psalm();
@@ -75,30 +68,22 @@
 		file_tree.value = search_string();
 	}
 
-	interface SearchMapData {
-		id: string;
-		caption: string;
-	}
-	type SearchMapFile = PsalmFile & { search_data?: SearchMapData };
-	let search_map: SearchMapFile[] = [];
-	function create_search_map(files: PsalmFile[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: PsalmFile[]): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
-				} else {
-					return_map.push({
-						...f,
-						search_data: {
-							id: f.data?.metadata.id?.toLowerCase() ?? "",
-							caption: f.data?.metadata?.caption?.toLowerCase() ?? ""
-						}
-					});
-				}
-			});
-		}
+		files.forEach((f) => {
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			} else {
+				return_map.push({
+					...f,
+					search_data: {
+						id: f.data?.metadata.id?.toLowerCase() ?? "",
+						caption: f.data?.metadata?.caption?.toLowerCase() ?? ""
+					}
+				});
+			}
+		});
 
 		return return_map;
 	}
@@ -106,7 +91,7 @@
 	function search_string(files: SearchMapFile[] | undefined = search_map): PsalmFile[] {
 		// if there are no search-strings, return the default files
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return props.files;
+			return Globals.get_psalm_files();
 		}
 
 		const return_files: PsalmFile[] = [];
@@ -146,10 +131,6 @@
 
 		return return_files;
 	}
-
-	function refresh_search_index() {
-		emit("refresh");
-	}
 </script>
 
 <template>
@@ -161,7 +142,7 @@
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="add_psalm"
-		@refresh_files="refresh_search_index"
+		@refresh_files="() => Globals.get_psalm_files(true)"
 		@new_file="emit('new_psalm')"
 	>
 		<template v-slot:buttons>

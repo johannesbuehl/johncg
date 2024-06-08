@@ -16,7 +16,6 @@
 	import Globals from "@/Globals";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import type { ItemFileMapped, ItemFileType, SongFile } from "@server/search_part";
 
@@ -25,7 +24,6 @@
 	const props = defineProps<{
 		files?: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
 		item_index: number | null;
-		bible?: BibleFile;
 		item_data: ItemData;
 	}>();
 
@@ -43,13 +41,11 @@
 				return;
 		}
 
-		const message: JGCPRecv.GetItemData = {
+		Globals.ws?.send<JGCPRecv.GetItemData>({
 			command: "get_item_data",
 			type: item_props.value.type,
 			file: item_props.value.file
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 </script>
 
@@ -88,7 +84,6 @@
 			v-else-if="item_props?.type === 'bible'"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
-			:bible="bible"
 			:item_index="item_index"
 		/>
 		<EditText

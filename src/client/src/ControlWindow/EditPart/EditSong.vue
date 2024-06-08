@@ -53,26 +53,22 @@
 	onMounted(() => request_song_data(song_props.value.file));
 
 	function request_song_data(file: string) {
-		const message: JGCPRecv.GetItemData = {
+		Globals.ws?.send<JGCPRecv.GetItemData>({
 			command: "get_item_data",
 			type: "song",
 			file: file
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	function update() {
 		const return_props = create_props();
 
 		if (return_props !== undefined) {
-			const message: JGCPRecv.UpdateItem = {
+			Globals.ws?.send<JGCPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: return_props
-			};
-
-			Globals.ws?.send(message);
+			});
 		}
 	}
 

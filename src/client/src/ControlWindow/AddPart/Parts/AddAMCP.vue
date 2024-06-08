@@ -16,7 +16,6 @@
 
 	const emit = defineEmits<{
 		add: [item_props: AMCPProps];
-		refresh: [];
 	}>();
 
 	function add_comment() {

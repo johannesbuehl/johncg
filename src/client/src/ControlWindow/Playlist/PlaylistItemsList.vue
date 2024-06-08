@@ -48,14 +48,12 @@
 	function on_change(evt: { added: { element: ClientPlaylistItem; newIndex: number } }) {
 		Object.entries(evt).forEach(([type, data]) => {
 			if (type === "added") {
-				const message: JGCPRecv.AddItem = {
+				Globals.ws?.send<JGCPRecv.AddItem>({
 					command: "add_item",
 					props: data.element,
 					index: data.newIndex,
 					set_active: true
-				};
-
-				Globals.ws?.send(message);
+				});
 			}
 		});
 
@@ -108,13 +106,11 @@
 
 	function duplicate_item(item_props: number) {
 		if (context_menu_picket_item.value !== undefined) {
-			const message: JGCPRecv.AddItem = {
+			Globals.ws?.send<JGCPRecv.AddItem>({
 				command: "add_item",
 				props: context_menu_picket_item.value.element,
 				index: context_menu_picket_item.value.index
-			};
-
-			Globals.ws?.send(message);
+			});
 		}
 	}
 </script>

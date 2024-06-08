@@ -19,8 +19,6 @@
 	import type * as JGCPSend from "@server/JGCPSendMessages";
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 
 	const props = defineProps<{
 		client_id: string;
@@ -28,8 +26,6 @@
 		playlist?: JGCPSend.Playlist;
 		slides?: JGCPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
-		files: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
-		bible_file?: BibleFile;
 		selected: number | null;
 		playlist_caption: string;
 		item_data: ItemData;
@@ -80,36 +76,30 @@
 
 	// send navigate-request over teh websocket
 	function navigate(type: JGCPRecv.NavigateType, steps: number) {
-		const message: JGCPRecv.Navigate = {
+		Globals.ws?.send<JGCPRecv.Navigate>({
 			command: "navigate",
 			type,
 			steps,
 			client_id: props.client_id
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	// send visibility changes over the websocket
 	function visibility(state: boolean) {
-		const message: JGCPRecv.SetVisibility = {
+		Globals.ws?.send<JGCPRecv.SetVisibility>({
 			command: "set_visibility",
 			visibility: state,
 			client_id: props.client_id
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	function dragged(from: number, to: number) {
-		const message: JGCPRecv.MovePlaylistItem = {
+		Globals.ws?.send<JGCPRecv.MovePlaylistItem>({
 			command: "move_playlist_item",
 			from,
 			to,
 			client_id: props.client_id
-		};
-
-		Globals.ws?.send(message);
+		});
 	}
 
 	function edit_item(index: number) {
@@ -127,13 +117,9 @@
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<OpenPlaylist
-			v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
-			:files="files.playlist"
-		/>
+		<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
 		<SavePlaylist
 			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
-			:files="files.playlist"
 			:file_name="playlist_caption"
 		/>
 		<PlaylistItemsList
@@ -164,42 +150,30 @@
 		/>
 		<AddPart
 			v-else-if="Globals.ControlWindowState === ControlWindowState.Add"
-			:files="files"
-			:bible="bible_file"
 			:media_thumbnails="media_thumbnails"
 		/>
 		<EditPart
 			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
 			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
 			:item_index="selected"
-			:bible="bible_file"
-			:files="files"
 			:item_data="item_data"
 		/>
 		<SongEditor
 			v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong"
-			:song_files="files.song"
-			:media_files="files.media"
 			:thumbnails="media_thumbnails"
 		/>
-		<PsalmEditor
-			v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm"
-			:psalm_files="files.psalm"
-		/>
+		<PsalmEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm" />
 		<EditSongFile
 			v-else-if="
 				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
 			"
-			:song_files="files.song"
 			:song_file="item_data.song"
-			:media_files="files.media"
 			:thumbnails="media_thumbnails"
 		/>
 		<EditPsalmFile
 			v-else-if="
 				Globals.ControlWindowState === ControlWindowState.EditPsalm && item_data.psalm !== undefined
 			"
-			:psalm_files="files.psalm"
 			:psalm_file="item_data.psalm"
 		/>
 		<MessageView v-else-if="Globals.ControlWindowState === ControlWindowState.Message" />

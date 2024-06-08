@@ -9,28 +9,26 @@
 		chapter_verse_selection_to_props,
 		get_book_from_id
 	} from "@/ControlWindow/ItemDialogue/BibleSelector.vue";
+	import Globals from "@/Globals";
 
 	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
 	import { create_bible_citation_string } from "@server/lib";
 
 	library.add(fas.faPlus);
 
-	const props = defineProps<{
-		bible?: BibleFile;
-	}>();
-
 	const emit = defineEmits<{
 		add: [bible_props: BibleProps];
-		refresh: [];
 	}>();
 
 	const book_selection = defineModel<Book>("book_selection");
 	const chapter_verse_selection = ref<Record<string, boolean[]>>();
 
 	function add_item() {
+		const bible_file = Globals.get_bible_file();
+
 		if (
 			book_selection.value !== undefined &&
-			props.bible !== undefined &&
+			bible_file !== undefined &&
 			chapter_verse_selection.value !== undefined
 		) {
 			const chapters = chapter_verse_selection_to_props(chapter_verse_selection.value);
@@ -38,7 +36,7 @@
 			const bible_props: BibleProps = {
 				type: "bible",
 				caption: create_bible_citation_string(
-					get_book_from_id(props.bible, book_selection.value.id).name,
+					get_book_from_id(bible_file, book_selection.value.id).name,
 					chapters
 				),
 				color: "#0080FF",
@@ -55,8 +53,7 @@
 	<BibleSelector
 		v-model:book_selection="book_selection"
 		v-model:chapter_verse_selection="chapter_verse_selection"
-		:bible="bible"
-		@refresh="emit('refresh')"
+		:bible="Globals.get_bible_file()"
 	>
 		<MenuButton @click="add_item()">
 			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Bible

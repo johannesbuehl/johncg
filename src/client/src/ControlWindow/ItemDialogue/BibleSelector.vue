@@ -34,17 +34,11 @@
 </script>
 
 <script setup lang="ts">
-	import { onMounted, ref, watch, type VNodeRef, type Ref, nextTick, toRaw } from "vue";
+	import { ref, watch, type VNodeRef, type Ref, nextTick } from "vue";
+
+	import Globals from "@/Globals";
 
 	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
-
-	const props = defineProps<{
-		bible?: BibleFile;
-	}>();
-
-	const emit = defineEmits<{
-		refresh: [];
-	}>();
 
 	const chapter_selection = ref<number>(0);
 	const book_selection = defineModel<Book | undefined>("book_selection", { required: true });
@@ -53,12 +47,8 @@
 		{ required: true }
 	);
 
-	onMounted(() => {
-		emit("refresh");
-	});
-
 	watch(
-		() => props.bible,
+		() => Globals.get_bible_file(),
 		(bible) => {
 			if (bible !== undefined) {
 				// if there is no book-selection, select the first one
@@ -197,7 +187,7 @@
 	<div class="add_media_wrapper">
 		<div id="book_parts_viewer">
 			<div class="divisions">
-				<template v-for="[division, book_groups] in Object.entries(bible ?? {})">
+				<template v-for="[division, book_groups] in Object.entries(Globals.get_bible_file() ?? {})">
 					<div class="header">
 						{{ division }}
 					</div>

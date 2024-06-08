@@ -29,13 +29,11 @@
 	}
 
 	onUnmounted(() => {
-		const message: JGCPRecv.UpdateItem = {
+		Globals.ws?.send<JGCPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: item_props.value
-		};
-
-		Globals.ws?.send(message);
+		});
 	});
 </script>
 

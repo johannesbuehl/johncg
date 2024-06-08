@@ -1,15 +1,13 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-	import FileDialogue, {
-		type SearchInputDefinitions
-	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
+	import Globals from "@/Globals";
 
 	import type { MediaFile } from "@server/search_part";
 	import type { CountdownProps } from "@server/PlaylistItems/Countdown";
@@ -17,13 +15,11 @@
 
 	library.add(fas.faPlus, fas.faRepeat);
 	const props = defineProps<{
-		files: MediaFile[];
 		thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: CountdownProps];
-		refresh: [];
 	}>();
 
 	const countdown_mode = ref<CountdownMode>(CountdownMode.EndTime);
@@ -71,7 +67,7 @@
 </script>
 
 <template>
-	<MediaDialogue :files="files" :thumbnails="thumbnails" @choose="add_countdown">
+	<MediaDialogue :thumbnails="thumbnails" @choose="add_countdown">
 		<template v-slot:buttons>
 			<MenuButton @click="add_countdown">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown
