@@ -76,10 +76,7 @@
 		selected_parts.value.push(name);
 	}
 
-	function delete_song_part(event: KeyboardEvent, index?: number) {
-		event.stopPropagation();
-		event.preventDefault();
-
+	function delete_song_part(index?: number) {
 		if (index !== undefined) {
 			selected_parts.value.splice(index, 1);
 
@@ -206,17 +203,9 @@
 								:ref="list_ref"
 								:style="{ color: get_song_part_color(element) }"
 								:key="`${element}_${index}`"
-								@click="
-									selected_song_part = index;
-									$event.stopPropagation();
-									$event.preventDefault();
-								"
-								@keydown.enter="
-									selected_song_part = index;
-									$event.stopPropagation();
-									$event.preventDefault();
-								"
-								@keydown.delete="delete_song_part($event, index)"
+								@click="selected_song_part = index"
+								@keydown.enter.prevent="selected_song_part = index"
+								@keydown.delete.prevent="delete_song_part(index)"
 								@keydown.up="
 									selected_song_part !== undefined && selected_song_part > 0
 										? selected_song_part--
@@ -232,7 +221,7 @@
 							</div>
 						</template>
 					</Draggable>
-					<MenuButton @click="delete_song_part($event, selected_song_part)">
+					<MenuButton @click="delete_song_part(selected_song_part)">
 						<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
 					</MenuButton>
 				</div>

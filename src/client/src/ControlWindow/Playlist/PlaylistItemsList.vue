@@ -13,6 +13,7 @@
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientItemBase, ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import Globals from "@/Globals";
+	import { stop_event } from "@/App.vue";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 
@@ -87,8 +88,7 @@
 			index
 		};
 
-		event.preventDefault();
-		event.stopPropagation();
+		stop_event(event);
 
 		context_menu_position.value = event;
 	}

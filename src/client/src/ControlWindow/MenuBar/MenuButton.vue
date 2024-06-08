@@ -13,11 +13,7 @@
 		class="button"
 		:class="{ active: state !== undefined ? state : active, square, disabled }"
 		tabindex="0"
-		@keydown.enter="
-			($event.target as HTMLDivElement)?.click();
-			$event.preventDefault();
-			$event.stopPropagation();
-		"
+		@keydown.enter.prevent="($event.target as HTMLDivElement)?.click()"
 		@click="state !== undefined ? (state = !state) : undefined"
 	>
 		<slot></slot>

@@ -17,11 +17,7 @@
 		class="add_part_radio"
 		:class="{ active: pick === value }"
 		:for="value"
-		@keydown.enter="
-			pick = value;
-			$event.stopPropagation();
-			$event.preventDefault();
-		"
+		@keydown.enter.prevent="pick = value"
 	>
 		<FontAwesomeIcon :icon="['fas', icon]" />
 		{{ text }}

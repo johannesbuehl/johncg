@@ -407,11 +407,7 @@
 							:style="{ color: get_song_part_color(part) }"
 							tabindex="-1"
 							@click="selected_verse_order_part = index"
-							@keydown.enter="
-								selected_verse_order_part = index;
-								$event.preventDefault();
-								$event.stopPropagation();
-							"
+							@keydown.enter.prevent="selected_verse_order_part = index"
 							@keydown.delete="remove_verse_order_part(index)"
 						>
 							{{ part }}

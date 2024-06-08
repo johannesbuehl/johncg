@@ -1,4 +1,5 @@
 <script setup lang="ts">
+	import { stop_event } from "@/App.vue";
 	import { onMounted, onUnmounted } from "vue";
 
 	const props = defineProps<{
@@ -25,8 +26,7 @@
 	function on_click_event(event: MouseEvent) {
 		emit("close");
 
-		event.stopPropagation();
-		event.preventDefault();
+		stop_event(event);
 	}
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { ref, watch } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	library.add(
@@ -80,16 +80,19 @@
 	}
 
 	let playlist_caption_timeout: NodeJS.Timeout;
-	function update_playlist_caption() {
-		clearTimeout(playlist_caption_timeout);
+	watch(
+		() => playlist_caption.value,
+		() => {
+			clearTimeout(playlist_caption_timeout);
 
-		playlist_caption_timeout = setTimeout(() => {
-			Globals.ws?.send<JGCPRecv.UpdatePlaylistCaption>({
-				command: "update_playlist_caption",
-				caption: playlist_caption.value
-			});
-		}, 1000);
-	}
+			playlist_caption_timeout = setTimeout(() => {
+				Globals.ws?.send<JGCPRecv.UpdatePlaylistCaption>({
+					command: "update_playlist_caption",
+					caption: playlist_caption.value
+				});
+			}, 1000);
+		}
+	);
 
 	function save_playlist() {
 		if (props.playlist_path !== undefined) {
@@ -191,10 +194,6 @@
 				type="text"
 				v-model="playlist_caption"
 				placeholder="Playlist-Name"
-				@keydown="
-					update_playlist_caption();
-					$event.stopPropagation();
-				"
 			/>
 		</template>
 		<MenuButton

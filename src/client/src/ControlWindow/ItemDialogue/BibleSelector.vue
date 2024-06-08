@@ -155,13 +155,6 @@
 		}
 	}
 
-	function enter_element(event: KeyboardEvent) {
-		event.stopPropagation();
-		event.preventDefault();
-
-		(event.target as HTMLElement)?.click();
-	}
-
 	function clear_verses(chapter: number) {
 		if (
 			chapter_verse_selection.value !== undefined &&
@@ -236,7 +229,7 @@
 								selected: chapter_selection === chapter
 							}"
 							:for="`${book_selection?.id}_${chapter}`"
-							@keydown.enter="enter_element"
+							@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
 							@dblclick="clear_verses(chapter)"
 						>
 							{{ chapter + 1 }}
@@ -262,7 +255,7 @@
 							:class="{ active: state }"
 							:for="`${book_selection?.id}_${chapter_selection}_${verse}`"
 							@click.shift="shift_click(verse)"
-							@keydown.enter="enter_element"
+							@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
 						>
 							{{ verse + 1 }}
 						</label>

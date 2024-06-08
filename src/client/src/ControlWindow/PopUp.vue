@@ -17,9 +17,6 @@
 	document.addEventListener("keydown", (event) => {
 		if (event.code === "Escape" && active.value === true) {
 			active.value = false;
-
-			event.preventDefault();
-			event.stopPropagation();
 		}
 	});
 </script>

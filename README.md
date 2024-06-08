@@ -37,5 +37,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - FileDialogue: Create directories
 - FileDialogue Thumbnails: make like songbeamer for easy switching
 - Fix style of AddPart-Draggable-Drag-n-drop Placeholder
-- check all stopropagation / preventdefault if really needed after bug fix in global evenlistener
 - SavePlaylist: create-directory-stack

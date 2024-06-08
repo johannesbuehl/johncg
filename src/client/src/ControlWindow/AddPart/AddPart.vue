@@ -16,6 +16,7 @@
 	import AddComment from "./Parts/AddComment.vue";
 	import AddText from "./Parts/AddText.vue";
 	import Globals from "@/Globals";
+	import { stop_event } from "@/App.vue";
 
 	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
@@ -70,8 +71,7 @@
 			pick.value = part_types[(pick_index + part_types.length) % part_types.length].value;
 
 			if (prevent_default) {
-				event.preventDefault();
-				event.stopPropagation();
+				stop_event(event);
 			}
 		}
 	}

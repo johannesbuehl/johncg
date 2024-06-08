@@ -213,16 +213,13 @@
 								'choose',
 								directory_stack.length > 0 ? directory_stack[directory_stack.length - 1] : undefined
 							);
-							$event.stopPropagation();
-							$event.preventDefault();
 						"
 					>
 						<FontAwesomeIcon :icon="['fas', 'house']" />
 					</MenuButton>
 					<template v-for="(dir, dir_index) of directory_stack">
 						<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
-						<div
-							class="directory_stack_dir"
+						<MenuButton
 							@click="
 								directory_stack.splice(dir_index + 1, directory_stack.length);
 								$emit(
@@ -231,12 +228,10 @@
 										? directory_stack[directory_stack.length - 1]
 										: undefined
 								);
-								$event.stopPropagation();
-								$event.preventDefault();
 							"
 						>
 							{{ dir.name }}
-						</div>
+						</MenuButton>
 					</template>
 					<MenuButton
 						id="refresh_button"
@@ -263,16 +258,8 @@
 										selectable: element.children === undefined,
 										active: element === selection
 									}"
-									@keydown.enter="
-										on_choose(element as Directory<T>);
-										$event.stopPropagation();
-										$event.preventDefault();
-									"
-									@dblclick="
-										on_choose(element as Directory<T>);
-										$event.stopPropagation();
-										$event.preventDefault();
-									"
+									@keydown.enter.prevent="on_choose(element as Directory<T>)"
+									@dblclick.prevent="on_choose(element as Directory<T>)"
 									@click="selection = element as Directory<T>"
 								>
 									{{ element.name }}
@@ -297,16 +284,8 @@
 											v-show="!element.hidden"
 											class="file_item"
 											:class="{ selectable: true, active: element === selection }"
-											@keydown.enter="
-												on_choose(element);
-												$event.stopPropagation();
-												$event.preventDefault();
-											"
-											@dblclick="
-												on_choose(element);
-												$event.stopPropagation();
-												$event.preventDefault();
-											"
+											@keydown.enter.prevent="on_choose(element)"
+											@dblclick="on_choose(element)"
 											@click="selection = element"
 										>
 											{{ element.name }}
@@ -335,16 +314,8 @@
 										>
 											<img
 												:src="thumbnails[element.path]"
-												@keydown.enter="
-													on_choose(element);
-													$event.stopPropagation();
-													$event.preventDefault();
-												"
-												@dblclick="
-													on_choose(element);
-													$event.stopPropagation();
-													$event.preventDefault();
-												"
+												@keydown.enter.prevent="on_choose(element)"
+												@dblclick="on_choose(element)"
 												@click="selection = element"
 											/>
 											<div class="file_thumbnail_name">
@@ -482,19 +453,6 @@
 
 	#directory_stack > .button {
 		margin: 0;
-	}
-
-	.directory_stack_dir {
-		cursor: pointer;
-
-		padding: 0.5rem;
-
-		border-radius: 0.25rem;
-		background-color: var(--color-item);
-	}
-
-	.directory_stack_dir:hover {
-		background-color: var(--color-item-hover);
 	}
 
 	#refresh_button {
