@@ -11,8 +11,8 @@ import type {
 	WebsocketServerArguments,
 	WebsocketMessageHandler
 } from "./servers/websocket-server.ts";
-import * as JGCPSend from "./JGCPSendMessages.ts";
-import * as JGCPRecv from "./JGCPReceiveMessages.ts";
+import * as JCGPSend from "./JCGPSendMessages.ts";
+import * as JCGPRecv from "./JCGPReceiveMessages.ts";
 
 import Config, { CasparCGConnectionSettings } from "./config.ts";
 import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_part.ts";
@@ -37,45 +37,45 @@ export default class Control {
 
 	// mapping of the websocket-messages to the functions
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	private readonly client_ws_function_map: { [T in JGCPRecv.Message["command"]]: Function } = {
-		new_playlist: (msg: JGCPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
-		load_playlist: (msg: JGCPRecv.OpenPlaylist, ws: WebSocket) =>
+	private readonly client_ws_function_map: { [T in JCGPRecv.Message["command"]]: Function } = {
+		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
+		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.load_playlist(msg?.playlist, ws),
-		save_playlist: (msg: JGCPRecv.SavePlaylist, ws: WebSocket) =>
+		save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
 			this.save_playlist(msg.playlist, ws),
-		request_item_slides: (msg: JGCPRecv.RequestItemSlides, ws: WebSocket) =>
+		request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
 			this.get_item_slides(msg?.item, msg?.client_id, ws),
-		select_item_slide: (msg: JGCPRecv.SelectItemSlide, ws: WebSocket) =>
+		select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
 			this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
-		navigate: (msg: JGCPRecv.Navigate, ws: WebSocket) =>
+		navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
 			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
-		set_visibility: (msg: JGCPRecv.SetVisibility, ws: WebSocket) =>
+		set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
 			this.set_visibility(msg.visibility, msg.client_id, ws),
 		toggle_visibility: () => this.toggle_visibility(),
-		move_playlist_item: (msg: JGCPRecv.MovePlaylistItem, ws: WebSocket) =>
+		move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
 			this.move_playlist_item(msg.from, msg.to, ws),
-		add_item: (msg: JGCPRecv.AddItem, ws: WebSocket) =>
+		add_item: (msg: JCGPRecv.AddItem, ws: WebSocket) =>
 			this.add_item(msg.props, msg.index, msg.set_active, ws),
-		update_item: (msg: JGCPRecv.UpdateItem, ws: WebSocket) =>
+		update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
-		delete_item: (msg: JGCPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-		get_item_files: (msg: JGCPRecv.GetItemFiles, ws: WebSocket) =>
+		delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
+		get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
 			this.get_item_files(msg.type, ws),
-		get_bible: (msg: JGCPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
-		get_media_thumbnails: (msg: JGCPRecv.GetMediaThumbnails, ws: WebSocket) =>
+		get_bible: (msg: JCGPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+		get_media_thumbnails: (msg: JCGPRecv.GetMediaThumbnails, ws: WebSocket) =>
 			this.get_media_thumbnails(msg.files, ws),
-		get_item_data: (msg: JGCPRecv.GetItemData, ws: WebSocket) =>
+		get_item_data: (msg: JCGPRecv.GetItemData, ws: WebSocket) =>
 			this.get_item_data(msg.type, msg.file, ws),
-		create_playlist_pdf: (msg: JGCPRecv.CreatePlaylistPDF, ws: WebSocket) =>
+		create_playlist_pdf: (msg: JCGPRecv.CreatePlaylistPDF, ws: WebSocket) =>
 			this.create_playlist_pdf(ws, msg.type),
-		update_playlist_caption: (msg: JGCPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
+		update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
 			this.update_playlist_caption(msg.caption, ws),
-		save_file: (msg: JGCPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws)
+		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		JGCP: {
+		JCGP: {
 			open: (ws: WebSocket) => this.ws_on_connection(ws),
 			message: (ws: WebSocket, data: RawData) => this.ws_on_message(ws, data)
 		},
@@ -145,12 +145,12 @@ export default class Control {
 	private save_playlist(playlist: string, ws: WebSocket) {
 		logger.log(`saving playlist at ${playlist}`);
 
-		let message: JGCPSend.ClientMessage;
+		let message: JCGPSend.ClientMessage;
 		if (this.playlist.save(playlist)) {
 			message = {
 				command: "client_mesage",
 				message: "Playlist has been saved",
-				type: JGCPSend.LogLevel.log
+				type: JCGPSend.LogLevel.log
 			};
 
 			// send the playlist-path to the clients
@@ -159,7 +159,7 @@ export default class Control {
 			message = {
 				command: "client_mesage",
 				message: "Can't save playlist: invalid path",
-				type: JGCPSend.LogLevel.error
+				type: JCGPSend.LogLevel.error
 			};
 
 			logger.error("Can't save playlist: invalid path");
@@ -168,7 +168,7 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
-	private save_file(path: string, message: JGCPRecv.SaveFile, ws: WebSocket) {
+	private save_file(path: string, message: JCGPRecv.SaveFile, ws: WebSocket) {
 		let test_result: boolean = typeof path === "string";
 
 		switch (message.type) {
@@ -226,7 +226,7 @@ export default class Control {
 		ws?: WebSocket,
 		new_playlist?: boolean
 	) {
-		const response_playlist_items: JGCPSend.Playlist = {
+		const response_playlist_items: JCGPSend.Playlist = {
 			command: "playlist_items",
 			caption: this.playlist.caption,
 			path: this.playlist.path,
@@ -272,7 +272,7 @@ export default class Control {
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
 				if (casparcg.casparcg_connections.length > 0) {
-					const message: JGCPSend.ItemSlides = {
+					const message: JCGPSend.ItemSlides = {
 						command: "item_slides",
 						item,
 						client_id,
@@ -370,13 +370,13 @@ export default class Control {
 	 * @param steps
 	 * @param client_id
 	 */
-	private navigate(type: JGCPRecv.NavigateType, steps: number, client_id?: string, ws?: WebSocket) {
+	private navigate(type: JCGPRecv.NavigateType, steps: number, client_id?: string, ws?: WebSocket) {
 		// if there is no playlist loaded, send a negative response back and exit
 		if (!this.check_playlist_loaded(ws)) {
 			return;
 		}
 
-		if (!JGCPRecv.is_item_navigate_type(type)) {
+		if (!JCGPRecv.is_item_navigate_type(type)) {
 			logger.debug("Can't navigate: type is invalid");
 
 			ws_send_response("Can't navigate: type is invalid", false, ws);
@@ -602,7 +602,7 @@ export default class Control {
 		const files = await search_map[type]();
 
 		if (files !== undefined) {
-			const message: JGCPSend.ItemFiles<K> = {
+			const message: JCGPSend.ItemFiles<K> = {
 				command: "item_files",
 				type,
 				files
@@ -626,7 +626,7 @@ export default class Control {
 			return;
 		}
 
-		const message: JGCPSend.Bible = {
+		const message: JCGPSend.Bible = {
 			command: "bible",
 			bible
 		};
@@ -669,7 +669,7 @@ export default class Control {
 			thumbnails[file.path] = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
 		}
 
-		const message: JGCPSend.MediaThumbnails = {
+		const message: JCGPSend.MediaThumbnails = {
 			command: "media_thumbnails",
 			// thumbnails: Object.fromEntries(await Promise.all(thumbnails))
 			thumbnails: thumbnails
@@ -678,10 +678,10 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private get_item_data(type: JGCPRecv.GetItemData["type"], path: string, ws: WebSocket) {
+	private get_item_data(type: JCGPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
-		let data: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]>["data"];
+		let data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>["data"];
 
 		switch (type) {
 			case "song":
@@ -692,7 +692,7 @@ export default class Control {
 				break;
 		}
 
-		const message: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]> = {
+		const message: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]> = {
 			command: "item_data",
 			type,
 			data
@@ -701,7 +701,7 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
-	private create_playlist_pdf(ws: WebSocket, type: JGCPRecv.CreatePlaylistPDF["type"]) {
+	private create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
 		const markdown = this.playlist.get_playlist_markdown(type === "full");
 
 		const markdown_file = tmp.fileSync({ postfix: ".md" });
@@ -722,7 +722,7 @@ export default class Control {
 
 			command += ` ${markdown_file.name} -o ${pdf_file.name} --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
 
-			let message: JGCPSend.PlaylistPDF;
+			let message: JCGPSend.PlaylistPDF;
 
 			try {
 				child_process.execSync(command);
@@ -760,7 +760,7 @@ export default class Control {
 			`Toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "visible"}'`
 		);
 
-		const message: JGCPSend.State = {
+		const message: JCGPSend.State = {
 			command: "state",
 			visibility: await this.playlist.toggle_visibility()
 		};
@@ -773,14 +773,14 @@ export default class Control {
 	}
 
 	/**
-	 * Send a JGCP-message to all registered clients
+	 * Send a JCGP-message to all registered clients
 	 * @param message JSON-message to be sent
 	 */
-	private send_all_clients(message: JGCPSend.Message) {
+	private send_all_clients(message: JCGPSend.Message) {
 		const message_string = JSON.stringify(message);
 
 		// gather all the clients
-		const ws_clients = this.ws_server.get_connections("JGCP");
+		const ws_clients = this.ws_server.get_connections("JCGP");
 
 		ws_clients.forEach((ws_client) => {
 			ws_client.send(message_string);
@@ -812,7 +812,7 @@ export default class Control {
 			logger.debug("new client-connection: clearing client-data");
 
 			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
-			const clear_message: JGCPSend.Clear = {
+			const clear_message: JCGPSend.Clear = {
 				command: "clear"
 			};
 
@@ -822,9 +822,9 @@ export default class Control {
 
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
-		logger.debug(`received JGCP-message: ${raw_data.toString()}`);
+		logger.debug(`received JCGP-message: ${raw_data.toString()}`);
 
-		let data: JGCPRecv.Message;
+		let data: JCGPRecv.Message;
 		// try to parse the data as a JSON-object
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-base-to-string
@@ -837,12 +837,12 @@ export default class Control {
 		} catch (e) {
 			// if there was a SyntaxError, the data was not a valid JSON-object -> send response and exit
 			if (e instanceof SyntaxError) {
-				logger.error("Can't parse JGCP-message: no JSON-object");
+				logger.error("Can't parse JCGP-message: no JSON-object");
 
 				ws_send_response("data is no JSON object", false, ws);
 				return;
 			} else {
-				logger.error(`can't parse JGCP-message: unknown error (${e})`);
+				logger.error(`can't parse JCGP-message: unknown error (${e})`);
 
 				throw e;
 			}
@@ -850,12 +850,12 @@ export default class Control {
 
 		// check wether the JSON-object does contain a command and wether it is a valid command
 		if (typeof data.command !== "string") {
-			logger.error("Can't parse JGCP-message: 'command' is invalid");
+			logger.error("Can't parse JCGP-message: 'command' is invalid");
 
 			ws_send_response("'command' is not of type 'string", false, ws);
 			return;
 		} else if (!Object.keys(this.client_ws_function_map).includes(data.command)) {
-			logger.error("Can't parse JGCP-message: 'command' is not implemented");
+			logger.error("Can't parse JCGP-message: 'command' is not implemented");
 			ws_send_response(`Command '${data.command}' is not implemented`, false, ws);
 		} else {
 			void this.client_ws_function_map[data.command](data as never, ws);
@@ -890,7 +890,7 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 }
 
 function check_song_data(song_data: SongData): boolean {
-	const data_template: JGCPRecv.SaveFile["data"] = {
+	const data_template: JCGPRecv.SaveFile["data"] = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		metadata: { Title: ["template"], LangCount: 1 },
 		text: { template: [[["template"]]] }
@@ -945,7 +945,7 @@ function check_song_data(song_data: SongData): boolean {
 }
 
 function check_psalm_data(psalm_data: PsalmFile): boolean {
-	const data_template: JGCPRecv.SaveFile["data"] = {
+	const data_template: JCGPRecv.SaveFile["data"] = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		metadata: { caption: "template", indent: true },
 		text: [[["template"]]]

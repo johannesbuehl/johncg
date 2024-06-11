@@ -20,7 +20,7 @@
 	import Globals from "@/Globals";
 
 	import type { PsalmFile } from "@server/search_part";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faIndent);
@@ -227,7 +227,7 @@
 			}
 		}
 
-		Globals.ws?.send<JGCPRecv.SaveFile>({
+		Globals.ws?.send<JCGPRecv.SaveFile>({
 			command: "save_file",
 			path: save_path,
 			type: "psalm",

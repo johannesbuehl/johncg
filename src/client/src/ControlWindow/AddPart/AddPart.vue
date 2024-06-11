@@ -18,7 +18,7 @@
 	import Globals from "@/Globals";
 	import { stop_event } from "@/App.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
 	library.add(
@@ -86,7 +86,7 @@
 	];
 
 	function add_item(item_props: ItemProps) {
-		Globals.ws?.send<JGCPRecv.AddItem>({
+		Globals.ws?.send<JCGPRecv.AddItem>({
 			command: "add_item",
 			props: item_props,
 			set_active: true

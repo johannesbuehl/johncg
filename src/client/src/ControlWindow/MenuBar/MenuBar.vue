@@ -27,7 +27,7 @@
 	import PopUp from "../PopUp.vue";
 	import Globals from "@/Globals";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 
 	const props = defineProps<{
 		playlist_path: string | undefined;
@@ -37,12 +37,12 @@
 	const visibility = defineModel<boolean>("visibility", { required: true });
 
 	const emit = defineEmits<{
-		navigate: [type: JGCPRecv.NavigateType, steps: number];
+		navigate: [type: JCGPRecv.NavigateType, steps: number];
 		set_visibility: [state: boolean];
 	}>();
 
 	function new_playlist() {
-		Globals.ws?.send<JGCPRecv.NewPlaylist>({
+		Globals.ws?.send<JCGPRecv.NewPlaylist>({
 			command: "new_playlist"
 		});
 	}
@@ -59,7 +59,7 @@
 			const reader = new FileReader();
 
 			reader.addEventListener("load", (e) => {
-				Globals.ws?.send<JGCPRecv.OpenPlaylist>({
+				Globals.ws?.send<JCGPRecv.OpenPlaylist>({
 					command: "load_playlist",
 					playlist: e.target?.result as string
 				});
@@ -71,7 +71,7 @@
 
 	const pdf_popup = ref<boolean>(false);
 	function create_playlist_pdf(type: "full" | "small") {
-		Globals.ws?.send<JGCPRecv.CreatePlaylistPDF>({
+		Globals.ws?.send<JCGPRecv.CreatePlaylistPDF>({
 			command: "create_playlist_pdf",
 			type
 		});
@@ -86,7 +86,7 @@
 			clearTimeout(playlist_caption_timeout);
 
 			playlist_caption_timeout = setTimeout(() => {
-				Globals.ws?.send<JGCPRecv.UpdatePlaylistCaption>({
+				Globals.ws?.send<JCGPRecv.UpdatePlaylistCaption>({
 					command: "update_playlist_caption",
 					caption: playlist_caption.value
 				});
@@ -96,7 +96,7 @@
 
 	function save_playlist() {
 		if (props.playlist_path !== undefined) {
-			Globals.ws?.send<JGCPRecv.SavePlaylist>({
+			Globals.ws?.send<JCGPRecv.SavePlaylist>({
 				command: "save_playlist",
 				playlist: props.playlist_path
 			});

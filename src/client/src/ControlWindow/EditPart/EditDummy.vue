@@ -2,7 +2,7 @@
 	import { onUnmounted } from "vue";
 
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import Globals from "@/Globals";
 
 	const props = defineProps<{
@@ -13,7 +13,7 @@
 
 	onUnmounted(() => {
 		if (item_props.value !== null) {
-			Globals.ws?.send<JGCPRecv.UpdateItem>({
+			Globals.ws?.send<JCGPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: item_props.value

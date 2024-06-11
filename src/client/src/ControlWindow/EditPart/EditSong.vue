@@ -3,7 +3,7 @@
 
 	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientSongItem } from "@server/PlaylistItems/Song";
 	import type { SongData } from "@server/PlaylistItems/SongFile/SongFile";
 	import Globals from "@/Globals";
@@ -53,7 +53,7 @@
 	onMounted(() => request_song_data(song_props.value.file));
 
 	function request_song_data(file: string) {
-		Globals.ws?.send<JGCPRecv.GetItemData>({
+		Globals.ws?.send<JCGPRecv.GetItemData>({
 			command: "get_item_data",
 			type: "song",
 			file: file
@@ -64,7 +64,7 @@
 		const return_props = create_props();
 
 		if (return_props !== undefined) {
-			Globals.ws?.send<JGCPRecv.UpdateItem>({
+			Globals.ws?.send<JCGPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: return_props

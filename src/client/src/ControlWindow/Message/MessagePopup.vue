@@ -23,7 +23,7 @@
 
 	import type { LogMessage } from "@/Globals";
 
-	import type { LogLevel } from "@server/JGCPSendMessages";
+	import type { LogLevel } from "@server/JCGPSendMessages";
 	import { get_time_string } from "@server/lib";
 	import Globals from "@/Globals";
 

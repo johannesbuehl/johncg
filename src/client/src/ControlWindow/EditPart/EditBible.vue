@@ -7,7 +7,7 @@
 	} from "../ItemDialogue/BibleSelector.vue";
 
 	import type { Book, ClientBibleItem } from "@server/PlaylistItems/Bible";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import Globals from "@/Globals";
 
 	const props = defineProps<{
@@ -60,7 +60,7 @@
 
 	function update() {
 		if (book_selection.value !== undefined && bible_props.value !== undefined) {
-			Globals.ws?.send<JGCPRecv.UpdateItem>({
+			Globals.ws?.send<JCGPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: {

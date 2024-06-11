@@ -2,9 +2,9 @@ import { ref } from "vue";
 
 import { ControlWindowState } from "./Enums";
 
-import * as JGCPRecv from "@server/JGCPReceiveMessages";
-import type * as JGCPSend from "@server/JGCPSendMessages";
-import { LogLevel } from "@server/JGCPSendMessages";
+import * as JCGPRecv from "@server/JCGPReceiveMessages";
+import type * as JCGPSend from "@server/JCGPSendMessages";
+import { LogLevel } from "@server/JCGPSendMessages";
 import type {
 	ItemFileMapped,
 	ItemFileType,
@@ -73,10 +73,10 @@ export class WSWrapper {
 	constructor(hostname: string, port: number) {
 		const ws_url: string = `ws://${hostname}:${port}`;
 
-		this._ws = new WebSocket(ws_url, "JGCP");
+		this._ws = new WebSocket(ws_url, "JCGP");
 	}
 
-	send<T extends JGCPRecv.Message>(message: T) {
+	send<T extends JCGPRecv.Message>(message: T) {
 		this.ws?.send(JSON.stringify(message));
 	}
 }
@@ -180,7 +180,7 @@ class Global {
 		) {
 			this.item_files_last_requests.song = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "song"
 			});
@@ -201,7 +201,7 @@ class Global {
 		) {
 			this.item_files_last_requests.media = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "media"
 			});
@@ -225,7 +225,7 @@ class Global {
 		) {
 			this.item_files_last_requests.pdf = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "pdf"
 			});
@@ -246,7 +246,7 @@ class Global {
 		) {
 			this.item_files_last_requests.playlist = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "playlist"
 			});
@@ -267,7 +267,7 @@ class Global {
 		) {
 			this.item_files_last_requests.template = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "template"
 			});
@@ -288,7 +288,7 @@ class Global {
 		) {
 			this.item_files_last_requests.psalm = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetItemFiles>({
+			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
 				type: "psalm"
 			});
@@ -310,7 +310,7 @@ class Global {
 		) {
 			this.bible_file_last_request = new Date().valueOf();
 
-			this.ws?.send<JGCPRecv.GetBible>({
+			this.ws?.send<JCGPRecv.GetBible>({
 				command: "get_bible"
 			});
 		}
@@ -319,7 +319,7 @@ class Global {
 	}
 
 	// Thumbnails
-	_thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
+	_thumbnails = ref<JCGPSend.MediaThumbnails["thumbnails"]>({});
 	get_thumbnails(files?: MediaFile[]): Record<string, string> {
 		if (files !== undefined) {
 			const thumbnails_result: [MediaFile, string | undefined][] = files.map((ff) => [
@@ -332,7 +332,7 @@ class Global {
 				.map(([ff]) => ff);
 
 			if (missing_thumbnails.length > 0) {
-				this.ws?.send<JGCPRecv.GetMediaThumbnails>({
+				this.ws?.send<JCGPRecv.GetMediaThumbnails>({
 					command: "get_media_thumbnails",
 					files: missing_thumbnails
 				});

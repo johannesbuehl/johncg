@@ -7,7 +7,7 @@
 	import Globals from "@/Globals";
 
 	import { get_time_string } from "@server/lib";
-	import type { LogLevel } from "@server/JGCPSendMessages";
+	import type { LogLevel } from "@server/JCGPSendMessages";
 
 	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 </script>

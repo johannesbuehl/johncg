@@ -1,12 +1,12 @@
 import * as PlaylistClass from "../server/Playlist.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
-import { GetItemData, GetItemFiles } from "./JGCPReceiveMessages.ts";
+import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
 import { ItemFileMapped, ItemFileType } from "./search_part.ts";
 import { CasparCGResolution } from "./CasparCG.ts";
 
 /**
- * Base interface for sent JGCP-messages
+ * Base interface for sent JCGP-messages
  */
 interface Base {
 	client_id?: string;
@@ -22,7 +22,7 @@ export interface Response {
 }
 
 /**
- * JGCP-messages with the playlist_items
+ * JCGP-messages with the playlist_items
  */
 export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 	command: "playlist_items";
@@ -33,7 +33,7 @@ export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 }
 
 /**
- * JGCP-messages with the current state
+ * JCGP-messages with the current state
  */
 export interface State extends Base {
 	command: "state";
@@ -97,7 +97,7 @@ export interface MediaThumbnails {
 }
 
 /**
- * Uniun of the different JGCP-messages
+ * Uniun of the different JCGP-messages
  */
 export type Message =
 	| Response

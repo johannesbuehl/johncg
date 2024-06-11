@@ -15,7 +15,7 @@
 	import type { ItemData } from "@/App.vue";
 	import Globals from "@/Globals";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import type { ItemFileMapped, ItemFileType, SongFile } from "@server/search_part";
 
@@ -41,7 +41,7 @@
 				return;
 		}
 
-		Globals.ws?.send<JGCPRecv.GetItemData>({
+		Globals.ws?.send<JCGPRecv.GetItemData>({
 			command: "get_item_data",
 			type: item_props.value.type,
 			file: item_props.value.file

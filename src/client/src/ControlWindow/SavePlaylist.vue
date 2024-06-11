@@ -8,7 +8,7 @@
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import Globals from "@/Globals";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PlaylistFile } from "@server/search_part";
 	import PopUp from "./PopUp.vue";
 	import { ControlWindowState } from "@/Enums";
@@ -66,7 +66,7 @@
 			}
 		}
 
-		Globals.ws?.send<JGCPRecv.SavePlaylist>({
+		Globals.ws?.send<JCGPRecv.SavePlaylist>({
 			command: "save_playlist",
 			playlist: save_path
 		});

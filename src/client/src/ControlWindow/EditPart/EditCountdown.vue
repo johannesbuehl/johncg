@@ -3,7 +3,7 @@
 
 	import CountdownEditor from "../ItemDialogue/CountdownEditor.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientCountdownItem } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode } from "@server/lib";
 	import Globals from "@/Globals";
@@ -31,7 +31,7 @@
 	});
 
 	onUnmounted(() => {
-		Globals.ws?.send<JGCPRecv.UpdateItem>({
+		Globals.ws?.send<JCGPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: {

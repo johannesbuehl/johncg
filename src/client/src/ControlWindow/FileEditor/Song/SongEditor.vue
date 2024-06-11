@@ -27,7 +27,7 @@
 	import { create_directory_stack } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
 	import type { MediaFile, SongFile } from "@server/search_part";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
@@ -203,7 +203,7 @@
 			}
 		}
 
-		Globals.ws?.send<JGCPRecv.SaveFile>({
+		Globals.ws?.send<JCGPRecv.SaveFile>({
 			command: "save_file",
 			type: "song",
 			path: save_path,

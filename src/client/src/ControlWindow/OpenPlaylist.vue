@@ -9,7 +9,7 @@
 	import { ControlWindowState } from "@/Enums";
 	import Globals from "@/Globals";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PlaylistFile } from "@server/search_part";
 
 	library.add(fas.faFolderOpen);
@@ -42,7 +42,7 @@
 
 	function load_playlist(playlist?: PlaylistFile) {
 		if (playlist !== undefined) {
-			Globals.ws?.send<JGCPRecv.OpenPlaylist>({
+			Globals.ws?.send<JCGPRecv.OpenPlaylist>({
 				command: "load_playlist",
 				playlist: playlist.path
 			});

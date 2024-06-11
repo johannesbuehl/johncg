@@ -8,7 +8,7 @@ import type {
 } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
 
-import * as JGCPSend from "./JGCPSendMessages.ts";
+import * as JCGPSend from "./JCGPSendMessages.ts";
 
 import Config from "./config.ts";
 import PlaylistObject from "./PlaylistFile.ts";
@@ -510,7 +510,7 @@ export default class Playlist {
 		return casparcg.visibility;
 	}
 
-	get state(): JGCPSend.State {
+	get state(): JCGPSend.State {
 		return {
 			command: "state",
 			active_item_slide: this.active_item_slide,

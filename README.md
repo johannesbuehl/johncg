@@ -35,4 +35,3 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - FileDialogue: Create directories
 - Fix style of AddPart-Draggable-Drag-n-drop Placeholder
 - SavePlaylist: create-directory-stack
-- rename JGCP to JCGP

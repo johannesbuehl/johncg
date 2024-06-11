@@ -3,7 +3,7 @@
 
 	import AMCPInput from "../ItemDialogue/AMCPInput.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientAMCPItem } from "@server/PlaylistItems/AMCP";
 	import Globals from "@/Globals";
 
@@ -31,7 +31,7 @@
 		item_props.value.commands.set_inactive =
 			set_inactive_command.value.length > 0 ? set_inactive_command.value : undefined;
 
-		Globals.ws?.send<JGCPRecv.UpdateItem>({
+		Globals.ws?.send<JCGPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: item_props.value

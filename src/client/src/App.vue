@@ -4,7 +4,7 @@
 		event.preventDefault();
 	}
 
-	export type ItemData = { [key in JGCPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
+	export type ItemData = { [key in JCGPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
 </script>
 
 <script setup lang="ts">
@@ -13,8 +13,8 @@
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
-	import * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import * as JCGPSend from "@server/JCGPSendMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
 	import Globals, { WSWrapper } from "./Globals";
 
@@ -35,9 +35,9 @@
 		connected = 1
 	}
 
-	const server_state = ref<JGCPSend.State>({ command: "state" });
-	const playlist_items = ref<JGCPSend.Playlist>();
-	const item_slides = ref<JGCPSend.ItemSlides>();
+	const server_state = ref<JCGPSend.State>({ command: "state" });
+	const playlist_items = ref<JCGPSend.Playlist>();
+	const item_slides = ref<JCGPSend.ItemSlides>();
 	const selected_item = ref<number | null>(null);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 	const playlist_caption = ref<string>("");
@@ -74,7 +74,7 @@
 	);
 
 	function request_item_slides(index: number) {
-		Globals.ws?.send<JGCPRecv.RequestItemSlides>({
+		Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 			command: "request_item_slides",
 			item: index,
 			client_id
@@ -116,7 +116,7 @@
 		});
 
 		Globals.ws?.ws.addEventListener("message", (event: MessageEvent) => {
-			let data: JGCPSend.Message;
+			let data: JCGPSend.Message;
 
 			try {
 				data = JSON.parse(event.data as string);
@@ -129,7 +129,7 @@
 				}
 			}
 
-			const command_parser_map: { [key in JGCPSend.Message["command"]]: (...args: any) => void } = {
+			const command_parser_map: { [key in JCGPSend.Message["command"]]: (...args: any) => void } = {
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
@@ -170,7 +170,7 @@
 		});
 	}
 
-	function load_playlist_items(data: JGCPSend.Playlist) {
+	function load_playlist_items(data: JCGPSend.Playlist) {
 		playlist_items.value = data;
 		playlist_caption.value = data.caption;
 
@@ -185,7 +185,7 @@
 		} else {
 			// request new slides for the selected item
 			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
-				Globals.ws?.send<JGCPRecv.RequestItemSlides>({
+				Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 					command: "request_item_slides",
 					item: selected_item.value
 				});
@@ -193,7 +193,7 @@
 		}
 	}
 
-	function parse_state(data: JGCPSend.State) {
+	function parse_state(data: JCGPSend.State) {
 		if (typeof data.active_item_slide === "object") {
 			if (
 				(typeof data.active_item_slide?.item !== "number" &&
@@ -224,12 +224,12 @@
 		};
 	}
 
-	function load_item_slides(data: JGCPSend.ItemSlides) {
+	function load_item_slides(data: JCGPSend.ItemSlides) {
 		item_slides.value = data;
 	}
 
 	function set_active_slide(item: number, slide: number) {
-		Globals.ws?.send<JGCPRecv.SelectItemSlide>({
+		Globals.ws?.send<JCGPRecv.SelectItemSlide>({
 			command: "select_item_slide",
 			item: item,
 			slide,
@@ -237,13 +237,13 @@
 		});
 	}
 
-	function parse_item_files(data: JGCPSend.ItemFiles<keyof ItemFileType>) {
+	function parse_item_files(data: JCGPSend.ItemFiles<keyof ItemFileType>) {
 		if (Object.keys(Globals.item_files.value).includes(data.type)) {
 			Globals.item_files.value[data.type] = data.files;
 		}
 	}
 
-	function store_item_data(data: JGCPSend.ItemData<JGCPRecv.GetItemData["type"]>) {
+	function store_item_data(data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>) {
 		// work around typescripts conservative type-system
 		switch (data.type) {
 			case "song":
@@ -255,7 +255,7 @@
 		}
 	}
 
-	function store_thumbnails(data: JGCPSend.MediaThumbnails) {
+	function store_thumbnails(data: JCGPSend.MediaThumbnails) {
 		if (typeof data.thumbnails === "object") {
 			Object.assign(Globals._thumbnails.value, {
 				...Globals._thumbnails.value,
@@ -264,11 +264,11 @@
 		}
 	}
 
-	function parse_bible(data: JGCPSend.Bible) {
+	function parse_bible(data: JCGPSend.Bible) {
 		Globals.bible_file.value = data.bible;
 	}
 
-	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
+	function save_playlist_pdf(data: JCGPSend.PlaylistPDF) {
 		Globals.message.log("Received Playlist PDF");
 
 		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
@@ -282,11 +282,11 @@
 		URL.revokeObjectURL(url);
 	}
 
-	function show_client_message(data: JGCPSend.ClientMessage) {
+	function show_client_message(data: JCGPSend.ClientMessage) {
 		Globals.message.add(data.message, data.type);
 	}
 
-	function handle_ws_response(response: JGCPSend.Response) {
+	function handle_ws_response(response: JCGPSend.Response) {
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
 				case 4:

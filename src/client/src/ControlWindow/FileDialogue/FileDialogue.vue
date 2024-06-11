@@ -83,7 +83,7 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { Directory, ItemFileMapped, ItemFileType } from "@server/search_part";
 
@@ -98,10 +98,10 @@
 	const props = defineProps<{
 		name: string;
 		select_dirs?: boolean;
-		files?: JGCPSend.ItemFiles<keyof ItemFileType>["files"];
+		files?: JCGPSend.ItemFiles<keyof ItemFileType>["files"];
 		thumbnails?: Record<string, string>;
 		hide_header?: boolean;
-		clone_callback?: (arg: JGCPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
+		clone_callback?: (arg: JCGPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
 		new_button?: boolean;
 		search_disabled?: boolean;
 	}>();

@@ -16,15 +16,15 @@
 	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
 	import Globals from "@/Globals";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
 		client_id: string;
-		server_state: JGCPSend.State;
-		playlist?: JGCPSend.Playlist;
-		slides?: JGCPSend.ItemSlides;
+		server_state: JCGPSend.State;
+		playlist?: JCGPSend.Playlist;
+		slides?: JCGPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		selected: number | null;
 		playlist_caption: string;
@@ -74,8 +74,8 @@
 	});
 
 	// send navigate-request over teh websocket
-	function navigate(type: JGCPRecv.NavigateType, steps: number) {
-		Globals.ws?.send<JGCPRecv.Navigate>({
+	function navigate(type: JCGPRecv.NavigateType, steps: number) {
+		Globals.ws?.send<JCGPRecv.Navigate>({
 			command: "navigate",
 			type,
 			steps,
@@ -85,7 +85,7 @@
 
 	// send visibility changes over the websocket
 	function visibility(state: boolean) {
-		Globals.ws?.send<JGCPRecv.SetVisibility>({
+		Globals.ws?.send<JCGPRecv.SetVisibility>({
 			command: "set_visibility",
 			visibility: state,
 			client_id: props.client_id
@@ -93,7 +93,7 @@
 	}
 
 	function dragged(from: number, to: number) {
-		Globals.ws?.send<JGCPRecv.MovePlaylistItem>({
+		Globals.ws?.send<JCGPRecv.MovePlaylistItem>({
 			command: "move_playlist_item",
 			from,
 			to,

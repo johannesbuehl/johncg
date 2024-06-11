@@ -3,7 +3,7 @@ import type { RawData } from "ws";
 import { logger } from "../logger";
 
 // defintion of a JCGP-response
-export interface JGCPResponse {
+export interface JCGPResponse {
 	command: "response";
 	message: string;
 	code: number;

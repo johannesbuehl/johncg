@@ -4,7 +4,7 @@ import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import type { ItemFileType, MediaFile } from "./search_part";
 
 /**
- * Base interface for Received JGCP-messages
+ * Base interface for Received JCGP-messages
  */
 interface Base {
 	client_id?: string;
@@ -128,7 +128,7 @@ export interface GetMediaThumbnails extends Base {
 }
 
 /**
- * Uniun of the different JGCP-messages
+ * Uniun of the different JCGP-messages
  */
 export type Message =
 	| RequestItemSlides

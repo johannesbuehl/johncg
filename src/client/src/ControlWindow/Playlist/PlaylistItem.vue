@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { ref, watch, onMounted, nextTick } from "vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import Globals from "@/Globals";
 
@@ -40,7 +40,7 @@
 	}
 
 	function delete_item() {
-		Globals.ws?.send<JGCPRecv.DeleteItem>({
+		Globals.ws?.send<JCGPRecv.DeleteItem>({
 			command: "delete_item",
 			position: props.index
 		});
