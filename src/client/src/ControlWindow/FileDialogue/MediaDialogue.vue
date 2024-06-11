@@ -8,10 +8,8 @@
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { MediaFile } from "@server/search_part";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 
 	const props = defineProps<{
-		thumbnails: Record<string, string>;
 		hide_header?: boolean;
 		create_props_callback?: (file: MediaFile) => MediaProps;
 	}>();
@@ -20,7 +18,7 @@
 		choose: [file: MediaFile];
 	}>();
 
-	const selection = defineModel<MediaFile>({});
+	const selection = defineModel<MediaFile>("selection");
 
 	const directory_stack = defineModel<MediaFile[]>("directory_stack", {
 		default: () => reactive([])
@@ -48,15 +46,9 @@
 
 		search_media();
 
-		// if there are no fitting thumbnails , retriefe them also
-		const thumbnail_files = Object.keys(props.thumbnails);
-		if (
-			!Globals.get_media_files()
-				.filter((ff) => ff.children === undefined)
-				.every((ff) => thumbnail_files.includes(ff.path))
-		) {
-			get_media_thumbnails(Globals.get_media_files());
-		}
+		// if there are no fitting thumbnails , retrieve them also
+		const files = Globals.get_media_files().filter((ff) => ff.children === undefined);
+		Globals.get_thumbnails(files);
 	}
 
 	watch(search_strings.value, () => {
@@ -135,17 +127,14 @@
 	function get_media_thumbnails(files: MediaFile[] | undefined) {
 		files = (files ?? Globals.get_media_files()).filter((ff) => ff.children === undefined);
 
-		Globals.ws?.send<JGCPRecv.GetMediaThumbnails>({
-			command: "get_media_thumbnails",
-			files
-		});
+		Globals.get_thumbnails(files);
 	}
 </script>
 
 <template>
 	<FileDialogue
 		:files="file_tree"
-		:thumbnails="thumbnails"
+		:thumbnails="Globals.get_thumbnails()"
 		:hide_header="hide_header"
 		:clone_callback="
 			create_props_callback !== undefined

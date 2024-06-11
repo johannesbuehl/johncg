@@ -7,7 +7,6 @@
 	import type { SongFileMetadata } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const props = defineProps<{
-		thumbnails: Record<string, string>;
 		song_file: SongFile;
 	}>();
 
@@ -52,12 +51,8 @@
 </script>
 
 <template>
-	<SongEditor
-		:thumbnails="thumbnails"
-		:song_file="song_file"
-		v-model:metadata="metadata"
-		v-model:text_parts="text_parts"
-	/>
+	<!-- :thumbnails="thumbnails" -->
+	<SongEditor :song_file="song_file" v-model:metadata="metadata" v-model:text_parts="text_parts" />
 </template>
 
 <style scoped></style>

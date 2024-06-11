@@ -14,9 +14,6 @@
 	import { CountdownMode, countdown_title_map } from "@server/lib";
 
 	library.add(fas.faPlus, fas.faRepeat);
-	const props = defineProps<{
-		thumbnails: Record<string, string>;
-	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: CountdownProps];
@@ -33,6 +30,8 @@
 
 	function add_countdown() {
 		const return_props = create_props();
+
+		console.dir(return_props);
 
 		if (return_props !== undefined) {
 			emit("add", return_props);
@@ -67,7 +66,7 @@
 </script>
 
 <template>
-	<MediaDialogue :thumbnails="thumbnails" @choose="add_countdown">
+	<MediaDialogue v-model:selection="media_selection" @choose="add_countdown">
 		<template v-slot:buttons>
 			<MenuButton @click="add_countdown">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown

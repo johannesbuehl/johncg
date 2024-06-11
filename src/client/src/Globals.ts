@@ -2,8 +2,9 @@ import { ref } from "vue";
 
 import { ControlWindowState } from "./Enums";
 
+import * as JGCPRecv from "@server/JGCPReceiveMessages";
+import type * as JGCPSend from "@server/JGCPSendMessages";
 import { LogLevel } from "@server/JGCPSendMessages";
-import type * as JGCPRecv from "@server/JGCPReceiveMessages";
 import type {
 	ItemFileMapped,
 	ItemFileType,
@@ -76,7 +77,7 @@ export class WSWrapper {
 	}
 
 	send<T extends JGCPRecv.Message>(message: T) {
-		this._ws.send(JSON.stringify(message));
+		this.ws?.send(JSON.stringify(message));
 	}
 }
 
@@ -204,6 +205,9 @@ class Global {
 				command: "get_item_files",
 				type: "media"
 			});
+
+			// reset the thumbnails
+			this._thumbnails.value = {};
 		}
 
 		return this.item_files.value.media;
@@ -312,6 +316,30 @@ class Global {
 		}
 
 		return this.bible_file.value;
+	}
+
+	// Thumbnails
+	_thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
+	get_thumbnails(files?: MediaFile[]): Record<string, string> {
+		if (files !== undefined) {
+			const thumbnails_result: [MediaFile, string | undefined][] = files.map((ff) => [
+				ff,
+				this._thumbnails.value[ff.path]
+			]);
+
+			const missing_thumbnails = thumbnails_result
+				.filter(([ff, thumbnail]) => thumbnail === undefined)
+				.map(([ff]) => ff);
+
+			if (missing_thumbnails.length > 0) {
+				this.ws?.send<JGCPRecv.GetMediaThumbnails>({
+					command: "get_media_thumbnails",
+					files: missing_thumbnails
+				});
+			}
+		}
+
+		return this._thumbnails.value;
 	}
 }
 

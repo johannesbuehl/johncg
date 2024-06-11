@@ -150,18 +150,6 @@
 		return files as ItemFileMapped<T>[];
 	}
 
-	function are_valid_thumbnails(files: ItemFileMapped<T>[] = get_current_files()): boolean {
-		if (props.thumbnails !== undefined && Object.values(props.thumbnails).length > 0) {
-			return Object.entries(props.thumbnails).every(([path, thumbnail]) => {
-				return files.some((ff) => {
-					return ff.path === path;
-				});
-			});
-		} else {
-			return false;
-		}
-	}
-
 	function on_choose(file: ItemFileMapped<T>) {
 		if (file.children !== undefined) {
 			directory_stack.value.push(file);
@@ -246,9 +234,9 @@
 						<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
 					</MenuButton>
 				</div>
-				<div id="selection_wrapper">
-					<div class="file_view">
-						<div id="file_draggable_wrapper">
+				<div id="file_view_wrapper">
+					<div id="file_view">
+						<div id="file_list">
 							<div>
 								<div
 									v-for="element of sort_dirs(get_current_files())"
@@ -267,7 +255,6 @@
 							</div>
 							<template v-if="files !== undefined">
 								<Draggable
-									v-if="!are_valid_thumbnails()"
 									:list="sort_files(get_current_files())"
 									:group="{
 										name: 'playlist',
@@ -292,45 +279,45 @@
 										</div>
 									</template>
 								</Draggable>
-								<Draggable
-									v-else-if="thumbnails !== undefined"
-									id="file_thumbnail_wrapper"
-									:list="sort_files(get_current_files())"
-									:group="{
-										name: 'playlist',
-										pull: clone_callback !== undefined ? 'clone' : false,
-										put: false
-									}"
-									item-key="path"
-									tag="div"
-									:clone="clone_callback"
-									:sort="false"
-								>
-									<template #item="{ element }">
-										<div
-											v-if="!element.hidden && thumbnails[element.path]"
-											class="file_thumbnail selectable"
-											:class="{ active: element === selection }"
-										>
-											<img
-												:src="thumbnails[element.path]"
-												@keydown.enter.prevent="on_choose(element)"
-												@dblclick="on_choose(element)"
-												@click="selection = element"
-											/>
-											<div class="file_thumbnail_name">
-												{{ element.name }}
-											</div>
-										</div>
-									</template>
-								</Draggable>
 							</template>
 						</div>
-						<div class="button_wrapper" v-if="!!slots.buttons">
-							<slot name="buttons"></slot>
-						</div>
+						<Draggable
+							v-if="thumbnails !== undefined"
+							id="file_thumbnail_wrapper"
+							:list="sort_files(get_current_files())"
+							:group="{
+								name: 'playlist',
+								pull: clone_callback !== undefined ? 'clone' : false,
+								put: false
+							}"
+							item-key="path"
+							tag="div"
+							:clone="clone_callback"
+							:sort="false"
+						>
+							<template #item="{ element }">
+								<div
+									v-if="!element.hidden && thumbnails[element.path]"
+									class="file_thumbnail selectable"
+									:class="{ active: element === selection }"
+								>
+									<img
+										:src="thumbnails[element.path]"
+										@keydown.enter.prevent="on_choose(element)"
+										@dblclick="on_choose(element)"
+										@click="selection = element"
+									/>
+									<div class="file_thumbnail_name">
+										{{ element.name }}
+									</div>
+								</div>
+							</template>
+						</Draggable>
+						<slot name="edit"></slot>
 					</div>
-					<slot name="edit"></slot>
+					<div class="button_wrapper" v-if="!!slots.buttons">
+						<slot name="buttons"></slot>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -459,14 +446,6 @@
 		margin-left: auto !important;
 	}
 
-	#selection_wrapper {
-		display: flex;
-
-		flex: 1;
-
-		gap: 0.25rem;
-	}
-
 	.header {
 		text-align: center;
 
@@ -490,7 +469,7 @@
 		gap: 0.25rem;
 	}
 
-	.file_view {
+	#file_view_wrapper {
 		display: flex;
 		flex-direction: column;
 		flex: 1;
@@ -498,11 +477,16 @@
 		gap: 0.25rem;
 
 		border-radius: 0.25rem;
-
-		background-color: var(--color-container);
 	}
 
-	#file_draggable_wrapper {
+	#file_view {
+		flex: 1;
+		display: flex;
+
+		gap: 0.25rem;
+	}
+
+	#file_list {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
@@ -510,24 +494,35 @@
 		overflow: auto;
 
 		align-items: baseline;
+
+		border-radius: 0.25rem;
+
+		background-color: var(--color-container);
 	}
 
-	#file_draggable_wrapper > div {
+	#file_list > div {
 		display: flex;
 
 		overflow: visible;
 	}
 
 	#file_thumbnail_wrapper {
+		flex: 1;
+		display: flex;
 		flex-wrap: wrap;
+		align-content: flex-start;
 
 		overflow: auto;
 
 		gap: 0.5rem;
 		padding: 0.5rem;
+
+		border-radius: inherit;
+
+		background-color: var(--color-container);
 	}
 
-	#file_draggable_wrapper > div:not(#file_thumbnail_wrapper) {
+	#file_list > div:not(#file_thumbnail_wrapper) {
 		flex-direction: column;
 
 		gap: 0.25rem;
@@ -606,6 +601,10 @@
 
 	.button_wrapper {
 		display: flex;
+
+		border-radius: inherit;
+
+		background-color: var(--color-container);
 	}
 
 	.rotate_button > svg {

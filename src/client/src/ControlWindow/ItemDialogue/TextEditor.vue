@@ -24,7 +24,9 @@
 				@keydown="emit('update')"
 			/>
 		</div>
-		<slot></slot>
+		<div id="slot_buttons">
+			<slot></slot>
+		</div>
 	</div>
 </template>
 
@@ -34,12 +36,15 @@
 		flex-direction: column;
 		flex: 1;
 
-		background-color: var(--color-container);
+		gap: inherit;
 	}
 
 	#inputs_wrapper {
 		display: flex;
 		flex: 1;
+
+		background-color: var(--color-container);
+		border-radius: 0.25rem;
 
 		padding: 0.25rem;
 	}
@@ -76,5 +81,10 @@
 		background-color: var(--color-page-background);
 
 		outline: none;
+	}
+
+	#slot_buttons {
+		background-color: var(--color-container);
+		border-radius: 0.25rem;
 	}
 </style>

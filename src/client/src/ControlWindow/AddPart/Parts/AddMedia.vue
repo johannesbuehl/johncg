@@ -11,9 +11,6 @@
 	import type { MediaFile } from "@server/search_part";
 
 	library.add(fas.faPlus, fas.faRepeat);
-	const props = defineProps<{
-		thumbnails: Record<string, string>;
-	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: MediaProps];
@@ -40,7 +37,7 @@
 </script>
 
 <template>
-	<MediaDialogue :thumbnails="thumbnails" :create_props_callback="create_props" @choose="add_media">
+	<MediaDialogue :create_props_callback="create_props" @choose="add_media">
 		<template v-slot:buttons>
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop

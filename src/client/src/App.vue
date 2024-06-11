@@ -43,7 +43,6 @@
 	const playlist_caption = ref<string>("");
 
 	const item_data = ref<ItemData>({});
-	const thumbnails = ref<JGCPSend.MediaThumbnails["thumbnails"]>({});
 
 	ws_connect();
 
@@ -258,14 +257,10 @@
 
 	function store_thumbnails(data: JGCPSend.MediaThumbnails) {
 		if (typeof data.thumbnails === "object") {
-			const thumbnails_object = Object.fromEntries(
-				Object.entries(data.thumbnails).filter(
-					([path, thumbnail]) =>
-						typeof thumbnail === "string" && thumbnail.indexOf("data:image/png;base64,") === 0
-				)
-			);
-
-			thumbnails.value = thumbnails_object;
+			Object.assign(Globals._thumbnails.value, {
+				...Globals._thumbnails.value,
+				...data.thumbnails
+			});
 		}
 	}
 
@@ -322,7 +317,6 @@
 			:selected="selected_item"
 			:playlist_caption="playlist_caption"
 			:item_data="item_data"
-			:media_thumbnails="thumbnails"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

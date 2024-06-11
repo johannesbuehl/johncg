@@ -34,10 +34,6 @@
 		fas.faMessage
 	);
 
-	const props = defineProps<{
-		media_thumbnails: Record<string, string>;
-	}>();
-
 	const pick = ref<ItemProps["type"]>("song");
 
 	onMounted(() => {
@@ -121,10 +117,10 @@
 		/>
 		<AddBible v-else-if="pick === 'bible'" @add="add_item" />
 		<AddText v-else-if="pick === 'text'" @add="add_item" />
-		<AddMedia v-else-if="pick === 'media'" :thumbnails="media_thumbnails" @add="add_item" />
+		<AddMedia v-else-if="pick === 'media'" @add="add_item" />
 		<AddTemplate v-else-if="pick === 'template'" @add="add_item" />
 		<AddPDF v-else-if="pick === 'pdf'" @add="add_item" />
-		<AddCountdown v-else-if="pick === 'countdown'" :thumbnails="media_thumbnails" @add="add_item" />
+		<AddCountdown v-else-if="pick === 'countdown'" @add="add_item" />
 		<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" />
 		<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 	</div>

@@ -29,7 +29,6 @@
 		selected: number | null;
 		playlist_caption: string;
 		item_data: ItemData;
-		media_thumbnails: Record<string, string>;
 	}>();
 
 	const emit = defineEmits<{
@@ -148,27 +147,20 @@
 				slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
 			"
 		/>
-		<AddPart
-			v-else-if="Globals.ControlWindowState === ControlWindowState.Add"
-			:media_thumbnails="media_thumbnails"
-		/>
+		<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
 		<EditPart
 			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
 			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
 			:item_index="selected"
 			:item_data="item_data"
 		/>
-		<SongEditor
-			v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong"
-			:thumbnails="media_thumbnails"
-		/>
+		<SongEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong" />
 		<PsalmEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm" />
 		<EditSongFile
 			v-else-if="
 				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
 			"
 			:song_file="item_data.song"
-			:thumbnails="media_thumbnails"
 		/>
 		<EditPsalmFile
 			v-else-if="

@@ -177,8 +177,8 @@
 </script>
 
 <template>
-	<div class="add_media_wrapper">
-		<div id="book_parts_viewer">
+	<div id="add_bible_wrapper">
+		<div id="bible_viewer">
 			<div class="divisions">
 				<template v-for="[division, book_groups] in Object.entries(Globals.get_bible_file() ?? {})">
 					<div class="header">
@@ -206,82 +206,82 @@
 					</template>
 				</template>
 			</div>
-			<slot></slot>
+			<div id="chapter_verse_wrapper" v-if="chapter_verse_selection !== undefined">
+				<div>
+					<div class="header">Chapter</div>
+					<div class="chapters">
+						<template v-for="(verse_count, chapter) of book_selection?.chapters">
+							<input
+								type="radio"
+								style="display: none"
+								v-model="chapter_selection"
+								:value="chapter"
+								:id="`${book_selection?.id}_${chapter}`"
+							/>
+							<label
+								tabindex="0"
+								class="chapter"
+								:ref="chapter_obj_ref($el, chapter)"
+								:class="{
+									active: chapter_verse_selection[chapter]?.some((ele) => ele),
+									selected: chapter_selection === chapter
+								}"
+								:for="`${book_selection?.id}_${chapter}`"
+								@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
+								@dblclick="clear_verses(chapter)"
+							>
+								{{ chapter + 1 }}
+							</label>
+						</template>
+					</div>
+				</div>
+				<div>
+					<div class="header">Verse</div>
+					<div class="chapters">
+						<template v-for="(state, verse) of chapter_verse_selection[chapter_selection]">
+							<input
+								type="checkbox"
+								style="display: none"
+								v-model="chapter_verse_selection[chapter_selection][verse]"
+								:id="`${book_selection?.id}_${chapter_selection}_${verse}`"
+								@change="last_verse = verse"
+							/>
+							<label
+								tabindex="0"
+								class="chapter"
+								:ref="verse_obj_ref($el, verse)"
+								:class="{ active: state }"
+								:for="`${book_selection?.id}_${chapter_selection}_${verse}`"
+								@click.shift="shift_click(verse)"
+								@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
+							>
+								{{ verse + 1 }}
+							</label>
+						</template>
+					</div>
+				</div>
+			</div>
 		</div>
-		<div id="chapter_verse_wrapper" v-if="chapter_verse_selection !== undefined">
-			<div>
-				<div class="header">Chapter</div>
-				<div class="chapters">
-					<template v-for="(verse_count, chapter) of book_selection?.chapters">
-						<input
-							type="radio"
-							style="display: none"
-							v-model="chapter_selection"
-							:value="chapter"
-							:id="`${book_selection?.id}_${chapter}`"
-						/>
-						<label
-							tabindex="0"
-							class="chapter"
-							:ref="chapter_obj_ref($el, chapter)"
-							:class="{
-								active: chapter_verse_selection[chapter]?.some((ele) => ele),
-								selected: chapter_selection === chapter
-							}"
-							:for="`${book_selection?.id}_${chapter}`"
-							@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
-							@dblclick="clear_verses(chapter)"
-						>
-							{{ chapter + 1 }}
-						</label>
-					</template>
-				</div>
-			</div>
-			<div>
-				<div class="header">Verse</div>
-				<div class="chapters">
-					<template v-for="(state, verse) of chapter_verse_selection[chapter_selection]">
-						<input
-							type="checkbox"
-							style="display: none"
-							v-model="chapter_verse_selection[chapter_selection][verse]"
-							:id="`${book_selection?.id}_${chapter_selection}_${verse}`"
-							@change="last_verse = verse"
-						/>
-						<label
-							tabindex="0"
-							class="chapter"
-							:ref="verse_obj_ref($el, verse)"
-							:class="{ active: state }"
-							:for="`${book_selection?.id}_${chapter_selection}_${verse}`"
-							@click.shift="shift_click(verse)"
-							@keydown.enter.prevent="($event.target as HTMLElement)?.click()"
-						>
-							{{ verse + 1 }}
-						</label>
-					</template>
-				</div>
-			</div>
+		<div id="slot_buttons">
+			<slot></slot>
 		</div>
 	</div>
 </template>
 
 <style scoped>
-	.add_media_wrapper {
-		flex: 1;
-		display: flex;
-
-		gap: inherit;
-	}
-
-	#book_parts_viewer {
+	#add_bible_wrapper {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 
-		background-color: var(--color-container);
+		gap: inherit;
+	}
 
-		border-radius: 0.25rem;
+	#bible_viewer {
+		flex: 1;
+		display: flex;
+
+		gap: inherit;
 	}
 
 	.divisions {
@@ -292,6 +292,9 @@
 		gap: 0.25rem;
 
 		overflow: auto;
+
+		background-color: var(--color-container);
+		border-radius: 0.25rem;
 	}
 
 	.book_group,
@@ -400,5 +403,10 @@
 
 	.chapter:hover {
 		background-color: var(--color-item-hover);
+	}
+
+	#slot_buttons {
+		background-color: var(--color-container);
+		border-radius: 0.25rem;
 	}
 </style>

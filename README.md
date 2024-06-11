@@ -29,12 +29,10 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move template-jump()-function into update() to prevent error messages in casparcg-log
 - song-file: chords itself as chords and transpose them
 - support other browser than Chrome and phone / tablet resolution
-- show thumbnail of CasparCG-media
-- SongEditor / PsalmEditor: Confirm to abort unsaved changes
 - save_song(): check, wether "chords" is valid
 - launch casparcg automatically
 - reload psalm and song after file-edit
 - FileDialogue: Create directories
-- FileDialogue Thumbnails: make like songbeamer for easy switching
 - Fix style of AddPart-Draggable-Drag-n-drop Placeholder
 - SavePlaylist: create-directory-stack
+- rename JGCP to JCGP

@@ -32,10 +32,6 @@
 
 	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
-	const props = defineProps<{
-		thumbnails: Record<string, string>;
-	}>();
-
 	const text_parts = defineModel<SongTextPart[]>("text_parts", {
 		default: () => reactive([{ part: "", text: [["", "", "", ""]] }])
 	});
@@ -421,8 +417,8 @@
 		</div>
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
+		<!-- :thumbnails="thumbnails" -->
 		<MediaDialogue
-			:thumbnails="thumbnails"
 			:hide_header="true"
 			v-model:directory_stack="media_directory_stack"
 			@choose="(ff) => select_media(ff as MediaFile)"
