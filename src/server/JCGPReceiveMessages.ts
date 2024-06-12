@@ -127,6 +127,12 @@ export interface GetMediaThumbnails extends Base {
 	files: MediaFile[];
 }
 
+export interface NewDirectory extends Base {
+	command: "new_directory";
+	path: string;
+	type: "playlist" | "song" | "psalm";
+}
+
 /**
  * Uniun of the different JCGP-messages
  */
@@ -149,4 +155,5 @@ export type Message =
 	| GetItemData
 	| CreatePlaylistPDF
 	| SaveFile
-	| GetMediaThumbnails;
+	| GetMediaThumbnails
+	| NewDirectory;

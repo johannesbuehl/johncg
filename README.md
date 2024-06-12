@@ -31,8 +31,5 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - support other browser than Chrome and phone / tablet resolution
 - save_song(): check, wether "chords" is valid
 - reload psalm and song after file-edit
-- FileDialogue: Create directories
 - Fix style of AddPart-Draggable-Drag-n-drop Placeholder
-- SavePlaylist: create-directory-stack
-- move config-file to yaml and create default-config-file with comments
 - repair new-file abort unsaved changes

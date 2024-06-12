@@ -18,7 +18,6 @@
 	}>();
 
 	const item = ref<HTMLDivElement>();
-	const color_picker = ref<HTMLInputElement>();
 	const caption_element = ref<HTMLDivElement>();
 	const item_props = defineModel<ClientPlaylistItem>("item_props", { required: true });
 
@@ -65,14 +64,7 @@
 		@keydown.enter="emit('set_active')"
 		@keydown.delete="delete_item"
 	>
-		<div
-			class="item_color_indicator"
-			:style="{ 'background-color': item_props.color }"
-			@contextmenu="
-				color_picker?.click();
-				$event.preventDefault();
-			"
-		></div>
+		<div class="item_color_indicator" :style="{ 'background-color': item_props.color }"></div>
 		<div class="playlist_item" ref="caption_element">
 			{{ item_props.caption }}
 		</div>

@@ -434,8 +434,17 @@
 		<SongDialogue
 			:select_dirs="true"
 			:hide_header="true"
+			:new_directory="true"
 			v-model:directory_stack="song_directory_stack"
 			v-model:selection="song_selection"
+			@new_directory="
+				(path: string) =>
+					Globals.ws?.send<JCGPRecv.NewDirectory>({
+						command: 'new_directory',
+						path,
+						type: 'song'
+					})
+			"
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />

@@ -88,8 +88,17 @@
 		:search_disabled="true"
 		v-model:selection="selection"
 		:select_dirs="true"
+		:new_directory="true"
 		@choose="(playlist) => save_playlist(playlist)"
 		@refresh_files="() => Globals.get_playlist_files(true)"
+		@new_directory="
+			(path: string) =>
+				Globals.ws?.send<JCGPRecv.NewDirectory>({
+					command: 'new_directory',
+					path,
+					type: 'playlist'
+				})
+		"
 	>
 		<template v-slot:buttons>
 			<input class="file_name_box" v-model="file_name" placeholder="Filename" @input="" />
