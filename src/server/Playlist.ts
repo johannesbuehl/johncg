@@ -139,7 +139,7 @@ export default class Playlist {
 			this.active_item_number++;
 		}
 
-		if (set_active) {
+		if (set_active && Config.behaviour.show_on_load) {
 			this.set_active_item(index, 0);
 		}
 

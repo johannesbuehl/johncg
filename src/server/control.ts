@@ -50,7 +50,7 @@ export default class Control {
 		navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
 			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
 		set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
-			this.set_visibility(msg.visibility, msg.client_id, ws),
+			this.set_visibility(msg.visibility, ws),
 		toggle_visibility: () => this.toggle_visibility(),
 		move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
 			this.move_playlist_item(msg.from, msg.to, ws),
@@ -418,7 +418,7 @@ export default class Control {
 	 * set the visibility of the playlist in the renderer
 	 * @param visibility wether the output should be visible (true) or not (false)
 	 */
-	private async set_visibility(visibility: boolean, client_id?: string, ws?: WebSocket) {
+	private async set_visibility(visibility: boolean, ws?: WebSocket) {
 		if (typeof visibility === "boolean") {
 			logger.log(`changed CasparCG-visibility: '${visibility ? "visible" : "hidden"}'`);
 

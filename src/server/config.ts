@@ -5,6 +5,7 @@ import { recurse_object_check } from "./lib";
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import { CasparCGResolution } from "./CasparCGConnection";
+import yaml from "yaml";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -17,7 +18,7 @@ export interface CasparCGConnectionSettings {
 	path?: string;
 }
 
-export interface ConfigJSON {
+export interface ConfigYAML {
 	log_level: keyof Levels;
 	behaviour: {
 		show_on_load: boolean;
@@ -43,10 +44,10 @@ export interface ConfigJSON {
 	};
 }
 
-const config_path = "config.json";
+const config_path = "config.yaml";
 
 // validate the config file
-const config_template: ConfigJSON = {
+const config_template: ConfigYAML = {
 	log_level: "INFO",
 	behaviour: {
 		show_on_load: true
@@ -84,7 +85,7 @@ const config_template: ConfigJSON = {
 class ConfigClass {
 	private config_path: string;
 
-	private config: ConfigJSON;
+	private config: ConfigYAML;
 	private config_internal: {
 		casparcg_template_path?: string;
 		casparcg_resolution: CasparCGResolution;
@@ -99,7 +100,7 @@ class ConfigClass {
 	}
 
 	open(pth: string = config_path): boolean {
-		const new_config = JSON.parse(fs.readFileSync(pth, "utf-8")) as ConfigJSON;
+		const new_config = yaml.parse(fs.readFileSync(pth, "utf-8")) as ConfigYAML;
 
 		if (this.check_config(new_config)) {
 			this.config_path = pth;
@@ -120,7 +121,7 @@ class ConfigClass {
 		fs.writeFileSync(pth, JSON.stringify(this.config, undefined, "\t"));
 	}
 
-	private check_config(config: ConfigJSON): boolean {
+	private check_config(config: ConfigYAML): boolean {
 		let file_check = recurse_object_check(config, config_template);
 
 		file_check &&= [
@@ -160,7 +161,7 @@ class ConfigClass {
 		return file_check;
 	}
 
-	get_path(type: keyof ConfigJSON["path"] | "template", pth?: string): string {
+	get_path(type: keyof ConfigYAML["path"] | "template", pth?: string): string {
 		let base_path: string;
 
 		if (type === "template") {
@@ -205,23 +206,23 @@ class ConfigClass {
 		return structuredClone(this.config_internal.casparcg_resolution);
 	}
 
-	get path(): ConfigJSON["path"] {
+	get path(): ConfigYAML["path"] {
 		return structuredClone(this.config.path);
 	}
 
-	get casparcg(): ConfigJSON["casparcg"] {
+	get casparcg(): ConfigYAML["casparcg"] {
 		return structuredClone(this.config.casparcg);
 	}
 
-	get log_level(): ConfigJSON["log_level"] {
+	get log_level(): ConfigYAML["log_level"] {
 		return structuredClone(this.config.log_level);
 	}
 
-	get client_server(): ConfigJSON["client_server"] {
+	get client_server(): ConfigYAML["client_server"] {
 		return structuredClone(this.config.client_server);
 	}
 
-	get behaviour(): ConfigJSON["behaviour"] {
+	get behaviour(): ConfigYAML["behaviour"] {
 		return structuredClone(this.config.behaviour);
 	}
 }

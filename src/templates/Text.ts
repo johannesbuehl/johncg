@@ -15,8 +15,6 @@ function update(str_args: string) {
 
 	if (json_args?.text !== undefined) {
 		document.querySelector<HTMLDivElement>("div#text").innerText = json_args?.text;
-	} else {
-		console.log("args: ", json_args);
 	}
 
 	mute_transition = json_args?.mute_transition ?? false;

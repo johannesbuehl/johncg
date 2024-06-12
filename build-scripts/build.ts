@@ -3,8 +3,6 @@ import fs from "fs";
 import path from "path";
 import tar from "tar";
 
-import type { ConfigJSON } from "../src/server/config.ts";
-
 // check, wether the build script supports the os
 if (!["win32", "linux"].includes(process.platform)) {
 	throw new TypeError("Buildscript does not support this OS");
@@ -59,18 +57,7 @@ copy_build_file(process.execPath, exec_name);
 // // modify the node executable
 // execSync(`npx postject dist/build/${exec_name} NODE_SEA_BLOB dist/build/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`);
 
-// load the config-file, censor the file-paths and store it for the relase
-const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
-config_file.path = {
-	song: "Song/",
-	pdf: "PDF/",
-	psalm: "Psalm/",
-	playlist: "Playlist/",
-	bible: "Bible/Luther-Bibel.json"
-};
-config_file.log_level = "INFO";
-
-fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
+copy_release_dir("config_default.yaml", "config.yaml");
 
 // copy the file to the output
 copy_release_file(path.join(build_dir, exec_name));

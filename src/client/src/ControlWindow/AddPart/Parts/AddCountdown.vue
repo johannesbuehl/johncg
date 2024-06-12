@@ -31,8 +31,6 @@
 	function add_countdown() {
 		const return_props = create_props();
 
-		console.dir(return_props);
-
 		if (return_props !== undefined) {
 			emit("add", return_props);
 		}
