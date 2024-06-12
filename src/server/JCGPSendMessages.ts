@@ -3,7 +3,7 @@ import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
 import { ItemFileMapped, ItemFileType } from "./search_part.ts";
-import { CasparCGResolution } from "./CasparCG.ts";
+import { CasparCGResolution } from "./CasparCGConnection.js";
 
 /**
  * Base interface for sent JCGP-messages

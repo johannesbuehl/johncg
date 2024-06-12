@@ -4,7 +4,7 @@ import path from "path";
 import { recurse_object_check } from "./lib";
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
-import { CasparCGResolution } from "./CasparCG";
+import { CasparCGResolution } from "./CasparCGConnection";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -14,6 +14,7 @@ export interface CasparCGConnectionSettings {
 		media?: number;
 		template: number;
 	};
+	path?: string;
 }
 
 export interface ConfigJSON {
@@ -137,9 +138,15 @@ class ConfigClass {
 		file_check &&= config?.casparcg?.connections?.every(
 			(connection) => connection?.layers?.media !== connection?.layers?.template
 		);
-		file_check &&= config?.casparcg?.connections?.every((connection) =>
-			Object.values(connection?.layers).every((layer) => layer >= 0)
-		);
+		file_check &&= config?.casparcg?.connections?.every((connection) => {
+			let check = Object.values(connection?.layers).every((layer) => layer >= 0);
+
+			if (connection.path !== undefined) {
+				check &&= typeof connection.path === "string";
+			}
+
+			return check;
+		});
 
 		const check_valid_port = (port: unknown) =>
 			typeof port === "number" && Number.isInteger(port) && port >= 0 && port <= 65535;

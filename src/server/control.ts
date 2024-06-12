@@ -19,7 +19,7 @@ import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_pa
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
-import { casparcg } from "./CasparCG.ts";
+import { casparcg } from "./CasparCGConnection.js";
 import { recurse_object_check } from "./lib.ts";
 import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
 import { PsalmFile } from "./PlaylistItems/Psalm.ts";

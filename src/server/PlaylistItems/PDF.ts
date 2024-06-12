@@ -7,7 +7,7 @@ import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./Play
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
-import { CasparCGResolution } from "../CasparCG.ts";
+import { CasparCGResolution } from "../CasparCGConnection.js";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";

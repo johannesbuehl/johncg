@@ -27,7 +27,7 @@ import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
 import { PlayParameters } from "casparcg-connection";
 import { logger } from "../logger.ts";
 import { get_casparcg_transition } from "../config.ts";
-import { CasparCGConnection, casparcg } from "../CasparCG.ts";
+import { CasparCGConnection, casparcg } from "../CasparCGConnection.js";
 import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text.ts";
 
 export type PlaylistItem =

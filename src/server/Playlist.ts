@@ -22,7 +22,12 @@ import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
 import AMCP from "./PlaylistItems/AMCP.ts";
-import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
+import {
+	CasparCGConnection,
+	add_casparcg_listener,
+	casparcg,
+	casparcg_clear
+} from "./CasparCGConnection.js";
 import path from "path";
 import Text from "./PlaylistItems/Text.ts";
 

@@ -1,4 +1,4 @@
-import { CasparCGConnection, casparcg } from "../CasparCG";
+import { CasparCGConnection, casparcg } from "../CasparCGConnection";
 import { recurse_object_check } from "../lib";
 import {
 	ClientItemBase,

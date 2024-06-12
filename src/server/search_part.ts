@@ -5,7 +5,7 @@ import Config from "./config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
-import { casparcg } from "./CasparCG";
+import { casparcg } from "./CasparCGConnection";
 
 export interface FileBase<K extends keyof ItemFileType> {
 	name: string;
