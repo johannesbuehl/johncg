@@ -70,7 +70,9 @@ export default class Control {
 			this.create_playlist_pdf(ws, msg.type),
 		update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
 			this.update_playlist_caption(msg.caption, ws),
-		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws)
+		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws),
+		new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
+			this.new_directory(msg.path, msg.type, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -772,11 +774,46 @@ export default class Control {
 		});
 	}
 
+	private new_directory<Type extends JCGPRecv.NewDirectory["type"]>(
+		path: string,
+		type: Type,
+		ws: WebSocket
+	) {
+		const directory_path = Config.get_path(type, path);
+		logger.log(`creating directory: '${path}'`);
+
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		fs.mkdir(directory_path, async (err) => {
+			if (err) {
+				logger.error(`Can't create directory: ${err.message}`);
+				ws_send_response(`Can't create directory: ${err.message}`, false, ws);
+			} else {
+				logger.debug(`Created directory: ${directory_path}`);
+				ws_send_response(`Created directory: ${directory_path}`, true, ws);
+
+				const search_map: {
+					[T in JCGPRecv.NewDirectory["type"]]: () => Promise<ItemFileMapped<T>[]>;
+				} = {
+					song: () => Promise.resolve(this.search_part.find_sng_files()),
+					playlist: () => Promise.resolve(this.search_part.find_jcg_files()),
+					psalm: () => Promise.resolve(this.search_part.find_psalm_files())
+				};
+
+				// send the new files to the client
+				this.send_all_clients<JCGPSend.ItemFiles<Type>>({
+					command: "item_files",
+					type,
+					files: await search_map[type]()
+				});
+			}
+		});
+	}
+
 	/**
 	 * Send a JCGP-message to all registered clients
 	 * @param message JSON-message to be sent
 	 */
-	private send_all_clients(message: JCGPSend.Message) {
+	private send_all_clients<T extends JCGPSend.Message>(message: T) {
 		const message_string = JSON.stringify(message);
 
 		// gather all the clients

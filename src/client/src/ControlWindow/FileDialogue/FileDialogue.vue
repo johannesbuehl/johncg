@@ -82,6 +82,7 @@
 	import Draggable from "vuedraggable";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
+	import PopUp from "../PopUp.vue";
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
@@ -92,7 +93,9 @@
 		fas.faChevronRight,
 		fas.faArrowsRotate,
 		fas.faFileCirclePlus,
-		fas.faXmark
+		fas.faXmark,
+		fas.faFolderPlus,
+		fas.faPlus
 	);
 
 	const props = defineProps<{
@@ -103,11 +106,13 @@
 		hide_header?: boolean;
 		clone_callback?: (arg: JCGPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
 		new_button?: boolean;
+		new_directory?: boolean;
 		search_disabled?: boolean;
 	}>();
 
 	const emit = defineEmits<{
 		new_file: [];
+		new_directory: [path: string];
 		choose: [file: ItemFileMapped<T> | undefined];
 		refresh_files: [];
 	}>();
@@ -116,6 +121,9 @@
 
 	const search_strings = defineModel<SearchInputDefinition<unknown>[]>("search_strings");
 
+	const show_new_directory = ref<boolean>(false);
+	const directory_name = ref<string>("");
+	const directory_name_input = ref<HTMLInputElement>();
 	const rotate_button = ref<boolean>(false);
 	const directory_stack = defineModel<ItemFileMapped<T>[]>("directory_stack", {
 		default: () => reactive([])
@@ -157,6 +165,17 @@
 
 		emit("choose", file);
 	}
+
+	function on_new_directory() {
+		let directory = "";
+
+		if (directory_stack.value.length > 0) {
+			directory = directory_stack.value[directory_stack.value.length - 1].path + "/";
+		}
+
+		emit("new_directory", directory + directory_name.value);
+		show_new_directory.value = false;
+	}
 </script>
 
 <template>
@@ -192,24 +211,26 @@
 						</div>
 					</div>
 				</div>
-				<div id="directory_stack">
-					<MenuButton
-						:square="true"
-						@click="
-							directory_stack = reactive([]);
-							$emit(
-								'choose',
-								directory_stack.length > 0 ? directory_stack[directory_stack.length - 1] : undefined
-							);
-						"
-					>
-						<FontAwesomeIcon :icon="['fas', 'house']" />
-					</MenuButton>
-					<template v-for="(dir, dir_index) of directory_stack">
-						<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
+				<div id="navigation_bar">
+					<div v-if="new_directory" id="new_directory_wrapper">
 						<MenuButton
+							:square="true"
 							@click="
-								directory_stack.splice(dir_index + 1, directory_stack.length);
+								show_new_directory = true;
+								directory_name = '';
+								$nextTick(() => {
+									directory_name_input?.focus();
+								});
+							"
+						>
+							<FontAwesomeIcon :icon="['fas', 'folder-plus']" />
+						</MenuButton>
+					</div>
+					<div id="directory_stack">
+						<MenuButton
+							:square="true"
+							@click="
+								directory_stack = reactive([]);
 								$emit(
 									'choose',
 									directory_stack.length > 0
@@ -218,21 +239,37 @@
 								);
 							"
 						>
-							{{ dir.name }}
+							<FontAwesomeIcon :icon="['fas', 'house']" />
 						</MenuButton>
-					</template>
-					<MenuButton
-						id="refresh_button"
-						:class="{ rotate_button: rotate_button }"
-						:square="true"
-						@click="
-							emit('refresh_files');
-							rotate_button = true;
-						"
-						@animationend="rotate_button = false"
-					>
-						<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
-					</MenuButton>
+						<template v-for="(dir, dir_index) of directory_stack">
+							<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
+							<MenuButton
+								@click="
+									directory_stack.splice(dir_index + 1, directory_stack.length);
+									$emit(
+										'choose',
+										directory_stack.length > 0
+											? directory_stack[directory_stack.length - 1]
+											: undefined
+									);
+								"
+							>
+								{{ dir.name }}
+							</MenuButton>
+						</template>
+						<MenuButton
+							id="refresh_button"
+							:class="{ rotate_button: rotate_button }"
+							:square="true"
+							@click="
+								emit('refresh_files');
+								rotate_button = true;
+							"
+							@animationend="rotate_button = false"
+						>
+							<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
+						</MenuButton>
+					</div>
 				</div>
 				<div id="file_view_wrapper">
 					<div id="file_view">
@@ -321,6 +358,20 @@
 				</div>
 			</div>
 		</div>
+		<PopUp v-model:active="show_new_directory" title="Create Directory">
+			<div id="create_directory_popup">
+				<input
+					ref="directory_name_input"
+					class="search_box"
+					v-model="directory_name"
+					placeholder="Directory Name"
+					@keydown.enter="on_new_directory"
+				/>
+				<MenuButton :square="true" @click="on_new_directory">
+					<FontAwesomeIcon :icon="['fas', 'plus']" />
+				</MenuButton>
+			</div>
+		</PopUp>
 	</div>
 </template>
 
@@ -335,6 +386,7 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		gap: inherit;
 	}
 
 	#search_wrapper {
@@ -425,11 +477,30 @@
 		justify-content: center;
 	}
 
+	#navigation_bar {
+		display: flex;
+
+		gap: 0.25rem;
+	}
+
+	#new_directory_wrapper {
+		background-color: var(--color-container);
+		border-radius: 0.25rem;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		aspect-ratio: 1;
+		max-height: 100%;
+	}
+
 	#directory_stack {
 		background-color: var(--color-container);
 
 		border-radius: 0.25rem;
 
+		flex: 1;
 		display: flex;
 		align-items: center;
 
@@ -619,5 +690,11 @@
 		to {
 			transform: rotate(180deg);
 		}
+	}
+
+	#create_directory_popup {
+		display: flex;
+
+		background-color: var(--color-container);
 	}
 </style>

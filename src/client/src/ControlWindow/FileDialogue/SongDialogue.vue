@@ -13,11 +13,13 @@
 		select_dirs?: boolean;
 		new_button?: boolean;
 		hide_header?: boolean;
+		new_directory?: boolean;
 	}>();
 
 	const emit = defineEmits<{
 		add: [item_props: SongProps];
 		new_song: [];
+		new_directory: [path: string];
 	}>();
 
 	// currently selected song
@@ -175,6 +177,7 @@
 		:new_button="new_button"
 		:select_dirs="select_dirs"
 		:hide_header="hide_header"
+		:new_directory="new_directory"
 		v-model:directory_stack="directory_stack"
 		name="Song"
 		v-model:selection="selection"
@@ -182,6 +185,7 @@
 		@choose="add_song"
 		@refresh_files="() => Globals.get_song_files(true)"
 		@new_file="emit('new_song')"
+		@new_directory="(path: string) => emit('new_directory', path)"
 	>
 		<template v-slot:buttons>
 			<slot name="buttons"></slot>

@@ -372,10 +372,19 @@
 			name="Save Path"
 			:files="psalm_file_tree"
 			:select_dirs="true"
+			:new_directory="true"
 			v-model:selection="file_selection"
 			v-model:search_strings="psalm_search_strings"
 			v-model:directory_stack="directory_stack"
 			@refresh_files="() => Globals.get_psalm_files(true)"
+			@new_directory="
+				(path: string) =>
+					Globals.ws?.send<JCGPRecv.NewDirectory>({
+						command: 'new_directory',
+						path,
+						type: 'psalm'
+					})
+			"
 		>
 			<template v-slot:buttons>
 				<input class="file_name_box" v-model="psalm_file_name" placeholder="Filename" @input="" />
