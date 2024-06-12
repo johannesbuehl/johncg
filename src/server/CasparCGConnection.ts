@@ -70,7 +70,7 @@ void (async () => {
 					// wait for a few seconds before trying to connect
 					await new Promise((resolve) => setTimeout(resolve, 5000));
 				} catch (e) {
-					/* empty */
+					logger.error(`Can't launch CasparCG at ${connection_setting.path}`);
 				}
 			}
 
