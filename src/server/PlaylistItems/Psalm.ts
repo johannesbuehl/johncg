@@ -11,7 +11,7 @@ export interface PsalmFile {
 		caption: string;
 		id?: string;
 		book?: string;
-		indent?: boolean;
+		indent: boolean;
 	};
 	text: string[][][];
 }
@@ -107,9 +107,21 @@ export default class Psalm extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientPsalmSlides> {
+		let title: string = "";
+		const psalm_file = this.psalm_file;
+
+		if (psalm_file !== false) {
+			if (psalm_file.metadata.id !== undefined) {
+				title = `${psalm_file.metadata.id} - `;
+			}
+
+			title += psalm_file.metadata.caption;
+		}
+
 		const return_item: ClientPsalmSlides = {
 			type: "psalm",
 			caption: this.item_props.caption,
+			title,
 			media: this.media,
 			template: this.template
 		};
@@ -146,7 +158,8 @@ export default class Psalm extends PlaylistItemBase {
 
 		const template: PsalmFile = {
 			metadata: {
-				caption: "Template"
+				caption: "Template",
+				indent: false
 			},
 			text: [[["Template"]]]
 		};

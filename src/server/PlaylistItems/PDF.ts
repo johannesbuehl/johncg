@@ -7,7 +7,7 @@ import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./Play
 import { logger } from "../logger.ts";
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
-import { CasparCGResolution } from "../CasparCG.ts";
+import { CasparCGResolution } from "../CasparCGConnection.js";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -68,20 +68,13 @@ export default class PDF extends PlaylistItemBase {
 							);
 							const scale = Math.min(...Object.values(scales));
 
-							const canvas = Canvas.createCanvas(
-								casparcg_resolution.width,
-								casparcg_resolution.height
-							);
+							const canvas = Canvas.createCanvas(viewport.width * scale, viewport.height * scale);
 
 							await page.render({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
 								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
 								/* eslint-disable @typescript-eslint/naming-convention */
-								viewport: page.getViewport({
-									scale,
-									offsetY: (casparcg_resolution.height - scale * viewport.height) / 2,
-									offsetX: (casparcg_resolution.width - scale * viewport.width) / 2
-								}),
+								viewport: page.getViewport({ scale }),
 								/* eslint-enable @typescript-eslint/naming-convention */
 								background: "#000000"
 							}).promise;
@@ -127,6 +120,7 @@ export default class PDF extends PlaylistItemBase {
 	async create_client_object_item_slides(): Promise<ClientPDFSlides> {
 		return Promise.resolve({
 			caption: this.props.caption,
+			title: this.props.file,
 			type: "pdf",
 			slides: await Promise.all(this.slides.map(async (m) => await this.create_thumbnail(m))),
 			media: undefined

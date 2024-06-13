@@ -33,6 +33,12 @@
 				"trailingUnderscore": "forbid"
 			},
 			{
+				"selector": "enumMember",
+				"format": ["PascalCase"],
+				"leadingUnderscore": "forbid",
+				"trailingUnderscore": "forbid"
+			},
+			{
 				"selector": "import",
 				"format": ["PascalCase", "snake_case", "camelCase"],
 				"leadingUnderscore": "forbid",

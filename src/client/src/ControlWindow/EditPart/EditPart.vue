@@ -1,22 +1,52 @@
 <script setup lang="ts">
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
+
 	import EditSong from "./EditSong.vue";
 	import EditBible from "./EditBible.vue";
 	import EditTemplate from "./EditTemplate.vue";
 	import EditCountdown from "./EditCountdown.vue";
-
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import EditAMCP from "./EditAMCP.vue";
+	import EditText from "./EditText.vue";
+	import MenuButton from "../MenuBar/MenuButton.vue";
+	import EditDummy from "./EditDummy.vue";
+	import { ControlWindowState } from "@/Enums";
+	import type { ItemData } from "@/App.vue";
+	import Globals from "@/Globals";
 
-	defineProps<{
-		ws: WebSocket;
-		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import type { ItemFileMapped, ItemFileType, SongFile } from "@server/search_part";
+
+	library.add(fas.faPen);
+
+	const props = defineProps<{
+		files?: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
 		item_index: number | null;
-		bible?: BibleFile;
+		item_data: ItemData;
 	}>();
 
 	const item_props = defineModel<ClientPlaylistItem | undefined>("item_props", { required: true });
+
+	function edit_file() {
+		switch (item_props.value?.type) {
+			case "song":
+				Globals.ControlWindowState = ControlWindowState.EditSong;
+				break;
+			case "psalm":
+				Globals.ControlWindowState = ControlWindowState.EditPsalm;
+				break;
+			default:
+				return;
+		}
+
+		Globals.ws?.send<JCGPRecv.GetItemData>({
+			command: "get_item_data",
+			type: item_props.value.type,
+			file: item_props.value.file
+		});
+	}
 </script>
 
 <template>
@@ -35,47 +65,60 @@
 				v-model="item_props.caption"
 				placeholder="Item Caption"
 			/>
+			<MenuButton
+				v-if="item_props.type === 'song' || item_props.type === 'psalm'"
+				@click="edit_file"
+			>
+				<FontAwesomeIcon :icon="['fas', 'pen']" />Edit
+				{{ item_props.type === "song" ? "Song" : "Psalm" }}-File
+			</MenuButton>
 		</div>
 		<EditSong
 			v-if="item_props?.type === 'song'"
 			:key="`${item_index}_song`"
 			v-model:item_props="item_props"
-			:ws="ws"
-			:song_file="files?.song"
+			:song_data="(item_data.song as SongFile | undefined)?.data"
 			:item_index="item_index"
 		/>
 		<EditBible
 			v-else-if="item_props?.type === 'bible'"
 			:key="`${item_index}_bible`"
 			v-model:item_props="item_props"
-			:ws="ws"
-			:bible="bible"
+			:item_index="item_index"
+		/>
+		<EditText
+			v-else-if="item_props?.type === 'text'"
+			:key="`${item_index}_text`"
+			v-model:item_props="item_props"
 			:item_index="item_index"
 		/>
 		<EditTemplate
 			v-else-if="item_props?.type === 'template'"
 			:key="`${item_index}_template`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditCountdown
 			v-else-if="item_props?.type === 'countdown'"
 			:key="`${item_index}_countdown`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
 		<EditAMCP
 			v-else-if="item_props?.type === 'amcp'"
 			:key="`${item_index}_amcp`"
 			v-model:item_props="item_props"
-			:ws="ws"
 			:item_index="item_index"
 		/>
-		<div v-if="item_props?.type === undefined" id="edit_part_placeholder">
+		<div v-else-if="item_props?.type === undefined" id="edit_part_placeholder">
 			Select an item in the playlist for editing
 		</div>
+		<EditDummy
+			v-else
+			:key="`${item_index}_dummy`"
+			v-model:item_props="item_props"
+			:item_index="item_index"
+		/>
 	</div>
 </template>
 

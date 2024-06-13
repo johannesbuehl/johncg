@@ -1,59 +1,24 @@
 import fs from "fs";
 import iconv from "iconv-lite";
+import Chord from "./Chord";
 
-export const verse_types = [
-	"refrain",
-	"chorus",
-	"vers",
-	"verse",
-	"strophe",
-	"intro",
-	"coda",
-	"ending",
-	"bridge",
-	"instrumental",
-	"interlude",
-	"zwischenspiel",
-	"pre-chorus",
-	"pre-refrain",
-	"misc",
-	"solo",
-	"outro",
-	"pre-bridge",
-	"pre-coda",
-	"part",
-	"teil",
-	"title",
-	"unbekannt",
-	"unknown",
-	"unbenannt"
-] as const;
-
-export type SongElement = (typeof verse_types)[number];
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const is_song_element = (x: any): x is SongElement => {
-	if (typeof x !== "string") {
-		return false;
-	}
-
-	const stem = x.split(" ", 1)[0];
-
-	return verse_types.includes(stem.toLowerCase() as SongElement);
-};
+import { type SongElement, is_song_element } from "./SongElements";
 
 // metadata of the songfile
 export interface SongFileMetadata {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	Title: string[];
+	LangCount: number;
 	ChurchSongID?: string;
 	Songbook?: string;
-	VerseOrder?: SongElement[];
+	VerseOrder?: string[];
 	BackgroundImage?: string;
 	Author?: string;
 	Melody?: string;
 	Translation?: string;
 	Copyright?: string;
-	LangCount: number;
+	Chords?: Chords;
+	Transpose?: number;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -70,6 +35,11 @@ export interface LyricPart {
 }
 
 export type ItemPart = TitlePart | LyricPart;
+
+export interface SongData {
+	metadata: SongFileMetadata;
+	text: SongParts;
+}
 
 interface BasePartClient {
 	type: string;
@@ -90,6 +60,8 @@ export type ItemPartClient = TitlePartClient | LyricPartClient;
 export type SongPart = string[][][];
 export type SongParts = Record<string, SongPart>;
 
+export type Chords = Record<number, Record<number, Chord>>;
+
 /**
  * processes and saves song-files (*.sng)
  * They should be compatible with those created by songbeamer (no guarantee given)
@@ -98,7 +70,7 @@ export default class SongFile {
 	private song_file_path?: string;
 
 	// private variables
-	private text_parts: SongParts = {};
+	private song_parts: SongParts = {};
 
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -107,11 +79,15 @@ export default class SongFile {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(path?: string) {
-		this.song_file_path = path;
+	constructor(path: string);
+	constructor(data: SongData);
+	constructor(arg: string | SongData) {
+		if (typeof arg === "string") {
+			this.song_file_path = arg;
 
-		if (path !== undefined) {
-			this.parse_song_text();
+			this.parse_song_file();
+		} else {
+			this.load_song_data(arg);
 		}
 	}
 
@@ -119,7 +95,7 @@ export default class SongFile {
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
 	 */
-	private parse_text_header(header: string): void {
+	private parse_metadata(header: string): void {
 		// split the header into the individual lines
 		const header_data: string[] = header.split(/\r?\n/);
 
@@ -153,6 +129,17 @@ export default class SongFile {
 					break;
 				case "LangCount":
 					this.metadata[key] = Number(value);
+
+					// populate titles
+					Array.from(Array(Number(value)).keys()).forEach((lang_index) => {
+						this.metadata.Title[lang_index] ??= "";
+					});
+					break;
+				case "Chords":
+					this.metadata.Chords = parse_base64_chords(value);
+					break;
+				case "Transpose":
+					this.metadata.Transpose = Number(value);
 					break;
 				default:
 					break;
@@ -161,7 +148,7 @@ export default class SongFile {
 	}
 
 	// parse the text-content
-	private parse_song_text() {
+	private parse_song_file() {
 		if (!this.song_file_path) {
 			return;
 		}
@@ -188,9 +175,9 @@ export default class SongFile {
 		const data = raw_data.split(/\r?\n---?(?:\r?\n|$)/);
 
 		// parse metadata of the header
-		this.parse_text_header(data[0]);
+		this.parse_metadata(data[0]);
 
-		// remove the header the array
+		// remove the header of the array
 		data.splice(0, 1);
 
 		// go through all the text blocks and save them to the text-dictionary
@@ -213,7 +200,7 @@ export default class SongFile {
 				lines.splice(0, 1);
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
-				this.text_parts[key] = [];
+				this.song_parts[key] = [];
 			}
 
 			// pad the text with empty lines so that every language has an equal amount of lines
@@ -231,10 +218,16 @@ export default class SongFile {
 				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
 			});
 
-			if (this.text_parts[key] !== undefined) {
-				this.text_parts[key].push(slide);
+			if (this.song_parts[key] !== undefined) {
+				this.song_parts[key].push(slide);
 			}
 		}
+	}
+
+	private load_song_data(data: SongData) {
+		this.metadata = data.metadata;
+
+		this.song_parts = data.text;
 	}
 
 	get part_title(): TitlePart {
@@ -259,7 +252,7 @@ export default class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text_parts[part]
+			slides: this.song_parts[part]
 		};
 	}
 
@@ -285,7 +278,7 @@ export default class SongFile {
 		return {
 			type: "lyric",
 			part,
-			slides: this.text_parts[part].length
+			slides: this.song_parts[part].length
 		};
 	}
 
@@ -297,11 +290,11 @@ export default class SongFile {
 	 * all the parts of the song in the order they are defined
 	 */
 	get avaliable_parts(): string[] {
-		return Object.keys(this.text_parts);
+		return Object.keys(this.song_parts);
 	}
 
 	get all_parts(): SongParts {
-		return this.text_parts;
+		return this.song_parts;
 	}
 
 	get languages(): number[] {
@@ -313,6 +306,105 @@ export default class SongFile {
 	}
 
 	get text(): Record<string, string[][][]> {
-		return this.text_parts;
+		return this.song_parts;
 	}
+
+	get sng_file(): string {
+		let sng_file: string = Buffer.from([239, 187, 191]).toString("utf-8");
+
+		sng_file += Object.entries(this.metadata)
+			.filter(([, val]) => val !== undefined)
+			.map(([key, val]) => {
+				switch (key) {
+					case "Title": {
+						// only save used languages
+						const titles = (val as SongFileMetadata["Title"]).filter((title, title_index) => {
+							return title !== "" && title_index < this.language_count;
+						});
+
+						return titles
+							.map((title, title_index) => {
+								if (title_index === 0) {
+									return `#Title=${title}`;
+								} else {
+									return `#TitleLang${title_index + 1}=${title}`;
+								}
+							})
+							.join("\n");
+					}
+
+					case "VerseOrder":
+						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;
+
+					case "Chords": {
+						const chord_string = Object.entries(val as SongFileMetadata["Chords"])
+							.map(([line, val2]) => {
+								Object.entries(val2).map(([char, chord]: [string, Chord]) => {
+									return `${char},${line},${chord.get_chord_string()}`;
+								});
+							})
+							.flat()
+							.join("\r");
+
+						return Buffer.from(chord_string).toString("base64");
+					}
+					default:
+						return `#${key}=${val}`;
+				}
+			})
+			.join("\n");
+
+		sng_file += "\n---\n";
+
+		sng_file += Object.entries(this.all_parts)
+			.map(([part, text]) => {
+				let part_text = `${part}\n`;
+
+				part_text += text
+					.map((slide) => {
+						return slide.flat().join("\n");
+					})
+					.join("\n---\n");
+
+				return part_text;
+			})
+			.join("\n---\n");
+
+		return sng_file;
+	}
+}
+
+function parse_base64_chords(base64: string): Chords {
+	const return_object: Chords = {};
+
+	const chords = Buffer.from(base64, "base64").toString();
+
+	const chord_regex = /(?<position>\d+),(?<line>\d+),(?<chord>.*)\r/g;
+
+	let match = chord_regex.exec(chords);
+	while (match !== null) {
+		const check_number = (val: string): number | false => {
+			const number = Number(val);
+
+			if (Number.isNaN(number) || !Number.isInteger(number) || number < -1) {
+				return false;
+			} else {
+				return number;
+			}
+		};
+
+		const line = check_number(match.groups?.line);
+		const position = check_number(match.groups?.position);
+		const chord = match.groups?.chord;
+
+		if (line !== false && position !== false && typeof chord === "string") {
+			return_object[line] ??= {};
+
+			return_object[line][position] = new Chord(chord);
+		}
+
+		match = chord_regex.exec(chords);
+	}
+
+	return return_object;
 }

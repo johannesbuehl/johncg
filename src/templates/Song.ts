@@ -1,5 +1,5 @@
 import { SongTemplateData } from "../server/PlaylistItems/Song";
-import { ItemPart } from "../server/PlaylistItems/SongFile";
+import { ItemPart } from "../server/PlaylistItems/SongFile/SongFile";
 
 let data: SongTemplateData & { mute_transition: boolean };
 

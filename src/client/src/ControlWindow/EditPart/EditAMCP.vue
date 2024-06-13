@@ -3,11 +3,11 @@
 
 	import AMCPInput from "../ItemDialogue/AMCPInput.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientAMCPItem } from "@server/PlaylistItems/AMCP";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
@@ -31,13 +31,11 @@
 		item_props.value.commands.set_inactive =
 			set_inactive_command.value.length > 0 ? set_inactive_command.value : undefined;
 
-		const message: JGCPRecv.UpdateItem = {
+		Globals.ws?.send<JCGPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: item_props.value
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	});
 </script>
 

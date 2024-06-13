@@ -17,7 +17,7 @@ function update(str_args: string) {
 		document.querySelector("#text").innerHTML = json_args.text;
 	}
 
-	mute_transition = json_args.mute_transition;
+	mute_transition = json_args?.mute_transition ?? false;
 
 	if (mute_transition === true) {
 		document.querySelectorAll("*").forEach((ele: HTMLElement) => {

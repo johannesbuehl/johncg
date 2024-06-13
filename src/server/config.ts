@@ -4,7 +4,8 @@ import path from "path";
 import { recurse_object_check } from "./lib";
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
-import { CasparCGResolution } from "./CasparCG";
+import { CasparCGResolution } from "./CasparCGConnection";
+import yaml from "yaml";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -14,9 +15,10 @@ export interface CasparCGConnectionSettings {
 		media?: number;
 		template: number;
 	};
+	path?: string;
 }
 
-export interface ConfigJSON {
+export interface ConfigYAML {
 	log_level: keyof Levels;
 	behaviour: {
 		show_on_load: boolean;
@@ -40,19 +42,12 @@ export interface ConfigJSON {
 			port: number;
 		};
 	};
-	osc_server: {
-		port: number;
-	};
-	companion: {
-		address: string;
-		osc_port: number;
-	};
 }
 
-const config_path = "config.json";
+const config_path = "config.yaml";
 
 // validate the config file
-const config_template: ConfigJSON = {
+const config_template: ConfigYAML = {
 	log_level: "INFO",
 	behaviour: {
 		show_on_load: true
@@ -84,20 +79,13 @@ const config_template: ConfigJSON = {
 		websocket: {
 			port: 0
 		}
-	},
-	osc_server: {
-		port: 0
-	},
-	companion: {
-		address: "template",
-		osc_port: 0
 	}
 };
 
 class ConfigClass {
 	private config_path: string;
 
-	private config: ConfigJSON;
+	private config: ConfigYAML;
 	private config_internal: {
 		casparcg_template_path?: string;
 		casparcg_resolution: CasparCGResolution;
@@ -112,7 +100,7 @@ class ConfigClass {
 	}
 
 	open(pth: string = config_path): boolean {
-		const new_config = JSON.parse(fs.readFileSync(pth, "utf-8")) as ConfigJSON;
+		const new_config = yaml.parse(fs.readFileSync(pth, "utf-8")) as ConfigYAML;
 
 		if (this.check_config(new_config)) {
 			this.config_path = pth;
@@ -133,7 +121,7 @@ class ConfigClass {
 		fs.writeFileSync(pth, JSON.stringify(this.config, undefined, "\t"));
 	}
 
-	private check_config(config: ConfigJSON): boolean {
+	private check_config(config: ConfigYAML): boolean {
 		let file_check = recurse_object_check(config, config_template);
 
 		file_check &&= [
@@ -151,9 +139,15 @@ class ConfigClass {
 		file_check &&= config?.casparcg?.connections?.every(
 			(connection) => connection?.layers?.media !== connection?.layers?.template
 		);
-		file_check &&= config?.casparcg?.connections?.every((connection) =>
-			Object.values(connection?.layers).every((layer) => layer >= 0)
-		);
+		file_check &&= config?.casparcg?.connections?.every((connection) => {
+			let check = Object.values(connection?.layers).every((layer) => layer >= 0);
+
+			if (connection.path !== undefined) {
+				check &&= typeof connection.path === "string";
+			}
+
+			return check;
+		});
 
 		const check_valid_port = (port: unknown) =>
 			typeof port === "number" && Number.isInteger(port) && port >= 0 && port <= 65535;
@@ -163,13 +157,11 @@ class ConfigClass {
 		);
 		file_check &&= check_valid_port(config?.client_server?.http?.port);
 		file_check &&= check_valid_port(config?.client_server?.websocket?.port);
-		file_check &&= check_valid_port(config?.osc_server?.port);
-		file_check &&= check_valid_port(config?.companion?.osc_port);
 
 		return file_check;
 	}
 
-	get_path(type: keyof ConfigJSON["path"] | "template", pth?: string): string {
+	get_path(type: keyof ConfigYAML["path"] | "template", pth?: string): string {
 		let base_path: string;
 
 		if (type === "template") {
@@ -214,31 +206,23 @@ class ConfigClass {
 		return structuredClone(this.config_internal.casparcg_resolution);
 	}
 
-	get path(): ConfigJSON["path"] {
+	get path(): ConfigYAML["path"] {
 		return structuredClone(this.config.path);
 	}
 
-	get casparcg(): ConfigJSON["casparcg"] {
+	get casparcg(): ConfigYAML["casparcg"] {
 		return structuredClone(this.config.casparcg);
 	}
 
-	get log_level(): ConfigJSON["log_level"] {
+	get log_level(): ConfigYAML["log_level"] {
 		return structuredClone(this.config.log_level);
 	}
 
-	get client_server(): ConfigJSON["client_server"] {
+	get client_server(): ConfigYAML["client_server"] {
 		return structuredClone(this.config.client_server);
 	}
 
-	get osc_server(): ConfigJSON["osc_server"] {
-		return structuredClone(this.config["osc_server"]);
-	}
-
-	get companion(): ConfigJSON["companion"] {
-		return structuredClone(this.config.companion);
-	}
-
-	get behaviour(): ConfigJSON["behaviour"] {
+	get behaviour(): ConfigYAML["behaviour"] {
 		return structuredClone(this.config.behaviour);
 	}
 }

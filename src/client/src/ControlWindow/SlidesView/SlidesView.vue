@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	import SongPart from "./Parts/SongPart.vue";
@@ -10,7 +10,7 @@
 	import PsalmPart from "./Parts/PsalmPart.vue";
 
 	const props = defineProps<{
-		slides?: JGCPSend.ItemSlides;
+		slides?: JCGPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();

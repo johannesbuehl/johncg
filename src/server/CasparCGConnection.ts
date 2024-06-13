@@ -2,14 +2,17 @@ import { CasparCG, ClipInfo } from "casparcg-connection";
 import Config, { CasparCGConnectionSettings, get_casparcg_transition } from "./config";
 import { logger } from "./logger";
 import { XMLParser } from "fast-xml-parser";
+import CasparCGServer from "./CasparCGServer";
 
 interface CasparCGPathsSettings {
+	/* eslint-disable @typescript-eslint/naming-convention */
 	/* eslint-disable @typescript-eslint/naming-convention */
 	"data-path": string;
 	"initial-path": string;
 	"log-path": string;
 	"media-path": string;
 	"template-path": string;
+	/* eslint-enable @typescript-eslint/naming-convention */
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -23,6 +26,7 @@ export interface CasparCGConnection {
 	settings: CasparCGConnectionSettings;
 	media: ClipInfo[];
 	template: string[];
+	server?: CasparCGServer;
 }
 
 interface CallbackObject {
@@ -46,7 +50,7 @@ const xml_parser = new XMLParser();
 
 // initiate all casparcg-connections
 export const casparcg: { visibility: boolean; casparcg_connections: CasparCGConnection[] } = {
-	visibility: true,
+	visibility: Config.behaviour.show_on_load,
 	casparcg_connections: []
 };
 
@@ -56,6 +60,19 @@ void (async () => {
 			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
 			let connection: CasparCG;
+			let server: CasparCGServer;
+
+			// if a path is specified, try to launch it
+			if (connection_setting.path !== undefined) {
+				try {
+					server = new CasparCGServer(connection_setting.path);
+
+					// wait for a few seconds before trying to connect
+					await new Promise((resolve) => setTimeout(resolve, 5000));
+				} catch (e) {
+					logger.error(`Can't launch CasparCG at ${connection_setting.path}`);
+				}
+			}
 
 			try {
 				connection = new CasparCG({
@@ -72,7 +89,8 @@ void (async () => {
 				connection,
 				settings: connection_setting,
 				media: (await (await connection.cls()).request)?.data ?? [],
-				template: (await (await connection.tls()).request)?.data ?? []
+				template: (await (await connection.tls()).request)?.data ?? [],
+				server
 			};
 
 			connection.addListener("connect", () => {

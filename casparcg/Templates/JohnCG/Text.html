@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<style>
+		:root {
+			font-size: 0.8333vw;
+
+			overflow: hidden;
+
+			font-family: Bahnschrift;
+		}
+
+		body {
+			margin: 0px;
+
+			background-color: transparent;
+
+			user-select: none;
+		}
+
+		#main {
+			font-size: 4em;
+
+			position: absolute;
+
+			bottom: 0;
+			left: 0;
+
+			padding-left: 1em;
+			padding-bottom: 0.5em;
+
+			display: flex;
+
+			align-items: center;
+
+			transform: translate(0, 100%);
+
+			transition: transform 0.3s cubic-bezier(0.2, 0, 0.39, 0);
+		}
+
+		#main.slide_in {
+			transform: unset;
+
+			transition-timing-function: ease-in-out;
+		}
+
+		#text_wrapper {
+			overflow: hidden;
+
+			z-index: 0;
+
+			width: 0em;
+
+			transition: width 0.5s ease-in-out;
+
+			/* transform: translate(-1.5em, 0); */
+
+			background-color: white;
+
+			/* border-top-right-radius: 0.5em;
+			border-bottom-right-radius: 0.5em; */
+			border-radius: 0.5em;
+		}
+		
+		#text_wrapper.show {
+			width: 100%;
+
+			transition: width 0.5s ease-out;
+		}
+		
+		#text {
+			padding: 0.25em;
+
+			/* padding-left: 1.5em; */
+			padding-inline: 0.5em;
+
+			text-wrap: nowrap;
+
+			overflow: hidden;
+		}
+	</style>
+	<!-- ------------------------------------------------------------------- -->
+	<head>
+		<title>
+			JohnCG - Text-template
+		</title>
+	</head>
+	<!-- ------------------------------------------------------------------- -->
+	<body>
+		<div id="main">
+			<div>
+				<div id="text_wrapper">
+					<div id="text"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="Text.js"></script>
+</html>

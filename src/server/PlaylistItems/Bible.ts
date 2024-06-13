@@ -53,6 +53,7 @@ export default class Bible extends PlaylistItemBase {
 	create_client_object_item_slides(): Promise<ClientBibleSlides> {
 		return Promise.resolve({
 			type: "bible",
+			title: create_bible_citation_string(this.props.book_id, this.props.chapters),
 			caption: this.props.caption,
 			media: undefined,
 			template: this.template

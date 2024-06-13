@@ -1,13 +1,12 @@
 import * as PlaylistClass from "../server/Playlist.ts";
-import PlaylistObject from "./PlaylistFile.ts";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
-import { GetItemFiles } from "./JGCPReceiveMessages.ts";
-import { File } from "./search_part.ts";
-import { CasparCGResolution } from "./CasparCG.ts";
+import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
+import { ItemFileMapped, ItemFileType } from "./search_part.ts";
+import { CasparCGResolution } from "./CasparCGConnection.js";
 
 /**
- * Base interface for sent JGCP-messages
+ * Base interface for sent JCGP-messages
  */
 interface Base {
 	client_id?: string;
@@ -23,16 +22,18 @@ export interface Response {
 }
 
 /**
- * JGCP-messages with the playlist_items
+ * JCGP-messages with the playlist_items
  */
 export interface Playlist extends Base, PlaylistClass.ClientPlaylistItems {
 	command: "playlist_items";
+	caption: string;
+	path: string;
 	new_item_order: number[];
 	new?: boolean;
 }
 
 /**
- * JGCP-messages with the current state
+ * JCGP-messages with the current state
  */
 export interface State extends Base {
 	command: "state";
@@ -52,16 +53,18 @@ export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 export interface Clear extends Base {
 	command: "clear";
 }
-export interface PlaylistSave {
-	command: "playlist_save";
-	playlist: PlaylistObject;
-}
 
-export interface ItemFiles {
+export interface ItemFiles<K extends keyof ItemFileType> {
 	command: "item_files";
 	type: GetItemFiles["type"];
-	files: File[];
+	files: ItemFileMapped<K>[];
 }
+
+export type ItemData<K extends GetItemData["type"]> = {
+	command: "item_data";
+	type: K;
+	data: ItemFileMapped<K>;
+};
 
 export interface Bible {
 	command: "bible";
@@ -73,8 +76,28 @@ export interface PlaylistPDF {
 	playlist_pdf: string;
 }
 
+export enum LogLevel {
+	/* eslint-disable @typescript-eslint/naming-convention */
+	error = "error",
+	warn = "warn",
+	log = "log",
+	debug = "debug"
+	/* eslint-enable @typescript-eslint/naming-convention */
+}
+
+export interface ClientMessage {
+	command: "client_mesage";
+	message: string;
+	type: LogLevel;
+}
+
+export interface MediaThumbnails {
+	command: "media_thumbnails";
+	thumbnails: Record<string, string>;
+}
+
 /**
- * Uniun of the different JGCP-messages
+ * Uniun of the different JCGP-messages
  */
 export type Message =
 	| Response
@@ -82,7 +105,9 @@ export type Message =
 	| State
 	| ItemSlides
 	| Clear
-	| PlaylistSave
-	| ItemFiles
+	| ItemFiles<keyof ItemFileType>
+	| ItemData<GetItemData["type"]>
 	| Bible
-	| PlaylistPDF;
+	| PlaylistPDF
+	| ClientMessage
+	| MediaThumbnails;

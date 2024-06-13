@@ -2,6 +2,7 @@
 	defineProps<{
 		square?: boolean;
 		active?: boolean;
+		disabled?: boolean;
 	}>();
 
 	const state = defineModel<boolean | undefined>({ default: undefined });
@@ -10,13 +11,9 @@
 <template>
 	<div
 		class="button"
-		:class="{ active: state !== undefined ? state : active, square }"
+		:class="{ active: state !== undefined ? state : active, square, disabled }"
 		tabindex="0"
-		@keydown.enter="
-			($event.target as HTMLDivElement)?.click();
-			$event.preventDefault();
-			$event.stopPropagation();
-		"
+		@keydown.enter.prevent="($event.target as HTMLDivElement)?.click()"
 		@click="state !== undefined ? (state = !state) : undefined"
 	>
 		<slot></slot>
@@ -26,6 +23,7 @@
 <style scoped>
 	div.button {
 		background-color: rgb(60, 64, 75);
+		overflow: visible;
 
 		border-radius: 0.25rem;
 
@@ -39,6 +37,10 @@
 		height: 2em;
 
 		margin: 0.25rem;
+
+		transition: background-color 0.25s ease;
+
+		text-wrap: nowrap;
 	}
 
 	div.button.square {
@@ -60,5 +62,15 @@
 	div.button,
 	div.button > * {
 		cursor: pointer;
+	}
+
+	div.button.disabled {
+		cursor: unset;
+
+		color: var(--color-text-disabled);
+	}
+
+	div.button.disabled:hover {
+		background-color: var(--color-item);
 	}
 </style>

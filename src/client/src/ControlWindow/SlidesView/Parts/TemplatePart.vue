@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import ItemSlide, { type CasparCGTemplate } from "./ItemSlide.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
-		slide: JGCPSend.ItemSlides & { type: "template" | "bible" };
+		slide: JCGPSend.ItemSlides & { type: "template" | "bible" };
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
 	}>();
@@ -30,7 +30,7 @@
 			:class="{ active: 0 === active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ slide?.caption }}
+			{{ slide?.title }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
@@ -64,6 +64,8 @@
 		padding-left: 0.75rem;
 
 		cursor: pointer;
+
+		transition: background-color 0.25s ease;
 	}
 
 	.header:hover {

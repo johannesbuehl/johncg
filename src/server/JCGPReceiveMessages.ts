@@ -1,7 +1,10 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
+import { SongData } from "./PlaylistItems/SongFile/SongFile";
+import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
+import type { ItemFileType, MediaFile } from "./search_part";
 
 /**
- * Base interface for Received JGCP-messages
+ * Base interface for Received JCGP-messages
  */
 interface Base {
 	client_id?: string;
@@ -9,6 +12,7 @@ interface Base {
 
 export interface NewPlaylist extends Base {
 	command: "new_playlist";
+	force?: boolean;
 }
 
 /**
@@ -21,6 +25,7 @@ export interface OpenPlaylist extends Base {
 
 export interface SavePlaylist extends Base {
 	command: "save_playlist";
+	playlist: string;
 }
 
 export interface CreatePlaylistPDF extends Base {
@@ -58,6 +63,10 @@ export interface SetVisibility extends Base {
 	visibility: boolean;
 }
 
+export interface ToggleVisibility extends Base {
+	command: "toggle_visibility";
+}
+
 export interface SelectItemSlide extends Base {
 	command: "select_item_slide";
 	item: number;
@@ -72,7 +81,7 @@ export interface MovePlaylistItem extends Base {
 
 export interface GetItemFiles extends Base {
 	command: "get_item_files";
-	type: "song" | "media" | "template" | "playlist" | "pdf" | "psalm";
+	type: keyof ItemFileType;
 }
 
 export interface GetBible extends Base {
@@ -81,7 +90,7 @@ export interface GetBible extends Base {
 
 export interface GetItemData extends Base {
 	command: "get_item_data";
-	type: "song";
+	type: "song" | "psalm";
 	file: string;
 }
 
@@ -98,27 +107,53 @@ export interface UpdateItem extends Base {
 	index: number;
 }
 
-export interface DeleteItem {
+export interface UpdatePlaylistCaption extends Base {
+	command: "update_playlist_caption";
+	caption: string;
+}
+
+export interface DeleteItem extends Base {
 	command: "delete_item";
 	position: number;
 }
 
+export type SaveFile = Base & { command: "save_file"; path: string } & (
+		| { type: "song"; data: SongData }
+		| { type: "psalm"; data: PsalmData }
+	);
+
+export interface GetMediaThumbnails extends Base {
+	command: "get_media_thumbnails";
+	files: MediaFile[];
+}
+
+export interface NewDirectory extends Base {
+	command: "new_directory";
+	path: string;
+	type: "playlist" | "song" | "psalm";
+}
+
 /**
- * Uniun of the different JGCP-messages
+ * Uniun of the different JCGP-messages
  */
 export type Message =
 	| RequestItemSlides
 	| SetVisibility
+	| ToggleVisibility
 	| OpenPlaylist
 	| Navigate
 	| SelectItemSlide
 	| MovePlaylistItem
 	| AddItem
 	| UpdateItem
+	| UpdatePlaylistCaption
 	| DeleteItem
 	| NewPlaylist
 	| SavePlaylist
 	| GetItemFiles
 	| GetBible
 	| GetItemData
-	| CreatePlaylistPDF;
+	| CreatePlaylistPDF
+	| SaveFile
+	| GetMediaThumbnails
+	| NewDirectory;

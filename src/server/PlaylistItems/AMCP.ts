@@ -1,4 +1,4 @@
-import { CasparCGConnection, casparcg } from "../CasparCG";
+import { CasparCGConnection, casparcg } from "../CasparCGConnection";
 import { recurse_object_check } from "../lib";
 import {
 	ClientItemBase,
@@ -45,6 +45,7 @@ export default class AMCP extends PlaylistItemBase {
 	create_client_object_item_slides(): Promise<ClientAMCPSlides> {
 		return Promise.resolve({
 			caption: this.props.caption,
+			title: "AMCP command",
 			type: "amcp",
 			media: undefined,
 			data: {

@@ -8,10 +8,12 @@
 	import ContextMenu from "./ContextMenu.vue";
 	import PlaylistItem from "./PlaylistItem.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientItemBase, ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import Globals from "@/Globals";
+	import { stop_event } from "@/App.vue";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 
@@ -21,7 +23,6 @@
 	}
 
 	const props = defineProps<{
-		ws: WebSocket;
 		selected: number | null;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
@@ -34,7 +35,7 @@
 		edit: [index: number];
 	}>();
 
-	const playlist = defineModel<JGCPSend.Playlist>("playlist");
+	const playlist = defineModel<JCGPSend.Playlist>("playlist");
 
 	const context_menu_position = ref<{ x: number; y: number }>();
 
@@ -48,14 +49,12 @@
 	function on_change(evt: { added: { element: ClientPlaylistItem; newIndex: number } }) {
 		Object.entries(evt).forEach(([type, data]) => {
 			if (type === "added") {
-				const message: JGCPRecv.AddItem = {
+				Globals.ws?.send<JCGPRecv.AddItem>({
 					command: "add_item",
 					props: data.element,
 					index: data.newIndex,
 					set_active: true
-				};
-
-				props.ws.send(JSON.stringify(message));
+				});
 			}
 		});
 
@@ -89,8 +88,7 @@
 			index
 		};
 
-		event.preventDefault();
-		event.stopPropagation();
+		stop_event(event);
 
 		context_menu_position.value = event;
 	}
@@ -108,13 +106,11 @@
 
 	function duplicate_item(item_props: number) {
 		if (context_menu_picket_item.value !== undefined) {
-			const message: JGCPRecv.AddItem = {
+			Globals.ws?.send<JCGPRecv.AddItem>({
 				command: "add_item",
 				props: context_menu_picket_item.value.element,
 				index: context_menu_picket_item.value.index
-			};
-
-			props.ws.send(JSON.stringify(message));
+			});
 		}
 	}
 </script>
@@ -137,7 +133,6 @@
 				<PlaylistItem
 					:ref="list_ref"
 					:index="index"
-					:ws="ws"
 					:item_props="element"
 					:selected="selected === index"
 					:active="active_item_slide?.item === index"
@@ -148,6 +143,7 @@
 					@keydown.up="navigate_selection($event.target, index, -1)"
 					@keydown.down="navigate_selection($event.target, index, 1)"
 					@contextmenu="show_context_menu($event, element, index)"
+					@keydown.ctrl.e="emit('edit', index)"
 				/>
 			</template>
 		</Draggable>

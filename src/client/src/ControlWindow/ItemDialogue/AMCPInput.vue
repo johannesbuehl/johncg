@@ -23,20 +23,14 @@
 				class="input_box"
 				v-model="command_active"
 				placeholder="Command"
-				@keydown="
-					$event.stopPropagation();
-					emit('update');
-				"
+				@keydown="emit('update')"
 			/>
 			Deselection
 			<input
 				class="input_box"
 				v-model="command_inactive"
 				placeholder="Command"
-				@keydown="
-					$event.stopPropagation();
-					emit('update');
-				"
+				@keydown="emit('update')"
 			/>
 		</div>
 		<slot></slot>

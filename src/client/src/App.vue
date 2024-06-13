@@ -1,19 +1,32 @@
+<script lang="ts">
+	export function stop_event(event: Event) {
+		event.stopPropagation();
+		event.preventDefault();
+	}
+
+	export type ItemData = { [key in JCGPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
+</script>
+
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
-	import type { File } from "@server/search_part";
+	import * as JCGPSend from "@server/JCGPSendMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
+	import Globals, { WSWrapper } from "./Globals";
 
 	const Config = {
 		client_server: {
 			websocket: {
-				port: "8765"
+				port: 8765
 			}
+		},
+		timeouts: {
+			item_file_getters: 5000, // 5 seconds
+			item_file_invalidation: 300000 // 5 minutes
 		}
 	};
 
@@ -22,33 +35,22 @@
 		connected = 1
 	}
 
-	const server_state = ref<JGCPSend.State>({ command: "state" });
-	const playlist_items = ref<JGCPSend.Playlist>();
-	const item_slides = ref<JGCPSend.ItemSlides>();
+	const server_state = ref<JCGPSend.State>({ command: "state" });
+	const playlist_items = ref<JCGPSend.Playlist>();
+	const item_slides = ref<JCGPSend.ItemSlides>();
 	const selected_item = ref<number | null>(null);
 	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
-	const bible_file = ref<BibleFile>();
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		default: ControlWindowState.Slides
-	});
+	const playlist_caption = ref<string>("");
 
-	const files = ref<{ [key in JGCPSend.ItemFiles["type"]]: File[] }>({
-		song: [],
-		media: [],
-		pdf: [],
-		playlist: [],
-		template: [],
-		psalm: []
-	});
+	const item_data = ref<ItemData>({});
 
-	let ws: WebSocket | undefined;
 	ws_connect();
 
 	// watch for changes in item-selection
 	watch(selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
 		if (
-			control_window_state.value === ControlWindowState.Slides &&
+			Globals.ControlWindowState === ControlWindowState.Slides &&
 			typeof new_selection === "number"
 		) {
 			request_item_slides(new_selection);
@@ -58,24 +60,25 @@
 		}
 	});
 
-	watch(control_window_state, (new_state) => {
-		// if the new control-window-state is the playlist, request the slides
-		if (new_state === ControlWindowState.Slides && selected_item.value) {
-			request_item_slides(selected_item.value);
-		} else {
-			// else delete the stored slides
-			item_slides.value = undefined;
+	watch(
+		() => Globals.ControlWindowState,
+		() => {
+			// if the new control-window-state is the playlist, request the slides
+			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
+				request_item_slides(selected_item.value);
+			} else {
+				// else delete the stored slides
+				item_slides.value = undefined;
+			}
 		}
-	});
+	);
 
 	function request_item_slides(index: number) {
-		const message: JGCPRecv.RequestItemSlides = {
+		Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 			command: "request_item_slides",
 			item: index,
 			client_id
-		};
-
-		ws?.send(JSON.stringify(message));
+		});
 	}
 
 	function init() {
@@ -88,8 +91,12 @@
 	function select_item(item: number) {
 		if (
 			playlist_items.value?.playlist_items[item].displayable ||
-			control_window_state.value === ControlWindowState.Edit
+			Globals.ControlWindowState === ControlWindowState.Edit
 		) {
+			if (selected_item.value === item) {
+				request_item_slides(item);
+			}
+
 			selected_item.value = item;
 		}
 	}
@@ -97,55 +104,60 @@
 	function ws_connect() {
 		const url = new URL(document.URL);
 
-		const ws_url: string = `ws://${url.hostname}:${Config.client_server.websocket.port}`;
+		Globals._ws = new WSWrapper(url.hostname, Config.client_server.websocket.port);
 
-		ws = new WebSocket(ws_url, "JGCP");
+		Globals.ws?.ws.addEventListener("open", () => {
+			// reset the window-state
+			Globals.ControlWindowState === ControlWindowState.Slides;
 
-		ws.addEventListener("open", () => {
 			server_connection.value = ServerConnection.connected;
+
+			Globals.message.log("Connected to JohnCG");
 		});
 
-		ws.addEventListener("message", (event: MessageEvent) => {
-			let data: JGCPSend.Message;
+		Globals.ws?.ws.addEventListener("message", (event: MessageEvent) => {
+			let data: JCGPSend.Message;
 
 			try {
 				data = JSON.parse(event.data as string);
 			} catch (e) {
 				if (e instanceof SyntaxError) {
-					console.error("received invalid JSON");
+					Globals.message.error("received invalid JSON");
 					return;
 				} else {
 					throw e;
 				}
 			}
 
-			const command_parser_map: { [key in JGCPSend.Message["command"]]: (...args: any) => void } = {
+			const command_parser_map: { [key in JCGPSend.Message["command"]]: (...args: any) => void } = {
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
 				response: handle_ws_response,
 				clear: init,
-				playlist_save: save_playlist_file,
 				item_files: parse_item_files,
 				bible: parse_bible,
-				playlist_pdf: save_playlist_pdf
+				playlist_pdf: save_playlist_pdf,
+				client_mesage: show_client_message,
+				item_data: store_item_data,
+				media_thumbnails: store_thumbnails
 			};
 
 			command_parser_map[data.command](data as never);
 		});
 
-		ws.addEventListener("ping", () => {});
+		Globals.ws?.ws.addEventListener("ping", () => {});
 
-		ws.addEventListener("error", (event: Event) => {
-			console.error(
+		Globals.ws?.ws.addEventListener("error", (event: Event) => {
+			Globals.message.error(
 				`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`
 			);
 
-			ws?.close();
+			Globals.ws?.ws.close();
 		});
 
-		ws.addEventListener("close", () => {
-			console.log("No connection to server. Retrying in 1s");
+		Globals.ws?.ws.addEventListener("close", () => {
+			Globals.message.log("No connection to server. Retrying in 1s");
 
 			// delete the playlist and slides
 			init();
@@ -158,16 +170,13 @@
 		});
 	}
 
-	function load_playlist_items(data: JGCPSend.Playlist) {
+	function load_playlist_items(data: JCGPSend.Playlist) {
 		playlist_items.value = data;
+		playlist_caption.value = data.caption;
 
 		// if it is a new-playlist, reset the selected-item to the first one
 		if (data.new) {
 			selected_item.value = data.playlist_items.length > 0 ? 0 : null;
-		}
-
-		if (control_window_state.value === ControlWindowState.OpenPlaylist) {
-			control_window_state.value = ControlWindowState.Slides;
 		}
 
 		// if the playlist is empty, clear the slides-view
@@ -175,18 +184,16 @@
 			item_slides.value = undefined;
 		} else {
 			// request new slides for the selected item
-			if (control_window_state.value === ControlWindowState.Slides && selected_item.value) {
-				const message: JGCPRecv.RequestItemSlides = {
+			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
+				Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 					command: "request_item_slides",
 					item: selected_item.value
-				};
-
-				ws?.send(JSON.stringify(message));
+				});
 			}
 		}
 	}
 
-	function parse_state(data: JGCPSend.State) {
+	function parse_state(data: JCGPSend.State) {
 		if (typeof data.active_item_slide === "object") {
 			if (
 				(typeof data.active_item_slide?.item !== "number" &&
@@ -217,70 +224,76 @@
 		};
 	}
 
-	function load_item_slides(data: JGCPSend.ItemSlides) {
+	function load_item_slides(data: JCGPSend.ItemSlides) {
 		item_slides.value = data;
 	}
 
 	function set_active_slide(item: number, slide: number) {
-		const message: JGCPRecv.SelectItemSlide = {
+		Globals.ws?.send<JCGPRecv.SelectItemSlide>({
 			command: "select_item_slide",
 			item: item,
 			slide,
 			client_id: client_id
-		};
-
-		ws?.send(JSON.stringify(message));
+		});
 	}
 
-	function save_playlist_file(data: JGCPSend.PlaylistSave) {
-		const json_string = JSON.stringify(data.playlist, null, "\t");
-
-		const blob = new Blob([json_string], { type: "application/json" });
-		const url = URL.createObjectURL(blob);
-
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = "playlist.jcg";
-
-		link.click();
-
-		URL.revokeObjectURL(url);
-	}
-
-	function parse_item_files(data: JGCPSend.ItemFiles) {
-		if (Object.keys(files.value).includes(data.type)) {
-			files.value[data.type] = data.files;
+	function parse_item_files(data: JCGPSend.ItemFiles<keyof ItemFileType>) {
+		if (Object.keys(Globals.item_files.value).includes(data.type)) {
+			Globals.item_files.value[data.type] = data.files;
 		}
 	}
 
-	function parse_bible(data: JGCPSend.Bible) {
-		bible_file.value = data.bible;
+	function store_item_data(data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>) {
+		// work around typescripts conservative type-system
+		switch (data.type) {
+			case "song":
+				item_data.value.song = data.data;
+				break;
+			case "psalm":
+				item_data.value.psalm = data.data;
+				break;
+		}
 	}
 
-	function save_playlist_pdf(data: JGCPSend.PlaylistPDF) {
-		// const json_string = JSON.stringify(data.playlist_pdf, null, "\t");
+	function store_thumbnails(data: JCGPSend.MediaThumbnails) {
+		if (typeof data.thumbnails === "object") {
+			Object.assign(Globals._thumbnails.value, {
+				...Globals._thumbnails.value,
+				...data.thumbnails
+			});
+		}
+	}
 
-		// const blob = new Blob([Buffer.from(data.playlist_pdf, "base64")], { type: "application/pdf" });
-		// const url = URL.createObjectURL(blob);
+	function parse_bible(data: JCGPSend.Bible) {
+		Globals.bible_file.value = data.bible;
+	}
+
+	function save_playlist_pdf(data: JCGPSend.PlaylistPDF) {
+		Globals.message.log("Received Playlist PDF");
+
 		const url = `data:application/pdf;base64,${data.playlist_pdf}`;
 
 		const link = document.createElement("a");
 		link.href = url;
-		link.download = "playlist.pdf";
+		link.download = `${playlist_caption.value}.pdf`;
 
 		link.click();
 
 		URL.revokeObjectURL(url);
 	}
 
-	function handle_ws_response(response: JGCPSend.Response) {
+	function show_client_message(data: JCGPSend.ClientMessage) {
+		Globals.message.add(data.message, data.type);
+	}
+
+	function handle_ws_response(response: JCGPSend.Response) {
 		if (typeof response.code === "number") {
 			switch (Number(response.code.toString()[0])) {
 				case 4:
-					console.error(response.message);
+					Globals.message.error(response.message);
 					break;
 				default:
-					console.debug(response.message);
+					Globals.message.debug(response.message);
 			}
 		}
 	}
@@ -296,16 +309,14 @@
 	<div id="main_window">
 		<ControlWindow
 			v-if="server_connection === ServerConnection.connected"
-			v-model:control_window_state="control_window_state"
-			:ws="ws!"
 			:client_id="client_id"
 			:server_state="server_state"
 			:playlist="playlist_items"
 			:slides="item_slides"
 			:active_item_slide="server_state.active_item_slide"
 			:selected="selected_item"
-			:files="files"
-			:bible_file="bible_file"
+			:playlist_caption="playlist_caption"
+			:item_data="item_data"
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>

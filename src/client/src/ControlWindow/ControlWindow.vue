@@ -1,39 +1,40 @@
 <script setup lang="ts">
-	import { toRaw } from "vue";
-
+	import { ControlWindowState } from "@/Enums";
+	import { stop_event, type ItemData } from "@/App.vue";
 	import PlaylistItemsList from "./Playlist/PlaylistItemsList.vue";
 	import SlidesView from "./SlidesView/SlidesView.vue";
 	import MenuBar from "./MenuBar/MenuBar.vue";
-	import { ControlWindowState } from "@/Enums";
 	import AddPart from "./AddPart/AddPart.vue";
 	import EditPart from "./EditPart/EditPart.vue";
-	import PlaylistFile from "./PlaylistFile.vue";
+	import OpenPlaylist from "./OpenPlaylist.vue";
+	import MessagePopup from "./Message/MessagePopup.vue";
+	import MessageView from "./Message/MessageView.vue";
+	import SavePlaylist from "./SavePlaylist.vue";
+	import SongEditor from "./FileEditor/Song/SongEditor.vue";
+	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
+	import PsalmEditor from "./FileEditor/Psalm/PsalmEditor.vue";
+	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
+	import Globals from "@/Globals";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		client_id: string;
-		server_state: JGCPSend.State;
-		playlist?: JGCPSend.Playlist;
-		slides?: JGCPSend.ItemSlides;
+		server_state: JCGPSend.State;
+		playlist?: JCGPSend.Playlist;
+		slides?: JCGPSend.ItemSlides;
 		active_item_slide?: ActiveItemSlide;
-		files: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
-		bible_file?: BibleFile;
 		selected: number | null;
+		playlist_caption: string;
+		item_data: ItemData;
 	}>();
 
 	const emit = defineEmits<{
 		select_item: [item: number];
 		select_slide: [item: number, slide: number];
 	}>();
-
-	const control_window_state = defineModel<ControlWindowState>("control_window_state", {
-		required: true
-	});
 
 	document.addEventListener("keydown", (event) => {
 		// exit on composing
@@ -44,7 +45,7 @@
 		let prevent_default = false;
 
 		// execute the navigation-keys only if the slides are visible
-		if (control_window_state.value === ControlWindowState.Slides && !event.repeat) {
+		if (Globals.ControlWindowState === ControlWindowState.Slides && !event.repeat) {
 			prevent_default = true;
 
 			switch (event.code) {
@@ -65,86 +66,80 @@
 					prevent_default = false;
 					break;
 			}
-		}
 
-		if (prevent_default) {
-			event.preventDefault();
+			if (prevent_default) {
+				stop_event(event);
+			}
 		}
 	});
 
 	// send navigate-request over teh websocket
-	function navigate(type: JGCPRecv.NavigateType, steps: number) {
-		const message: JGCPRecv.Navigate = {
+	function navigate(type: JCGPRecv.NavigateType, steps: number) {
+		Globals.ws?.send<JCGPRecv.Navigate>({
 			command: "navigate",
 			type,
 			steps,
 			client_id: props.client_id
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 
 	// send visibility changes over the websocket
 	function visibility(state: boolean) {
-		const message: JGCPRecv.SetVisibility = {
+		Globals.ws?.send<JCGPRecv.SetVisibility>({
 			command: "set_visibility",
 			visibility: state,
 			client_id: props.client_id
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 
 	function dragged(from: number, to: number) {
-		const message: JGCPRecv.MovePlaylistItem = {
+		Globals.ws?.send<JCGPRecv.MovePlaylistItem>({
 			command: "move_playlist_item",
 			from,
 			to,
 			client_id: props.client_id
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 
 	function edit_item(index: number) {
-		control_window_state.value = ControlWindowState.Edit;
+		Globals.ControlWindowState = ControlWindowState.Edit;
 		emit("select_item", index);
 	}
 </script>
 
 <template>
 	<MenuBar
-		class="menu_bar"
-		:ws="ws"
 		:visibility="server_state?.visibility ?? false"
-		v-model="control_window_state"
+		:playlist_caption="playlist_caption"
+		:playlist_path="playlist?.path"
 		@navigate="navigate"
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<PlaylistFile
-			v-if="control_window_state === ControlWindowState.OpenPlaylist"
-			:files="files.playlist"
-			:ws="ws"
+		<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
+		<SavePlaylist
+			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
+			:file_name="playlist_caption"
 		/>
 		<PlaylistItemsList
 			v-if="
-				control_window_state === ControlWindowState.Slides ||
-				control_window_state === ControlWindowState.Add ||
-				control_window_state === ControlWindowState.Edit
+				Globals.ControlWindowState === ControlWindowState.Slides ||
+				Globals.ControlWindowState === ControlWindowState.Add ||
+				Globals.ControlWindowState === ControlWindowState.Edit
 			"
 			:playlist="playlist"
 			:selected="selected"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
-			:ws="ws"
 			@selection="emit('select_item', $event)"
 			@dragged="dragged"
 			@set_active="emit('select_slide', $event, 0)"
 			@edit="edit_item"
 		/>
 		<SlidesView
-			v-if="typeof slides?.item === 'number' && control_window_state === ControlWindowState.Slides"
+			v-if="
+				typeof slides?.item === 'number' && Globals.ControlWindowState === ControlWindowState.Slides
+			"
 			:slides="slides"
 			:active_item_slide="active_item_slide"
 			:scroll="client_id === server_state.client_id"
@@ -152,21 +147,29 @@
 				slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
 			"
 		/>
-		<AddPart
-			v-else-if="control_window_state === ControlWindowState.Add"
-			:ws="ws"
-			:files="files"
-			:bible="bible_file"
-			:mode="control_window_state"
-		/>
+		<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
 		<EditPart
-			v-else-if="control_window_state === ControlWindowState.Edit"
+			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
 			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
-			:ws="ws"
 			:item_index="selected"
-			:bible="bible_file"
-			:files="files"
+			:item_data="item_data"
 		/>
+		<SongEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong" />
+		<PsalmEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm" />
+		<EditSongFile
+			v-else-if="
+				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
+			"
+			:song_file="item_data.song"
+		/>
+		<EditPsalmFile
+			v-else-if="
+				Globals.ControlWindowState === ControlWindowState.EditPsalm && item_data.psalm !== undefined
+			"
+			:psalm_file="item_data.psalm"
+		/>
+		<MessageView v-else-if="Globals.ControlWindowState === ControlWindowState.Message" />
+		<MessagePopup v-if="Globals.ControlWindowState !== ControlWindowState.Message" />
 	</div>
 </template>
 

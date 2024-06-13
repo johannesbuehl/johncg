@@ -4,8 +4,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
-
-	import type { CountdownMode } from "@server/PlaylistItems/Countdown";
+	import type { CountdownMode } from "@server/lib";
 
 	library.add(
 		fas.faCalendarXmark,
@@ -111,10 +110,8 @@
 			<div class="header">Font</div>
 			<div class="input_wrapper">
 				<div class="named_input">
-					<input type="number" min="0" v-model="font_size" @change="input_change" /><span
-						class="unit"
-						>pt</span
-					>
+					<input type="number" min="0" v-model="font_size" @change="input_change" />
+					<span class="unit">pt</span>
 				</div>
 				<input
 					id="font_color_picker"

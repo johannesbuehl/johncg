@@ -1,9 +1,7 @@
+import archiver from "archiver";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import tar from "tar";
-
-import type { ConfigJSON } from "../src/server/config.ts";
 
 // check, wether the build script supports the os
 if (!["win32", "linux"].includes(process.platform)) {
@@ -59,19 +57,7 @@ copy_build_file(process.execPath, exec_name);
 // // modify the node executable
 // execSync(`npx postject dist/build/${exec_name} NODE_SEA_BLOB dist/build/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2`);
 
-// load the config-file, censor the file-paths and store it for the relase
-const config_file = JSON.parse(fs.readFileSync("config.json", "utf-8")) as ConfigJSON;
-config_file.path = {
-	song: "Song/",
-	pdf: "PDF/",
-	psalm: "Psalm/",
-	playlist: "Playlist/",
-	bible: "Bible/Luther-Bibel.json"
-};
-config_file.companion.address = "172.0.0.1";
-config_file.log_level = "INFO";
-
-fs.writeFileSync(path.join(release_dir, "config.json"), JSON.stringify(config_file, undefined, "\t"));
+copy_release_dir("config_default.yaml", "config.yaml");
 
 // copy the file to the output
 copy_release_file(path.join(build_dir, exec_name));
@@ -130,8 +116,16 @@ copy_release_file("LICENSE", "LICENSE.txt");
 // copy the licenses
 copy_release_dir(path.join(build_dir, "licenses"));
 
-// pack the files in a .tar.gz-file
-void tar.c({ gzip: true, file: release_dir + ".tar.gz", cwd: "dist" }, [path.relative("dist", release_dir)]);
+// pack the files
+const zip_stream = fs.createWriteStream(release_dir + ".zip");
+
+const archive = archiver("zip");
+
+archive.pipe(zip_stream);
+
+archive.directory(release_dir, false);
+
+void archive.finalize();
 
 function create_launch_script(pth: string, destination: string) {
 	const relative_path_prefix = "../".repeat((destination.match(/\//g) ?? []).length);

@@ -1,3 +1,41 @@
+<script lang="ts">
+	export function create_song_part_type(part_name: string): string {
+		return part_name.split(" ", 1)[0].toLowerCase();
+	}
+
+	export function get_song_part_color(part_name: string): string | undefined {
+		const color_map: Record<string, string> = {
+			title: "hsl(0, 100%, 50%)",
+			intro: "hsl(0, 100%, 50%)",
+			vers: "hsl(23, 100%, 50%)",
+			verse: "hsl(23, 100%, 50%)",
+			strophe: "hsl(23, 100%, 50%)",
+			"pre-refrain": "hsl(46, 100%, 50%)",
+			"pre-chorus": "hsl(46, 100%, 50%)",
+			chorus: "hsl(69, 100%, 50%)",
+			refrain: "hsl(69, 100%, 50%)",
+			"pre-bridge": "hsl(92, 100%, 50%)",
+			bridge: "hsl(184, 100%, 50%)",
+			instrumental: "hsl(207, 100%, 50%)",
+			interlude: "hsl(207, 100%, 50%)",
+			zwischenspiel: "hsl(207, 100%, 50%)",
+			solo: "hsl(207, 100%, 50%)",
+			"pre-coda": "hsl(276, 100%, 50%)",
+			coda: "hsl(299, 100%, 50%)",
+			ending: "hsl(299, 100%, 50%)",
+			outro: "hsl(299, 100%, 50%)",
+			misc: "hsl(345, 100%, 50%)",
+			part: "hsl(345, 100%, 50%)",
+			teil: "hsl(345, 100%, 50%)",
+			unbekannt: "hsl(345, 100%, 50%)",
+			unknown: "hsl(345, 100%, 50%)",
+			unbenannt: "hsl(345, 100%, 50%)"
+		};
+
+		return color_map[create_song_part_type(part_name)];
+	}
+</script>
+
 <script setup lang="ts">
 	import { ref, type Ref, type VNodeRef } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
@@ -7,13 +45,12 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import type { SongFile } from "@server/search_part";
-	import type { SongPart } from "@server/PlaylistItems/SongFile";
+	import type { SongData, SongPart } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 
 	defineProps<{
-		song_file?: SongFile;
+		song_data: SongData | undefined;
 	}>();
 
 	// currently selected song
@@ -35,18 +72,11 @@
 		}
 	}
 
-	function create_song_part_type(part_name: string): string {
-		return part_name.split(" ", 1)[0].toLowerCase();
-	}
-
 	function add_song_part(name: string) {
 		selected_parts.value.push(name);
 	}
 
-	function delete_song_part(event: KeyboardEvent, index?: number) {
-		event.stopPropagation();
-		event.preventDefault();
-
+	function delete_song_part(index?: number) {
 		if (index !== undefined) {
 			selected_parts.value.splice(index, 1);
 
@@ -88,12 +118,9 @@
 </script>
 
 <template>
-	<template v-if="song_file?.data !== undefined">
+	<template v-if="song_data !== undefined">
 		<div id="song_editor_wrapper">
-			<div
-				v-if="song_file.data.title !== undefined && selected_languages.length > 1"
-				id="language_selector"
-			>
+			<div v-if="selected_languages.length > 1" id="language_selector">
 				<div class="header">Languages</div>
 				<Draggable
 					id="language_wrapper"
@@ -110,7 +137,7 @@
 								class="language_selected_icon"
 								:icon="['fas', state ? 'check' : 'xmark']"
 							/>
-							{{ song_file.data.title[language_index] }}
+							{{ song_data.metadata.Title[language_index] }}
 						</div>
 					</template>
 				</Draggable>
@@ -122,7 +149,7 @@
 						id="result_text"
 						item-key="key"
 						tag="span"
-						:list="Object.entries(song_file.data.text ?? {})"
+						:list="Object.entries(song_data?.text ?? {})"
 						:group="{ name: 'song_part', pull: 'clone', put: false }"
 						:clone="on_clone"
 						:sort="false"
@@ -133,7 +160,7 @@
 								:class="{ active: selected_available_song_part === index }"
 								@click="selected_available_song_part = index"
 							>
-								<div class="song_part_header" :class="[create_song_part_type(part_name)]">
+								<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
 									{{ part_name }}
 								</div>
 								<div class="song_slides_wrapper">
@@ -150,8 +177,8 @@
 					</Draggable>
 					<MenuButton
 						@click="
-							selected_available_song_part !== undefined
-								? add_song_part(song_file.data.parts.available[selected_available_song_part])
+							selected_available_song_part !== undefined && song_data !== undefined
+								? add_song_part(Object.keys(song_data.text)[selected_available_song_part])
 								: undefined
 						"
 					>
@@ -174,22 +201,11 @@
 								tabindex="0"
 								class="song_part_name"
 								:ref="list_ref"
-								:class="{
-									[create_song_part_type(element)]: true,
-									active: selected_song_part === index
-								}"
+								:style="{ color: get_song_part_color(element) }"
 								:key="`${element}_${index}`"
-								@click="
-									selected_song_part = index;
-									$event.stopPropagation();
-									$event.preventDefault();
-								"
-								@keydown.enter="
-									selected_song_part = index;
-									$event.stopPropagation();
-									$event.preventDefault();
-								"
-								@keydown.delete="delete_song_part($event, index)"
+								@click="selected_song_part = index"
+								@keydown.enter.prevent="selected_song_part = index"
+								@keydown.delete.prevent="delete_song_part(index)"
 								@keydown.up="
 									selected_song_part !== undefined && selected_song_part > 0
 										? selected_song_part--
@@ -205,7 +221,7 @@
 							</div>
 						</template>
 					</Draggable>
-					<MenuButton @click="delete_song_part($event, selected_song_part)">
+					<MenuButton @click="delete_song_part(selected_song_part)">
 						<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
 					</MenuButton>
 				</div>
@@ -392,60 +408,5 @@
 
 	.dragging > .song_part_header {
 		background-color: var(--color-item-hover);
-	}
-
-	.title,
-	.intro {
-		color: hsl(0, 100%, 50%);
-	}
-
-	.vers,
-	.verse,
-	.strophe {
-		color: hsl(23, 100%, 50%);
-	}
-
-	.pre-refrain,
-	.pre-chorus {
-		color: hsl(46, 100%, 50%);
-	}
-
-	.chorus,
-	.refrain {
-		color: hsl(69, 100%, 50%);
-	}
-
-	.pre-bridge {
-		color: hsl(92, 100%, 50%);
-	}
-
-	.bridge {
-		color: hsl(184, 100%, 50%);
-	}
-
-	.instrumental,
-	.interlude,
-	.zwischenspiel,
-	.solo {
-		color: hsl(207, 100%, 50%);
-	}
-
-	.pre-coda {
-		color: hsl(276, 100%, 50%);
-	}
-
-	.coda,
-	.ending,
-	.outro {
-		color: hsl(299, 100%, 50%);
-	}
-
-	.misc,
-	.part,
-	.teil,
-	.unbekannt,
-	.unknown,
-	.unbenannt {
-		color: hsl(345, 100%, 50%);
 	}
 </style>

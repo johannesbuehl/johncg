@@ -4,62 +4,50 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
-	import FileDialogue, {
-		type SearchInputDefinitions
-	} from "./ItemDialogue/FileDialogue/FileDialogue.vue";
+	import FileDialogue, { type SearchInputDefinitions } from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
+	import { ControlWindowState } from "@/Enums";
+	import Globals from "@/Globals";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { File } from "@server/search_part";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import type { PlaylistFile } from "@server/search_part";
 
 	library.add(fas.faFolderOpen);
 
-	const props = defineProps<{
-		ws: WebSocket;
-		files: File[];
-	}>();
+	const selection = ref<PlaylistFile>();
 
-	const selection = ref<File>();
+	const search_strings = ref<SearchInputDefinitions<"name">>([
+		{ id: "name", placeholder: "Name", value: "" }
+	]);
 
-	const search_strings = defineModel<SearchInputDefinitions<"name">>("search_strings", {
-		default: [{ id: "name", placeholder: "Name", value: "" }]
-	});
-
-	type SearchMapFile = File & { children?: SearchMapFile[]; search_data?: { name: string } };
+	type SearchMapFile = PlaylistFile & {
+		search_data?: { name: string };
+	};
 	let search_map: SearchMapFile[] = [];
-	const file_tree = defineModel<File[]>("file_tree");
-
-	onMounted(() => {
-		refresh_items();
-	});
+	const file_tree = defineModel<PlaylistFile[]>("file_tree");
 
 	watch(
-		() => props.files,
+		() => Globals.get_playlist_files(),
 		() => {
-			search_map = create_search_map();
+			search_map = create_search_map(Globals.get_playlist_files());
 
 			search_file();
 		},
 		{ immediate: true, deep: true }
 	);
 
-	function refresh_items() {
-		const message: JGCPRecv.GetItemFiles = {
-			command: "get_item_files",
-			type: "playlist"
-		};
+	watch(search_strings.value, () => {
+		search_file();
+	});
 
-		props.ws.send(JSON.stringify(message));
-	}
-
-	function load_playlist(playlist?: File) {
+	function load_playlist(playlist?: PlaylistFile) {
 		if (playlist !== undefined) {
-			const message: JGCPRecv.OpenPlaylist = {
+			Globals.ws?.send<JCGPRecv.OpenPlaylist>({
 				command: "load_playlist",
 				playlist: playlist.path
-			};
+			});
 
-			props.ws.send(JSON.stringify(message));
+			Globals.ControlWindowState = ControlWindowState.Slides;
 		}
 	}
 
@@ -67,26 +55,32 @@
 		file_tree.value = search_string();
 	}
 
-	function create_search_map(files: File[] | undefined = props.files): SearchMapFile[] {
+	function create_search_map(files: PlaylistFile[]): SearchMapFile[] {
 		const return_map: SearchMapFile[] = [];
 
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					},
-					children: f.children !== undefined ? create_search_map(f.children) : undefined
-				});
+		files.forEach((f) => {
+			return_map.push({
+				...f,
+				search_data: {
+					name: f.name.toLowerCase()
+				}
 			});
-		}
+
+			if (f.children !== undefined) {
+				return_map.push(...create_search_map(f.children));
+			}
+		});
 
 		return return_map;
 	}
 
-	function search_string(files: SearchMapFile[] | undefined = search_map): File[] {
-		const return_files: File[] = [];
+	function search_string(files: SearchMapFile[] | undefined = search_map): PlaylistFile[] {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return Globals.get_playlist_files();
+		}
+
+		const return_files: PlaylistFile[] = [];
 
 		files?.forEach((f) => {
 			if (
@@ -121,13 +115,13 @@
 
 <template>
 	<FileDialogue
+		key="playlist"
 		:files="file_tree"
-		name="PlaylistFiles"
+		name="Playlist Files"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		@choose="load_playlist"
-		@search="search_file"
-		@refresh_files="refresh_items"
+		@refresh_files="() => Globals.get_playlist_files(true)"
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="load_playlist(selection)">

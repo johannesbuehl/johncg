@@ -1,9 +1,13 @@
-import { countdown_title_map, recurse_object_check } from "../lib.ts";
+import {
+	CountdownMode,
+	countdown_title_map,
+	get_time_string,
+	recurse_object_check
+} from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
 const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
-export type CountdownMode = "duration" | "end_time" | "stopwatch" | "clock";
 
 interface CountdownPosition {
 	x: number;
@@ -74,10 +78,10 @@ export default class Countdown extends PlaylistItemBase {
 
 		// depending on the countdown_mode, set the counter to now
 		switch (this.props.mode) {
-			case "stopwatch":
+			case CountdownMode.Stopwatch:
 				this.time = new Date();
 				break;
-			case "end_time":
+			case CountdownMode.EndTime:
 				this.time = new Date();
 
 				this.time.setHours(parseInt(time.groups.hours));
@@ -90,7 +94,7 @@ export default class Countdown extends PlaylistItemBase {
 				}
 
 				break;
-			case "duration":
+			case CountdownMode.Duration:
 				this.time = new Date();
 
 				this.time.setHours(this.time.getHours() + parseInt(time.groups.hours));
@@ -103,8 +107,15 @@ export default class Countdown extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientCountdownSlides> {
+		let title = countdown_title_map[this.props.mode];
+
+		if (CountdownMode.Duration === this.props.mode || CountdownMode.EndTime === this.props.mode) {
+			title += `: ${get_time_string(new Date(this.props.time))}`;
+		}
+
 		return Promise.resolve({
 			caption: this.props.caption,
+			title,
 			type: this.props.type,
 			media: this.media,
 			template: this.template
@@ -124,7 +135,7 @@ export default class Countdown extends PlaylistItemBase {
 			font_color: "Template",
 			time: "Template",
 			show_seconds: false,
-			mode: "clock",
+			mode: CountdownMode.Clock,
 			media: "Template"
 		};
 
@@ -175,10 +186,10 @@ export default class Countdown extends PlaylistItemBase {
 
 		if (full) {
 			switch (this.props.mode) {
-				case "duration":
+				case CountdownMode.Duration:
 					return_string += `\nDuration: ${this.props.time}`;
 					break;
-				case "end_time":
+				case CountdownMode.EndTime:
 					return_string += `\nEnd time: ${this.props.time}`;
 					break;
 			}

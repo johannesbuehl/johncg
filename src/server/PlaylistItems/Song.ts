@@ -3,8 +3,8 @@ import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import SongFile from "./SongFile.ts";
-import type { ItemPart, LyricPart } from "./SongFile.ts";
+import SongFile from "./SongFile/SongFile.ts";
+import type { Chords, ItemPart, LyricPart } from "./SongFile/SongFile.ts";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -23,6 +23,7 @@ export type ClientSongItem = SongProps & ClientItemBase;
 export interface SongTemplateData {
 	parts: ItemPart[];
 	languages?: number[];
+	chords?: Chords;
 	slide: number;
 }
 
@@ -39,7 +40,7 @@ export default class Song extends PlaylistItemBase {
 	// currently active slide-number
 	private active_slide_number: number = 0;
 
-	private song_file: SongFile = new SongFile();
+	private song_file: SongFile;
 
 	protected media_casparcg: string;
 
@@ -154,9 +155,18 @@ export default class Song extends PlaylistItemBase {
 	}
 
 	create_client_object_item_slides(): Promise<ClientSongSlides> {
+		let title: string = "";
+
+		if (this.song_file.metadata.ChurchSongID !== undefined) {
+			title += `${this.song_file.metadata.ChurchSongID} - `;
+		}
+
+		title += this.song_file.metadata.Title[this.props.languages?.[0] ?? 0];
+
 		return Promise.resolve({
 			type: "song",
 			caption: this.item_props.caption,
+			title,
 			media: this.media,
 			template: this.template
 		});
@@ -199,7 +209,7 @@ export default class Song extends PlaylistItemBase {
 		const props = structuredClone(this.item_props);
 
 		// if the languages are the same as in the song-file, remove them from the returned props
-		if (props.languages?.every((lang, index) => lang === this.song_file.languages[index])) {
+		if (props.languages?.every((lang, index) => lang === this.song_file?.languages[index])) {
 			delete props.languages;
 		}
 
@@ -284,9 +294,10 @@ export default class Song extends PlaylistItemBase {
 			return_string += `${this.song_file.metadata.ChurchSongID}: `;
 		}
 
-		const language_index = this.props.languages ? this.props.languages[0] : 0;
+		// const language_index = this.props.languages ? this.props.languages[0] : 0;
+		const languages = this.props.languages ?? this.song_file.languages;
 
-		return_string += `${this.song_file.metadata.Title[language_index]})\n\n`;
+		return_string += `${this.song_file.metadata.Title[languages[0]]})\n\n`;
 
 		if (full) {
 			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
@@ -296,7 +307,15 @@ export default class Song extends PlaylistItemBase {
 
 				this.song_file.get_part(part).slides.forEach((slide) => {
 					slide.forEach((line) => {
-						return_string += `\n${line[language_index]}  `;
+						languages.forEach((language_index) => {
+							if (line[language_index].length > 0) {
+								if (language_index !== languages[0]) {
+									return_string += `\n*${line[language_index]}*  `;
+								} else {
+									return_string += `\n${line[language_index]}  `;
+								}
+							}
+						});
 					});
 				});
 

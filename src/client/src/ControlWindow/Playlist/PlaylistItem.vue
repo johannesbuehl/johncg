@@ -1,11 +1,11 @@
 <script setup lang="ts">
 	import { ref, watch, onMounted, nextTick } from "vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		index: number;
 		selected?: boolean;
 		active?: boolean;
@@ -18,7 +18,6 @@
 	}>();
 
 	const item = ref<HTMLDivElement>();
-	const color_picker = ref<HTMLInputElement>();
 	const caption_element = ref<HTMLDivElement>();
 	const item_props = defineModel<ClientPlaylistItem>("item_props", { required: true });
 
@@ -40,12 +39,10 @@
 	}
 
 	function delete_item() {
-		const message: JGCPRecv.DeleteItem = {
+		Globals.ws?.send<JCGPRecv.DeleteItem>({
 			command: "delete_item",
 			position: props.index
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 
 	defineExpose({
@@ -67,14 +64,7 @@
 		@keydown.enter="emit('set_active')"
 		@keydown.delete="delete_item"
 	>
-		<div
-			class="item_color_indicator"
-			:style="{ 'background-color': item_props.color }"
-			@contextmenu="
-				color_picker?.click();
-				$event.preventDefault();
-			"
-		></div>
+		<div class="item_color_indicator" :style="{ 'background-color': item_props.color }"></div>
 		<div class="playlist_item" ref="caption_element">
 			{{ item_props.caption }}
 		</div>

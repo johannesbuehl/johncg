@@ -8,7 +8,7 @@ import type {
 } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song.ts";
 
-import * as JGCPSend from "./JGCPSendMessages.ts";
+import * as JCGPSend from "./JCGPSendMessages.ts";
 
 import Config from "./config.ts";
 import PlaylistObject from "./PlaylistFile.ts";
@@ -22,8 +22,14 @@ import Bible from "./PlaylistItems/Bible.ts";
 import Psalm from "./PlaylistItems/Psalm.ts";
 import { logger } from "./logger.ts";
 import AMCP from "./PlaylistItems/AMCP.ts";
-import { CasparCGConnection, add_casparcg_listener, casparcg, casparcg_clear } from "./CasparCG.ts";
+import {
+	CasparCGConnection,
+	add_casparcg_listener,
+	casparcg,
+	casparcg_clear
+} from "./CasparCGConnection.js";
 import path from "path";
+import Text from "./PlaylistItems/Text.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -46,7 +52,8 @@ enum TransitionType {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 export default class Playlist {
-	private caption: string = "";
+	caption: string;
+	path: string;
 
 	// store the individual items of the playlist
 	playlist_items: PlaylistItem[] = [];
@@ -62,9 +69,10 @@ export default class Playlist {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(playlist?: string, callback?: () => void) {
-		if (playlist !== undefined) {
-			this.load_playlist_file(playlist, callback);
+	constructor(playlist_path?: string, callback?: () => void) {
+		// if there is a playlist-path specified, try to load the file
+		if (playlist_path !== undefined) {
+			this.load_playlist_file(playlist_path, callback);
 
 			let first_item = 0;
 
@@ -77,6 +85,11 @@ export default class Playlist {
 			}
 
 			this.set_active_item(first_item, 0);
+		} else {
+			// else initialize the playlist-caption with the date of creation
+			const dt = new Date();
+
+			this.caption = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")} ${String(dt.getHours()).padStart(2, "0")}-${String(dt.getMinutes()).padStart(2, "0")}-${String(dt.getSeconds()).padStart(2, "0")}`;
 		}
 
 		// add a listener to send send the current-slide on connection
@@ -101,14 +114,15 @@ export default class Playlist {
 			[key in ItemProps["type"]]: new (props: ItemProps, callback: () => void) => PlaylistItem;
 		} = {
 			song: Song,
-			comment: Comment,
-			countdown: Countdown,
-			media: Media,
-			pdf: PDF,
-			template: TemplateItem,
-			bible: Bible,
 			psalm: Psalm,
-			amcp: AMCP
+			bible: Bible,
+			text: Text,
+			media: Media,
+			template: TemplateItem,
+			pdf: PDF,
+			countdown: Countdown,
+			amcp: AMCP,
+			comment: Comment
 		};
 
 		const new_item = new item_class_map[item.type](item, () => {
@@ -125,7 +139,7 @@ export default class Playlist {
 			this.active_item_number++;
 		}
 
-		if (set_active) {
+		if (set_active && Config.behaviour.show_on_load) {
 			this.set_active_item(index, 0);
 		}
 
@@ -190,13 +204,15 @@ export default class Playlist {
 	}
 
 	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
+		this.path = path.relative(Config.path.playlist, playlist_path);
+
 		let playlist_string: string;
 
 		try {
-			playlist_string = fs.readFileSync(playlist_path, "utf-8");
+			playlist_string = fs.readFileSync(Config.get_path("playlist", this.path), "utf-8");
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
-				logger.error(`can't load playlist: playlist does not exist (${playlist_path})`);
+				logger.error(`can't load playlist: playlist does not exist (${this.path})`);
 
 				return;
 			} else {
@@ -209,21 +225,45 @@ export default class Playlist {
 		this.caption = playlist.caption;
 
 		if (this.caption === undefined || this.caption === "") {
-			this.caption = path.basename(playlist_path).replace(/\.jcg$/, "");
+			this.caption = path.basename(this.path).replace(/\.jcg$/, "");
 		}
 
 		playlist.items.forEach((item) => {
 			this.add_item(item, false, callback);
 		});
+
+		// reset the changes
+		this.changes = false;
 	}
 
-	save(): PlaylistObject {
+	save(playlist?: string): boolean {
+		if (playlist !== undefined) {
+			this.path = playlist;
+		}
+
 		const save_object: PlaylistObject = {
 			caption: this.caption,
 			items: this.playlist_items.map((item) => item.props)
 		};
 
-		return save_object;
+		try {
+			fs.writeFileSync(
+				path.join(Config.get_path("playlist"), this.path),
+				JSON.stringify(save_object, null, "\t"),
+				"utf-8"
+			);
+		} catch (e) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			if (e?.code !== "ENOENT") {
+				throw e;
+			}
+
+			return false;
+		}
+
+		this.changes = false;
+
+		return true;
 	}
 
 	create_client_object_playlist(): ClientPlaylistItems {
@@ -475,7 +515,7 @@ export default class Playlist {
 		return casparcg.visibility;
 	}
 
-	get state(): JGCPSend.State {
+	get state(): JCGPSend.State {
 		return {
 			command: "state",
 			active_item_slide: this.active_item_slide,

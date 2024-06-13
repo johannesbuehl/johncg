@@ -4,10 +4,10 @@
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 
 	import type { ClientTemplateItem } from "@server/PlaylistItems/Template";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
@@ -29,13 +29,11 @@
 	}
 
 	onUnmounted(() => {
-		const message: JGCPRecv.UpdateItem = {
+		Globals.ws?.send<JCGPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: item_props.value
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	});
 </script>
 

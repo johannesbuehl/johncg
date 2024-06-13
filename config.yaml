@@ -1,0 +1,25 @@
+log_level: DEBUG # log-leve - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
+behaviour:
+  show_on_load: true # show the first slide when loading - valid-values: true false
+path: # path to the different files
+  playlist: g:/Meine Ablage/Streaming/12_Abläufe/ # song-files
+  song: G:/Meine Ablage/Streaming/80_Songs/Lieder # pdf-files
+  psalm: G:/Meine Ablage/Streaming/80_Songs/Psalme # psalm-files
+  pdf: g:/Meine Ablage/Streaming/60_PDF/ # playlist-files
+  bible: files/Bible/Luther-Bibel.json # used bible
+casparcg:
+  transition_length: 12.5 # transition-length in frames
+  connections: # individual CasparCG-connections
+    - host: 127.0.0.1
+      port: 5250
+      channel: 1
+      layers:
+        media: 20 # used for media-playback - Can be removed to don't show media
+        template: 21 # used for templates and song-/psalm-/countdown-text
+      path: D:/Streaming-neu/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
+client_server:
+  http:
+    port: 8888 # port for the client-interface web-server
+  websocket:
+    port: 8765 # port for the websocket-communication between client and server (needs to be changed in client/assets/main-*.js - search for 'port:"')
+

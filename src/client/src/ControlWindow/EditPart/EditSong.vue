@@ -3,13 +3,13 @@
 
 	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { ClientSongItem, SongProps } from "@server/PlaylistItems/Song";
-	import type { SongFile } from "@server/search_part";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import type { ClientSongItem } from "@server/PlaylistItems/Song";
+	import type { SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
-		song_file: SongFile[] | undefined;
+		song_data: SongData | undefined;
 		item_index: number;
 	}>();
 
@@ -19,13 +19,12 @@
 	const song_props = defineModel<ClientSongItem>("item_props", { required: true });
 
 	watch(
-		() => props.song_file,
-		(new_song_data) => {
-			if (new_song_data !== undefined) {
-				verse_order.value =
-					song_props.value.verse_order ?? new_song_data[0].data?.parts.default ?? [];
+		() => props.song_data,
+		(song_data) => {
+			if (song_data !== undefined) {
+				verse_order.value = song_props.value.verse_order ?? Object.keys(song_data.text ?? {});
 
-				const default_languages: [number, boolean][] = Array(new_song_data[0].data?.title?.length)
+				const default_languages: [number, boolean][] = Array(song_data.metadata.Title?.length)
 					.fill([])
 					.map((ele, index) => [index, true]);
 
@@ -54,73 +53,63 @@
 	onMounted(() => request_song_data(song_props.value.file));
 
 	function request_song_data(file: string) {
-		const message: JGCPRecv.GetItemData = {
+		Globals.ws?.send<JCGPRecv.GetItemData>({
 			command: "get_item_data",
 			type: "song",
 			file: file
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 
 	function update() {
 		const return_props = create_props();
 
 		if (return_props !== undefined) {
-			const message: JGCPRecv.UpdateItem = {
+			Globals.ws?.send<JCGPRecv.UpdateItem>({
 				command: "update_item",
 				index: props.item_index,
 				props: return_props
-			};
-
-			props.ws.send(JSON.stringify(message));
+			});
 		}
 	}
 
 	function create_props(): ClientSongItem | undefined {
+		const return_props = structuredClone(toRaw(song_props.value));
+
+		const default_parts = Object.keys(props.song_data?.text || {});
 		if (
-			props.song_file !== undefined &&
-			props.song_file.length > 0 &&
-			props.song_file[0].data !== undefined
+			default_parts.length !== verse_order.value.length ||
+			!verse_order.value.every((verse, index) => {
+				return verse === default_parts[index];
+			})
 		) {
-			const return_props = structuredClone(toRaw(song_props.value));
-
-			const default_parts = props.song_file[0].data.parts.default;
-			if (
-				default_parts.length !== verse_order.value.length ||
-				!verse_order.value.every((verse, index) => {
-					return verse === default_parts[index];
-				})
-			) {
-				return_props.verse_order = verse_order.value;
-			} else {
-				return_props.verse_order = undefined;
-			}
-
-			if (
-				languages.value.some((val, index) => {
-					return val[0] !== index || val[1] === false;
-				})
-			) {
-				return_props.languages = languages.value
-					.filter(([number, active]) => active)
-					.map(([number, active]) => number);
-			} else {
-				return_props.languages = undefined;
-			}
-
-			return return_props;
+			return_props.verse_order = verse_order.value;
+		} else {
+			return_props.verse_order = undefined;
 		}
+
+		if (
+			languages.value.some((val, index) => {
+				return val[0] !== index || val[1] === false;
+			})
+		) {
+			return_props.languages = languages.value
+				.filter(([number, active]) => active)
+				.map(([number, active]) => number);
+		} else {
+			return_props.languages = undefined;
+		}
+
+		return return_props;
 	}
 </script>
 
 <template>
 	<div id="edit_song_wrapper">
 		<SongPartSelector
-			v-if="song_file !== undefined"
+			v-if="song_data !== undefined"
 			v-model:selected_parts="verse_order"
 			v-model:selected_languages="languages"
-			:song_file="song_file[0]"
+			:song_data="song_data"
 		/>
 	</div>
 </template>

@@ -3,19 +3,16 @@
 
 	import CountdownEditor from "../ItemDialogue/CountdownEditor.vue";
 
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type {
-		ClientCountdownItem,
-		CountdownMode,
-		CountdownProps
-	} from "@server/PlaylistItems/Countdown";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import type { ClientCountdownItem } from "@server/PlaylistItems/Countdown";
+	import { CountdownMode } from "@server/lib";
+	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		ws: WebSocket;
 		item_index: number;
 	}>();
 
-	const countdown_mode = ref<CountdownMode>("end_time");
+	const countdown_mode = ref<CountdownMode>(CountdownMode.EndTime);
 	const time = ref<string>(new Date(Date.now()).toLocaleTimeString());
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
@@ -34,7 +31,7 @@
 	});
 
 	onUnmounted(() => {
-		const message: JGCPRecv.UpdateItem = {
+		Globals.ws?.send<JCGPRecv.UpdateItem>({
 			command: "update_item",
 			index: props.item_index,
 			props: {
@@ -45,9 +42,7 @@
 				show_seconds: show_seconds.value,
 				time: time.value
 			}
-		};
-
-		props.ws.send(JSON.stringify(message));
+		});
 	});
 </script>
 

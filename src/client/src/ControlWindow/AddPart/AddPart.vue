@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { onMounted, onUnmounted, ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 
@@ -14,10 +14,11 @@
 	import AddCountdown from "./Parts/AddCountdown.vue";
 	import AddAMCP from "./Parts/AddAMCP.vue";
 	import AddComment from "./Parts/AddComment.vue";
+	import AddText from "./Parts/AddText.vue";
+	import Globals from "@/Globals";
+	import { stop_event } from "@/App.vue";
 
-	import type * as JGCPSend from "@server/JGCPSendMessages";
-	import type * as JGCPRecv from "@server/JGCPReceiveMessages";
-	import type { BibleFile } from "@server/PlaylistItems/Bible";
+	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
 	library.add(
@@ -33,20 +34,49 @@
 		fas.faMessage
 	);
 
-	const props = defineProps<{
-		ws: WebSocket;
-		files?: Record<JGCPSend.ItemFiles["type"], JGCPSend.ItemFiles["files"]>;
-		bible?: BibleFile;
-		mode: ControlWindowState;
-	}>();
-
 	const pick = ref<ItemProps["type"]>("song");
+
+	onMounted(() => {
+		window.addEventListener("keydown", key_part_navigation);
+	});
+
+	onUnmounted(() => {
+		window.removeEventListener("keydown", key_part_navigation);
+	});
+
+	function key_part_navigation(event: KeyboardEvent) {
+		// exit on composing
+		if (event.isComposing) {
+			return;
+		}
+
+		let prevent_default = false;
+
+		// execute the navigation-keys only if the slides are visible
+		prevent_default = true;
+
+		if (event.ctrlKey && event.code === "Tab") {
+			let pick_index = part_types.findIndex((part) => part.value === pick.value);
+
+			if (event.shiftKey) {
+				pick_index--;
+			} else {
+				pick_index++;
+			}
+
+			pick.value = part_types[(pick_index + part_types.length) % part_types.length].value;
+
+			if (prevent_default) {
+				stop_event(event);
+			}
+		}
+	}
 
 	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
 		{ text: "Song", value: "song", icon: "music" },
 		{ text: "Psalm", value: "psalm", icon: "book-bible" },
 		{ text: "Bible", value: "bible", icon: "quote-left" },
-		// { text: "Text", value: "text", icon: "font" },
+		{ text: "Text", value: "text", icon: "font" },
 		{ text: "Media", value: "media", icon: "image" },
 		{ text: "Template", value: "template", icon: "pen-ruler" },
 		{ text: "PDF", value: "pdf", icon: "file-pdf" },
@@ -56,36 +86,17 @@
 	];
 
 	function add_item(item_props: ItemProps) {
-		const message: JGCPRecv.AddItem = {
+		Globals.ws?.send<JCGPRecv.AddItem>({
 			command: "add_item",
 			props: item_props,
 			set_active: true
-		};
-
-		props.ws.send(JSON.stringify(message));
-	}
-
-	function get_files(type: JGCPRecv.GetItemFiles["type"] | "bible") {
-		let message: JGCPRecv.Message;
-
-		if (type === "bible") {
-			message = {
-				command: "get_bible"
-			};
-		} else {
-			message = {
-				command: "get_item_files",
-				type
-			};
-		}
-
-		props.ws.send(JSON.stringify(message));
+		});
 	}
 </script>
 
 <template>
 	<div class="add_part_wrapper">
-		<div class="song_part_selector" v-if="mode === ControlWindowState.Add">
+		<div class="song_part_selector">
 			<PartRadio
 				v-for="type in part_types"
 				v-model="pick"
@@ -94,52 +105,24 @@
 				:text="type.text"
 			/>
 		</div>
-		<template v-if="files !== undefined">
-			<AddSong
-				v-if="pick === 'song'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('song')"
-			/>
-			<AddPsalm
-				v-else-if="pick === 'psalm'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('psalm')"
-			/>
-			<AddBible
-				v-else-if="pick === 'bible'"
-				:bible="bible"
-				@add="add_item"
-				@refresh="get_files('bible')"
-			/>
-			<AddMedia
-				v-else-if="pick === 'media'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('media')"
-			/>
-			<AddTemplate
-				v-else-if="pick === 'template'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('template')"
-			/>
-			<AddPDF
-				v-else-if="pick === 'pdf'"
-				:files="files[pick]"
-				@add="add_item"
-				@refresh="get_files('pdf')"
-			/>
-			<AddCountdown
-				v-else-if="pick === 'countdown'"
-				:files="files['media']"
-				@add="add_item"
-				@refresh="get_files('media')"
-			/>
-			<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" @refresh="get_files('media')" />
-			<AddComment v-else-if="pick === 'comment'" @add="add_item" />
-		</template>
+		<AddSong
+			v-if="pick === 'song'"
+			@add="add_item"
+			@new_song="Globals.ControlWindowState = ControlWindowState.NewSong"
+		/>
+		<AddPsalm
+			v-else-if="pick === 'psalm'"
+			@add="add_item"
+			@new_psalm="Globals.ControlWindowState = ControlWindowState.NewPsalm"
+		/>
+		<AddBible v-else-if="pick === 'bible'" @add="add_item" />
+		<AddText v-else-if="pick === 'text'" @add="add_item" />
+		<AddMedia v-else-if="pick === 'media'" @add="add_item" />
+		<AddTemplate v-else-if="pick === 'template'" @add="add_item" />
+		<AddPDF v-else-if="pick === 'pdf'" @add="add_item" />
+		<AddCountdown v-else-if="pick === 'countdown'" @add="add_item" />
+		<AddAMCP v-else-if="pick === 'amcp'" @add="add_item" />
+		<AddComment v-else-if="pick === 'comment'" @add="add_item" />
 	</div>
 </template>
 

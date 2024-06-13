@@ -15,6 +15,8 @@ export default defineConfig(({ command }) => ({
 		outDir: "../../dist/build/client",
 		emptyOutDir: true,
 		chunkSizeWarningLimit: 2000
+		// minify: false,
+		// sourcemap: true
 	},
 	server: {
 		host: true

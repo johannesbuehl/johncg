@@ -3,7 +3,7 @@ import type { RawData } from "ws";
 import { logger } from "../logger";
 
 // defintion of a JCGP-response
-export interface JGCPResponse {
+export interface JCGPResponse {
 	command: "response";
 	message: string;
 	code: number;
@@ -99,7 +99,7 @@ export default class WebsocketServer {
 			ws.close();
 
 			// remove the connection from the list
-			const index = this.connections[ws.protocol].indexOf(ws);
+			const index = this.connections[ws.protocol]?.indexOf(ws);
 
 			if (index > -1) {
 				this.connections[ws.protocol].splice(index, 1);
