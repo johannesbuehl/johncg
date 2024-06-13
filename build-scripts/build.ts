@@ -1,7 +1,7 @@
+import archiver from "archiver";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import tar from "tar";
 
 // check, wether the build script supports the os
 if (!["win32", "linux"].includes(process.platform)) {
@@ -116,8 +116,16 @@ copy_release_file("LICENSE", "LICENSE.txt");
 // copy the licenses
 copy_release_dir(path.join(build_dir, "licenses"));
 
-// pack the files in a .tar.gz-file
-void tar.c({ gzip: true, file: release_dir + ".tar.br", cwd: "dist" }, [path.relative("dist", release_dir)]);
+// pack the files
+const zip_stream = fs.createWriteStream(release_dir + ".zip");
+
+const archive = archiver("zip");
+
+archive.pipe(zip_stream);
+
+archive.directory(release_dir, false);
+
+void archive.finalize();
 
 function create_launch_script(pth: string, destination: string) {
 	const relative_path_prefix = "../".repeat((destination.match(/\//g) ?? []).length);
