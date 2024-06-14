@@ -29,7 +29,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const psalm_file_tree = ref<PsalmFile[]>();
-	const file_selection = defineModel<PsalmFile>("psalm_file");
+	const file_selection = defineModel<PsalmFile>("psalm_file", { default: undefined });
 	const psalm_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
@@ -47,7 +47,8 @@
 			if (file_selection.value !== undefined && file_selection.value.children === undefined) {
 				psalm_file_name.value = file_selection.value.name.replace(/\.psm$/, "");
 			}
-		}
+		},
+		{ immediate: true }
 	);
 
 	// watch for new psalm-files

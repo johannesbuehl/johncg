@@ -20,9 +20,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - save_song(): check, wether "chords" is valid
 - repair new-file abort unsaved changes
-- move template-jump()-function into update() to prevent error messages in casparcg-log
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
-- edit psalm-file (maybe song too): load path for "save"-button to be enabled from beginning
+- fix updating playlistname on page-load
+- song- and psalm-editor: editing existing file: save-confirm despite no changes
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

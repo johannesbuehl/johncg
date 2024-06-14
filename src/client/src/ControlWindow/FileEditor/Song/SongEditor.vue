@@ -60,6 +60,8 @@
 		() => {
 			if (song_selection.value !== undefined && song_selection.value.children === undefined) {
 				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
+
+				console.debug("setting song_file_name to", song_file_name.value);
 			}
 		}
 	);

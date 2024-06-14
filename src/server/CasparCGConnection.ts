@@ -76,7 +76,6 @@ void (async () => {
 		Config.casparcg.connections.map(async (connection_setting) => {
 			logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
-			let connection: CasparCG;
 			let server: CasparCGServer;
 
 			// if a path is specified, try to launch it
@@ -91,16 +90,12 @@ void (async () => {
 				}
 			}
 
-			try {
-				connection = new CasparCG({
-					...connection_setting,
-					/* eslint-disable @typescript-eslint/naming-convention */
-					autoConnect: true
-					/* eslint-enable @typescript-eslint/naming-convention */
-				});
-			} catch (e) {
-				/* empty */
-			}
+			const connection = new CasparCG({
+				...connection_setting,
+				/* eslint-disable @typescript-eslint/naming-convention */
+				autoConnect: true
+				/* eslint-enable @typescript-eslint/naming-convention */
+			});
 
 			const casparcg_connection: CasparCGConnection = {
 				connection,

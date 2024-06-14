@@ -51,7 +51,6 @@
 </script>
 
 <template>
-	<!-- :thumbnails="thumbnails" -->
 	<SongEditor :song_file="song_file" v-model:metadata="metadata" v-model:text_parts="text_parts" />
 </template>
 

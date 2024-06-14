@@ -41,7 +41,7 @@
 	});
 
 	function load_playlist(playlist?: PlaylistFile) {
-		if (playlist !== undefined) {
+		if (playlist !== undefined && playlist.children === undefined) {
 			Globals.ws?.send<JCGPRecv.OpenPlaylist>({
 				command: "load_playlist",
 				playlist: playlist.path
