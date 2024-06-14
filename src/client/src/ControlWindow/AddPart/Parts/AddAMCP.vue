@@ -8,6 +8,7 @@
 
 	import type { AMCPProps } from "@server/PlaylistItems/AMCP";
 	import AMCPInput from "@/ControlWindow/ItemDialogue/AMCPInput.vue";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus);
 
@@ -22,7 +23,7 @@
 		emit("add", {
 			type: "amcp",
 			caption: "AMCP-Command",
-			color: "#FF00FF",
+			color: Globals.color.amcp,
 			commands: {
 				set_active: set_active_command.value.length > 0 ? set_active_command.value : undefined,
 				set_inactive: set_inactive_command.value.length > 0 ? set_inactive_command.value : undefined

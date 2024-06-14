@@ -6,6 +6,7 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import TextEditor from "@/ControlWindow/ItemDialogue/TextEditor.vue";
+	import Globals from "@/Globals";
 
 	import type { TextProps } from "@server/PlaylistItems/Text";
 
@@ -28,7 +29,7 @@
 			emit("add", {
 				type: "text",
 				caption: text_input.value.split("\n", 1)[0].slice(0, 50),
-				color: "#FF0000",
+				color: Globals.color.text,
 				text: text_input.value
 			});
 		}

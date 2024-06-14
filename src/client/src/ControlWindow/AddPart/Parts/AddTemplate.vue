@@ -57,7 +57,7 @@
 		return {
 			type: "template",
 			caption: file.name,
-			color: "#FF0000",
+			color: Globals.color.template,
 			template: {
 				template: file.path,
 				data: Object.keys(template_data.value).length > 0 ? template_data.value : undefined
@@ -137,6 +137,7 @@
 	<FileDialogue
 		:files="file_tree"
 		:clone_callback="(ff) => create_props(ff as TemplateFile)"
+		:item_color="Globals.color.template"
 		name="Template"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"

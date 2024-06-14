@@ -10,6 +10,7 @@
 
 	import type { SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus);
 
@@ -47,7 +48,7 @@
 		const props: SongProps = {
 			type: "song",
 			caption: file.name,
-			color: "#0000FF",
+			color: Globals.color.song,
 			file: file.path
 		};
 

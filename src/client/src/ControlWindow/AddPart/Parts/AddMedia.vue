@@ -9,6 +9,7 @@
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { MediaFile } from "@server/search_part";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faRepeat);
 
@@ -29,7 +30,7 @@
 		return {
 			type: "media",
 			caption: file.name,
-			color: "#00FF00",
+			color: Globals.color.media,
 			media: file.path,
 			loop: loop.value
 		};

@@ -16,7 +16,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import Draggable from "vuedraggable";
+	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import { get_song_part_color } from "../../ItemDialogue/SongPartSelector.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -395,20 +395,21 @@
 					v-model="metadata.VerseOrder"
 					group="song_parts"
 					item-key="item"
+					delay-on-touch-only="true"
+					delay="250"
 				>
-					<template #item="{ element: part, index }">
-						<div
-							class="verse_part"
-							:class="{ selected: selected_verse_order_part === index }"
-							:style="{ color: get_song_part_color(part) }"
-							tabindex="-1"
-							@click="selected_verse_order_part = index"
-							@keydown.enter.prevent="selected_verse_order_part = index"
-							@keydown.delete="remove_verse_order_part(index)"
-						>
-							{{ part }}
-						</div>
-					</template>
+					<div
+						v-for="(part, index) of metadata.VerseOrder"
+						class="verse_part"
+						:class="{ selected: selected_verse_order_part === index }"
+						:style="{ color: get_song_part_color(part) }"
+						tabindex="-1"
+						@click="selected_verse_order_part = index"
+						@keydown.enter.prevent="selected_verse_order_part = index"
+						@keydown.delete="remove_verse_order_part(index)"
+					>
+						{{ part }}
+					</div>
 				</Draggable>
 				<MenuButton @click="remove_verse_order_part()">
 					<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part

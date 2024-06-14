@@ -79,7 +79,7 @@
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import Draggable from "vuedraggable";
+	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import PopUp from "../PopUp.vue";
@@ -87,6 +87,7 @@
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import type { Directory, ItemFileMapped, ItemFileType } from "@server/search_part";
+	import PlaylistItemDummy from "../Playlist/PlaylistItemDummy.vue";
 
 	library.add(
 		fas.faHouse,
@@ -108,6 +109,7 @@
 		new_button?: boolean;
 		new_directory?: boolean;
 		search_disabled?: boolean;
+		item_color?: string;
 	}>();
 
 	const emit = defineEmits<{
@@ -292,6 +294,7 @@
 							</div>
 							<template v-if="files !== undefined">
 								<Draggable
+									class="draggable"
 									:list="sort_files(get_current_files())"
 									:group="{
 										name: 'playlist',
@@ -302,25 +305,27 @@
 									tag="div"
 									:clone="clone_callback"
 									:sort="false"
+									delay-on-touch-only="true"
+									delay="250"
 								>
-									<template #item="{ element }">
-										<div
-											v-show="!element.hidden"
-											class="file_item"
-											:class="{ selectable: true, active: element === selection }"
-											@keydown.enter.prevent="on_choose(element)"
-											@dblclick="on_choose(element)"
-											@click="selection = element"
-										>
-											{{ element.name }}
-										</div>
-									</template>
+									<PlaylistItemDummy
+										v-for="element of sort_files(get_current_files())"
+										v-show="!element.hidden"
+										:active="element === selection"
+										:color="item_color ?? ''"
+										@keydown.enter.prevent="on_choose(element)"
+										@dblclick="on_choose(element)"
+										@click="selection = element"
+									>
+										{{ element.name }}
+									</PlaylistItemDummy>
 								</Draggable>
 							</template>
 						</div>
 						<Draggable
 							v-if="thumbnails !== undefined"
 							id="file_thumbnail_wrapper"
+							class="draggable"
 							:list="sort_files(get_current_files())"
 							:group="{
 								name: 'playlist',
@@ -331,29 +336,32 @@
 							tag="div"
 							:clone="clone_callback"
 							:sort="false"
+							delay-on-touch-only="true"
+							delay="250"
 						>
-							<template #item="{ element }">
-								<div
+							<template v-for="element of sort_files(get_current_files())">
+								<PlaylistItemDummy
 									v-if="!element.hidden && thumbnails[element.path]"
-									class="file_thumbnail selectable"
-									:class="{ active: element === selection }"
+									:color="item_color ?? ''"
 								>
-									<img
-										:src="thumbnails[element.path]"
-										@keydown.enter.prevent="on_choose(element)"
-										@dblclick="on_choose(element)"
-										@click="selection = element"
-									/>
-									<div class="file_thumbnail_name">
-										{{ element.name }}
+									<div class="file_thumbnail selectable" :class="{ active: element === selection }">
+										<img
+											:src="thumbnails[element.path]"
+											@keydown.enter.prevent="on_choose(element)"
+											@dblclick="on_choose(element)"
+											@click="selection = element"
+										/>
+										<div class="file_thumbnail_name">
+											{{ element.name }}
+										</div>
 									</div>
-								</div>
+								</PlaylistItemDummy>
 							</template>
 						</Draggable>
-						<slot name="edit"></slot>
+						<slot name="edit" />
 					</div>
 					<div class="button_wrapper" v-if="!!slots.buttons">
-						<slot name="buttons"></slot>
+						<slot name="buttons" />
 					</div>
 				</div>
 			</div>
@@ -635,39 +643,41 @@
 		background-color: var(--color-active-hover);
 	}
 
-	.file_thumbnail_name {
-		width: 0;
-		min-width: 100%;
-
-		padding: 0.25rem;
-	}
-
 	.file_thumbnail {
 		cursor: pointer;
+
+		display: flex;
+		flex-direction: column;
 	}
 
 	.file_thumbnail.selectable {
 		font-weight: lighter;
 
-		background-color: var(--color-item);
-
 		border-radius: 0.25rem;
 	}
 
-	.file_thumbnail.selectable:hover {
-		background-color: var(--color-item-hover);
-	}
-
 	.file_thumbnail.selectable.active {
-		background-color: var(--color-active);
-
 		outline-color: var(--color-active);
 		outline-style: solid;
 	}
 
 	.file_thumbnail.selectable.active:hover {
-		outline-color: var(--color-active-hover);
 		outline-style: solid;
+	}
+
+	.file_thumbnail > img {
+		display: none;
+	}
+
+	.file_thumbnail_name {
+		font-weight: lighter;
+	}
+
+	#file_thumbnail_wrapper .file_thumbnail_name {
+		width: 0;
+		min-width: 100%;
+
+		padding: 0.25rem;
 	}
 
 	.button_wrapper {
@@ -696,5 +706,17 @@
 		display: flex;
 
 		background-color: var(--color-container);
+	}
+
+	.draggable:deep(.item_color_indicator) {
+		display: none !important;
+	}
+
+	#file_thumbnail_wrapper:deep(.playlist_item) {
+		padding: 0;
+	}
+
+	#file_thumbnail_wrapper:deep(img) {
+		display: unset;
 	}
 </style>

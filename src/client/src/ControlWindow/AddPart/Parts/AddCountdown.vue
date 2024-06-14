@@ -50,7 +50,7 @@
 			return {
 				type: "countdown",
 				caption,
-				color: "#FF0080",
+				color: Globals.color.countdown,
 				media: media_selection.value.path,
 				font_size: font_size.value,
 				font_color: font_color.value,

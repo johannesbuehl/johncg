@@ -41,7 +41,7 @@
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import Draggable from "vuedraggable";
+	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
@@ -130,16 +130,21 @@
 					easing="cubic-bezier(1, 0, 0, 1)"
 					ghostClass="dragged_ghost"
 					fallbackClass="dragged"
+					delay-on-touch-only="true"
+					delay="250"
 				>
-					<template #item="{ element: [language_index, state], index }">
-						<div :class="{ active: state }" :id="language_index" @click="language_toggle(index)">
-							<FontAwesomeIcon
-								class="language_selected_icon"
-								:icon="['fas', state ? 'check' : 'xmark']"
-							/>
-							{{ song_data.metadata.Title[language_index] }}
-						</div>
-					</template>
+					<div
+						v-for="([language_index, state], index) of selected_languages"
+						:class="{ active: state }"
+						:id="language_index.toString()"
+						@click="language_toggle(index)"
+					>
+						<FontAwesomeIcon
+							class="language_selected_icon"
+							:icon="['fas', state ? 'check' : 'xmark']"
+						/>
+						{{ song_data.metadata.Title[language_index] }}
+					</div>
 				</Draggable>
 			</div>
 			<div id="part_selector_wrapper">
@@ -153,27 +158,28 @@
 						:group="{ name: 'song_part', pull: 'clone', put: false }"
 						:clone="on_clone"
 						:sort="false"
+						delay-on-touch-only="true"
+						delay="250"
 					>
-						<template #item="{ element: [part_name, part], index }">
-							<div
-								class="song_part"
-								:class="{ active: selected_available_song_part === index }"
-								@click="selected_available_song_part = index"
-							>
-								<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
-									{{ part_name }}
-								</div>
-								<div class="song_slides_wrapper">
-									<div v-for="slide in part">
-										<div v-for="line in slide">
-											<div class="song_language_line" v-for="lang in get_language_lines(line)">
-												{{ lang }}
-											</div>
+						<div
+							v-for="([part_name, part], index) of Object.entries(song_data?.text ?? {})"
+							class="song_part"
+							:class="{ active: selected_available_song_part === index }"
+							@click="selected_available_song_part = index"
+						>
+							<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
+								{{ part_name }}
+							</div>
+							<div class="song_slides_wrapper">
+								<div v-for="slide in part">
+									<div v-for="line in slide">
+										<div class="song_language_line" v-for="lang in get_language_lines(line)">
+											{{ lang }}
 										</div>
 									</div>
 								</div>
 							</div>
-						</template>
+						</div>
 					</Draggable>
 					<MenuButton
 						@click="
@@ -196,30 +202,29 @@
 						easing="cubic-bezier(1, 0, 0, 1)"
 						ghost-class="dragging"
 					>
-						<template #item="{ element, index }">
-							<div
-								tabindex="0"
-								class="song_part_name"
-								:ref="list_ref"
-								:style="{ color: get_song_part_color(element) }"
-								:key="`${element}_${index}`"
-								@click="selected_song_part = index"
-								@keydown.enter.prevent="selected_song_part = index"
-								@keydown.delete.prevent="delete_song_part(index)"
-								@keydown.up="
-									selected_song_part !== undefined && selected_song_part > 0
-										? selected_song_part--
-										: undefined
-								"
-								@keydown.down="
-									selected_song_part !== undefined && selected_song_part < song_parts_list.length
-										? selected_song_part++
-										: undefined
-								"
-							>
-								{{ element }}
-							</div>
-						</template>
+						<div
+							v-for="(element, index) of selected_parts"
+							tabindex="0"
+							class="song_part_name"
+							:ref="list_ref"
+							:style="{ color: get_song_part_color(element) }"
+							:key="`${element}_${index}`"
+							@click="selected_song_part = index"
+							@keydown.enter.prevent="selected_song_part = index"
+							@keydown.delete.prevent="delete_song_part(index)"
+							@keydown.up="
+								selected_song_part !== undefined && selected_song_part > 0
+									? selected_song_part--
+									: undefined
+							"
+							@keydown.down="
+								selected_song_part !== undefined && selected_song_part < song_parts_list.length
+									? selected_song_part++
+									: undefined
+							"
+						>
+							{{ element }}
+						</div>
 					</Draggable>
 					<MenuButton @click="delete_song_part(selected_song_part)">
 						<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 	import { ref, type Ref, type VNodeRef } from "vue";
-	import Draggable from "vuedraggable";
+	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -126,26 +126,27 @@
 			animation="150"
 			easing="cubic-bezier(1, 0, 0, 1)"
 			ghostClass="dragged_ghost"
+			delay-on-touch-only="true"
+			delay="250"
 			@end="on_end"
 			@change="on_change"
 		>
-			<template #item="{ element, index }">
-				<PlaylistItem
-					:ref="list_ref"
-					:index="index"
-					:item_props="element"
-					:selected="selected === index"
-					:active="active_item_slide?.item === index"
-					:scroll="scroll"
-					@click="emit('selection', index)"
-					@dblclick="emit('set_active', index)"
-					@set_active="emit('set_active', index)"
-					@keydown.up="navigate_selection($event.target, index, -1)"
-					@keydown.down="navigate_selection($event.target, index, 1)"
-					@contextmenu="show_context_menu($event, element, index)"
-					@keydown.ctrl.e="emit('edit', index)"
-				/>
-			</template>
+			<PlaylistItem
+				v-for="(element, index) in playlist?.playlist_items"
+				:ref="list_ref"
+				:index="index"
+				:item_props="element"
+				:selected="selected === index"
+				:active="active_item_slide?.item === index"
+				:scroll="scroll"
+				@click="emit('selection', index)"
+				@dblclick="emit('set_active', index)"
+				@set_active="emit('set_active', index)"
+				@keydown.up="navigate_selection($event.target, index, -1)"
+				@keydown.down="navigate_selection($event.target, index, 1)"
+				@contextmenu="show_context_menu($event, element, index)"
+				@keydown.ctrl.e="emit('edit', index)"
+			/>
 		</Draggable>
 	</div>
 	<ContextMenu

@@ -39,7 +39,7 @@
 					get_book_from_id(bible_file, book_selection.value.id).name,
 					chapters
 				),
-				color: "#0080FF",
+				color: Globals.color.bible,
 				book_id: book_selection.value.id,
 				chapters
 			};

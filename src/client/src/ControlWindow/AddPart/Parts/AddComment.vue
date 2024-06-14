@@ -6,6 +6,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import type { CommentProps } from "@server/PlaylistItems/Comment";
+	import Globals from "@/Globals";
 
 	library.add(fas.faPlus);
 
@@ -26,7 +27,7 @@
 			emit("add", {
 				type: "comment",
 				caption: text_input.value,
-				color: "#FF8000"
+				color: Globals.color.comment
 			});
 		}
 	}

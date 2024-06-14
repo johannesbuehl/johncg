@@ -53,7 +53,7 @@
 		return {
 			type: "pdf",
 			caption: file.name,
-			color: "#00FFFF",
+			color: Globals.color.pdf,
 			file: file.path
 		};
 	}

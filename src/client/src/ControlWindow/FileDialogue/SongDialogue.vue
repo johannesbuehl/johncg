@@ -178,6 +178,7 @@
 		:select_dirs="select_dirs"
 		:hide_header="hide_header"
 		:new_directory="new_directory"
+		:item_color="Globals.color.song"
 		v-model:directory_stack="directory_stack"
 		name="Song"
 		v-model:selection="selection"

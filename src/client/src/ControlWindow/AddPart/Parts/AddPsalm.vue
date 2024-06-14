@@ -59,7 +59,7 @@
 		return {
 			type: "psalm",
 			caption: file.name,
-			color: "#FFFF00",
+			color: Globals.color.psalm,
 			file: file.path
 		};
 	}
@@ -138,6 +138,7 @@
 		:files="file_tree"
 		:clone_callback="(ff) => create_props(ff as PsalmFile)"
 		:new_button="true"
+		:item_color="Globals.color.psalm"
 		name="Psalm"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"

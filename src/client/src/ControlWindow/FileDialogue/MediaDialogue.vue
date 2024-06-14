@@ -141,6 +141,7 @@
 				? (file) => create_props_callback!(file as MediaFile)
 				: undefined
 		"
+		:item_color="Globals.color.media"
 		name="Media"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"

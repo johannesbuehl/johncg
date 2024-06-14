@@ -16,6 +16,7 @@ import type {
 	TemplateFile
 } from "@server/search_part";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
+import type { ItemProps, PlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 
 export interface LogMessage {
 	message: string;
@@ -341,6 +342,20 @@ class Global {
 
 		return this._thumbnails.value;
 	}
+
+	// colors
+	readonly color: Record<ItemProps["type"], string> = {
+		amcp: "#FF00FF",
+		bible: "#0080FF",
+		comment: "#FF8000",
+		countdown: "#FF0080",
+		media: "#00FF00",
+		pdf: "#00FFFF",
+		psalm: "#FFFF00",
+		song: "#0000FF",
+		template: "#FF0000",
+		text: "#FF0000"
+	};
 }
 
 const Globals = new Global();
