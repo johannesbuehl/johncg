@@ -5,6 +5,7 @@ import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./Play
 import { recurse_object_check } from "../lib.ts";
 import Config from "../config.ts";
 import { logger } from "../logger.ts";
+import { TemplateSlideJump } from "../CasparCGConnection.ts";
 
 export interface PsalmFile {
 	metadata: {
@@ -16,7 +17,10 @@ export interface PsalmFile {
 	text: string[][][];
 }
 
+export type PsalmTemplateMessage = PsalmTemplateData | TemplateSlideJump;
+
 export interface PsalmTemplateData {
+	command: "data";
 	data?: PsalmFile;
 	slide: number;
 }
@@ -240,6 +244,7 @@ export default class Psalm extends PlaylistItemBase {
 		const template: PsalmTemplate = {
 			template: "JohnCG/Psalm",
 			data: {
+				command: "data",
 				slide: this.active_slide,
 				data: psalm_file !== false ? psalm_file : undefined
 			}

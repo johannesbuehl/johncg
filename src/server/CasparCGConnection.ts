@@ -29,6 +29,11 @@ export interface CasparCGConnection {
 	server?: CasparCGServer;
 }
 
+export interface TemplateSlideJump {
+	command: "jump";
+	slide: number;
+}
+
 interface CallbackObject {
 	connect: ((casparcg_connection: CasparCGConnection) => void)[];
 	disconnect: ((casparcg_connection: CasparCGConnection) => void)[];
@@ -44,6 +49,18 @@ export function add_casparcg_listener<T extends keyof CallbackObject>(
 	func: CallbackObject[T][number]
 ) {
 	callbacks[type].push(func);
+}
+
+export function stringify_json_for_tempalte<T>(data: T) {
+	return JSON.stringify(
+		JSON.stringify(data, (key, val: unknown) => {
+			if (typeof val === "string") {
+				return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
+			} else {
+				return val;
+			}
+		})
+	);
 }
 
 const xml_parser = new XMLParser();

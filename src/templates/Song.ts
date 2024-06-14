@@ -1,4 +1,4 @@
-import { SongTemplateData } from "../server/PlaylistItems/Song";
+import { SongTemplateData, SongTemplateMessage } from "../server/PlaylistItems/Song";
 import { ItemPart } from "../server/PlaylistItems/SongFile/SongFile";
 
 let data: SongTemplateData & { mute_transition: boolean };
@@ -9,9 +9,10 @@ let slide_count = 0;
 // CasparCG-function: transmits data
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
+	let recieved_data: SongTemplateMessage & { mute_transition: boolean };
 	// parse the transferred data into json
 	try {
-		data = JSON.parse(s_data) as SongTemplateData & {
+		recieved_data = JSON.parse(s_data) as SongTemplateMessage & {
 			mute_transition: boolean;
 		};
 	} catch (error) {
@@ -21,6 +22,19 @@ function update(s_data: string) {
 			return;
 		}
 	}
+
+	// handle the different message-types
+	switch (recieved_data.command) {
+		case "jump":
+			jump(recieved_data.slide);
+			break;
+		case "data":
+			load_song(recieved_data);
+	}
+}
+
+function load_song(recieved_data: SongTemplateData & { mute_transition: boolean }) {
+	data = recieved_data;
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");

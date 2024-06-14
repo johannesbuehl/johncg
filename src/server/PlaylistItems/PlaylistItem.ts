@@ -27,7 +27,12 @@ import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
 import { PlayParameters } from "casparcg-connection";
 import { logger } from "../logger.ts";
 import { get_casparcg_transition } from "../config.ts";
-import { CasparCGConnection, casparcg } from "../CasparCGConnection.js";
+import {
+	CasparCGConnection,
+	TemplateSlideJump,
+	casparcg,
+	stringify_json_for_tempalte
+} from "../CasparCGConnection.js";
 import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text.ts";
 
 export type PlaylistItem =
@@ -266,15 +271,7 @@ export abstract class PlaylistItemBase {
 				layer: casparcg_connection.settings.layers.template,
 				cgLayer: 0,
 				// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
-				data: JSON.stringify(
-					JSON.stringify(template.data, (_key, val: unknown) => {
-						if (typeof val === "string") {
-							return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
-						} else {
-							return val;
-						}
-					})
-				)
+				data: stringify_json_for_tempalte(template.data)
 				// /* eslint-enable @typescript-eslint/naming-convention */
 			});
 		}
@@ -344,12 +341,15 @@ export abstract class PlaylistItemBase {
 
 			// jump to the slide-number in casparcg
 			promises.push(
-				casparcg_connection.connection.cgInvoke({
+				casparcg_connection.connection.cgUpdate({
 					/* eslint-disable @typescript-eslint/naming-convention */
 					channel: casparcg_connection.settings.channel,
 					layer: casparcg_connection.settings.layers.template,
 					cgLayer: 0,
-					method: `jump(${this.active_slide})`
+					data: stringify_json_for_tempalte<TemplateSlideJump>({
+						command: "jump",
+						slide: this.active_slide
+					})
 					/* eslint-enable @typescript-eslint/naming-convention */
 				})
 			);

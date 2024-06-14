@@ -1,4 +1,4 @@
-import { PsalmTemplateData } from "../server/PlaylistItems/Psalm";
+import { PsalmTemplateData, PsalmTemplateMessage } from "../server/PlaylistItems/Psalm";
 
 let data: PsalmTemplateData & { mute_transition: boolean };
 
@@ -7,9 +7,10 @@ let active_slide = 0;
 // CasparCG-function: transmits data
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(s_data: string) {
+	let recieved_data: PsalmTemplateMessage & { mute_transition: boolean };
 	// parse the transferred data into json
 	try {
-		data = JSON.parse(s_data) as PsalmTemplateData & {
+		recieved_data = JSON.parse(s_data) as PsalmTemplateMessage & {
 			mute_transition: boolean;
 		};
 	} catch (error) {
@@ -19,6 +20,18 @@ function update(s_data: string) {
 			return;
 		}
 	}
+
+	switch (recieved_data.command) {
+		case "jump":
+			jump(recieved_data.slide);
+			break;
+		case "data":
+			load_psalm(recieved_data);
+	}
+}
+
+function load_psalm(recieved_data: PsalmTemplateData & { mute_transition: boolean }) {
+	data = recieved_data;
 
 	// get the div for the display and storage
 	const div_container = document.querySelector<HTMLDivElement>("div#container");

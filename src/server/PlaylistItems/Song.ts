@@ -1,3 +1,4 @@
+import { TemplateSlideJump } from "../CasparCGConnection.ts";
 import Config from "../config.ts";
 import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
@@ -20,7 +21,10 @@ export interface SongProps extends ItemPropsBase {
 
 export type ClientSongItem = SongProps & ClientItemBase;
 
+export type SongTemplateMessage = SongTemplateData | TemplateSlideJump;
+
 export interface SongTemplateData {
+	command: "data";
 	parts: ItemPart[];
 	languages?: number[];
 	chords?: Chords;
@@ -83,6 +87,7 @@ export default class Song extends PlaylistItemBase {
 
 	create_template_data() {
 		const return_object: SongTemplateData = {
+			command: "data",
 			slide: this.active_slide,
 			parts: [this.song_file.part_title],
 			languages: this.props.languages ?? this.song_file.languages
