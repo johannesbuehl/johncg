@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 
-import Config from "./config";
+import Config from "./config/config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";

@@ -33,10 +33,15 @@ fs.rmSync(release_dir, { recursive: true, force: true });
 fs.mkdirSync(build_dir, { recursive: true });
 fs.mkdirSync(release_dir, { recursive: true });
 
+// helper-functions
 const copy_build_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(build_dir, dest ?? path.basename(file)));
 // const copy_build_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(build_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
 const copy_release_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(release_dir, dest ?? path.basename(file)));
 const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(release_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
+
+// write the version-number to config/version.ts
+fs.writeFileSync("src/server/config/version.ts", `// eslint-disable-next-line @typescript-eslint/naming-convention
+export const Version = "${package_json.version}";`);
 
 // bundle the different scripts
 execSync("npm run server-build");

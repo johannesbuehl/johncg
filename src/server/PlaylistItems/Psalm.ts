@@ -3,7 +3,7 @@ import fs from "fs";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import { recurse_object_check } from "../lib.ts";
-import Config from "../config.ts";
+import Config from "../config/config.ts";
 import { logger } from "../logger.ts";
 import { TemplateSlideJump } from "../CasparCGConnection.ts";
 

@@ -1,10 +1,10 @@
 import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
-import { recurse_object_check } from "./lib";
+import { recurse_object_check } from "../lib";
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
-import { CasparCGResolution } from "./CasparCGConnection";
+import { CasparCGResolution } from "../CasparCGConnection";
 import yaml from "yaml";
 
 export interface CasparCGConnectionSettings {

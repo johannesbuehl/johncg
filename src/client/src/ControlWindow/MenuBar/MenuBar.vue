@@ -79,20 +79,12 @@
 		pdf_popup.value = false;
 	}
 
-	let playlist_caption_timeout: NodeJS.Timeout;
-	watch(
-		() => playlist_caption.value,
-		() => {
-			clearTimeout(playlist_caption_timeout);
-
-			playlist_caption_timeout = setTimeout(() => {
-				Globals.ws?.send<JCGPRecv.UpdatePlaylistCaption>({
-					command: "update_playlist_caption",
-					caption: playlist_caption.value
-				});
-			}, 1000);
-		}
-	);
+	function update_caption() {
+		Globals.ws?.send<JCGPRecv.UpdatePlaylistCaption>({
+			command: "update_playlist_caption",
+			caption: playlist_caption.value
+		});
+	}
 
 	function save_playlist() {
 		if (props.playlist_path !== undefined) {
@@ -194,6 +186,7 @@
 				type="text"
 				v-model="playlist_caption"
 				placeholder="Playlist-Name"
+				@change="update_caption"
 			/>
 		</template>
 		<MenuButton

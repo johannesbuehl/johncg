@@ -3,6 +3,7 @@ import iconv from "iconv-lite";
 import Chord from "./Chord";
 
 import { type SongElement, is_song_element } from "./SongElements";
+import { Version } from "../../config/version";
 
 // metadata of the songfile
 export interface SongFileMetadata {
@@ -354,7 +355,7 @@ export default class SongFile {
 			})
 			.join("\n");
 
-		sng_file += "\n---\n";
+		sng_file += `\n#Editor=JohnCG ${Version}\n---\n`;
 
 		sng_file += Object.entries(this.all_parts)
 			.map(([part, text]) => {

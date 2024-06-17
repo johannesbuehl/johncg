@@ -10,7 +10,7 @@ import Song from "./PlaylistItems/Song.ts";
 
 import * as JCGPSend from "./JCGPSendMessages.ts";
 
-import Config from "./config.ts";
+import Config from "./config/config.ts";
 import PlaylistObject from "./PlaylistFile.ts";
 import Comment from "./PlaylistItems/Comment.ts";
 import Countdown from "./PlaylistItems/Countdown.ts";

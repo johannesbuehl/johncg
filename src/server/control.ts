@@ -14,7 +14,7 @@ import type {
 import * as JCGPSend from "./JCGPSendMessages.ts";
 import * as JCGPRecv from "./JCGPReceiveMessages.ts";
 
-import Config, { CasparCGConnectionSettings } from "./config.ts";
+import Config, { CasparCGConnectionSettings } from "./config/config.ts";
 import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_part.ts";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";

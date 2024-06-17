@@ -26,7 +26,7 @@ import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm.t
 import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
 import { PlayParameters } from "casparcg-connection";
 import { logger } from "../logger.ts";
-import { get_casparcg_transition } from "../config.ts";
+import { get_casparcg_transition } from "../config/config.ts";
 import {
 	CasparCGConnection,
 	TemplateSlideJump,

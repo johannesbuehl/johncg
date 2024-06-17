@@ -4,7 +4,7 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-import Config from "../config.ts";
+import Config from "../config/config.ts";
 import { logger } from "../logger.ts";
 
 class HTTPServer {

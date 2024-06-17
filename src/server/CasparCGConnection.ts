@@ -1,5 +1,5 @@
 import { CasparCG, ClipInfo } from "casparcg-connection";
-import Config, { CasparCGConnectionSettings, get_casparcg_transition } from "./config";
+import Config, { CasparCGConnectionSettings, get_casparcg_transition } from "./config/config";
 import { logger } from "./logger";
 import { XMLParser } from "fast-xml-parser";
 import CasparCGServer from "./CasparCGServer";

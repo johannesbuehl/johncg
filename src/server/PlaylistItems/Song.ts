@@ -1,5 +1,5 @@
 import { TemplateSlideJump } from "../CasparCGConnection.ts";
-import Config from "../config.ts";
+import Config from "../config/config.ts";
 import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
