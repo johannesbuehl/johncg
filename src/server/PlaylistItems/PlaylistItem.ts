@@ -161,9 +161,17 @@ export abstract class PlaylistItemBase {
 		return slide;
 	}
 
+	// calculates and stores the slide-count
+	recalculate_slide_count() {
+		this.slide_count = 1;
+	}
+
 	update(new_props: ItemProps, callback: (new_props: ItemProps) => void): boolean {
 		if (this.validate_props(new_props)) {
 			this.item_props = new_props;
+
+			// recalculate slide-count
+			this.recalculate_slide_count();
 
 			callback(this.item_props);
 

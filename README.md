@@ -23,6 +23,12 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - fix updating playlistname on page-load
 - song- and psalm-editor: editing existing file: save-confirm despite no changes
+- debug saving of song-files and choosing background-image
+- songeditor re-add overwrite-confirm
+- refresh with active directory-stack: rebuild directory-stack with new files
+- opening playlist doesn't set first element active
+- song-saving: write "#Editor=JohnCG x.x.x"
+- song / psalm-editor: no "new" button, instead empty dummy like parts
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

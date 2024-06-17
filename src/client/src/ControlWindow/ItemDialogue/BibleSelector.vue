@@ -34,7 +34,7 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, watch, type VNodeRef, type Ref, nextTick } from "vue";
+	import { ref, watch, nextTick } from "vue";
 
 	import Globals from "@/Globals";
 
@@ -67,18 +67,6 @@
 						create_verse_selection();
 					}
 				}
-
-				nextTick(() => {
-					// if there is a book selected, scroll it into view
-					if (book_selection.value !== undefined) {
-						const ref_array = book_refs[book_selection.value.id].value;
-
-						ref_array[ref_array.length - 1].scrollIntoView({
-							block: "nearest",
-							behavior: "smooth"
-						});
-					}
-				});
 			}
 		}
 	);
@@ -104,33 +92,6 @@
 			}
 		}
 	);
-
-	const book_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
-	function book_obj_ref(element: HTMLLabelElement, id: string): VNodeRef | undefined {
-		if (element !== null) {
-			book_refs[id] = ref([element]);
-
-			return book_refs[id];
-		}
-	}
-
-	const chapter_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
-	function chapter_obj_ref(element: HTMLLabelElement, index: number): VNodeRef | undefined {
-		if (element !== null) {
-			chapter_refs[index] = ref([element]);
-
-			return chapter_refs[index];
-		}
-	}
-
-	const verse_refs: Record<string, Ref<HTMLLabelElement[]>> = {};
-	function verse_obj_ref(element: HTMLLabelElement, index: number): VNodeRef | undefined {
-		if (element !== null) {
-			verse_refs[index] = ref([element]);
-
-			return verse_refs[index];
-		}
-	}
 
 	let last_verse: number | undefined;
 	function shift_click(this_verse: number) {
@@ -196,7 +157,6 @@
 							/>
 							<label
 								class="book"
-								:ref="book_obj_ref($el, book.id)"
 								:class="{ active: book_selection?.id === book.id }"
 								:for="`bible_book_${book.id}`"
 							>
@@ -221,7 +181,6 @@
 							<label
 								tabindex="0"
 								class="chapter"
-								:ref="chapter_obj_ref($el, chapter)"
 								:class="{
 									active: chapter_verse_selection[chapter]?.some((ele) => ele),
 									selected: chapter_selection === chapter
@@ -249,7 +208,6 @@
 							<label
 								tabindex="0"
 								class="chapter"
-								:ref="verse_obj_ref($el, verse)"
 								:class="{ active: state }"
 								:for="`${book_selection?.id}_${chapter_selection}_${verse}`"
 								@click.shift="shift_click(verse)"

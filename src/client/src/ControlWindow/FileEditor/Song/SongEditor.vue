@@ -201,6 +201,8 @@
 			if (overwrite === false && compare_file(Globals.get_song_files(), save_path)) {
 				overwrite_dialog.value = true;
 
+				console.warn("abort");
+
 				return false;
 			}
 		}
@@ -359,7 +361,7 @@
 				<div class="header">Song-File</div>
 				<div class="content">
 					<div class="row_container">
-						<MenuButton :disabled="song_file_name === ''" @click="save_song()">
+						<MenuButton :disabled="song_file_name === ''" @click="save_song(true)">
 							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">

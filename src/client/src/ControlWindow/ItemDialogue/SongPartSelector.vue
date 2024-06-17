@@ -37,7 +37,7 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, type Ref, type VNodeRef } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -46,6 +46,7 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import type { SongData, SongPart } from "@server/PlaylistItems/SongFile/SongFile";
+	import { nextTick } from "process";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 
@@ -62,15 +63,7 @@
 	});
 	const selected_parts = defineModel<string[]>("selected_parts", { required: true });
 
-	let song_parts_list: Ref<HTMLDivElement>[] = [];
-	function list_ref(el: HTMLDivElement): VNodeRef | undefined {
-		if (el) {
-			const re = ref(el);
-			song_parts_list.push(re);
-
-			return re;
-		}
-	}
+	let song_parts_list = ref<HTMLDivElement[]>([]);
 
 	function add_song_part(name: string) {
 		selected_parts.value.push(name);
@@ -85,7 +78,11 @@
 					selected_song_part.value--;
 				}
 
-				song_parts_list[selected_song_part.value].value.focus();
+				if (index === song_parts_list.value.length - 1) {
+					index--;
+				}
+
+				song_parts_list.value[index].focus();
 			}
 		}
 	}
@@ -206,9 +203,9 @@
 							v-for="(element, index) of selected_parts"
 							tabindex="0"
 							class="song_part_name"
-							:ref="list_ref"
+							ref="song_parts_list"
 							:style="{ color: get_song_part_color(element) }"
-							:key="`${element}_${index}`"
+							:key="index"
 							@click="selected_song_part = index"
 							@keydown.enter.prevent="selected_song_part = index"
 							@keydown.delete.prevent="delete_song_part(index)"

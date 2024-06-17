@@ -6,7 +6,7 @@
 </script>
 
 <script setup lang="ts">
-	import { reactive, ref, watch, type Ref } from "vue";
+	import { reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";

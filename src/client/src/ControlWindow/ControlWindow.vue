@@ -119,7 +119,7 @@
 		<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
 		<SavePlaylist
 			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
-			:file_name="playlist_caption"
+			:playlist_file_name="playlist_caption"
 		/>
 		<PlaylistItemsList
 			v-if="

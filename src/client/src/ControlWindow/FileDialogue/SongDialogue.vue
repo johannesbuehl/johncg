@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, reactive, ref, toRaw, watch } from "vue";
+	import { reactive, ref, toRaw, watch } from "vue";
 
 	import FileDialogue, {
 		type SearchInputDefinitions
@@ -182,7 +182,7 @@
 		v-model:directory_stack="directory_stack"
 		name="Song"
 		v-model:selection="selection"
-		v-model:search_strings="search_strings"
+		v-model:search_strings="search_strings as SearchInputDefinitions<keyof SearchMapData>"
 		@choose="add_song"
 		@refresh_files="() => Globals.get_song_files(true)"
 		@new_file="emit('new_song')"

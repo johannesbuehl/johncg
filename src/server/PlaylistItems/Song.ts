@@ -58,18 +58,22 @@ export default class Song extends PlaylistItemBase {
 		if (this.is_displayable) {
 			this.cache_song_file();
 
-			// add the title-slide to the counter
-			this.slide_count++;
+			this.recalculate_slide_count();
+		}
+	}
 
-			// count the slides
-			for (const part of this.get_verse_order()) {
-				// check wether the part is actually defined in the songfile
-				try {
-					this.slide_count += this.song_file.get_part(part).slides.length;
-				} catch (e) {
-					if (!(e instanceof ReferenceError)) {
-						throw e;
-					}
+	recalculate_slide_count() {
+		// add the title-slide to the counter
+		this.slide_count++;
+
+		// count the slides
+		for (const part of this.get_verse_order()) {
+			// check wether the part is actually defined in the songfile
+			try {
+				this.slide_count += this.song_file.get_part(part).slides.length;
+			} catch (e) {
+				if (!(e instanceof ReferenceError)) {
+					throw e;
 				}
 			}
 		}

@@ -75,7 +75,7 @@
 </script>
 
 <script setup lang="ts" generic="T extends keyof ItemFileType">
-	import { reactive, ref, useSlots, watch, type VNodeRef } from "vue";
+	import { onMounted, reactive, ref, useSlots } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -121,7 +121,7 @@
 
 	const slots = useSlots();
 
-	const search_strings = defineModel<SearchInputDefinition<unknown>[]>("search_strings");
+	const search_strings = defineModel<SearchInputDefinitions<unknown>>("search_strings");
 
 	const show_new_directory = ref<boolean>(false);
 	const directory_name = ref<string>("");
@@ -133,23 +133,11 @@
 
 	const selection = defineModel<ItemFileMapped<T> | undefined>("selection", { required: true });
 
-	const first_input_ref = ref<HTMLInputElement[]>([]);
-	function create_first_input_ref(element: HTMLInputElement, index: number): VNodeRef | undefined {
-		if (element !== null && index === 0) {
-			first_input_ref.value.push(element);
-			return first_input_ref;
-		}
-	}
+	const input_refs = ref<HTMLInputElement[]>([]);
 
-	watch(
-		() => first_input_ref.value,
-		(first_input_ref) => {
-			if (first_input_ref.length > 0) {
-				first_input_ref[first_input_ref.length - 1].focus();
-			}
-		},
-		{ deep: true }
-	);
+	onMounted(() => {
+		input_refs.value[0].focus();
+	});
 
 	function get_current_files(): ItemFileMapped<T>[] {
 		const files =
@@ -200,7 +188,7 @@
 							<input
 								class="search_box"
 								v-model="search_strings[index].value"
-								:ref="create_first_input_ref($el, index)"
+								ref="input_refs"
 								:placeholder="placeholder"
 								:size="size ?? undefined"
 							/>

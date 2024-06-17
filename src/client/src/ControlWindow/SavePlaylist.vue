@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { onMounted, ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -15,70 +15,73 @@
 
 	library.add(fas.faFolderOpen);
 
-	const selection = ref<PlaylistFile>();
+	const file_dialogue_selection = ref<PlaylistFile>();
+	const file_dialogue_directory_stack = ref<PlaylistFile[]>([]);
+	const playlist_file = ref<PlaylistFile>();
 
-	const file_name = defineModel<string>("file_name", { required: true });
+	const playlist_file_name = defineModel<string>("playlist_file_name", { required: true });
 
 	onMounted(() => {
 		Globals.get_playlist_files();
 	});
 
 	const overwrite_dialog = ref<boolean>(false);
-	let overwrite_path: string = "";
+	let overwrite_file: PlaylistFile | undefined = undefined;
 	function save_playlist(playlist?: PlaylistFile, overwrite: boolean = false) {
+		// if the selection is a directory, exit
+		if (playlist?.children !== undefined) {
+			return;
+		}
+
+		// if there is no playlist-file argument, create it
+		if (playlist === undefined) {
+			playlist = playlist_file.value ?? {
+				path:
+					(file_dialogue_directory_stack.value.length > 0
+						? file_dialogue_directory_stack.value.slice(-1)[0].path + "/"
+						: "") +
+					playlist_file_name.value +
+					".jcg",
+				name: playlist_file_name.value
+			};
+		}
+
 		// close the overwrite-dialog
 		overwrite_dialog.value = false;
 
-		// if no file is selected, save at the root dir
-		let save_path: string;
-		if (playlist === undefined) {
-			save_path = file_name.value + ".jcg";
-		} else {
-			// if the selection is a file, replace the file-name with the input-file-name
-			if (playlist.children === undefined) {
-				save_path =
-					playlist.path.slice(0, playlist.path.lastIndexOf("/") + 1) + file_name.value + ".jcg";
-			} else {
-				save_path = playlist.path + "/" + file_name.value + ".jcg";
-			}
+		// check, wether the file already exists
+		const compare_file = (files: PlaylistFile[], reference_file: PlaylistFile): boolean => {
+			return files.some((fil) => {
+				if (fil.path === reference_file.path) {
+					return true;
+				}
 
-			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: PlaylistFile[], path: string): boolean => {
-				return files.some((fil) => {
-					if (fil.path === path) {
-						return true;
-					}
+				if (fil.children !== undefined) {
+					return compare_file(fil.children, reference_file);
+				}
 
-					if (fil.children !== undefined) {
-						return compare_file(fil.children, path);
-					}
+				return false;
+			});
+		};
 
-					return false;
-				});
-			};
+		// overwrite is false and the file already exists, abort
+		if (overwrite === false && compare_file(Globals.get_playlist_files(), playlist)) {
+			overwrite_file = playlist;
 
-			if (overwrite === false && compare_file(Globals.get_playlist_files(), save_path)) {
-				overwrite_path = save_path;
+			overwrite_dialog.value = true;
 
-				overwrite_dialog.value = true;
-
-				return;
-			}
+			return;
 		}
+
+		console.debug(playlist);
 
 		Globals.ws?.send<JCGPRecv.SavePlaylist>({
 			command: "save_playlist",
-			playlist: save_path
+			playlist: playlist.path
 		});
 
 		Globals.ControlWindowState = ControlWindowState.Slides;
 	}
-
-	watch(selection, () => {
-		if (selection.value !== undefined && selection.value?.children === undefined) {
-			file_name.value = selection.value.name;
-		}
-	});
 </script>
 
 <template>
@@ -86,7 +89,8 @@
 		name="Playlist Files"
 		:files="Globals.get_playlist_files()"
 		:search_disabled="true"
-		v-model:selection="selection"
+		v-model:selection="file_dialogue_selection"
+		v-model:directory_stack="file_dialogue_directory_stack"
 		:select_dirs="true"
 		:new_directory="true"
 		@choose="(playlist) => save_playlist(playlist)"
@@ -101,21 +105,23 @@
 		"
 	>
 		<template v-slot:buttons>
-			<input class="file_name_box" v-model="file_name" placeholder="Filename" @input="" />
-			<MenuButton @click="save_playlist(selection)">
+			<input class="file_name_box" v-model="playlist_file_name" placeholder="Filename" @input="" />
+			<MenuButton @click="save_playlist()">
 				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Playlist
 			</MenuButton>
 		</template>
 	</FileDialogue>
 	<PopUp v-model:active="overwrite_dialog" title="Overwrite Playlist">
-		<div class="popup_menu_content">
-			The playlist
-			<div class="file_path">{{ overwrite_path }}</div>
-			already exists. Overwrite?
-		</div>
-		<div class="popup_menu_buttons">
-			<MenuButton @click="save_playlist(selection, true)">Overwrite</MenuButton>
-			<MenuButton @click="overwrite_dialog = false">Cancel</MenuButton>
+		<div id="popup_menu_wrapper">
+			<div class="popup_menu_content">
+				The playlist
+				<div class="file_path">{{ overwrite_file?.path }}</div>
+				already exists. Overwrite?
+			</div>
+			<div class="popup_menu_buttons">
+				<MenuButton @click="save_playlist(file_dialogue_selection, true)">Overwrite</MenuButton>
+				<MenuButton @click="overwrite_dialog = false">Cancel</MenuButton>
+			</div>
 		</div>
 	</PopUp>
 </template>
@@ -150,6 +156,10 @@
 		background-color: var(--color-page-background);
 
 		outline: none;
+	}
+
+	#popup_menu_wrapper {
+		background-color: var(--color-container);
 	}
 
 	.popup_menu_content {

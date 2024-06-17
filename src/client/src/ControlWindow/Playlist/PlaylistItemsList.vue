@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, type Ref, type VNodeRef } from "vue";
+	import { ref } from "vue";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +11,7 @@
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import type { ClientItemBase, ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+	import { type ClientPlaylistItem, type ItemProps } from "@server/PlaylistItems/PlaylistItem";
 	import Globals from "@/Globals";
 	import { stop_event } from "@/App.vue";
 
@@ -81,9 +81,9 @@
 		}
 	}
 
-	const context_menu_picket_item = ref<{ element: ClientPlaylistItem; index: number }>();
+	const context_menu_picker_item = ref<{ element: ClientPlaylistItem; index: number }>();
 	function show_context_menu(event: MouseEvent, element: ClientPlaylistItem, index: number) {
-		context_menu_picket_item.value = {
+		context_menu_picker_item.value = {
 			element,
 			index
 		};
@@ -93,25 +93,14 @@
 		context_menu_position.value = event;
 	}
 
-	let items_list: Ref<typeof PlaylistItem>[] = [];
-	function list_ref(el: typeof PlaylistItem): VNodeRef | undefined {
-		if (el) {
-			const re = ref(el);
+	const items_list = ref<(typeof PlaylistItem)[]>([]);
 
-			items_list.push(re);
-
-			return re;
-		}
-	}
-
-	function duplicate_item(item_props: number) {
-		if (context_menu_picket_item.value !== undefined) {
-			Globals.ws?.send<JCGPRecv.AddItem>({
-				command: "add_item",
-				props: context_menu_picket_item.value.element,
-				index: context_menu_picket_item.value.index
-			});
-		}
+	function duplicate_item(props: ItemProps, index: number) {
+		Globals.ws?.send<JCGPRecv.AddItem>({
+			command: "add_item",
+			props,
+			index
+		});
 	}
 </script>
 
@@ -133,7 +122,7 @@
 		>
 			<PlaylistItem
 				v-for="(element, index) in playlist?.playlist_items"
-				:ref="list_ref"
+				ref="items_list"
 				:index="index"
 				:item_props="element"
 				:selected="selected === index"
@@ -156,15 +145,15 @@
 		@close="context_menu_position = undefined"
 	>
 		<div
-			@click="context_menu_picket_item ? emit('edit', context_menu_picket_item.index) : undefined"
+			@click="context_menu_picker_item ? emit('edit', context_menu_picker_item.index) : undefined"
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
 			Edit item
 		</div>
 		<div
 			@click="
-				context_menu_picket_item
-					? duplicate_item(items_list[context_menu_picket_item.index].value.props)
+				context_menu_picker_item
+					? duplicate_item(context_menu_picker_item.element, context_menu_picker_item.index)
 					: undefined
 			"
 		>
@@ -173,8 +162,8 @@
 		</div>
 		<div
 			@click="
-				context_menu_picket_item
-					? items_list[context_menu_picket_item.index].value.delete_item()
+				context_menu_picker_item
+					? items_list[context_menu_picker_item.index].value.delete_item()
 					: undefined
 			"
 		>
