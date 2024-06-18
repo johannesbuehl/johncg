@@ -24,8 +24,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - song- and psalm-editor: editing existing file: save-confirm despite no changes
 - debug saving of song-files and choosing background-image
 - songeditor re-add overwrite-confirm
-- refresh with active directory-stack: rebuild directory-stack with new files
-- opening playlist doesn't set first element active
 - song / psalm-editor: no "new" button, instead empty dummy like parts
 - 
 - reload psalm and song after file-edit

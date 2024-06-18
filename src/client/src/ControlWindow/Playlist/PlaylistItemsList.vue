@@ -7,13 +7,13 @@
 
 	import ContextMenu from "./ContextMenu.vue";
 	import PlaylistItem from "./PlaylistItem.vue";
+	import Globals from "@/Globals";
+	import { stop_event } from "@/App.vue";
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import { type ClientPlaylistItem, type ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import Globals from "@/Globals";
-	import { stop_event } from "@/App.vue";
+	import type { ClientPlaylistItem, ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
 

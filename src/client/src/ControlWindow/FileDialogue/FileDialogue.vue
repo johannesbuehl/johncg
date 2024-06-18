@@ -75,7 +75,7 @@
 </script>
 
 <script setup lang="ts" generic="T extends keyof ItemFileType">
-	import { onMounted, reactive, ref, useSlots } from "vue";
+	import { onMounted, reactive, ref, useSlots, watch } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -138,6 +138,19 @@
 	onMounted(() => {
 		input_refs.value[0].focus();
 	});
+
+	// rebuild the directory-stack, when new files are there
+	watch(
+		() => props.files,
+		() => {
+			if (props.files && directory_stack.value.length > 0) {
+				directory_stack.value = create_directory_stack(
+					props.files,
+					directory_stack.value.slice(-1)[0].path.split(/[\/\\]/g)
+				) as ItemFileMapped<T>[];
+			}
+		}
+	);
 
 	function get_current_files(): ItemFileMapped<T>[] {
 		const files =

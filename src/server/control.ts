@@ -680,7 +680,7 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
-	private get_item_data(type: JCGPRecv.GetItemData["type"], path: string, ws: WebSocket) {
+	private async get_item_data(type: JCGPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
 		let data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>["data"];
@@ -690,7 +690,7 @@ export default class Control {
 				data = this.search_part.get_song_file(path);
 				break;
 			case "psalm":
-				data = this.search_part.get_psalm_file(path);
+				data = await this.search_part.get_psalm_file(path);
 				break;
 		}
 

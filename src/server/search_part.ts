@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises";
 
 import Config from "./config/config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
@@ -65,9 +65,9 @@ export default class SearchPart {
 		return song_value;
 	}
 
-	create_psalm_file(f: PsalmFile): PsalmFile {
+	async create_psalm_file(f: PsalmFile): Promise<PsalmFile> {
 		const psalm = JSON.parse(
-			fs.readFileSync(Config.get_path("psalm", f.path), "utf-8")
+			await fs.readFile(Config.get_path("psalm", f.path), "utf-8")
 		) as PsalmData;
 
 		return {
@@ -76,58 +76,63 @@ export default class SearchPart {
 		};
 	}
 
-	private find_files<K extends keyof ItemFileType>(
+	private async find_files<K extends keyof ItemFileType>(
 		pth: string,
 		root: string,
 		extensions: string[],
-		file_converter: (f: FileBase<K>) => ItemFileMapped<K>
-	): ItemFileMapped<K>[] {
-		const files = fs.readdirSync(pth);
-
-		const result_files: ItemFileMapped<K>[] = [];
+		file_converter: (f: FileBase<K>) => Promise<ItemFileMapped<K>>
+	): Promise<ItemFileMapped<K>[]> {
+		const files = await fs.readdir(pth);
 
 		const check_file = new RegExp(
 			`^(?<name>.+)(?<extension>${extensions.join("|").replaceAll(".", "\\.")})$`
 		);
 
-		files.forEach((f) => {
+		const promises = files.map(async (f) => {
 			const file_regex = check_file.exec(f);
 			const ff = path.join(pth, f);
-			const directory = fs.statSync(ff).isDirectory();
+			const is_directory = (await fs.stat(ff)).isDirectory();
 
-			if (directory || file_regex) {
+			if (is_directory || file_regex) {
 				const file_result: Directory<K> = {
-					name: directory ? f : file_regex?.groups["name"],
+					name: is_directory ? f : file_regex?.groups["name"],
 					path: path.relative(root, ff),
-					children: directory ? this.find_files<K>(ff, root, extensions, file_converter) : undefined
+					children: is_directory
+						? await this.find_files<K>(ff, root, extensions, file_converter)
+						: undefined
 				};
 
-				result_files.push(!directory ? file_converter(file_result) : file_result);
+				return !is_directory ? file_converter(file_result) : file_result;
 			}
 		});
 
-		return result_files;
+		return (await Promise.all(promises)).filter((el) => el !== undefined);
 	}
 
-	find_sng_files(pth: string = Config.path.song): SongFile[] {
+	async find_sng_files(pth: string = Config.path.song): Promise<SongFile[]> {
 		logger.log("searching song-files");
 
-		return this.find_files<"song">(pth, pth, [".sng"], (f): SongFile => this.create_song_file(f));
+		return this.find_files<"song">(
+			pth,
+			pth,
+			[".sng"],
+			(f): Promise<SongFile> => Promise.resolve(this.create_song_file(f))
+		);
 	}
 
-	find_jcg_files(pth: string = Config.path.playlist): PlaylistFile[] {
+	async find_jcg_files(pth: string = Config.path.playlist): Promise<PlaylistFile[]> {
 		logger.log("searching jcg-files");
 
-		return this.find_files<"playlist">(pth, pth, [".jcg"], (f) => f);
+		return this.find_files<"playlist">(pth, pth, [".jcg"], (f) => Promise.resolve(f));
 	}
 
-	find_pdf_files(pth: string = Config.path.pdf): PDFFile[] {
+	async find_pdf_files(pth: string = Config.path.pdf): Promise<PDFFile[]> {
 		logger.log("searching PDF-files");
 
-		return this.find_files<"pdf">(pth, pth, [".pdf"], (f) => f);
+		return this.find_files<"pdf">(pth, pth, [".pdf"], (f) => Promise.resolve(f));
 	}
 
-	find_psalm_files(pth: string = Config.path.psalm): PsalmFile[] {
+	async find_psalm_files(pth: string = Config.path.psalm): Promise<PsalmFile[]> {
 		logger.log("searching psalm-files");
 
 		return this.find_files<"psalm">(pth, pth, [".psm"], (f) => this.create_psalm_file(f));
@@ -186,14 +191,14 @@ export default class SearchPart {
 		}
 	}
 
-	get_psalm_file(path: string): PsalmFile | undefined {
+	async get_psalm_file(path: string): Promise<PsalmFile> | undefined {
 		const item_file: PsalmFile = {
 			name: path,
 			path
 		};
 
 		try {
-			return this.create_psalm_file(item_file);
+			return await this.create_psalm_file(item_file);
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't open psalm: '${path}' does not exist`);
