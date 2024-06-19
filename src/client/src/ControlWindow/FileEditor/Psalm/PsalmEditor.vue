@@ -10,6 +10,7 @@
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -23,7 +24,7 @@
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
-	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faIndent);
+	library.add(fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faIndent, fas.faCheck);
 
 	const emit = defineEmits<{}>();
 
@@ -159,6 +160,27 @@
 				}
 			});
 		});
+
+		// if the last slide isn't empty, add another one
+		if (psalm_text.value.length > 0) {
+			if (!is_empty_slide(psalm_text.value.slice(-1)[0])) {
+				psalm_text.value.push([
+					{
+						text: "",
+						indent: indent_state
+					}
+				]);
+			} else {
+				// if the second-last part is also empty, remove the last one
+				if (psalm_text.value.length > 1 && is_empty_slide(psalm_text.value.slice(-2)[0])) {
+					psalm_text.value.pop();
+				}
+			}
+		}
+	}
+
+	function is_empty_slide(part: PsalmTextBlock[]): boolean {
+		return part.every((block) => block.text.length === 0);
 	}
 
 	watch(
@@ -177,8 +199,7 @@
 		]);
 	}
 
-	const overwrite_dialog = ref<boolean>(false);
-	let overwrite_path: string = "";
+	const show_overwrite_dialog = ref<boolean>(false);
 	function save_psalm(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
 
@@ -203,29 +224,27 @@
 			} else {
 				save_path = file_selection.value.path + "/" + psalm_file_name.value + ".psm";
 			}
+		}
 
-			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: PsalmFile[], path: string): boolean => {
-				return files.some((fil) => {
-					if (fil.path === path) {
-						return true;
-					}
+		// if the save file exists already, ask wether it should be overwritten
+		const compare_file = (files: PsalmFile[], path: string): boolean => {
+			return files.some((fil) => {
+				if (fil.path === path) {
+					return true;
+				}
 
-					if (fil.children !== undefined) {
-						return compare_file(fil.children, path);
-					}
-
-					return false;
-				});
-			};
-
-			if (overwrite === false && compare_file(Globals.get_psalm_files(), save_path)) {
-				overwrite_path = save_path;
-
-				overwrite_dialog.value = true;
+				if (fil.children !== undefined) {
+					return compare_file(fil.children, path);
+				}
 
 				return false;
-			}
+			});
+		};
+
+		if (overwrite === false && compare_file(Globals.get_psalm_files(), save_path)) {
+			show_overwrite_dialog.value = true;
+
+			return false;
 		}
 
 		Globals.ws?.send<JCGPRecv.SaveFile>({
@@ -249,7 +268,12 @@
 			text: [[[]]]
 		};
 
-		psalm_data.text = psalm_text.value.map((slide) => {
+		// filter out the last, empty element
+		const saved_psalm_text = psalm_text.value.filter(
+			(text_part, index) => index < psalm_text.value.length - 1 || !is_empty_slide(text_part)
+		);
+
+		psalm_data.text = saved_psalm_text.map((slide) => {
 			// filter out the empty, last elements meant for the next slide to be inputted (but keep it if it is the first)
 			const slide_blocks = slide.filter((block, block_index, text_block) => {
 				// if it is the first element use it always
@@ -271,7 +295,7 @@
 		// if there currently is no file-name for the psalm, try to generate it from the psalm-data
 		if (psalm_file_name.value === "") {
 			// if the id is specified, use it
-			if (metadata.value.id !== undefined) {
+			if (metadata.value.id) {
 				psalm_file_name.value = metadata.value.id;
 
 				// if there is also a title defined, add an seperator
@@ -347,24 +371,45 @@
 			<div class="header">Text</div>
 			<div class="content" id="text_editor_container">
 				<div v-for="(slide, slide_index) of psalm_text" class="psalm_slide">
-					<MenuButton @click="psalm_text.splice(slide_index, 1)" :square="true">
-						<FontAwesomeIcon :icon="['fas', 'trash']" />
-					</MenuButton>
-					<div class="psalm_text_block">
-						<template v-for="(block, block_index) of slide">
+					<Draggable
+						class="psalm_text_blocks"
+						v-model="psalm_text[slide_index]"
+						:group="{ name: 'text_blocks', pull: true, put: true }"
+						handle=".text_part_handle.enabled"
+						animation="150"
+						easing="cubic-bezier(1, 0, 0, 1)"
+						delay-on-touch-only="true"
+						delay="250"
+						ghost-class="draggable_ghost"
+					>
+						<div class="psalm_text_block" v-for="(block, block_index) of slide">
+							<div
+								class="draggable_handle text_part_handle"
+								:class="{ enabled: slide_index < psalm_text.length - 1 }"
+							>
+								<FontAwesomeIcon :icon="['fas', 'bars']" />
+							</div>
 							<textarea
 								:class="{ indent: block.indent && metadata.indent }"
 								:rows="(block.text.match(/\n/g) || []).length + 1"
 								v-model="psalm_text[slide_index][block_index].text"
 								placeholder="Textblock"
 							/>
-						</template>
-					</div>
+						</div>
+					</Draggable>
+					<MenuButton
+						:disabled="psalm_text.length <= 1 || slide_index === psalm_text.length - 1"
+						@click="
+							psalm_text.length > 1 && slide_index < psalm_text.length - 1
+								? psalm_text.splice(slide_index, 1)
+								: undefined
+						"
+						:square="true"
+					>
+						<FontAwesomeIcon :icon="['fas', 'trash']" />
+					</MenuButton>
 				</div>
 			</div>
-			<MenuButton @click="add_slide()">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Slide
-			</MenuButton>
 		</div>
 	</div>
 	<PopUp title="Save Psalm" v-model:active="show_save_file_dialogue" :maximize="true">
@@ -398,6 +443,19 @@
 				</MenuButton>
 			</template>
 		</FileDialogue>
+	</PopUp>
+	<PopUp title="Overwrite existing file?" v-model:active="show_overwrite_dialog">
+		<MenuButton
+			@click="
+				show_overwrite_dialog = false;
+				save_psalm(true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'check']" />Overwrite
+		</MenuButton>
+		<MenuButton @click="show_overwrite_dialog = false">
+			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+		</MenuButton>
 	</PopUp>
 	<PopUp title="Save Changes" v-model:active="show_save_confirm">
 		<MenuButton
@@ -547,6 +605,7 @@
 
 	.psalm_slide {
 		display: flex;
+		align-items: baseline;
 
 		gap: 0.25rem;
 
@@ -567,11 +626,15 @@
 		width: 100%;
 	}
 
-	.psalm_text_block {
+	.psalm_text_blocks {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: inherit;
+	}
+
+	.psalm_text_block {
+		display: flex;
 	}
 
 	.psalm_text_block > textarea {
@@ -607,5 +670,29 @@
 
 	.file_dialogue_button {
 		flex: 1;
+	}
+
+	.draggable_handle {
+		aspect-ratio: 1;
+
+		border-radius: 0.25rem;
+
+		height: 2em;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.draggable_handle:not(.enabled) {
+		color: var(--color-text-disabled);
+	}
+
+	.draggable_handle.enabled {
+		cursor: move;
+	}
+
+	.draggable_ghost {
+		opacity: 0.25;
 	}
 </style>

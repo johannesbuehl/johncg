@@ -122,7 +122,6 @@
 				<Draggable
 					id="language_wrapper"
 					v-model="selected_languages"
-					item-key="id"
 					animation="150"
 					easing="cubic-bezier(1, 0, 0, 1)"
 					ghostClass="dragged_ghost"
@@ -149,7 +148,6 @@
 					<div class="header">Text</div>
 					<Draggable
 						id="result_text"
-						item-key="key"
 						tag="span"
 						:list="Object.entries(song_data?.text ?? {})"
 						:group="{ name: 'song_part', pull: 'clone', put: false }"
@@ -194,7 +192,6 @@
 						class="parts_container"
 						v-model="selected_parts"
 						:group="{ name: 'song_part', pull: false, put: true }"
-						item-key="key"
 						animation="150"
 						easing="cubic-bezier(1, 0, 0, 1)"
 						ghost-class="dragging"

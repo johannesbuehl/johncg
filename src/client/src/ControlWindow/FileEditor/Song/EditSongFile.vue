@@ -3,7 +3,7 @@
 
 	import SongEditor, { is_slide_empty, type SongTextPart } from "./SongEditor.vue";
 
-	import type { MediaFile, SongFile } from "@server/search_part";
+	import type { SongFile } from "@server/search_part";
 	import type { SongFileMetadata } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const props = defineProps<{
@@ -26,8 +26,9 @@
 						return Array.apply(null, Array(4)).map((_, lang_index) => {
 							return slide
 								.map((line) => {
-									return line[lang_index] ?? "";
+									return line[lang_index] ?? undefined;
 								})
+								.filter((line) => line !== undefined)
 								.join("\n");
 						});
 					}) as SongTextPart["text"];

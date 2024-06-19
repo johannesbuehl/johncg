@@ -73,8 +73,6 @@
 			return;
 		}
 
-		console.debug(playlist);
-
 		Globals.ws?.send<JCGPRecv.SavePlaylist>({
 			command: "save_playlist",
 			playlist: playlist.path

@@ -302,7 +302,6 @@
 										pull: clone_callback !== undefined ? 'clone' : false,
 										put: false
 									}"
-									item-key="path"
 									tag="div"
 									:clone="clone_callback"
 									:sort="false"
@@ -333,7 +332,6 @@
 								pull: clone_callback !== undefined ? 'clone' : false,
 								put: false
 							}"
-							item-key="path"
 							tag="div"
 							:clone="clone_callback"
 							:sort="false"

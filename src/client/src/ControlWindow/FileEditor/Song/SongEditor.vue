@@ -12,7 +12,7 @@
 </script>
 
 <script setup lang="ts">
-	import { reactive, ref, watch } from "vue";
+	import { nextTick, reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -30,7 +30,7 @@
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
-	library.add(fas.faPlus, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
+	library.add(fas.faUpDownLeftRight, fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
 	const text_parts = defineModel<SongTextPart[]>("text_parts", {
 		default: () => reactive([{ part: "", text: [["", "", "", ""]] }])
@@ -55,13 +55,20 @@
 	const song_file_name = ref<string>("");
 	const song_selection = defineModel<SongFile>("song_file", { default: undefined });
 
+	const textarea_refs = ref<HTMLTextAreaElement[]>([]);
+
+	watch(
+		() => metadata.value.LangCount,
+		() => {
+			textarea_refs.value.forEach(auto_resize_textarea);
+		}
+	);
+
 	watch(
 		() => song_selection.value,
 		() => {
 			if (song_selection.value !== undefined && song_selection.value.children === undefined) {
 				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
-
-				console.debug("setting song_file_name to", song_file_name.value);
 			}
 		}
 	);
@@ -119,6 +126,30 @@
 				part_text.pop();
 			}
 		});
+
+		// if the last isn't empty, add another one
+		if (text_parts.value.length > 0) {
+			if (!is_empty_part(text_parts.value.slice(-1)[0])) {
+				text_parts.value.push({
+					part: "",
+					text: [["", "", "", ""]]
+				});
+			} else {
+				// if the second-last part is also empty, remove the last one
+				if (text_parts.value.length > 1 && is_empty_part(text_parts.value.slice(-2)[0])) {
+					text_parts.value.pop();
+				}
+			}
+		}
+	}
+
+	function is_empty_part(part: SongTextPart): boolean {
+		return (
+			part.part.length === 0 &&
+			part.text.every((part) =>
+				part.every((text, index) => index >= metadata.value.LangCount || text.length === 0)
+			)
+		);
 	}
 
 	watch(
@@ -157,7 +188,11 @@
 		}
 	}
 
-	const overwrite_dialog = ref<boolean>(false);
+	function add_part_callback(part: SongTextPart): string {
+		return part.part;
+	}
+
+	const show_overwrite_dialog = ref<boolean>(false);
 	function save_song(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
 
@@ -182,29 +217,27 @@
 			} else {
 				save_path = song_selection.value.path + "/" + song_file_name.value + ".sng";
 			}
+		}
 
-			// if the save file exists already, ask wether it should be overwritten
-			const compare_file = (files: SongFile[], path: string): boolean => {
-				return files.some((fil) => {
-					if (fil.path === path) {
-						return true;
-					}
+		// if the save file exists already, ask wether it should be overwritten
+		const compare_file = (files: SongFile[], path: string): boolean => {
+			return files.some((fil) => {
+				if (fil.path === path) {
+					return true;
+				}
 
-					if (fil.children !== undefined) {
-						return compare_file(fil.children, path);
-					}
-
-					return false;
-				});
-			};
-
-			if (overwrite === false && compare_file(Globals.get_song_files(), save_path)) {
-				overwrite_dialog.value = true;
-
-				console.warn("abort");
+				if (fil.children !== undefined) {
+					return compare_file(fil.children, path);
+				}
 
 				return false;
-			}
+			});
+		};
+
+		if (overwrite === false && compare_file(Globals.get_song_files(), save_path)) {
+			show_overwrite_dialog.value = true;
+
+			return false;
 		}
 
 		Globals.ws?.send<JCGPRecv.SaveFile>({
@@ -231,7 +264,12 @@
 			text: {}
 		};
 
-		text_parts.value.forEach((part) => {
+		// filter out the last, empty element
+		const saved_text_parts = text_parts.value.filter(
+			(text_part, index) => index < text_parts.value.length - 1 || !is_empty_part(text_part)
+		);
+
+		saved_text_parts.forEach((part) => {
 			// filter out the empty, last elements meant for the next slide to be inputted (but keep it if it is the first)
 			const text_parts = part.text.filter((slide, slide_index, text_part) => {
 				// if it is the first element use it always
@@ -268,7 +306,7 @@
 		// if there currently is no file-name for the song, try to generate it from the song-data
 		if (song_file_name.value === "") {
 			// if the church-song-id is specified, use it
-			if (metadata.value.ChurchSongID !== undefined && metadata.value.ChurchSongID !== "") {
+			if (metadata.value.ChurchSongID) {
 				song_file_name.value = metadata.value.ChurchSongID;
 
 				// if there is also a title defined, add an seperator
@@ -301,6 +339,13 @@
 		save_callback = callback;
 		show_save_confirm.value = true;
 	}
+
+	function auto_resize_textarea(textarea: HTMLTextAreaElement) {
+		textarea.style.minHeight = "1px";
+		nextTick(() => {
+			textarea.style.minHeight = textarea.scrollHeight + "px";
+		});
+	}
 </script>
 
 <template>
@@ -320,40 +365,84 @@
 			</div>
 			<div class="container" id="text_container">
 				<div class="header">Text</div>
-				<div class="content" id="text_editor_container">
+				<Draggable
+					class="content"
+					id="text_editor_container"
+					v-model="text_parts"
+					:group="{ name: 'song_part', pull: 'clone', put: false }"
+					handle=".text_part_handle.enabled"
+					animation="150"
+					easing="cubic-bezier(1, 0, 0, 1)"
+					delay-on-touch-only="true"
+					delay="250"
+					ghost-class="draggable_ghost"
+					:clone="add_part_callback"
+				>
 					<div v-for="(part, index) of text_parts" class="text_part">
-						<div class="text_part_title">
+						<div class="verse_part" :style="{ color: get_song_part_color(part.part) }">
+							{{ text_parts[index].part }}
+						</div>
+						<div
+							class="draggable_handle text_part_handle"
+							:class="{ enabled: index < text_parts.length - 1 }"
+						>
+							<FontAwesomeIcon :icon="['fas', 'up-down-left-right']" />
+						</div>
+						<div class="text_part_data">
 							<input
 								placeholder="Part Name"
 								v-model="text_parts[index].part"
 								:style="{ color: get_song_part_color(part.part) }"
 							/>
-							<MenuButton @click="text_parts.splice(index, 1)">
-								<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
-							</MenuButton>
-							<MenuButton @click="metadata.VerseOrder?.push(part.part)">
-								<FontAwesomeIcon :icon="['fas', 'plus']" />Add to Verse Order
-							</MenuButton>
+							<Draggable
+								class="text_part_text"
+								v-model="part.text"
+								:group="{ name: 'text_part', pull: true, put: true }"
+								handle=".text_slide_handle.enabled"
+								animation="150"
+								easing="cubic-bezier(1, 0, 0, 1)"
+								delay-on-touch-only="true"
+								delay="250"
+								ghost-class="draggable_ghost"
+							>
+								<div v-for="(slide, slide_index) of part.text" class="song_text_language">
+									<div
+										class="draggable_handle text_slide_handle"
+										:class="{ enabled: index < text_parts.length - 1 }"
+									>
+										<FontAwesomeIcon :icon="['fas', 'bars']" />
+									</div>
+									<template v-for="(language, language_index) of slide">
+										<textarea
+											v-show="clamp_lang_count() > language_index"
+											ref="textarea_refs"
+											class="song_text_language"
+											v-model="part.text[slide_index][language_index]"
+											:rows="(language.match(/\n/g) || []).length + 1"
+											:placeholder="
+												`Slide ${slide_index + 1}` +
+												(metadata.LangCount > 1 ? ` - Language ${language_index + 1}` : '')
+											"
+											@input="auto_resize_textarea($event.target as HTMLTextAreaElement)"
+											@change="auto_resize_textarea($event.target as HTMLTextAreaElement)"
+										/>
+									</template>
+								</div>
+							</Draggable>
 						</div>
-						<div v-for="(slide, slide_index) of part.text" class="song_text_language">
-							<template v-for="(language, language_index) of slide">
-								<textarea
-									v-show="clamp_lang_count() > language_index"
-									:rows="(language.match(/\n/g) || []).length + 1"
-									class="song_text_language"
-									v-model="part.text[slide_index][language_index]"
-									:placeholder="
-										`Slide ${slide_index + 1}` +
-										(metadata.LangCount > 1 ? ` - Language ${language_index + 1}` : '')
-									"
-								/>
-							</template>
-						</div>
+						<MenuButton
+							:square="true"
+							:disabled="text_parts.length <= 1 || index === text_parts.length - 1"
+							@click="
+								text_parts.length > 1 && index < text_parts.length - 1
+									? text_parts.splice(index, 1)
+									: undefined
+							"
+						>
+							<FontAwesomeIcon :icon="['fas', 'trash']" />
+						</MenuButton>
 					</div>
-				</div>
-				<MenuButton @click="text_parts.push({ part: '', text: [['', '', '', '']] })">
-					<FontAwesomeIcon :icon="['fas', 'plus']" />Add Part
-				</MenuButton>
+				</Draggable>
 			</div>
 		</div>
 		<div>
@@ -397,10 +486,12 @@
 					class="content"
 					id="verse_order"
 					v-model="metadata.VerseOrder"
-					group="song_parts"
-					item-key="item"
+					:group="{ name: 'song_part', pull: false, put: true }"
+					animation="150"
+					easing="cubic-bezier(1, 0, 0, 1)"
 					delay-on-touch-only="true"
 					delay="250"
+					ghost-class="draggable_ghost"
 				>
 					<div
 						v-for="(part, index) of metadata.VerseOrder"
@@ -459,6 +550,19 @@
 			</template>
 		</SongDialogue>
 	</PopUp>
+	<PopUp title="Overwrite existing file?" v-model:active="show_overwrite_dialog">
+		<MenuButton
+			@click="
+				show_overwrite_dialog = false;
+				save_song(true);
+			"
+		>
+			<FontAwesomeIcon :icon="['fas', 'check']" />Overwrite
+		</MenuButton>
+		<MenuButton @click="show_overwrite_dialog = false">
+			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+		</MenuButton>
+	</PopUp>
 	<PopUp title="Save Changes" v-model:active="show_save_confirm">
 		<MenuButton
 			@click="
@@ -491,7 +595,6 @@
 	#new_song_container {
 		flex: 1;
 		display: flex;
-		/* flex-direction: column; */
 		gap: 0.25rem;
 
 		display: grid;
@@ -565,6 +668,8 @@
 	textarea {
 		background-color: transparent;
 		border: var(--color-item) 0.0625rem solid;
+
+		overflow: hidden;
 	}
 
 	input:focus,
@@ -601,7 +706,7 @@
 
 	.text_part {
 		display: flex;
-		flex-direction: column;
+		align-items: baseline;
 
 		gap: inherit;
 
@@ -612,13 +717,52 @@
 		overflow: visible;
 	}
 
-	.text_part_title {
+	#text_editor_container .verse_part {
+		display: none;
+	}
+
+	#verse_order > .text_part > :not(.verse_part) {
+		display: none !important;
+	}
+
+	#verse_order > .text_part > .verse_part {
+		display: unset;
+	}
+
+	.text_part_data {
 		flex: 1;
 		display: flex;
+		flex-direction: column;
 		gap: 0.25rem;
 	}
 
-	.text_part_title > input {
+	.text_part_text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.draggable_handle {
+		aspect-ratio: 1;
+
+		border-radius: 0.25rem;
+
+		height: 2em;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.draggable_handle:not(.enabled) > * {
+		color: var(--color-text-disabled);
+	}
+
+	.draggable_handle.enabled {
+		cursor: move;
+	}
+
+	.text_part_data > input {
 		width: 100%;
 	}
 
@@ -643,10 +787,10 @@
 	}
 
 	#verse_order {
-		display: block;
 		flex: 1;
-
-		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.verse_part {
@@ -665,5 +809,9 @@
 
 	.file_dialogue_button {
 		flex: 1;
+	}
+
+	.draggable_ghost {
+		color: var(--color-text-disabled);
 	}
 </style>

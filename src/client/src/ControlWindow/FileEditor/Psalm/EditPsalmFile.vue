@@ -50,6 +50,8 @@
 
 					return slide_blocks;
 				});
+
+				psalm_text.value.push([{ indent: indent_state, text: "" }]);
 			}
 		},
 		{ immediate: true }
