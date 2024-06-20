@@ -5,7 +5,7 @@ import Config from "./config/config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
-import { casparcg } from "./CasparCGConnection";
+import { casparcg, catch_casparcg_timeout } from "./CasparCGConnection";
 
 export interface FileBase<K extends keyof ItemFileType> {
 	name: string;
@@ -147,7 +147,10 @@ export default class SearchPart {
 		logger.debug("requesting CasparCG-media-list");
 
 		const media =
-			(await (await casparcg.casparcg_connections[0].connection.cls()).request)?.data ?? [];
+			(await catch_casparcg_timeout(
+				async () => (await (await casparcg.casparcg_connections[0].connection.cls()).request)?.data,
+				"CLS - get media"
+			)) ?? [];
 
 		return build_files<"media">(
 			"media",
@@ -164,7 +167,10 @@ export default class SearchPart {
 		logger.debug("requesting CasparCG-template-list");
 
 		const template =
-			(await (await casparcg.casparcg_connections[0].connection.tls()).request)?.data ?? [];
+			(await catch_casparcg_timeout(
+				async () => (await (await casparcg.casparcg_connections[0].connection.tls()).request)?.data,
+				"TLS - get templates"
+			)) ?? [];
 
 		return build_files<"template">(
 			"template",

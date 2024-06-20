@@ -19,7 +19,7 @@ import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_pa
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
-import { casparcg } from "./CasparCGConnection.js";
+import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConnection.js";
 import { recurse_object_check } from "./lib.ts";
 import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
 import { PsalmFile } from "./PlaylistItems/Psalm.ts";
@@ -637,35 +637,15 @@ export default class Control {
 	}
 
 	private async get_media_thumbnails(files: MediaFile[], ws: WebSocket) {
-		// const thumbnails = files.map(async (file): Promise<[string, string]> => {
-		// 	const thumbnail = (await (await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({ filename: file.path })).request)?.data as string[];
-
-		// 	return [file.path, thumbnail ? "data:image/png;base64," + thumbnail[0] : ""];
-		// });
-
 		const thumbnails: Record<string, string> = {};
 
 		for (const file of files) {
-			let thumbnail: string[] = (
-				await (
-					await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
-						filename: '"' + file.path + '"'
-					})
-				).request
-			)?.data as string[];
+			let thumbnail: string[] = await thumbnail_retrieve(file.path);
 
 			if (thumbnail === undefined) {
-				await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
-					filename: '"' + file.path + '"'
-				});
+				await thumbnail_generate(file.path);
 
-				thumbnail = (
-					await (
-						await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
-							filename: '"' + file.path + '"'
-						})
-					).request
-				)?.data as string[];
+				thumbnail = await thumbnail_retrieve(file.path);
 			}
 
 			thumbnails[file.path] = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
@@ -673,7 +653,6 @@ export default class Control {
 
 		const message: JCGPSend.MediaThumbnails = {
 			command: "media_thumbnails",
-			// thumbnails: Object.fromEntries(await Promise.all(thumbnails))
 			thumbnails: thumbnails
 		};
 

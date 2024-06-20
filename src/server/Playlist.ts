@@ -26,7 +26,9 @@ import {
 	CasparCGConnection,
 	add_casparcg_listener,
 	casparcg,
-	casparcg_clear
+	casparcg_clear,
+	thumbnail_generate,
+	thumbnail_retrieve
 } from "./CasparCGConnection.js";
 import path from "path";
 import Text from "./PlaylistItems/Text.ts";
@@ -286,26 +288,12 @@ export default class Playlist {
 					);
 
 					if (!test_rgb_string) {
-						let thumbnails: string[] = (
-							await (
-								await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
-									filename: '"' + client_object.media + '"'
-								})
-							).request
-						)?.data as string[];
+						let thumbnails: string[] = await thumbnail_retrieve(client_object.media);
 
 						if (thumbnails === undefined) {
-							await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
-								filename: '"' + client_object.media + '"'
-							});
+							await thumbnail_generate(client_object.media);
 
-							thumbnails = (
-								await (
-									await casparcg.casparcg_connections[0].connection.thumbnailRetrieve({
-										filename: '"' + client_object.media + '"'
-									})
-								).request
-							)?.data as string[];
+							thumbnails = await thumbnail_retrieve(client_object.media);
 						}
 
 						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";

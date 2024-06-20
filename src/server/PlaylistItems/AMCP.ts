@@ -1,4 +1,4 @@
-import { CasparCGConnection, casparcg } from "../CasparCGConnection";
+import { CasparCGConnection, casparcg, catch_casparcg_timeout } from "../CasparCGConnection";
 import { recurse_object_check } from "../lib";
 import {
 	ClientItemBase,
@@ -79,9 +79,13 @@ export default class AMCP extends PlaylistItemBase {
 
 		return Promise.all(
 			connections.map((connection) => {
-				return connection.connection.sendCustom({
-					command: command
-				});
+				return catch_casparcg_timeout(
+					async () =>
+						connection.connection.sendCustom({
+							command
+						}),
+					command
+				);
 			})
 		);
 	}

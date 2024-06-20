@@ -19,10 +19,10 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 ## Roadmap for Release
 - save_song(): check, wether "chords" is valid
+- debug saving of song-files and choosing background-image
 - repair new-file abort unsaved changes
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- and psalm-editor: editing existing file: save-confirm despite no changes
-- debug saving of song-files and choosing background-image
 - song- / psalm-editor: auto_resizse textarea on mount
 - 
 - reload psalm and song after file-edit
