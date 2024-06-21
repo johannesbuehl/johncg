@@ -53,7 +53,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const song_file_name = ref<string>("");
-	const song_selection = defineModel<SongFile>("song_file", { default: undefined });
+	const song_selection = defineModel<SongFile | undefined>("song_file", { default: undefined });
 
 	const textarea_refs = ref<HTMLTextAreaElement[]>([]);
 
@@ -77,34 +77,32 @@
 	watch(
 		() => [metadata.value.BackgroundImage, Globals.get_media_files()],
 		() => {
-			create_media_directory_stack();
+			if (metadata.value.BackgroundImage !== undefined && Globals.get_media_files().length > 0) {
+				const dir_stack = metadata.value.BackgroundImage.split(/[\\/]/g);
+				media_directory_stack.value = create_directory_stack(Globals.get_media_files(), dir_stack);
+
+				// select the media-file
+				media_selection.value = media_directory_stack.value
+					.slice(-1)[0]
+					.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
+				background_media.value = media_selection.value;
+			}
 		},
 		{ immediate: true }
 	);
 
 	const song_directory_stack = ref<SongFile[]>([]);
 	watch(
-		() => [song_selection.value, Globals.get_song_files()],
+		() => Globals.get_song_files(),
 		() => {
-			create_song_directory_stack();
+			if (song_selection.value !== undefined) {
+				const dir_stack = song_selection.value.path.split(/[\\/]/g);
+
+				song_directory_stack.value = create_directory_stack(Globals.get_song_files(), dir_stack);
+			}
 		},
 		{ immediate: true }
 	);
-
-	function create_media_directory_stack() {
-		if (metadata.value.BackgroundImage !== undefined) {
-			const dir_stack = metadata.value.BackgroundImage.split(/[\\/]/g);
-			media_directory_stack.value = create_directory_stack(Globals.get_media_files(), dir_stack);
-		}
-	}
-
-	function create_song_directory_stack() {
-		if (song_selection.value !== undefined) {
-			const dir_stack = song_selection.value.path.split(/[\\/]/g);
-
-			song_directory_stack.value = create_directory_stack(Globals.get_song_files(), dir_stack);
-		}
-	}
 
 	function clamp_lang_count() {
 		return Math.max(Math.min(Math.round(metadata.value.LangCount), 4), 1);
@@ -203,20 +201,10 @@
 			return false;
 		}
 
-		// if no file is selected, save at the root dir
-		let save_path: string;
-		if (song_selection.value === undefined) {
-			save_path = song_file_name.value + ".sng";
-		} else {
-			// if the selection is a file, replace the file-name with the file-name
-			if (song_selection.value.children === undefined) {
-				save_path =
-					song_selection.value.path.slice(0, song_selection.value.path.lastIndexOf("/") + 1) +
-					song_file_name.value +
-					".sng";
-			} else {
-				save_path = song_selection.value.path + "/" + song_file_name.value + ".sng";
-			}
+		let save_path: string = song_file_name.value + ".sng";
+		// if the directory-stack is filled, use its top-most as the path
+		if (song_directory_stack.value.length > 0) {
+			save_path = song_directory_stack.value.slice(-1)[0].path + "/" + save_path;
 		}
 
 		// if the save file exists already, ask wether it should be overwritten
@@ -513,14 +501,17 @@
 		</div>
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
-		<!-- :thumbnails="thumbnails" -->
 		<MediaDialogue
 			:hide_header="true"
 			v-model:directory_stack="media_directory_stack"
+			v-model:selection="media_selection"
 			@choose="(ff) => select_media(ff as MediaFile)"
 		>
 			<template v-slot:buttons>
-				<MenuButton class="file_dialogue_button" @click="select_media">
+				<MenuButton
+					class="file_dialogue_button"
+					@click="media_selection ? select_media(media_selection) : undefined"
+				>
 					<FontAwesomeIcon :icon="['fas', 'plus']" />Select Media
 				</MenuButton>
 			</template>
@@ -543,7 +534,12 @@
 			"
 		>
 			<template v-slot:buttons>
-				<input class="file_name_box" v-model="song_file_name" placeholder="Filename" @input="" />
+				<input
+					class="file_name_box"
+					v-model="song_file_name"
+					placeholder="Filename"
+					@input="song_selection = undefined"
+				/>
 				<MenuButton id="select_song_button" :disabled="song_file_name === ''" @click="save_song()">
 					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Song
 				</MenuButton>

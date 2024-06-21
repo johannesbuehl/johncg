@@ -30,7 +30,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const psalm_file_tree = ref<PsalmFile[]>();
-	const file_selection = defineModel<PsalmFile>("psalm_file", { default: undefined });
+	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
 	const psalm_search_strings = ref<SearchInputDefinitions<"name">>([
 		{ id: "name", placeholder: "Name", value: "" }
 	]);
@@ -43,7 +43,7 @@
 	});
 
 	watch(
-		() => file_selection,
+		() => file_selection.value,
 		() => {
 			if (file_selection.value !== undefined && file_selection.value.children === undefined) {
 				psalm_file_name.value = file_selection.value.name.replace(/\.psm$/, "");
@@ -210,20 +210,11 @@
 			return false;
 		}
 
-		// if no file is selected, save at the root dir
-		let save_path: string;
-		if (file_selection.value === undefined) {
-			save_path = psalm_file_name.value + ".psm";
-		} else {
-			// if the selection is a file, replace the file-name with the file-name
-			if (file_selection.value.children === undefined) {
-				save_path =
-					file_selection.value.path.slice(0, file_selection.value.path.lastIndexOf("/") + 1) +
-					psalm_file_name.value +
-					".psm";
-			} else {
-				save_path = file_selection.value.path + "/" + psalm_file_name.value + ".psm";
-			}
+		let save_path: string = psalm_file_name.value + ".psm";
+
+		// if the directory-stack is filled, use its top-most as the path
+		if (directory_stack.value.length > 0) {
+			save_path = directory_stack.value.slice(-1)[0].path + "/" + save_path;
 		}
 
 		// if the save file exists already, ask wether it should be overwritten
@@ -433,7 +424,12 @@
 			"
 		>
 			<template v-slot:buttons>
-				<input class="file_name_box" v-model="psalm_file_name" placeholder="Filename" @input="" />
+				<input
+					class="file_name_box"
+					v-model="psalm_file_name"
+					placeholder="Filename"
+					@input="file_selection = undefined"
+				/>
 				<MenuButton
 					id="select_psalm_button"
 					:disabled="psalm_file_name === ''"

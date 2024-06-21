@@ -23,6 +23,7 @@ import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConn
 import { recurse_object_check } from "./lib.ts";
 import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
 import { PsalmFile } from "./PlaylistItems/Psalm.ts";
+import { Chord } from "./PlaylistItems/SongFile/Chord.ts";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -912,46 +913,74 @@ function check_song_data(song_data: SongData): boolean {
 		text: { template: [[["template"]]] }
 	};
 
+	// check required data
 	let test_result: boolean = recurse_object_check(song_data, data_template);
 
+	// check optional data
+
+	// ChurchSongID
 	if (song_data.metadata.ChurchSongID !== undefined) {
 		test_result &&= typeof song_data.metadata.ChurchSongID === "string";
 	}
 
+	// SongBook
 	if (song_data.metadata.Songbook !== undefined) {
 		test_result &&= typeof song_data.metadata.Songbook === "string";
 	}
 
+	// VerseOrder
 	if (song_data.metadata.VerseOrder !== undefined) {
 		const verse_order_template: SongFileMetadata["VerseOrder"] = ["template"];
 
 		test_result &&= recurse_object_check(song_data.metadata.VerseOrder, verse_order_template);
 	}
 
+	// BackgroundImage
 	if (song_data.metadata.BackgroundImage !== undefined) {
 		test_result &&= typeof song_data.metadata.BackgroundImage === "string";
 	}
 
+	// Author
 	if (song_data.metadata.Author !== undefined) {
 		test_result &&= typeof song_data.metadata.Author === "string";
 	}
 
+	// Melody
 	if (song_data.metadata.Melody !== undefined) {
 		test_result &&= typeof song_data.metadata.Melody === "string";
 	}
 
+	// Translation
 	if (song_data.metadata.Translation !== undefined) {
 		test_result &&= typeof song_data.metadata.Translation === "string";
 	}
 
+	// Copyright
 	if (song_data.metadata.Copyright !== undefined) {
 		test_result &&= typeof song_data.metadata.Copyright === "string";
 	}
 
-	// IMPLEMENT ME
-	// if (data.metadata.Chords !== undefined) {
-	// 	test_result &&= typeof data.metadata.Chords === "string";
-	// }
+	// Chords
+	if (song_data.metadata.Chords !== undefined) {
+		const chord_check = (chord: Chord): boolean =>
+			typeof chord.note === "string" &&
+			typeof chord.chord_descriptors === "string" &&
+			(chord.bass_note === undefined || typeof chord.bass_note === "string");
+
+		test_result &&= Object.entries(song_data.metadata.Chords).every(
+			([line_number, line_chords]) => {
+				const check =
+					!isNaN(Number(line_number)) &&
+					Object.entries(line_chords).every(([pos_number, chord]) => {
+						const check = !isNaN(Number(pos_number)) && chord_check(chord);
+
+						return check;
+					});
+
+				return check;
+			}
+		);
+	}
 
 	if (song_data.metadata.Transpose !== undefined) {
 		test_result &&= typeof song_data.metadata.Transpose === "number";

@@ -18,12 +18,13 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## Roadmap for Release
-- save_song(): check, wether "chords" is valid
-- debug saving of song-files and choosing background-image
 - repair new-file abort unsaved changes
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
-- song- and psalm-editor: editing existing file: save-confirm despite no changes
 - song- / psalm-editor: auto_resizse textarea on mount
+- add-song to playlist after creation
+- media-selector: selected thumbnail doesn't get highlighted
+- file-dialogue search-results: show path to differentiate same file-name
+- reset client on server-restart through server-session-id or similar
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

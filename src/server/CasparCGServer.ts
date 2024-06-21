@@ -36,8 +36,6 @@ export default class CasparCGServer {
 		this.server_process = ChildProcess.execFile(this.server_path, { cwd: this.casparcg_path });
 
 		this.server_process.addListener("close", () => this.launch_server());
-
-		this.server_process.addListener("error", () => console.error("error"));
 	}
 
 	launch_scanner() {

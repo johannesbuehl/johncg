@@ -1,9 +1,9 @@
 import fs from "fs";
 import iconv from "iconv-lite";
-import Chord from "./Chord";
 
 import { type SongElement, is_song_element } from "./SongElements";
 import { Version } from "../../config/version";
+import { Chord, create_chord, get_chord_string } from "./Chord";
 
 // metadata of the songfile
 export interface SongFileMetadata {
@@ -339,15 +339,15 @@ export default class SongFile {
 
 					case "Chords": {
 						const chord_string = Object.entries(val as SongFileMetadata["Chords"])
-							.map(([line, val2]) => {
+							.map(([line, val2]) =>
 								Object.entries(val2).map(([char, chord]: [string, Chord]) => {
-									return `${char},${line},${chord.get_chord_string()}`;
-								});
-							})
+									return `${char},${line},${get_chord_string(chord)}`;
+								})
+							)
 							.flat()
 							.join("\r");
 
-						return Buffer.from(chord_string).toString("base64");
+						return `#Chords=${Buffer.from(chord_string).toString("base64")}`;
 					}
 					default:
 						return `#${key}=${val}`;
@@ -380,14 +380,14 @@ function parse_base64_chords(base64: string): Chords {
 
 	const chords = Buffer.from(base64, "base64").toString();
 
-	const chord_regex = /(?<position>\d+),(?<line>\d+),(?<chord>.*)\r/g;
+	const chord_regex = /(?<position>.+?),(?<line>.+?),(?<chord>.*)\r/g;
 
 	let match = chord_regex.exec(chords);
 	while (match !== null) {
 		const check_number = (val: string): number | false => {
 			const number = Number(val);
 
-			if (Number.isNaN(number) || !Number.isInteger(number) || number < -1) {
+			if (Number.isNaN(number) || number < -1) {
 				return false;
 			} else {
 				return number;
@@ -401,7 +401,7 @@ function parse_base64_chords(base64: string): Chords {
 		if (line !== false && position !== false && typeof chord === "string") {
 			return_object[line] ??= {};
 
-			return_object[line][position] = new Chord(chord);
+			return_object[line][position] = create_chord(chord);
 		}
 
 		match = chord_regex.exec(chords);

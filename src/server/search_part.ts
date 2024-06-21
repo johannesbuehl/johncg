@@ -180,7 +180,7 @@ export default class SearchPart {
 
 	get_song_file(path: string): SongFile | undefined {
 		const item_file: SongFile = {
-			name: path,
+			name: path.split(/[\\/]/g).slice(-1)[0],
 			path
 		};
 
@@ -199,7 +199,7 @@ export default class SearchPart {
 
 	async get_psalm_file(path: string): Promise<PsalmFile> | undefined {
 		const item_file: PsalmFile = {
-			name: path,
+			name: path.split(/[\\/]/g).slice(-1)[0],
 			path
 		};
 

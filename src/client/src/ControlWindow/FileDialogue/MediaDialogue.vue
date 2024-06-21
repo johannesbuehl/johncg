@@ -36,20 +36,23 @@
 	watch(
 		() => Globals.get_media_files(),
 		() => {
-			init_files();
+			search_map = create_search_map();
+
+			search_media();
+
+			// if there are no fitting thumbnails , retrieve them also
+			// if the directory-stack is populated, use it
+			let files: MediaFile[];
+			if (directory_stack.value.length > 0) {
+				files = directory_stack.value.slice(-1)[0].children ?? [];
+			} else {
+				files = Globals.get_media_files();
+			}
+
+			Globals.get_thumbnails(files.filter((ff) => ff.children === undefined));
 		},
 		{ immediate: true }
 	);
-
-	function init_files() {
-		search_map = create_search_map();
-
-		search_media();
-
-		// if there are no fitting thumbnails , retrieve them also
-		const files = Globals.get_media_files().filter((ff) => ff.children === undefined);
-		Globals.get_thumbnails(files);
-	}
 
 	watch(search_strings.value, () => {
 		search_media();
