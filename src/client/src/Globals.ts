@@ -97,6 +97,7 @@ export interface ClientSettings {
 	timeouts: {
 		item_file_getters: number;
 		item_file_invalidation: number;
+		client_id_confirm: number;
 	};
 }
 
@@ -110,7 +111,8 @@ class Global {
 		},
 		timeouts: {
 			item_file_getters: 5, // 5 seconds
-			item_file_invalidation: 300 // 5 minutes
+			item_file_invalidation: 300, // 5 minutes
+			client_id_confirm: 1800 // 30 minutes
 		}
 	};
 	get settings(): ClientSettings {
@@ -380,6 +382,11 @@ class Global {
 		const id = random_id();
 
 		this._confirm_id_functions[id] = callback;
+
+		// remove the function after a give time to prevent cluttering
+		setTimeout(() => {
+			delete this._confirm_id_functions[id];
+		}, this.settings.timeouts.client_id_confirm * 1000);
 
 		return id;
 	}

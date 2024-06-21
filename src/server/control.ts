@@ -107,6 +107,20 @@ export default class Control {
 		this.search_part = new SearchPart();
 	}
 
+	private task_list_add(
+		callback: (options: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => void
+	) {
+		const id = random_id();
+
+		this.task_list[id] = callback;
+
+		setTimeout(() => {
+			delete this.task_list[id];
+		}, 1800 * 1000); // 30 minutes
+
+		return id;
+	}
+
 	private new_playlist(ws: WebSocket) {
 		if (!this.playlist.unsaved_changes) {
 			logger.log("creating new playlist");
@@ -117,49 +131,47 @@ export default class Control {
 
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
-			const client_confirm_id = random_id();
+			const client_confirm_id = this.task_list_add(
+				(option: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => {
+					const response: JCGPSend.Response = {
+						command: "response",
+						message: "",
+						code: 200,
+						server_id
+					};
 
-			this.task_list[client_confirm_id] = (
-				option: JCGPSend.ClientConfirmation["options"][0]["value"],
-				ws: WebSocket
-			) => {
-				const response: JCGPSend.Response = {
-					command: "response",
-					message: "",
-					code: 200,
-					server_id
-				};
+					let send_playlist = false;
 
-				let send_playlist = false;
+					switch (option) {
+						case "save":
+							if (this.playlist.save()) {
+								this.playlist = new Playlist();
 
-				switch (option) {
-					case "save":
-						if (this.playlist.save()) {
+								send_playlist = true;
+
+								response.message = "Playlist has been saved and a new one has been created.";
+								logger.log("Playlist has been saved and a new one has been created.");
+							}
+							break;
+						case "discard":
 							this.playlist = new Playlist();
 
 							send_playlist = true;
 
-							response.message = "Playlist has been saved and a new one has been created.";
-							logger.log("Playlist has been saved and a new one has been created.");
-						}
-						break;
-					case "discard":
-						this.playlist = new Playlist();
+							break;
+						case "cancel":
+							response.message = "No new playlist has been created.";
+							break;
+					}
 
-						send_playlist = true;
+					if (send_playlist) {
+						this.send_playlist(undefined, undefined, undefined, true);
+					}
 
-						break;
-					case "cancel":
-						response.message = "No new playlist has been created.";
-						break;
+					ws.send(JSON.stringify(response));
 				}
+			);
 
-				if (send_playlist) {
-					this.send_playlist(undefined, undefined, undefined, true);
-				}
-
-				ws.send(JSON.stringify(response));
-			};
 			const message: JCGPSend.ClientConfirmation = {
 				command: "client_confirmation",
 				id: client_confirm_id,
@@ -193,26 +205,23 @@ export default class Control {
 	) {
 		let load_result = false;
 		if (this.playlist.unsaved_changes && overwrite === false) {
-			const client_confirm_id = random_id();
-
-			this.task_list[client_confirm_id] = (
-				option: JCGPSend.ClientConfirmation["options"][0]["value"],
-				ws: WebSocket
-			) => {
-				switch (option) {
-					case "save":
-						if (this.playlist.save()) {
+			const client_confirm_id = this.task_list_add(
+				(option: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => {
+					switch (option) {
+						case "save":
+							if (this.playlist.save()) {
+								this.load_playlist(playlist_path, id, ws, true);
+							} else {
+								ws_send_response("Can't save playlist", false, ws);
+								logger.warn("Can't save playlist");
+							}
+							break;
+						case "discard":
 							this.load_playlist(playlist_path, id, ws, true);
-						} else {
-							ws_send_response("Can't save playlist", false, ws);
-							logger.warn("Can't save playlist");
-						}
-						break;
-					case "discard":
-						this.load_playlist(playlist_path, id, ws, true);
-						break;
+							break;
+					}
 				}
-			};
+			);
 
 			const message: JCGPSend.ClientConfirmation = {
 				command: "client_confirmation",
@@ -326,16 +335,13 @@ export default class Control {
 				server_id
 			};
 
-			const client_confirm_id = random_id();
-
-			this.task_list[client_confirm_id] = (
-				option: JCGPSend.ClientConfirmation["options"][0]["value"],
-				ws: WebSocket
-			) => {
-				if (option === true) {
-					this.save_playlist(playlist, id, ws, true);
+			const client_confirm_id = this.task_list_add(
+				(option: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => {
+					if (option === true) {
+						this.save_playlist(playlist, id, ws, true);
+					}
 				}
-			};
+			);
 
 			const message: JCGPSend.ClientConfirmation = {
 				command: "client_confirmation",
@@ -392,16 +398,13 @@ export default class Control {
 
 			// if the file already exist and overwrite isn't set, ask the client what to do
 			if (fs.existsSync(save_path) && overwrite === false) {
-				const client_confirm_id = random_id();
-
-				this.task_list[client_confirm_id] = (
-					option: JCGPSend.ClientConfirmation["options"][0]["value"],
-					ws: WebSocket
-				) => {
-					if (option === true) {
-						this.save_file(path, id, message, ws, true);
+				const client_confirm_id = this.task_list_add(
+					(option: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => {
+						if (option === true) {
+							this.save_file(path, id, message, ws, true);
+						}
 					}
-				};
+				);
 
 				const client_confirm_message: JCGPSend.ClientConfirmation = {
 					command: "client_confirmation",
