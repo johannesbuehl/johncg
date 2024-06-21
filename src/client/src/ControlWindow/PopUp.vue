@@ -10,7 +10,9 @@
 		maximize?: boolean;
 	}>();
 
-	const emit = defineEmits<{}>();
+	const emit = defineEmits<{
+		close: [];
+	}>();
 
 	const active = defineModel<boolean>("active", { required: true });
 
@@ -23,10 +25,24 @@
 
 <template>
 	<Transition>
-		<div id="popup_wrapper" v-if="active" @click.self="active = false">
+		<div
+			id="popup_wrapper"
+			v-if="active"
+			@click.self="
+				active = false;
+				emit('close');
+			"
+		>
 			<div id="popup_window" :class="{ maximize }">
 				<div id="header">
-					{{ title }}<FontAwesomeIcon :icon="['fas', 'xmark']" @click="active = false" />
+					{{ title
+					}}<FontAwesomeIcon
+						:icon="['fas', 'xmark']"
+						@click="
+							active = false;
+							emit('close');
+						"
+					/>
 				</div>
 				<div id="popup_window_content">
 					<slot></slot>
@@ -98,8 +114,6 @@
 	}
 
 	#popup_window_content {
-		margin: 0.25rem;
-
 		display: flex;
 		flex: 1;
 	}

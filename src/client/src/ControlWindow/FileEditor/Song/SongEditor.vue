@@ -190,7 +190,6 @@
 		return part.part;
 	}
 
-	const show_overwrite_dialog = ref<boolean>(false);
 	function save_song(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
 
@@ -202,43 +201,29 @@
 		}
 
 		let save_path: string = song_file_name.value + ".sng";
+
 		// if the directory-stack is filled, use its top-most as the path
 		if (song_directory_stack.value.length > 0) {
 			save_path = song_directory_stack.value.slice(-1)[0].path + "/" + save_path;
 		}
 
-		// if the save file exists already, ask wether it should be overwritten
-		const compare_file = (files: SongFile[], path: string): boolean => {
-			return files.some((fil) => {
-				if (fil.path === path) {
-					return true;
-				}
+		const id = Globals.add_confirm((state: boolean) => {
+			if (state) {
+				Globals.ControlWindowStateConfirm = undefined;
 
-				if (fil.children !== undefined) {
-					return compare_file(fil.children, path);
-				}
-
-				return false;
-			});
-		};
-
-		if (overwrite === false && compare_file(Globals.get_song_files(), save_path)) {
-			show_overwrite_dialog.value = true;
-
-			return false;
-		}
+				// reset the item-files
+				Globals.item_files.value.song = [];
+			}
+		});
 
 		Globals.ws?.send<JCGPRecv.SaveFile>({
 			command: "save_file",
 			type: "song",
 			path: save_path,
+			overwrite,
+			id,
 			data: create_song_data()
 		});
-
-		Globals.ControlWindowStateConfirm = undefined;
-
-		// reset the psalm item-files
-		Globals.item_files.value.psalm = [];
 
 		return true;
 	}
@@ -502,6 +487,7 @@
 	</div>
 	<PopUp title="Select Background Image" v-model:active="show_media_selector" :maximize="true">
 		<MediaDialogue
+			class="file_dialogue"
 			:hide_header="true"
 			v-model:directory_stack="media_directory_stack"
 			v-model:selection="media_selection"
@@ -519,6 +505,7 @@
 	</PopUp>
 	<PopUp title="Save Song" v-model:active="show_save_file_dialogue" :maximize="true">
 		<SongDialogue
+			class="file_dialogue"
 			:select_dirs="true"
 			:hide_header="true"
 			:new_directory="true"
@@ -546,44 +533,33 @@
 			</template>
 		</SongDialogue>
 	</PopUp>
-	<PopUp title="Overwrite existing file?" v-model:active="show_overwrite_dialog">
-		<MenuButton
-			@click="
-				show_overwrite_dialog = false;
-				save_song(true);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'check']" />Overwrite
-		</MenuButton>
-		<MenuButton @click="show_overwrite_dialog = false">
-			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
-		</MenuButton>
-	</PopUp>
 	<PopUp title="Save Changes" v-model:active="show_save_confirm">
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(save_song());
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
-		</MenuButton>
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(true);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
-		</MenuButton>
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(false);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
-		</MenuButton>
+		<div id="save_changes_popup">
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(save_song());
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+			</MenuButton>
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(true);
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+			</MenuButton>
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(false);
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+			</MenuButton>
+		</div>
 	</PopUp>
 </template>
 
@@ -801,6 +777,8 @@
 	.file_dialogue {
 		flex: 1;
 		display: flex;
+
+		padding: 0.25rem;
 	}
 
 	.file_dialogue_button {
@@ -809,5 +787,17 @@
 
 	.draggable_ghost {
 		color: var(--color-text-disabled);
+	}
+
+	#save_changes_popup {
+		padding: 0.5rem;
+		display: flex;
+		gap: 0.25rem;
+
+		background-color: var(--color-container);
+	}
+
+	#save_changes_popup > .button {
+		margin: 0;
 	}
 </style>

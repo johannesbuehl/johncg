@@ -138,14 +138,13 @@
 	<FileDialogue
 		:files="file_tree"
 		:thumbnails="Globals.get_thumbnails()"
-		:hide_header="hide_header"
 		:clone_callback="
 			create_props_callback !== undefined
 				? (file) => create_props_callback!(file as MediaFile)
 				: undefined
 		"
 		:item_color="Globals.color.media"
-		name="Media"
+		:name="!hide_header ? 'Media' : undefined"
 		v-model:selection="selection"
 		v-model:search_strings="search_strings"
 		v-model:directory_stack="directory_stack"

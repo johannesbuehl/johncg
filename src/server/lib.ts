@@ -107,3 +107,14 @@ export function msleep(n: number) {
 export function sleep(n: number) {
 	msleep(n * 1000);
 }
+
+const random_4_hex = () =>
+	Math.floor((1 + Math.random()) * 0x10000)
+		.toString(16)
+		.substring(1);
+export const random_id = () =>
+	`${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+
+export type RequireAtLeastOne<T> = {
+	[K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>;
+}[keyof T];

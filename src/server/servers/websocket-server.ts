@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { RawData } from "ws";
 import { logger } from "../logger";
+import { random_id } from "../lib";
 
 // defintion of a JCGP-response
 export interface JCGPResponse {
@@ -27,12 +28,7 @@ export interface WebsocketServerArguments {
 }
 
 export type WebsocketMessageHandler = Record<string, MessageHandler>;
-
-const random_4_hex = () =>
-	Math.floor((1 + Math.random()) * 0x10000)
-		.toString(16)
-		.substring(1);
-export const server_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+export const server_id = random_id();
 
 export default class WebsocketServer {
 	ws_server: WebSocketServer;

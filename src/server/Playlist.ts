@@ -239,34 +239,35 @@ export default class Playlist {
 		this.changes = false;
 	}
 
-	save(playlist?: string): boolean {
+	save(playlist?: string, overwrite?: boolean): boolean {
 		if (playlist !== undefined) {
 			this.path = playlist;
 		}
 
-		const save_object: PlaylistObject = {
-			caption: this.caption,
-			items: this.playlist_items.map((item) => item.props)
-		};
+		// if there is no path specified, abort
+		if (this.path === undefined) {
+			return;
+		}
 
-		try {
+		// if overwrite isn't give, check wether the file exists
+		if (fs.existsSync(Config.get_path("playlist", this.path)) && overwrite !== true) {
+			return false;
+		} else {
+			const save_object: PlaylistObject = {
+				caption: this.caption,
+				items: this.playlist_items.map((item) => item.props)
+			};
+
 			fs.writeFileSync(
-				path.join(Config.get_path("playlist"), this.path),
+				Config.get_path("playlist", this.path),
 				JSON.stringify(save_object, null, "\t"),
 				"utf-8"
 			);
-		} catch (e) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if (e?.code !== "ENOENT") {
-				throw e;
-			}
 
-			return false;
+			this.changes = false;
+
+			return true;
 		}
-
-		this.changes = false;
-
-		return true;
 	}
 
 	create_client_object_playlist(): ClientPlaylistItems {

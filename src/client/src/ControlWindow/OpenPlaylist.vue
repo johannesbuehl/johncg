@@ -41,13 +41,21 @@
 	});
 
 	function load_playlist(playlist?: PlaylistFile) {
-		if (playlist !== undefined && playlist.children === undefined) {
-			Globals.ws?.send<JCGPRecv.OpenPlaylist>({
-				command: "load_playlist",
-				playlist: playlist.path
+		// if the selection is a directory, exit
+		if (playlist !== undefined && playlist?.children === undefined) {
+			const id = Globals.add_confirm((state: boolean) => {
+				console.debug("confirmed with state", state);
+
+				if (state === true) {
+					Globals.ControlWindowState = ControlWindowState.Slides;
+				}
 			});
 
-			Globals.ControlWindowState = ControlWindowState.Slides;
+			Globals.ws?.send<JCGPRecv.OpenPlaylist>({
+				command: "load_playlist",
+				playlist: playlist.path,
+				id: id
+			});
 		}
 	}
 

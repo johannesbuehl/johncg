@@ -4,12 +4,13 @@ import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
 import { ItemFileMapped, ItemFileType } from "./search_part.ts";
 import { CasparCGResolution } from "./CasparCGConnection.js";
+import { RequireAtLeastOne } from "./lib.ts";
 
 /**
  * Base interface for sent JCGP-messages
  */
 interface Base {
-	server_id: string | undefined;
+	server_id: string;
 	client_id?: string;
 }
 
@@ -93,6 +94,25 @@ export interface MediaThumbnails extends Base {
 	thumbnails: Record<string, string>;
 }
 
+export interface ClientConfirmation extends Base {
+	command: "client_confirmation";
+	id: string;
+	text: {
+		header: string;
+		text: string;
+	};
+	options: (RequireAtLeastOne<{
+		text: string;
+		icon: string;
+	}> & { value: string | number | boolean })[];
+}
+
+export interface ConfirmID extends Base {
+	command: "confirm_id";
+	id: string;
+	state: boolean;
+}
+
 /**
  * Uniun of the different JCGP-messages
  */
@@ -106,4 +126,6 @@ export type Message =
 	| Bible
 	| PlaylistPDF
 	| ClientMessage
-	| MediaThumbnails;
+	| MediaThumbnails
+	| ClientConfirmation
+	| ConfirmID;

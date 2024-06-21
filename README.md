@@ -21,6 +21,8 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - repair new-file abort unsaved changes
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- / psalm-editor: auto_resizse textarea on mount
+- make song-searching faster by skipping some parsing
+- timeout confirm-ids on client and server
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

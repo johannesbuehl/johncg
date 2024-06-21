@@ -2,6 +2,7 @@ import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import type { ItemFileType, MediaFile } from "./search_part";
+import * as JCGPSend from "./JCGPSendMessages";
 
 /**
  * Base interface for Received JCGP-messages
@@ -21,11 +22,14 @@ export interface NewPlaylist extends Base {
 export interface OpenPlaylist extends Base {
 	command: "load_playlist";
 	playlist: string;
+	id: string;
 }
 
 export interface SavePlaylist extends Base {
 	command: "save_playlist";
 	playlist: string;
+	id: string;
+	overwrite?: boolean;
 }
 
 export interface CreatePlaylistPDF extends Base {
@@ -117,10 +121,12 @@ export interface DeleteItem extends Base {
 	position: number;
 }
 
-export type SaveFile = Base & { command: "save_file"; path: string } & (
-		| { type: "song"; data: SongData }
-		| { type: "psalm"; data: PsalmData }
-	);
+export type SaveFile = Base & {
+	command: "save_file";
+	path: string;
+	id: string;
+	overwrite?: boolean;
+} & ({ type: "song"; data: SongData } | { type: "psalm"; data: PsalmData });
 
 export interface GetMediaThumbnails extends Base {
 	command: "get_media_thumbnails";
@@ -131,6 +137,12 @@ export interface NewDirectory extends Base {
 	command: "new_directory";
 	path: string;
 	type: "playlist" | "song" | "psalm";
+}
+
+export interface ClientConfirmation extends Base {
+	command: "client_confirmation";
+	id: string;
+	option: JCGPSend.ClientConfirmation["options"][0]["value"] | null;
 }
 
 /**
@@ -156,4 +168,5 @@ export type Message =
 	| CreatePlaylistPDF
 	| SaveFile
 	| GetMediaThumbnails
-	| NewDirectory;
+	| NewDirectory
+	| ClientConfirmation;

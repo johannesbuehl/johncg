@@ -17,7 +17,9 @@
 		fas.faPlus,
 		fas.faPen,
 		fas.faMessage,
-		fas.faXmark
+		fas.faXmark,
+		fas.faAlignJustify,
+		fas.faListOl
 	);
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -50,25 +52,6 @@
 	// reference for the file-input
 	const load_playlist_input = ref<HTMLInputElement>();
 
-	// read the content of the playlist-file and send it to the server
-	function load_playlist_file(e: Event) {
-		const input_event = e.target as HTMLInputElement;
-
-		// only continue, if there is a file
-		if (input_event.files !== null) {
-			const reader = new FileReader();
-
-			reader.addEventListener("load", (e) => {
-				Globals.ws?.send<JCGPRecv.OpenPlaylist>({
-					command: "load_playlist",
-					playlist: e.target?.result as string
-				});
-			});
-
-			reader.readAsText(input_event.files[0]);
-		}
-	}
-
 	const pdf_popup = ref<boolean>(false);
 	function create_playlist_pdf(type: "full" | "small") {
 		Globals.ws?.send<JCGPRecv.CreatePlaylistPDF>({
@@ -90,7 +73,9 @@
 		if (props.playlist_path !== undefined) {
 			Globals.ws?.send<JCGPRecv.SavePlaylist>({
 				command: "save_playlist",
-				playlist: props.playlist_path
+				playlist: props.playlist_path,
+				id: "",
+				overwrite: true
 			});
 		}
 	}
@@ -114,21 +99,17 @@
 				:active="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
 				@click="Globals.ControlWindowState = ControlWindowState.SavePlaylist"
 				@dblclick="
-					playlist_path !== undefined
-						? save_playlist()
-						: (Globals.ControlWindowState = ControlWindowState.SavePlaylist)
+					if (playlist_path !== undefined) {
+						save_playlist();
+
+						// backroll two states, since a double-click triggers two normal clicks
+						Globals.previousControlWindowState();
+						Globals.previousControlWindowState();
+					}
 				"
 			>
 				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
 			</MenuButton>
-			<input
-				type="file"
-				ref="load_playlist_input"
-				:accept="'.jcg'"
-				@click="load_playlist_input ? (load_playlist_input.value = '') : null"
-				@change="load_playlist_file"
-				style="display: none"
-			/>
 			<MenuButton :square="true" @click="pdf_popup = true">
 				<FontAwesomeIcon :icon="['fas', 'file-pdf']" />
 			</MenuButton>
@@ -202,9 +183,13 @@
 	</div>
 	<!-- PDF-save -->
 	<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
-		<div class="popup_menu_buttons">
-			<MenuButton @click="create_playlist_pdf('full')">Content</MenuButton>
-			<MenuButton @click="create_playlist_pdf('small')">Itemlist</MenuButton>
+		<div id="playlist_pdf_buttons">
+			<MenuButton @click="create_playlist_pdf('full')">
+				<FontAwesomeIcon :icon="['fas', 'align-justify']" />Content
+			</MenuButton>
+			<MenuButton @click="create_playlist_pdf('small')">
+				<FontAwesomeIcon :icon="['fas', 'list-ol']" />Itemlist
+			</MenuButton>
 		</div>
 	</PopUp>
 </template>
@@ -219,7 +204,7 @@
 		border-radius: 0.25rem;
 	}
 
-	.button {
+	.menubar .button {
 		font-size: 1.5rem;
 	}
 
@@ -269,5 +254,17 @@
 
 	.button_container {
 		display: inherit;
+	}
+
+	#playlist_pdf_buttons {
+		background-color: var(--color-container);
+
+		padding: 0.5rem;
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	#playlist_pdf_buttons > div {
+		margin: 0;
 	}
 </style>

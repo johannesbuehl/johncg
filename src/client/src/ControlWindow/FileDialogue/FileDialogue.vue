@@ -100,11 +100,10 @@
 	);
 
 	const props = defineProps<{
-		name: string;
+		name?: string;
 		select_dirs?: boolean;
 		files?: JCGPSend.ItemFiles<keyof ItemFileType>["files"];
 		thumbnails?: Record<string, string>;
-		hide_header?: boolean;
 		clone_callback?: (arg: JCGPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
 		new_button?: boolean;
 		new_directory?: boolean;
@@ -184,7 +183,7 @@
 <template>
 	<div id="element_wrapper">
 		<div id="file_dialogue_wrapper">
-			<div class="header" v-if="!hide_header">
+			<div class="header" v-if="name !== undefined">
 				{{ name }}
 			</div>
 			<div class="content">
@@ -714,9 +713,21 @@
 	}
 
 	#create_directory_popup {
+		padding: 0.5rem;
+
 		display: flex;
+		gap: 0.25rem;
 
 		background-color: var(--color-container);
+	}
+
+	#create_directory_popup > input {
+		width: 25rem;
+	}
+
+	#create_directory_popup > .button {
+		margin: 0;
+		height: 100%;
 	}
 
 	.draggable:deep(.item_color_indicator) {

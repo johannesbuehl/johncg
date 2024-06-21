@@ -5,18 +5,32 @@
 	}
 
 	export type ItemData = { [key in JCGPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
+
+	const random_4_hex = () =>
+		Math.floor((1 + Math.random()) * 0x10000)
+			.toString(16)
+			.substring(1);
+	export const random_id = () =>
+		`${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
 </script>
 
 <script setup lang="ts">
 	import { ref, watch } from "vue";
+	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import { library } from "@fortawesome/fontawesome-svg-core";
+	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
+	import Globals, { ServerConnection, WSWrapper } from "./Globals";
+	import PopUp from "./ControlWindow/PopUp.vue";
+	import MenuButton from "./ControlWindow/MenuBar/MenuButton.vue";
 
 	import * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
-	import Globals, { ServerConnection, WSWrapper } from "./Globals";
+
+	library.add(fas.faCheck, fas.faXmark);
 
 	const Config = {
 		client_server: {
@@ -30,7 +44,7 @@
 		}
 	};
 
-	const server_state = ref<JCGPSend.State>({ command: "state", server_id: undefined });
+	const server_state = ref<JCGPSend.State>({ command: "state", server_id: "" });
 	const playlist_items = ref<JCGPSend.Playlist>();
 	const item_slides = ref<JCGPSend.ItemSlides>();
 	const selected_item = ref<number | null>(null);
@@ -122,9 +136,11 @@
 				throw new TypeError("server-id is invalid");
 			}
 			// if the connection is new / no server-id is stored, save it
-			server_state.value.server_id ??= data.server_id;
+			if (server_state.value.server_id === "") {
+				server_state.value.server_id = data.server_id;
+			}
 			// if the server-id is new, reload the page
-			if (data.server_id !== server_state.value.server_id) {
+			if (server_state.value.server_id !== data.server_id) {
 				window.location.reload();
 			}
 
@@ -138,7 +154,9 @@
 				playlist_pdf: save_playlist_pdf,
 				client_mesage: show_client_message,
 				item_data: store_item_data,
-				media_thumbnails: store_thumbnails
+				media_thumbnails: store_thumbnails,
+				client_confirmation: show_confirmation_dialog,
+				confirm_id: handle_confirm_id
 			};
 
 			command_parser_map[data.command](data as never);
@@ -259,6 +277,45 @@
 		}
 	}
 
+	// const confirm_dialog_text = ref<JCGPSend.ClientConfirmation["text"]>();
+	let confirm_dialog_request: JCGPSend.ClientConfirmation;
+	const show_confirm_dialogue = ref<boolean>(false);
+	function show_confirmation_dialog(data: JCGPSend.ClientConfirmation) {
+		if (
+			typeof data.id === "string" &&
+			typeof data.text?.header === "string" &&
+			typeof data.text?.text === "string" &&
+			data.options.every(
+				(option) =>
+					["undfined", "string"].includes(typeof option?.icon) &&
+					["undfined", "string"].includes(typeof option?.text) &&
+					["string", "number", "boolean"].includes(typeof option?.value)
+			)
+		) {
+			confirm_dialog_request = data;
+
+			show_confirm_dialogue.value = true;
+		}
+	}
+
+	function answer_confirmation_dialogue(option: JCGPRecv.ClientConfirmation["option"]) {
+		show_confirm_dialogue.value = false;
+
+		Globals.ws?.send<JCGPRecv.ClientConfirmation>({
+			command: "client_confirmation",
+			id: confirm_dialog_request.id,
+			option
+		});
+	}
+
+	function handle_confirm_id(data: JCGPSend.ConfirmID) {
+		if (typeof data.id === "string" && typeof data.state === "boolean") {
+			Globals._confirm_id_functions[data.id]?.(data.state);
+
+			delete Globals._confirm_id_functions?.[data.id];
+		}
+	}
+
 	function parse_bible(data: JCGPSend.Bible) {
 		Globals.bible_file.value = data.bible;
 	}
@@ -292,12 +349,7 @@
 			}
 		}
 	}
-
-	const random_4_hex = () =>
-		Math.floor((1 + Math.random()) * 0x10000)
-			.toString(16)
-			.substring(1);
-	const client_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+	const client_id = random_id();
 </script>
 
 <template>
@@ -314,6 +366,29 @@
 			@select_item="select_item"
 			@select_slide="set_active_slide"
 		/>
+		<PopUp
+			v-model:active="show_confirm_dialogue"
+			:title="confirm_dialog_request?.text?.header ?? ''"
+			@close="answer_confirmation_dialogue(null)"
+		>
+			<div id="confirm_dialogue_content">
+				<div id="confirm_dialog_text">
+					{{ confirm_dialog_request?.text?.text }}
+				</div>
+				<div id="confirm_button_wrapper">
+					<MenuButton
+						v-for="option of confirm_dialog_request?.options"
+						@click="answer_confirmation_dialogue(option.value)"
+					>
+						<FontAwesomeIcon
+							v-if="option.icon !== undefined"
+							:icon="['fas', option.icon]"
+							:squre="option.text === undefined"
+						/>{{ option.text ?? "" }}
+					</MenuButton>
+				</div>
+			</div>
+		</PopUp>
 	</div>
 </template>
 
@@ -327,6 +402,21 @@
 
 		padding: 0.25rem;
 	}
+
+	#confirm_dialogue_content {
+		background-color: var(--color-container);
+	}
+
+	#confirm_dialog_text {
+		padding: 0.5rem;
+		padding-bottom: 0.25rem;
+	}
+
+	#confirm_button_wrapper {
+		display: flex;
+
+		justify-content: right;
+	}
 	/* 
 @media (min-width: 1024px) {
 	header {
@@ -335,15 +425,5 @@
 		place-items: center;
 		padding-right: calc(var(--section-gap) / 2);
 	}
-
-	.logo {
-		margin: 0 2rem 0 0;
-	}
-
-	header .wrapper {
-		display: flex;
-		place-items: flex-start;
-		flex-wrap: wrap;
-	}
-} */
+*/
 </style>

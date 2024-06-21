@@ -7,11 +7,12 @@
 	import FileDialogue from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import Globals from "@/Globals";
+	import { ControlWindowState } from "@/Enums";
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PlaylistFile } from "@server/search_part";
-	import PopUp from "./PopUp.vue";
-	import { ControlWindowState } from "@/Enums";
+	import type * as JCGPSend from "@server/JCGPSendMessages";
+	import { random_id } from "@/App.vue";
 
 	library.add(fas.faFolderOpen);
 
@@ -25,9 +26,7 @@
 		Globals.get_playlist_files();
 	});
 
-	const overwrite_dialog = ref<boolean>(false);
-	let overwrite_file: PlaylistFile | undefined = undefined;
-	function save_playlist(playlist?: PlaylistFile, overwrite: boolean = false) {
+	function save_playlist(playlist?: PlaylistFile) {
 		// if the selection is a directory, exit
 		if (playlist?.children !== undefined) {
 			return;
@@ -46,39 +45,17 @@
 			};
 		}
 
-		// close the overwrite-dialog
-		overwrite_dialog.value = false;
-
-		// check, wether the file already exists
-		const compare_file = (files: PlaylistFile[], reference_file: PlaylistFile): boolean => {
-			return files.some((fil) => {
-				if (fil.path === reference_file.path) {
-					return true;
-				}
-
-				if (fil.children !== undefined) {
-					return compare_file(fil.children, reference_file);
-				}
-
-				return false;
-			});
-		};
-
-		// overwrite is false and the file already exists, abort
-		if (overwrite === false && compare_file(Globals.get_playlist_files(), playlist)) {
-			overwrite_file = playlist;
-
-			overwrite_dialog.value = true;
-
-			return;
-		}
+		const id = Globals.add_confirm((state: boolean) => {
+			if (state === true) {
+				Globals.previousControlWindowState();
+			}
+		});
 
 		Globals.ws?.send<JCGPRecv.SavePlaylist>({
 			command: "save_playlist",
-			playlist: playlist.path
+			playlist: playlist.path,
+			id: id
 		});
-
-		Globals.ControlWindowState = ControlWindowState.Slides;
 	}
 </script>
 
@@ -108,19 +85,6 @@
 			</MenuButton>
 		</template>
 	</FileDialogue>
-	<PopUp v-model:active="overwrite_dialog" title="Overwrite Playlist">
-		<div id="popup_menu_wrapper">
-			<div class="popup_menu_content">
-				The playlist
-				<div class="file_path">{{ overwrite_file?.path }}</div>
-				already exists. Overwrite?
-			</div>
-			<div class="popup_menu_buttons">
-				<MenuButton @click="save_playlist(file_dialogue_selection, true)">Overwrite</MenuButton>
-				<MenuButton @click="overwrite_dialog = false">Cancel</MenuButton>
-			</div>
-		</div>
-	</PopUp>
 </template>
 
 <style scoped>
@@ -174,11 +138,5 @@
 		padding: 0.5rem;
 
 		border-radius: 0.25rem;
-	}
-
-	.popup_menu_buttons {
-		display: grid;
-
-		grid-template-columns: 1fr 1fr;
 	}
 </style>

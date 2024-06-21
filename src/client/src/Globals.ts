@@ -16,7 +16,8 @@ import type {
 	TemplateFile
 } from "@server/search_part";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
-import type { ItemProps, PlaylistItem } from "@server/PlaylistItems/PlaylistItem";
+import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
+import { random_id } from "@server/lib";
 
 export interface LogMessage {
 	message: string;
@@ -124,21 +125,31 @@ class Global {
 	server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 
 	// ControlWindowState
-	private control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
+	private control_window_state = ref<ControlWindowState[]>([ControlWindowState.Slides]);
 	get ControlWindowState(): ControlWindowState {
-		return this.control_window_state.value;
+		return this.control_window_state.value.slice(-1)[0];
 	}
 	set ControlWindowState(state: ControlWindowState) {
 		if (this.control_window_state_change_confirm === undefined) {
-			this.control_window_state.value = state;
+			this.control_window_state.value.push(state);
+
+			// shrink the array to the last 20 elements
+			this.control_window_state.value = this.control_window_state.value.slice(-20);
 		} else {
 			this.control_window_state_change_confirm((change_state: boolean) => {
 				if (change_state) {
-					this.control_window_state.value = state;
+					this.control_window_state.value.push(state);
+
+					// shrink the array to the last 20 elements
+					this.control_window_state.value = this.control_window_state.value.slice(-20);
+
 					this.control_window_state_change_confirm = undefined;
 				}
 			});
 		}
+	}
+	previousControlWindowState() {
+		this.control_window_state.value.pop();
 	}
 
 	// ControlWindowStateConfirm
@@ -362,6 +373,16 @@ class Global {
 		template: "#FF0000",
 		text: "#FF0000"
 	};
+
+	// ConfirmID
+	_confirm_id_functions: Record<string, (state: boolean) => void> = {};
+	add_confirm(callback: (state: boolean) => void) {
+		const id = random_id();
+
+		this._confirm_id_functions[id] = callback;
+
+		return id;
+	}
 }
 
 const Globals = new Global();

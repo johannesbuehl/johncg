@@ -199,7 +199,6 @@
 		]);
 	}
 
-	const show_overwrite_dialog = ref<boolean>(false);
 	function save_psalm(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
 
@@ -217,38 +216,23 @@
 			save_path = directory_stack.value.slice(-1)[0].path + "/" + save_path;
 		}
 
-		// if the save file exists already, ask wether it should be overwritten
-		const compare_file = (files: PsalmFile[], path: string): boolean => {
-			return files.some((fil) => {
-				if (fil.path === path) {
-					return true;
-				}
+		const id = Globals.add_confirm((state: boolean) => {
+			if (state) {
+				Globals.ControlWindowStateConfirm = undefined;
 
-				if (fil.children !== undefined) {
-					return compare_file(fil.children, path);
-				}
-
-				return false;
-			});
-		};
-
-		if (overwrite === false && compare_file(Globals.get_psalm_files(), save_path)) {
-			show_overwrite_dialog.value = true;
-
-			return false;
-		}
+				// reset the item-files
+				Globals.item_files.value.psalm = [];
+			}
+		});
 
 		Globals.ws?.send<JCGPRecv.SaveFile>({
 			command: "save_file",
 			path: save_path,
 			type: "psalm",
-			data: create_psalm_data()
+			data: create_psalm_data(),
+			id,
+			overwrite
 		});
-
-		Globals.ControlWindowStateConfirm = undefined;
-
-		// reset the psalm item-files
-		Globals.item_files.value.psalm = [];
 
 		return true;
 	}
@@ -406,7 +390,6 @@
 	<PopUp title="Save Psalm" v-model:active="show_save_file_dialogue" :maximize="true">
 		<FileDialogue
 			class="file_dialogue"
-			name="Save Path"
 			:files="psalm_file_tree"
 			:select_dirs="true"
 			:new_directory="true"
@@ -440,44 +423,33 @@
 			</template>
 		</FileDialogue>
 	</PopUp>
-	<PopUp title="Overwrite existing file?" v-model:active="show_overwrite_dialog">
-		<MenuButton
-			@click="
-				show_overwrite_dialog = false;
-				save_psalm(true);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'check']" />Overwrite
-		</MenuButton>
-		<MenuButton @click="show_overwrite_dialog = false">
-			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
-		</MenuButton>
-	</PopUp>
 	<PopUp title="Save Changes" v-model:active="show_save_confirm">
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(save_psalm());
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
-		</MenuButton>
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(true);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
-		</MenuButton>
-		<MenuButton
-			@click="
-				show_save_confirm = false;
-				save_callback(false);
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
-		</MenuButton>
+		<div id="save_changes_popup">
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(save_psalm());
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+			</MenuButton>
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(true);
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+			</MenuButton>
+			<MenuButton
+				@click="
+					show_save_confirm = false;
+					save_callback(false);
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+			</MenuButton>
+		</div>
 	</PopUp>
 </template>
 
@@ -662,6 +634,8 @@
 	.file_dialogue {
 		flex: 1;
 		display: flex;
+
+		padding: 0.25rem;
 	}
 
 	.file_dialogue_button {
@@ -690,5 +664,17 @@
 
 	.draggable_ghost {
 		opacity: 0.25;
+	}
+
+	#save_changes_popup {
+		padding: 0.5rem;
+		display: flex;
+		gap: 0.25rem;
+
+		background-color: var(--color-container);
+	}
+
+	#save_changes_popup > .button {
+		margin: 0;
 	}
 </style>

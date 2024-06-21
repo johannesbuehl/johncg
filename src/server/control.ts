@@ -20,7 +20,7 @@ import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
 import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConnection.js";
-import { recurse_object_check } from "./lib.ts";
+import { random_id, recurse_object_check } from "./lib.ts";
 import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
 import { PsalmFile } from "./PlaylistItems/Psalm.ts";
 import { Chord } from "./PlaylistItems/SongFile/Chord.ts";
@@ -36,14 +36,19 @@ export default class Control {
 	private ws_server: WebsocketServer;
 	private search_part: SearchPart;
 
+	private task_list: Record<
+		string,
+		(options: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => void
+	> = {};
+
 	// mapping of the websocket-messages to the functions
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	private readonly client_ws_function_map: { [T in JCGPRecv.Message["command"]]: Function } = {
 		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
-			this.load_playlist(msg?.playlist, ws),
+			this.load_playlist(msg?.playlist, msg.id, ws),
 		save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
-			this.save_playlist(msg.playlist, ws),
+			this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
 		request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
 			this.get_item_slides(msg?.item, msg?.client_id, ws),
 		select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
@@ -71,9 +76,12 @@ export default class Control {
 			this.create_playlist_pdf(ws, msg.type),
 		update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
 			this.update_playlist_caption(msg.caption, ws),
-		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) => this.save_file(msg.path, msg, ws),
+		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) =>
+			this.save_file(msg.path, msg.id, msg, ws, msg.overwrite),
 		new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
-			this.new_directory(msg.path, msg.type, ws)
+			this.new_directory(msg.path, msg.type, ws),
+		client_confirmation: (msg: JCGPRecv.ClientConfirmation, ws: WebSocket) =>
+			this.client_confirmation(msg.id, msg.option, ws)
 	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
@@ -109,9 +117,67 @@ export default class Control {
 
 			ws_send_response("new playlist has been created", true, ws);
 		} else {
-			logger.info("Can't create new playlist: there are unsaved changes");
+			const client_confirm_id = random_id();
 
-			ws_send_response("Can't create new playlist, there are unsaved changes", false, ws);
+			this.task_list[client_confirm_id] = (
+				option: JCGPSend.ClientConfirmation["options"][0]["value"],
+				ws: WebSocket
+			) => {
+				const response: JCGPSend.Response = {
+					command: "response",
+					message: "",
+					code: 200,
+					server_id
+				};
+
+				let send_playlist = false;
+
+				switch (option) {
+					case "save":
+						if (this.playlist.save()) {
+							this.playlist = new Playlist();
+
+							send_playlist = true;
+
+							response.message = "Playlist has been saved and a new one has been created.";
+							logger.log("Playlist has been saved and a new one has been created.");
+						}
+						break;
+					case "discard":
+						this.playlist = new Playlist();
+
+						send_playlist = true;
+
+						break;
+					case "cancel":
+						response.message = "No new playlist has been created.";
+						break;
+				}
+
+				if (send_playlist) {
+					this.send_playlist(undefined, undefined, undefined, true);
+				}
+
+				ws.send(JSON.stringify(response));
+			};
+			const message: JCGPSend.ClientConfirmation = {
+				command: "client_confirmation",
+				id: client_confirm_id,
+				text: {
+					header: "Unsaved Changes",
+					text: `The current playlist ${this.playlist.path !== undefined ? `'${this.playlist.path}' ` : ""}has unsaved changes.`
+				},
+				options: [
+					this.playlist.path !== undefined
+						? { icon: "floppy-disk", text: "Save", value: "save" }
+						: undefined,
+					{ icon: "trash", text: "Discard", value: "discard" },
+					{ icon: "xmark", text: "Cancel", value: "cancel" }
+				].filter((option) => option !== undefined),
+				server_id
+			};
+
+			ws.send(JSON.stringify(message));
 		}
 	}
 
@@ -119,48 +185,110 @@ export default class Control {
 	 * open and load a playlist-file and send it to clients and renderers
 	 * @param playlist_path playlist-file content
 	 */
-	private load_playlist(playlist_path: string, ws: WebSocket) {
-		let new_playlist: Playlist;
+	private load_playlist(
+		playlist_path: string,
+		id: string,
+		ws: WebSocket,
+		overwrite: boolean = false
+	) {
+		let load_result = false;
+		if (this.playlist.unsaved_changes && overwrite === false) {
+			const client_confirm_id = random_id();
 
-		logger.log(`loading playlist (${playlist_path})`);
+			this.task_list[client_confirm_id] = (
+				option: JCGPSend.ClientConfirmation["options"][0]["value"],
+				ws: WebSocket
+			) => {
+				switch (option) {
+					case "save":
+						if (this.playlist.save()) {
+							this.load_playlist(playlist_path, id, ws, true);
+						} else {
+							ws_send_response("Can't save playlist", false, ws);
+							logger.warn("Can't save playlist");
+						}
+						break;
+					case "discard":
+						this.load_playlist(playlist_path, id, ws, true);
+						break;
+				}
+			};
 
-		try {
-			new_playlist = new Playlist(Config.get_path("playlist", playlist_path), () => {
-				this.send_playlist();
-			});
-		} catch (e) {
-			logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
-			ws_send_response(`can't load playlist: invalid playlist-file (${playlist_path})`, false, ws);
-			return;
-		}
-
-		this.playlist = new_playlist;
-
-		// send the playlist to all clients
-		this.send_playlist(undefined, undefined, undefined, true);
-
-		// send the current state to all clients
-		this.send_state();
-
-		ws_send_response("playlist has been loaded", true, ws);
-	}
-
-	private save_playlist(playlist: string, ws: WebSocket) {
-		logger.log(`saving playlist at ${playlist}`);
-
-		let message: JCGPSend.ClientMessage;
-		if (this.playlist.save(playlist)) {
-			message = {
-				command: "client_mesage",
-				message: "Playlist has been saved",
-				type: JCGPSend.LogLevel.log,
+			const message: JCGPSend.ClientConfirmation = {
+				command: "client_confirmation",
+				id: client_confirm_id,
+				text: {
+					header: "Unsaved Changes",
+					text: `The current playlist ${this.playlist.path !== undefined ? `'${this.playlist.path}' ` : ""}has unsaved changes.`
+				},
+				options: [
+					this.playlist.path !== undefined
+						? { icon: "floppy-disk", text: "Save", value: "save" }
+						: undefined,
+					{ icon: "trash", text: "Discard", value: "discard" },
+					{ icon: "xmark", text: "Cancel", value: "cancel" }
+				].filter((option) => option !== undefined),
 				server_id
 			};
 
-			// send the playlist-path to the clients
-			this.send_playlist();
+			ws.send(JSON.stringify(message));
 		} else {
-			message = {
+			let new_playlist: Playlist;
+
+			logger.log(`loading playlist (${playlist_path})`);
+
+			try {
+				new_playlist = new Playlist(Config.get_path("playlist", playlist_path), () => {
+					this.send_playlist();
+				});
+
+				this.playlist = new_playlist;
+
+				load_result = true;
+			} catch (e) {
+				logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
+				ws_send_response(
+					`can't load playlist: invalid playlist-file (${playlist_path})`,
+					false,
+					ws
+				);
+
+				return;
+			}
+
+			const confirm_id_message: JCGPSend.ConfirmID = {
+				command: "confirm_id",
+				id,
+				state: load_result,
+				server_id
+			};
+
+			ws.send(JSON.stringify(confirm_id_message));
+
+			this.send_playlist(undefined, undefined, undefined, true);
+
+			// send the current state to all clients
+			this.send_state();
+
+			ws_send_response("playlist has been loaded", true, ws);
+		}
+	}
+
+	private save_playlist(playlist: string, id: string, ws: WebSocket, overwrite: boolean = false) {
+		logger.log(`saving playlist at ${playlist}`);
+
+		let save_result = false;
+		let replay_message: JCGPSend.ClientMessage;
+
+		try {
+			save_result = this.playlist.save(playlist, overwrite);
+		} catch (e) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			if (e?.code !== "ENOENT") {
+				throw e;
+			}
+
+			replay_message = {
 				command: "client_mesage",
 				message: "Can't save playlist: invalid path",
 				type: JCGPSend.LogLevel.error,
@@ -170,10 +298,72 @@ export default class Control {
 			logger.error("Can't save playlist: invalid path");
 		}
 
-		ws?.send(JSON.stringify(message));
+		if (save_result) {
+			const confirm_id_message: JCGPSend.ConfirmID = {
+				command: "confirm_id",
+				id,
+				state: save_result,
+				server_id
+			};
+
+			ws.send(JSON.stringify(confirm_id_message));
+
+			replay_message = {
+				command: "client_mesage",
+				message: "Playlist has been saved",
+				type: JCGPSend.LogLevel.log,
+				server_id
+			};
+
+			// send the playlist to the clients
+			this.send_playlist();
+		} else {
+			// get client-confirmation for overwriting playlist-file
+			replay_message = {
+				command: "client_mesage",
+				message: "Playlist already exists",
+				type: JCGPSend.LogLevel.debug,
+				server_id
+			};
+
+			const client_confirm_id = random_id();
+
+			this.task_list[client_confirm_id] = (
+				option: JCGPSend.ClientConfirmation["options"][0]["value"],
+				ws: WebSocket
+			) => {
+				if (option === true) {
+					this.save_playlist(playlist, id, ws, true);
+				}
+			};
+
+			const message: JCGPSend.ClientConfirmation = {
+				command: "client_confirmation",
+				id: client_confirm_id,
+				text: {
+					header: "Playlist already exists",
+					text: `Playlist '${playlist}' already exists. Overwrite?`
+				},
+				options: [
+					{ text: "Overwrite", icon: "check", value: true },
+					{ text: "Cancel", icon: "xmark", value: false }
+				],
+				server_id
+			};
+
+			ws?.send(JSON.stringify(message));
+		}
+
+		ws?.send(JSON.stringify(replay_message));
 	}
 
-	private save_file(path: string, message: JCGPRecv.SaveFile, ws: WebSocket) {
+	private save_file(
+		path: string,
+		id: string,
+		message: JCGPRecv.SaveFile,
+		ws: WebSocket,
+		overwrite: boolean = false
+	) {
 		let test_result: boolean = typeof path === "string";
 
 		switch (message.type) {
@@ -185,42 +375,79 @@ export default class Control {
 		}
 
 		if (test_result) {
+			let save_state = false;
+
+			let file_string: string;
+			let save_path: string;
 			switch (message.type) {
 				case "song":
-					fs.writeFile(
-						Config.get_path("song", path),
-						new SongFile(message.data).sng_file,
-						{ encoding: "utf-8" },
-						(err) => {
-							if (err) {
-								logger.error(`Can't save songfile '${path}': ${err.message}`);
-
-								ws_send_response(`Can't save songfile '${path}': ${err.message}`, false, ws);
-							} else {
-								logger.log(`Saved songfile '${path}'`);
-
-								ws_send_response(`Saved songfile '${path}'`, true, ws);
-							}
-						}
-					);
+					save_path = Config.get_path("song", path);
+					file_string = new SongFile(message.data).sng_file;
 					break;
 				case "psalm":
-					fs.writeFile(
-						Config.get_path("psalm", path),
-						JSON.stringify(message.data, undefined, "\t"),
-						{ encoding: "utf-8" },
-						(err) => {
-							if (err) {
-								logger.error(`Can't save psalmfile '${path}': ${err.message}`);
+					save_path = Config.get_path("psalm", path);
+					file_string = JSON.stringify(message.data, undefined, "\t");
+					break;
+			}
 
-								ws_send_response(`Can't save psalmfile '${path}': ${err.message}`, false, ws);
-							} else {
-								logger.log(`Saved psalmfile '${path}'`);
+			// if the file already exist and overwrite isn't set, ask the client what to do
+			if (fs.existsSync(save_path) && overwrite === false) {
+				const client_confirm_id = random_id();
 
-								ws_send_response(`Saved psalmfile '${path}'`, true, ws);
-							}
-						}
-					);
+				this.task_list[client_confirm_id] = (
+					option: JCGPSend.ClientConfirmation["options"][0]["value"],
+					ws: WebSocket
+				) => {
+					if (option === true) {
+						this.save_file(path, id, message, ws, true);
+					}
+				};
+
+				const client_confirm_message: JCGPSend.ClientConfirmation = {
+					command: "client_confirmation",
+					id: client_confirm_id,
+					text: {
+						header: "File already exists",
+						text: `file '${path}' already exists. Overwrite?`
+					},
+					options: [
+						{ text: "Overwrite", icon: "check", value: true },
+						{ text: "Cancel", icon: "xmark", value: false }
+					],
+					server_id
+				};
+
+				ws.send(JSON.stringify(client_confirm_message));
+			} else {
+				// file can be written
+
+				// try to write the file
+				try {
+					fs.writeFileSync(save_path, file_string, { encoding: "utf-8" });
+
+					save_state = true;
+				} catch (e) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					if (e?.code !== "ENOENT") {
+						throw e;
+					} else {
+						logger.warn(`Can't save file '${save_path}'`);
+						return;
+					}
+				}
+
+				const confirm_message: JCGPSend.ConfirmID = {
+					command: "confirm_id",
+					id,
+					state: save_state,
+					server_id
+				};
+
+				ws.send(JSON.stringify(confirm_message));
+
+				logger.log(`Saved file '${path}'`);
+
+				ws_send_response(`Saved file '${path}'`, true, ws);
 			}
 		}
 	}
@@ -803,6 +1030,18 @@ export default class Control {
 		});
 	}
 
+	private client_confirmation(
+		id: string,
+		option: JCGPRecv.ClientConfirmation["option"],
+		ws: WebSocket
+	) {
+		if (option !== null) {
+			this.task_list?.[id](option, ws);
+		}
+
+		delete this.task_list[id];
+	}
+
 	/**
 	 * Send a JCGP-message to all registered clients
 	 * @param message JSON-message to be sent
@@ -902,10 +1141,11 @@ export default class Control {
  * @param ws
  */
 function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
-	const response = {
+	const response: JCGPSend.Response = {
 		command: "response",
 		message: message,
-		code: success ? 200 : 400
+		code: success ? 200 : 400,
+		server_id
 	};
 
 	ws?.send(JSON.stringify(response));
