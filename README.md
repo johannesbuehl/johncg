@@ -23,7 +23,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - song- / psalm-editor: auto_resizse textarea on mount
 - add-song to playlist after creation
 - media-selector: selected thumbnail doesn't get highlighted
-- file-dialogue search-results: show path to differentiate same file-name
 - reset client on server-restart through server-session-id or similar
 - 
 - reload psalm and song after file-edit

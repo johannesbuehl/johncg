@@ -136,7 +136,7 @@
 	const input_refs = ref<HTMLInputElement[]>([]);
 
 	onMounted(() => {
-		input_refs.value[0].focus();
+		input_refs.value[0]?.focus();
 	});
 
 	// rebuild the directory-stack, when new files are there
@@ -318,6 +318,13 @@
 										@click="selection = element"
 									>
 										{{ element.name }}
+										<span
+											class="file_path"
+											v-if="search_strings?.some((search_string) => search_string.value !== '')"
+										>
+											({{ element.path.slice(0, element.path.lastIndexOf(element.name))
+											}}{{ element.name }})
+										</span>
 									</PlaylistItemDummy>
 								</Draggable>
 							</template>
@@ -582,6 +589,12 @@
 		display: flex;
 
 		overflow: visible;
+	}
+
+	.file_path {
+		color: var(--color-text-disabled);
+
+		font: inherit;
 	}
 
 	#file_thumbnail_wrapper {

@@ -91,7 +91,6 @@
 		v-model:directory_stack="file_dialogue_directory_stack"
 		:select_dirs="true"
 		:new_directory="true"
-		@choose="(playlist) => save_playlist(playlist)"
 		@refresh_files="() => Globals.get_playlist_files(true)"
 		@new_directory="
 			(path: string) =>
