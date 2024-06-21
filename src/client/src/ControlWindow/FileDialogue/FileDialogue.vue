@@ -322,8 +322,8 @@
 											class="file_path"
 											v-if="search_strings?.some((search_string) => search_string.value !== '')"
 										>
-											({{ element.path.slice(0, element.path.lastIndexOf(element.name))
-											}}{{ element.name }})
+											{{ element.path.slice(0, element.path.lastIndexOf(element.name))
+											}}{{ element.name }}
 										</span>
 									</PlaylistItemDummy>
 								</Draggable>
@@ -668,13 +668,12 @@
 		border-radius: 0.25rem;
 	}
 
-	.file_thumbnail.selectable.active {
-		outline-color: var(--color-active);
-		outline-style: solid;
+	.playlist_item_wrapper .file_thumbnail.active {
+		background-color: var(--color-active);
 	}
 
 	.file_thumbnail.selectable.active:hover {
-		outline-style: solid;
+		background-color: var(--color-active-hover);
 	}
 
 	.file_thumbnail > img {

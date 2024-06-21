@@ -100,6 +100,8 @@
 		flex: 1;
 
 		text-wrap: nowrap;
+
+		overflow: visible;
 	}
 
 	.playlist_item_wrapper.displayable:hover {

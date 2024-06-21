@@ -84,7 +84,7 @@
 				// select the media-file
 				media_selection.value = media_directory_stack.value
 					.slice(-1)[0]
-					.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
+					?.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
 				background_media.value = media_selection.value;
 			}
 		},

@@ -22,7 +22,10 @@
 		() => props.song_data,
 		(song_data) => {
 			if (song_data !== undefined) {
-				verse_order.value = song_props.value.verse_order ?? Object.keys(song_data.text ?? {});
+				console.debug(song_props.value);
+				console.debug(song_data.metadata.VerseOrder);
+
+				verse_order.value = song_props.value.verse_order ?? song_data.metadata.VerseOrder ?? [];
 
 				const default_languages: [number, boolean][] = Array(song_data.metadata.Title?.length)
 					.fill([])
