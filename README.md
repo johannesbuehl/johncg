@@ -21,8 +21,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - repair new-file abort unsaved changes
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- / psalm-editor: auto_resizse textarea on mount
-- add-song to playlist after creation
-- reset client on server-restart through server-session-id or similar
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
@@ -36,3 +34,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - song-file: chords itself as chords and transpose them
 - support other browser than Chrome and phone / tablet resolution
+- add-song to playlist after creation

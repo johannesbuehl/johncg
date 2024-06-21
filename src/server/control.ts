@@ -6,7 +6,7 @@ import tmp from "tmp";
 
 import Playlist from "./Playlist.ts";
 import type { ActiveItemSlide } from "./Playlist.ts";
-import WebsocketServer from "./servers/websocket-server.ts";
+import WebsocketServer, { server_id } from "./servers/websocket-server.ts";
 import type {
 	WebsocketServerArguments,
 	WebsocketMessageHandler
@@ -153,7 +153,8 @@ export default class Control {
 			message = {
 				command: "client_mesage",
 				message: "Playlist has been saved",
-				type: JCGPSend.LogLevel.log
+				type: JCGPSend.LogLevel.log,
+				server_id
 			};
 
 			// send the playlist-path to the clients
@@ -162,7 +163,8 @@ export default class Control {
 			message = {
 				command: "client_mesage",
 				message: "Can't save playlist: invalid path",
-				type: JCGPSend.LogLevel.error
+				type: JCGPSend.LogLevel.error,
+				server_id
 			};
 
 			logger.error("Can't save playlist: invalid path");
@@ -236,7 +238,8 @@ export default class Control {
 			new_item_order,
 			...this.playlist.create_client_object_playlist(),
 			client_id,
-			new: new_playlist
+			new: new_playlist,
+			server_id
 		};
 
 		if (ws) {
@@ -280,7 +283,8 @@ export default class Control {
 						item,
 						client_id,
 						resolution: Config.casparcg_resolution,
-						...(await this.playlist?.create_client_object_item_slides(item))
+						...(await this.playlist?.create_client_object_item_slides(item)),
+						server_id
 					};
 
 					logger.debug(`sending item-slides for item '${item}' to client`);
@@ -352,7 +356,8 @@ export default class Control {
 			this.send_all_clients({
 				command: "state",
 				active_item_slide: this.playlist?.active_item_slide,
-				client_id: client_id
+				client_id: client_id,
+				server_id
 			});
 
 			ws_send_response("slide has been selected", true, ws);
@@ -411,7 +416,8 @@ export default class Control {
 		this.send_all_clients({
 			command: "state",
 			active_item_slide: this.playlist?.active_item_slide,
-			client_id: client_id
+			client_id: client_id,
+			server_id
 		});
 
 		ws_send_response(`navigating ${type}: '${steps}' steps`, true, ws);
@@ -427,7 +433,8 @@ export default class Control {
 
 			this.send_all_clients({
 				command: "state",
-				visibility: await this.playlist.set_visibility(visibility)
+				visibility: await this.playlist.set_visibility(visibility),
+				server_id
 			});
 
 			ws_send_response(
@@ -608,7 +615,8 @@ export default class Control {
 			const message: JCGPSend.ItemFiles<K> = {
 				command: "item_files",
 				type,
-				files
+				files,
+				server_id
 			};
 
 			ws?.send(JSON.stringify(message));
@@ -631,7 +639,8 @@ export default class Control {
 
 		const message: JCGPSend.Bible = {
 			command: "bible",
-			bible
+			bible,
+			server_id
 		};
 
 		ws?.send(JSON.stringify(message));
@@ -654,7 +663,8 @@ export default class Control {
 
 		const message: JCGPSend.MediaThumbnails = {
 			command: "media_thumbnails",
-			thumbnails: thumbnails
+			thumbnails: thumbnails,
+			server_id
 		};
 
 		ws.send(JSON.stringify(message));
@@ -677,7 +687,8 @@ export default class Control {
 		const message: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]> = {
 			command: "item_data",
 			type,
-			data
+			data,
+			server_id
 		};
 
 		ws?.send(JSON.stringify(message));
@@ -713,7 +724,8 @@ export default class Control {
 
 				message = {
 					command: "playlist_pdf",
-					playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64")
+					playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64"),
+					server_id
 				};
 			} catch (e) {
 				let error_text: string;
@@ -744,7 +756,8 @@ export default class Control {
 
 		const message: JCGPSend.State = {
 			command: "state",
-			visibility: await this.playlist.toggle_visibility()
+			visibility: await this.playlist.toggle_visibility(),
+			server_id
 		};
 
 		this.send_all_clients(message);
@@ -783,7 +796,8 @@ export default class Control {
 				this.send_all_clients<JCGPSend.ItemFiles<Type>>({
 					command: "item_files",
 					type,
-					files: await search_map[type]()
+					files: await search_map[type](),
+					server_id
 				});
 			}
 		});
@@ -825,15 +839,6 @@ export default class Control {
 
 			// send the selected item-slide
 			this.send_state(undefined, ws);
-		} else {
-			logger.debug("new client-connection: clearing client-data");
-
-			// send a "clear" message to the client, so that it's currently loaded sequnece gets removed (for example after a server restart)
-			const clear_message: JCGPSend.Clear = {
-				command: "clear"
-			};
-
-			ws?.send(JSON.stringify(clear_message));
 		}
 	}
 

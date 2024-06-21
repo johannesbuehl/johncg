@@ -28,6 +28,12 @@ export interface WebsocketServerArguments {
 
 export type WebsocketMessageHandler = Record<string, MessageHandler>;
 
+const random_4_hex = () =>
+	Math.floor((1 + Math.random()) * 0x10000)
+		.toString(16)
+		.substring(1);
+export const server_id = `${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
+
 export default class WebsocketServer {
 	ws_server: WebSocketServer;
 

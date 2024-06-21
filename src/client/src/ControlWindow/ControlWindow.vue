@@ -14,7 +14,7 @@
 	import EditSongFile from "./FileEditor/Song/EditSongFile.vue";
 	import PsalmEditor from "./FileEditor/Psalm/PsalmEditor.vue";
 	import EditPsalmFile from "./FileEditor/Psalm/EditPsalmFile.vue";
-	import Globals from "@/Globals";
+	import Globals, { ServerConnection } from "@/Globals";
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
@@ -116,59 +116,63 @@
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
-		<SavePlaylist
-			v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
-			:playlist_file_name="playlist_caption"
-		/>
-		<PlaylistItemsList
-			v-if="
-				Globals.ControlWindowState === ControlWindowState.Slides ||
-				Globals.ControlWindowState === ControlWindowState.Add ||
-				Globals.ControlWindowState === ControlWindowState.Edit
-			"
-			:playlist="playlist"
-			:selected="selected"
-			:active_item_slide="active_item_slide"
-			:scroll="client_id === server_state.client_id"
-			@selection="emit('select_item', $event)"
-			@dragged="dragged"
-			@set_active="emit('select_slide', $event, 0)"
-			@edit="edit_item"
-		/>
-		<SlidesView
-			v-if="
-				typeof slides?.item === 'number' && Globals.ControlWindowState === ControlWindowState.Slides
-			"
-			:slides="slides"
-			:active_item_slide="active_item_slide"
-			:scroll="client_id === server_state.client_id"
-			@select_slide="
-				slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
-			"
-		/>
-		<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
-		<EditPart
-			v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
-			:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
-			:item_index="selected"
-			:item_data="item_data"
-		/>
-		<SongEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong" />
-		<PsalmEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm" />
-		<EditSongFile
-			v-else-if="
-				Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
-			"
-			:song_file="item_data.song"
-		/>
-		<EditPsalmFile
-			v-else-if="
-				Globals.ControlWindowState === ControlWindowState.EditPsalm && item_data.psalm !== undefined
-			"
-			:psalm_file="item_data.psalm"
-		/>
-		<MessageView v-else-if="Globals.ControlWindowState === ControlWindowState.Message" />
+		<template v-if="Globals.server_connection.value === ServerConnection.connected">
+			<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
+			<SavePlaylist
+				v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
+				:playlist_file_name="playlist_caption"
+			/>
+			<PlaylistItemsList
+				v-if="
+					Globals.ControlWindowState === ControlWindowState.Slides ||
+					Globals.ControlWindowState === ControlWindowState.Add ||
+					Globals.ControlWindowState === ControlWindowState.Edit
+				"
+				:playlist="playlist"
+				:selected="selected"
+				:active_item_slide="active_item_slide"
+				:scroll="client_id === server_state.client_id"
+				@selection="emit('select_item', $event)"
+				@dragged="dragged"
+				@set_active="emit('select_slide', $event, 0)"
+				@edit="edit_item"
+			/>
+			<SlidesView
+				v-if="
+					typeof slides?.item === 'number' &&
+					Globals.ControlWindowState === ControlWindowState.Slides
+				"
+				:slides="slides"
+				:active_item_slide="active_item_slide"
+				:scroll="client_id === server_state.client_id"
+				@select_slide="
+					slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
+				"
+			/>
+			<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
+			<EditPart
+				v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
+				:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
+				:item_index="selected"
+				:item_data="item_data"
+			/>
+			<SongEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong" />
+			<PsalmEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewPsalm" />
+			<EditSongFile
+				v-else-if="
+					Globals.ControlWindowState === ControlWindowState.EditSong && item_data.song !== undefined
+				"
+				:song_file="item_data.song"
+			/>
+			<EditPsalmFile
+				v-else-if="
+					Globals.ControlWindowState === ControlWindowState.EditPsalm &&
+					item_data.psalm !== undefined
+				"
+				:psalm_file="item_data.psalm"
+			/>
+		</template>
+		<MessageView v-if="Globals.ControlWindowState === ControlWindowState.Message" />
 		<MessagePopup v-if="Globals.ControlWindowState !== ControlWindowState.Message" />
 	</div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	library.add(
@@ -25,7 +25,7 @@
 	import MenuButton from "./MenuButton.vue";
 	import MenuDivider from "./MenuDivider.vue";
 	import PopUp from "../PopUp.vue";
-	import Globals from "@/Globals";
+	import Globals, { ServerConnection } from "@/Globals";
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 
@@ -98,96 +98,98 @@
 
 <template>
 	<div class="menubar">
-		<MenuButton :square="true" @click="new_playlist()">
-			<FontAwesomeIcon :icon="['fas', 'file']" />
-		</MenuButton>
-		<MenuButton
-			:square="true"
-			@click="Globals.ControlWindowState = ControlWindowState.OpenPlaylist"
-			:active="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
-		>
-			<FontAwesomeIcon :icon="['fas', 'folder-open']" />
-		</MenuButton>
-		<MenuButton
-			:square="true"
-			:active="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
-			@click="Globals.ControlWindowState = ControlWindowState.SavePlaylist"
-			@dblclick="
-				playlist_path !== undefined
-					? save_playlist()
-					: (Globals.ControlWindowState = ControlWindowState.SavePlaylist)
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
-		</MenuButton>
-		<input
-			type="file"
-			ref="load_playlist_input"
-			:accept="'.jcg'"
-			@click="load_playlist_input ? (load_playlist_input.value = '') : null"
-			@change="load_playlist_file"
-			style="display: none"
-		/>
-		<MenuButton :square="true" @click="pdf_popup = true">
-			<FontAwesomeIcon :icon="['fas', 'file-pdf']" />
-		</MenuButton>
-		<MenuDivider />
-		<MenuButton
-			:square="true"
-			@click="Globals.ControlWindowState = ControlWindowState.Slides"
-			:active="Globals.ControlWindowState === ControlWindowState.Slides"
-		>
-			<FontAwesomeIcon :icon="['fas', 'list']" />
-		</MenuButton>
-		<MenuButton
-			:square="true"
-			@click="Globals.ControlWindowState = ControlWindowState.Add"
-			:active="
-				Globals.ControlWindowState === ControlWindowState.Add ||
-				Globals.ControlWindowState === ControlWindowState.NewSong ||
-				Globals.ControlWindowState === ControlWindowState.NewPsalm
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'plus']" />
-		</MenuButton>
-		<MenuButton
-			:square="true"
-			@click="Globals.ControlWindowState = ControlWindowState.Edit"
-			:active="
-				Globals.ControlWindowState === ControlWindowState.Edit ||
-				Globals.ControlWindowState === ControlWindowState.EditSong ||
-				Globals.ControlWindowState === ControlWindowState.EditPsalm
-			"
-		>
-			<FontAwesomeIcon :icon="['fas', 'pen']" />
-		</MenuButton>
-		<div v-if="Globals.ControlWindowState === ControlWindowState.Slides" class="button_container">
-			<MenuDivider />
-			<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
-				<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+		<template v-if="Globals.server_connection.value === ServerConnection.connected">
+			<MenuButton :square="true" @click="new_playlist()">
+				<FontAwesomeIcon :icon="['fas', 'file']" />
 			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
-				<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+			<MenuButton
+				:square="true"
+				@click="Globals.ControlWindowState = ControlWindowState.OpenPlaylist"
+				:active="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
+			>
+				<FontAwesomeIcon :icon="['fas', 'folder-open']" />
 			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
-				<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+			<MenuButton
+				:square="true"
+				:active="Globals.ControlWindowState === ControlWindowState.SavePlaylist"
+				@click="Globals.ControlWindowState = ControlWindowState.SavePlaylist"
+				@dblclick="
+					playlist_path !== undefined
+						? save_playlist()
+						: (Globals.ControlWindowState = ControlWindowState.SavePlaylist)
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
 			</MenuButton>
-			<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
-				<FontAwesomeIcon :icon="['fas', 'angle-right']" />
-			</MenuButton>
-			<MenuDivider />
-			<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
-				<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
-			</MenuButton>
-		</div>
-		<template v-if="Globals.ControlWindowState === ControlWindowState.Edit">
 			<input
-				id="playlist_caption"
-				type="text"
-				v-model="playlist_caption"
-				placeholder="Playlist-Name"
-				@change="update_caption"
+				type="file"
+				ref="load_playlist_input"
+				:accept="'.jcg'"
+				@click="load_playlist_input ? (load_playlist_input.value = '') : null"
+				@change="load_playlist_file"
+				style="display: none"
 			/>
+			<MenuButton :square="true" @click="pdf_popup = true">
+				<FontAwesomeIcon :icon="['fas', 'file-pdf']" />
+			</MenuButton>
+			<MenuDivider />
+			<MenuButton
+				:square="true"
+				@click="Globals.ControlWindowState = ControlWindowState.Slides"
+				:active="Globals.ControlWindowState === ControlWindowState.Slides"
+			>
+				<FontAwesomeIcon :icon="['fas', 'list']" />
+			</MenuButton>
+			<MenuButton
+				:square="true"
+				@click="Globals.ControlWindowState = ControlWindowState.Add"
+				:active="
+					Globals.ControlWindowState === ControlWindowState.Add ||
+					Globals.ControlWindowState === ControlWindowState.NewSong ||
+					Globals.ControlWindowState === ControlWindowState.NewPsalm
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'plus']" />
+			</MenuButton>
+			<MenuButton
+				:square="true"
+				@click="Globals.ControlWindowState = ControlWindowState.Edit"
+				:active="
+					Globals.ControlWindowState === ControlWindowState.Edit ||
+					Globals.ControlWindowState === ControlWindowState.EditSong ||
+					Globals.ControlWindowState === ControlWindowState.EditPsalm
+				"
+			>
+				<FontAwesomeIcon :icon="['fas', 'pen']" />
+			</MenuButton>
+			<div v-if="Globals.ControlWindowState === ControlWindowState.Slides" class="button_container">
+				<MenuDivider />
+				<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
+					<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+				</MenuButton>
+				<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
+					<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+				</MenuButton>
+				<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
+					<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+				</MenuButton>
+				<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
+					<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+				</MenuButton>
+				<MenuDivider />
+				<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
+					<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+				</MenuButton>
+			</div>
+			<template v-if="Globals.ControlWindowState === ControlWindowState.Edit">
+				<input
+					id="playlist_caption"
+					type="text"
+					v-model="playlist_caption"
+					placeholder="Playlist-Name"
+					@change="update_caption"
+				/>
+			</template>
 		</template>
 		<MenuButton
 			id="message_button"

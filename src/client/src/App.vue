@@ -16,7 +16,7 @@
 	import * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
-	import Globals, { WSWrapper } from "./Globals";
+	import Globals, { ServerConnection, WSWrapper } from "./Globals";
 
 	const Config = {
 		client_server: {
@@ -30,16 +30,11 @@
 		}
 	};
 
-	const enum ServerConnection {
-		disconnected = 0,
-		connected = 1
-	}
-
-	const server_state = ref<JCGPSend.State>({ command: "state" });
+	const server_state = ref<JCGPSend.State>({ command: "state", server_id: undefined });
 	const playlist_items = ref<JCGPSend.Playlist>();
 	const item_slides = ref<JCGPSend.ItemSlides>();
 	const selected_item = ref<number | null>(null);
-	const server_connection = ref<ServerConnection>(ServerConnection.disconnected);
+
 	const playlist_caption = ref<string>("");
 
 	const item_data = ref<ItemData>({});
@@ -81,13 +76,6 @@
 		});
 	}
 
-	function init() {
-		server_state.value = { command: "state" };
-		playlist_items.value = undefined;
-		item_slides.value = undefined;
-		selected_item.value = -1;
-	}
-
 	function select_item(item: number) {
 		if (
 			playlist_items.value?.playlist_items[item].displayable ||
@@ -110,7 +98,7 @@
 			// reset the window-state
 			Globals.ControlWindowState === ControlWindowState.Slides;
 
-			server_connection.value = ServerConnection.connected;
+			Globals.server_connection.value = ServerConnection.connected;
 
 			Globals.message.log("Connected to JohnCG");
 		});
@@ -129,12 +117,22 @@
 				}
 			}
 
+			// check the server-id
+			if (typeof (data.server_id ?? "") !== "string") {
+				throw new TypeError("server-id is invalid");
+			}
+			// if the connection is new / no server-id is stored, save it
+			server_state.value.server_id ??= data.server_id;
+			// if the server-id is new, reload the page
+			if (data.server_id !== server_state.value.server_id) {
+				window.location.reload();
+			}
+
 			const command_parser_map: { [key in JCGPSend.Message["command"]]: (...args: any) => void } = {
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
 				response: handle_ws_response,
-				clear: init,
 				item_files: parse_item_files,
 				bible: parse_bible,
 				playlist_pdf: save_playlist_pdf,
@@ -159,10 +157,7 @@
 		Globals.ws?.ws.addEventListener("close", () => {
 			Globals.message.log("No connection to server. Retrying in 1s");
 
-			// delete the playlist and slides
-			init();
-
-			server_connection.value = ServerConnection.disconnected;
+			Globals.server_connection.value = ServerConnection.disconnected;
 
 			setTimeout(() => {
 				ws_connect();
@@ -308,7 +303,6 @@
 <template>
 	<div id="main_window">
 		<ControlWindow
-			v-if="server_connection === ServerConnection.connected"
 			:client_id="client_id"
 			:server_state="server_state"
 			:playlist="playlist_items"

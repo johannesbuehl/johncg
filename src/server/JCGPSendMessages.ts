@@ -9,13 +9,14 @@ import { CasparCGResolution } from "./CasparCGConnection.js";
  * Base interface for sent JCGP-messages
  */
 interface Base {
+	server_id: string | undefined;
 	client_id?: string;
 }
 
 /**
  * Response for received commands
  */
-export interface Response {
+export interface Response extends Base {
 	command: "response";
 	message: string;
 	code: number;
@@ -50,11 +51,7 @@ interface ItemSlidesBase extends Base {
 
 export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 
-export interface Clear extends Base {
-	command: "clear";
-}
-
-export interface ItemFiles<K extends keyof ItemFileType> {
+export interface ItemFiles<K extends keyof ItemFileType> extends Base {
 	command: "item_files";
 	type: GetItemFiles["type"];
 	files: ItemFileMapped<K>[];
@@ -64,14 +61,14 @@ export type ItemData<K extends GetItemData["type"]> = {
 	command: "item_data";
 	type: K;
 	data: ItemFileMapped<K>;
-};
+} & Base;
 
-export interface Bible {
+export interface Bible extends Base {
 	command: "bible";
 	bible: BibleFile;
 }
 
-export interface PlaylistPDF {
+export interface PlaylistPDF extends Base {
 	command: "playlist_pdf";
 	playlist_pdf: string;
 }
@@ -85,13 +82,13 @@ export enum LogLevel {
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
-export interface ClientMessage {
+export interface ClientMessage extends Base {
 	command: "client_mesage";
 	message: string;
 	type: LogLevel;
 }
 
-export interface MediaThumbnails {
+export interface MediaThumbnails extends Base {
 	command: "media_thumbnails";
 	thumbnails: Record<string, string>;
 }
@@ -104,7 +101,6 @@ export type Message =
 	| Playlist
 	| State
 	| ItemSlides
-	| Clear
 	| ItemFiles<keyof ItemFileType>
 	| ItemData<GetItemData["type"]>
 	| Bible

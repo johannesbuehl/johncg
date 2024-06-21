@@ -32,6 +32,7 @@ import {
 } from "./CasparCGConnection.js";
 import path from "path";
 import Text from "./PlaylistItems/Text.ts";
+import { server_id } from "./servers/websocket-server.ts";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -507,7 +508,8 @@ export default class Playlist {
 		return {
 			command: "state",
 			active_item_slide: this.active_item_slide,
-			visibility: this.visibility
+			visibility: this.visibility,
+			server_id
 		};
 	}
 

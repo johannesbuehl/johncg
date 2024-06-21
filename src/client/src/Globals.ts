@@ -24,6 +24,11 @@ export interface LogMessage {
 	timestamp: Date;
 }
 
+export const enum ServerConnection {
+	disconnected = 0,
+	connected = 1
+}
+
 class Log {
 	private _messages = ref<LogMessage[]>([]);
 	get messages(): LogMessage[] {
@@ -116,6 +121,7 @@ class Global {
 	get ws(): WSWrapper | undefined {
 		return this._ws;
 	}
+	server_connection = ref<ServerConnection>(ServerConnection.disconnected);
 
 	// ControlWindowState
 	private control_window_state = ref<ControlWindowState>(ControlWindowState.Slides);
