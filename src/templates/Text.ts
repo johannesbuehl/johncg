@@ -29,7 +29,7 @@ function update(str_args: string) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function play() {
 	const main = document.querySelector("#main");
-	const text = document.querySelector("#text_wrapper");
+	const text = document.querySelector("#text");
 
 	const show_text = () => {
 		const remove_listeners = () => {
@@ -55,11 +55,11 @@ function play() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stop() {
-	const text_wrapper = document.querySelector("#text_wrapper");
+	const text = document.querySelector("#text");
 	const main = document.querySelector("#main");
 
 	const slide_out = () => {
-		text_wrapper.removeEventListener("transitionend", slide_out);
+		text.removeEventListener("transitionend", slide_out);
 
 		setTimeout(() => {
 			const reset = () => {
@@ -75,10 +75,10 @@ function stop() {
 	if (mute_transition) {
 		main.classList.remove("slide_in");
 	} else {
-		text_wrapper.addEventListener("transitionend", slide_out);
+		text.addEventListener("transitionend", slide_out);
 	}
 
-	text_wrapper.classList.remove("show");
+	text.classList.remove("show");
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
