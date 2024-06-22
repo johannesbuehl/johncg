@@ -12,13 +12,12 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 2. Download the latest JohnCG-version from [releases](https://github.com/johannesbuehl/johncg/releases) and unzip it.
 3. Move the content of `casparcg/Templates` and `casparcg/Media` inside of CasparCGs Template and Media directories.
 4. Edit `config.json` if necessary
-5. Start CasparCG
+5. Start CasparCG. Alternatively set the path to yourCasparCG-directory in the config and JohnCG will start CasparCG automatically.
 6. Start JohnCG through `JohnCG_[VERSION]_linux.bat` or `JohnCG_[VERSION]_linux.sh`
 7. Open [`127.0.0.1:8888`](127.0.0.1:8888) (or the port you specified in `settings.json`)
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## Roadmap for Release
-- repair new-file abort unsaved changes
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- / psalm-editor: auto_resizse textarea on mount
 - 
@@ -35,3 +34,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - song-file: chords itself as chords and transpose them
 - support other browser than Chrome and phone / tablet resolution
 - add-song to playlist after creation
+- add english bible-file

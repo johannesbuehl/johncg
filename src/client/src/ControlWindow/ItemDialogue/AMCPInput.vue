@@ -46,7 +46,7 @@
 	}
 	#inputs_wrapper {
 		display: grid;
-		grid-template-columns: auto 100%;
+		grid-template-columns: auto 1fr;
 		row-gap: 0.25rem;
 		column-gap: 0.5rem;
 		align-items: center;
