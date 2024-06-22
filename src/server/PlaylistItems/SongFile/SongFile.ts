@@ -80,13 +80,13 @@ export default class SongFile {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(path: string);
+	constructor(path: string, fast?: boolean);
 	constructor(data: SongData);
-	constructor(arg: string | SongData) {
+	constructor(arg: string | SongData, fast?: boolean) {
 		if (typeof arg === "string") {
 			this.song_file_path = arg;
 
-			this.parse_song_file();
+			this.parse_song_file(fast);
 		} else {
 			this.load_song_data(arg);
 		}
@@ -96,9 +96,9 @@ export default class SongFile {
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
 	 */
-	private parse_metadata(header: string): void {
+	private parse_metadata(header: string, fast: boolean): void {
 		// split the header into the individual lines
-		const header_data: string[] = header.split(/\r?\n/);
+		const header_data: string[] = header.split("\n");
 
 		header_data.forEach((row) => {
 			const components = row.split("=");
@@ -137,7 +137,9 @@ export default class SongFile {
 					});
 					break;
 				case "Chords":
-					this.metadata.Chords = parse_base64_chords(value);
+					if (!fast) {
+						this.metadata.Chords = parse_base64_chords(value);
+					}
 					break;
 				case "Transpose":
 					this.metadata.Transpose = Number(value);
@@ -149,7 +151,7 @@ export default class SongFile {
 	}
 
 	// parse the text-content
-	private parse_song_file() {
+	private parse_song_file(fast?: boolean) {
 		if (!this.song_file_path) {
 			return;
 		}
@@ -173,10 +175,10 @@ export default class SongFile {
 		const raw_data = iconv.decode(raw_data_buffer, encoding);
 
 		// the different slides are seperated by a line of 2 or 3 dashes
-		const data = raw_data.split(/\r?\n---?(?:\r?\n|$)/);
+		const data = raw_data.replaceAll("\r", "").split(/\n---?(?:\n|$)/);
 
 		// parse metadata of the header
-		this.parse_metadata(data[0]);
+		this.parse_metadata(data[0], fast);
 
 		// remove the header of the array
 		data.splice(0, 1);
@@ -185,7 +187,7 @@ export default class SongFile {
 		let key = "";
 		for (const data_block of data) {
 			// split the block into the individual lines
-			const lines = data_block.split(/\r?\n/);
+			const lines = data_block.split("\n");
 
 			const first_line_items = lines[0].split(" ");
 

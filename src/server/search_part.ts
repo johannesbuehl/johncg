@@ -45,7 +45,7 @@ export default class SearchPart {
 	constructor() {}
 
 	create_song_file(f: SongFile): SongFile {
-		const song = new SngFile(Config.get_path("song", f.path));
+		const song = new SngFile(Config.get_path("song", f.path), true);
 
 		const song_value: SongFile = {
 			...f,
@@ -79,26 +79,23 @@ export default class SearchPart {
 	private async find_files<K extends keyof ItemFileType>(
 		pth: string,
 		root: string,
-		extensions: string[],
+		extension: string,
 		file_converter: (f: FileBase<K>) => Promise<ItemFileMapped<K>>
 	): Promise<ItemFileMapped<K>[]> {
 		const files = await fs.readdir(pth);
 
-		const check_file = new RegExp(
-			`^(?<name>.+)(?<extension>${extensions.join("|").replaceAll(".", "\\.")})$`
-		);
-
 		const promises = files.map(async (f) => {
-			const file_regex = check_file.exec(f);
+			const extension_index = f.lastIndexOf(extension);
+
 			const ff = path.join(pth, f);
 			const is_directory = (await fs.stat(ff)).isDirectory();
 
-			if (is_directory || file_regex) {
+			if (is_directory || extension_index >= 0) {
 				const file_result: Directory<K> = {
-					name: is_directory ? f : file_regex?.groups["name"],
+					name: is_directory ? f : f.slice(0, extension_index),
 					path: path.relative(root, ff),
 					children: is_directory
-						? await this.find_files<K>(ff, root, extensions, file_converter)
+						? await this.find_files<K>(ff, root, extension, file_converter)
 						: undefined
 				};
 
@@ -115,7 +112,7 @@ export default class SearchPart {
 		return this.find_files<"song">(
 			pth,
 			pth,
-			[".sng"],
+			".sng",
 			(f): Promise<SongFile> => Promise.resolve(this.create_song_file(f))
 		);
 	}
@@ -123,19 +120,19 @@ export default class SearchPart {
 	async find_jcg_files(pth: string = Config.path.playlist): Promise<PlaylistFile[]> {
 		logger.log("searching jcg-files");
 
-		return this.find_files<"playlist">(pth, pth, [".jcg"], (f) => Promise.resolve(f));
+		return this.find_files<"playlist">(pth, pth, ".jcg", (f) => Promise.resolve(f));
 	}
 
 	async find_pdf_files(pth: string = Config.path.pdf): Promise<PDFFile[]> {
 		logger.log("searching PDF-files");
 
-		return this.find_files<"pdf">(pth, pth, [".pdf"], (f) => Promise.resolve(f));
+		return this.find_files<"pdf">(pth, pth, ".pdf", (f) => Promise.resolve(f));
 	}
 
 	async find_psalm_files(pth: string = Config.path.psalm): Promise<PsalmFile[]> {
 		logger.log("searching psalm-files");
 
-		return this.find_files<"psalm">(pth, pth, [".psm"], (f) => this.create_psalm_file(f));
+		return this.find_files<"psalm">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
 	}
 
 	async get_casparcg_media(): Promise<ItemFileMapped<"media">[]> {
