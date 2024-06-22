@@ -14,6 +14,7 @@
 		new_button?: boolean;
 		hide_header?: boolean;
 		new_directory?: boolean;
+		create_props?: (file: SongFile) => SongProps;
 	}>();
 
 	const emit = defineEmits<{
@@ -78,27 +79,33 @@
 	}
 
 	function create_props(file: SongFile): SongProps {
-		const props: SongProps = {
-			type: "song",
-			caption: file.name,
-			color: "#0000FF",
-			file: file.path
-		};
-
-		// if the selected parts differ from the default ones, save them in the playlist
-		if (Object.keys(file.data?.text ?? {}).some((val, index) => val !== verse_order.value[index])) {
-			props.verse_order = verse_order.value;
-		}
-
-		// if not all languages are checked or the order isn't default, add it to the props
-		if (languages.value.some(([lang, state], index) => lang !== index && state)) {
-			props.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
+		if (props.create_props) {
+			return props.create_props(file);
 		} else {
-			// delete them from the props
-			delete props.languages;
-		}
+			const song_props: SongProps = {
+				type: "song",
+				caption: file.name,
+				color: "#0000FF",
+				file: file.path
+			};
 
-		return props;
+			// if the selected parts differ from the default ones, save them in the playlist
+			if (
+				Object.keys(file.data?.text ?? {}).some((val, index) => val !== verse_order.value[index])
+			) {
+				song_props.verse_order = verse_order.value;
+			}
+
+			// if not all languages are checked or the order isn't default, add it to the props
+			if (languages.value.some(([lang, state], index) => lang !== index && state)) {
+				song_props.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
+			} else {
+				// delete them from the props
+				delete song_props.languages;
+			}
+
+			return song_props;
+		}
 	}
 
 	function search_song() {

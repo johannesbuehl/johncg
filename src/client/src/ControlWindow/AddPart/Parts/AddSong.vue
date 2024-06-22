@@ -58,8 +58,8 @@
 		}
 
 		// if not all languages are checked or the order isn't default, add it to the props
-		if (languages.value.some(([lang, state], index) => lang !== index && state)) {
-			props.languages = languages.value.filter((ele) => ele[1]).map((ele) => ele[0]);
+		if (languages.value.some(([lang, state], index) => lang !== index || !state)) {
+			props.languages = languages.value.filter(([lang, state]) => state).map((ele) => ele[0]);
 		} else {
 			// delete them from the props
 			delete props.languages;
@@ -72,6 +72,7 @@
 <template>
 	<SongDialogue
 		:new_button="true"
+		:create_props="create_props"
 		v-model:selection="selection"
 		@choose="add_song"
 		@new_song="emit('new_song')"
