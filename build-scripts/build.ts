@@ -41,7 +41,7 @@ const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions)
 
 // write the version-number to config/version.ts
 fs.writeFileSync("src/server/config/version.ts", `// eslint-disable-next-line @typescript-eslint/naming-convention
-export const Version = "${package_json.version}";`);
+export const Version = "${package_json.version}";\n`);
 
 // bundle the different scripts
 execSync("npm run server-build");

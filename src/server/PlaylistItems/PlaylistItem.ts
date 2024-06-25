@@ -327,7 +327,7 @@ export abstract class PlaylistItemBase {
 						)
 					]);
 				} else {
-					const promises = [
+					const promises: Promise<unknown>[] = [
 						// stop the template-layer
 						catch_casparcg_timeout(
 							async () =>
@@ -341,6 +341,24 @@ export abstract class PlaylistItemBase {
 							"CG STOP - hide template"
 						)
 					];
+
+					if (connection.settings.layers.media !== undefined) {
+						promises.push(
+							catch_casparcg_timeout(
+								async () =>
+									// fade-out the media
+									connection.connection.play({
+										/* eslint-disable @typescript-eslint/naming-convention */
+										channel: connection.settings.channel,
+										layer: connection.settings.layers.media,
+										clip: "EMPTY",
+										transition: get_casparcg_transition()
+										/* eslint-enable @typescript-eslint/naming-convention */
+									}),
+								"STOP - hide media"
+							)
+						);
+					}
 
 					return Promise.allSettled(promises);
 				}

@@ -27,21 +27,13 @@ class HTTPServer {
 				// override different requested urls
 				switch (true) {
 					// redirect the root to the main-site
-					case /^\/$/.test(request.url):
+					case request.url === "/":
 						request.url = "main.html";
 						break;
 					// serve the CasparCG-templates
-					case /^\/Templates\//.test(request.url):
+					case request.url.slice(0, 11) === "/Templates/":
 						resource_dir = Config.get_path("template");
-						request.url = request.url.replace(/\/Templates\//, "");
-
-						// check, wether the file exits
-						try {
-							fs.accessSync(path.join(resource_dir, request.url));
-						} catch (e) {
-							// if it doesn't exist, add an html-extension
-							request.url += ".html";
-						}
+						request.url = request.url.slice(11);
 						break;
 				}
 
