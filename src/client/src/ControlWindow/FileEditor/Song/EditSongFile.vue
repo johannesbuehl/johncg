@@ -21,6 +21,11 @@
 			if (props.song_file.data?.metadata !== undefined) {
 				metadata.value = props.song_file.data.metadata;
 
+				// fill up the title-array
+				metadata.value.Title = Array.apply(null, Array(4)).map((_, lang_index) => {
+					return metadata.value?.Title[lang_index] ?? "";
+				});
+
 				text_parts.value = Object.entries(props.song_file.data.text).map(([part, text]) => {
 					const part_text: SongTextPart["text"] = text.map((slide) => {
 						return Array.apply(null, Array(4)).map((_, lang_index) => {

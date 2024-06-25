@@ -20,6 +20,10 @@ export interface SongFileMetadata {
 	Copyright?: string;
 	Chords?: Chords;
 	Transpose?: number;
+	Key?: string;
+	Speed?: string;
+	Tempo?: string;
+	Time?: string;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
 
@@ -115,13 +119,6 @@ export default class SongFile {
 				case "TitleLang4":
 					this.metadata["Title"][Number(key.charAt(key.length - 1)) - 1] = value;
 					break;
-				case "Songbook":
-				case "ChurchSongID":
-				case "BackgroundImage":
-				case "Author":
-				case "Melody":
-					this.metadata[key] = value;
-					break;
 				case "(c)":
 					this.metadata.Copyright = value;
 					break;
@@ -143,6 +140,18 @@ export default class SongFile {
 					break;
 				case "Transpose":
 					this.metadata.Transpose = Number(value);
+					break;
+				case "Songbook":
+				case "ChurchSongID":
+				case "BackgroundImage":
+				case "Author":
+				case "Melody":
+				case "Translation":
+				case "Key":
+				case "Speed":
+				case "Tempo":
+				case "Time":
+					this.metadata[key] = value;
 					break;
 				default:
 					break;

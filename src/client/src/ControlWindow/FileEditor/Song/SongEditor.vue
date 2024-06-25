@@ -237,6 +237,11 @@
 			text: {}
 		};
 
+		// filter out empty metadata
+		song_data_object.metadata = Object.fromEntries(
+			Object.entries(metadata.value).filter(([key, value]) => value !== "")
+		) as SongFileMetadata;
+
 		// filter out the last, empty element
 		const saved_text_parts = text_parts.value.filter(
 			(text_part, index) => index < text_parts.value.length - 1 || !is_empty_part(text_part)

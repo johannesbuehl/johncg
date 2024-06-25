@@ -44,8 +44,8 @@ export interface ItemFileType {
 export default class SearchPart {
 	constructor() {}
 
-	create_song_file(f: SongFile): SongFile {
-		const song = new SngFile(Config.get_path("song", f.path), true);
+	create_song_file(f: SongFile, fast: boolean = true): SongFile {
+		const song = new SngFile(Config.get_path("song", f.path), fast);
 
 		const song_value: SongFile = {
 			...f,
@@ -182,7 +182,7 @@ export default class SearchPart {
 		};
 
 		try {
-			return this.create_song_file(item_file);
+			return this.create_song_file(item_file, false);
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't open song: '${path}' does not exist`);
