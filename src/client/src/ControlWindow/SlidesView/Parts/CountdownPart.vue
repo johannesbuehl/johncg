@@ -3,7 +3,6 @@
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
-	import { get_time_string, countdown_title_map, CountdownMode } from "@server/lib";
 
 	const props = defineProps<{
 		slide?: ClientCountdownSlides;
@@ -37,19 +36,11 @@
 			:class="{ active: 0 === active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ countdown_title_map[slide?.template.data.mode ?? CountdownMode.Clock] }}
-			<template
-				v-if="
-					CountdownMode.Duration === slide?.template.data.mode ||
-					CountdownMode.EndTime === slide?.template.data.mode
-				"
-			>
-				: {{ get_time_string(new Date(slide?.template.data.time)) }}
-			</template>
+			{{ slide?.title }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlide
-				:media="slide?.title"
+				:media="slide?.media"
 				:template="slide?.template"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"

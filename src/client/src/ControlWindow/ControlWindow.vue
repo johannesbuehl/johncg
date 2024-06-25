@@ -124,9 +124,10 @@
 			/>
 			<PlaylistItemsList
 				v-if="
-					Globals.ControlWindowState === ControlWindowState.Slides ||
-					Globals.ControlWindowState === ControlWindowState.Add ||
-					Globals.ControlWindowState === ControlWindowState.Edit
+					playlist !== undefined &&
+					(Globals.ControlWindowState === ControlWindowState.Slides ||
+						Globals.ControlWindowState === ControlWindowState.Add ||
+						Globals.ControlWindowState === ControlWindowState.Edit)
 				"
 				:playlist="playlist"
 				:selected="selected"

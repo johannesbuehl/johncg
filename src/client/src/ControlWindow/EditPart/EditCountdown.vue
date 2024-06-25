@@ -37,6 +37,7 @@
 			props: {
 				...item_props.value,
 				font_size: font_size.value,
+				font_color: font_color.value,
 				mode: countdown_mode.value,
 				position: position.value,
 				show_seconds: show_seconds.value,

@@ -1,9 +1,4 @@
-import {
-	CountdownMode,
-	countdown_title_map,
-	get_time_string,
-	recurse_object_check
-} from "../lib.ts";
+import { CountdownMode, countdown_title_map, recurse_object_check } from "../lib.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 
@@ -110,7 +105,7 @@ export default class Countdown extends PlaylistItemBase {
 		let title = countdown_title_map[this.props.mode];
 
 		if (CountdownMode.Duration === this.props.mode || CountdownMode.EndTime === this.props.mode) {
-			title += `: ${get_time_string(new Date(this.props.time))}`;
+			title += `: ${this.props.time}`;
 		}
 
 		return Promise.resolve({

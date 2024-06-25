@@ -28,11 +28,13 @@
 
 	const media_selection = defineModel<MediaFile>({});
 
-	function add_countdown() {
-		const return_props = create_props();
+	function add_countdown(file_selection: MediaFile) {
+		if (file_selection.children === undefined) {
+			const return_props = create_props();
 
-		if (return_props !== undefined) {
-			emit("add", return_props);
+			if (return_props !== undefined) {
+				emit("add", return_props);
+			}
 		}
 	}
 

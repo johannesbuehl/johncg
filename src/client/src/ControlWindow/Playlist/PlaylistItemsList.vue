@@ -35,7 +35,7 @@
 		edit: [index: number];
 	}>();
 
-	const playlist = defineModel<JCGPSend.Playlist>("playlist");
+	const playlist = defineModel<JCGPSend.Playlist>("playlist", { required: true });
 
 	const context_menu_position = ref<{ x: number; y: number }>();
 
@@ -95,11 +95,24 @@
 
 	const items_list = ref<(typeof PlaylistItem)[]>([]);
 
-	function duplicate_item(props: ItemProps, index: number) {
-		Globals.ws?.send<JCGPRecv.AddItem>({
-			command: "add_item",
-			props,
-			index
+	function duplicate_item(index: number, props?: ItemProps) {
+		if (props === undefined) {
+			props = playlist.value?.playlist_items[index];
+		}
+
+		if (props !== undefined) {
+			Globals.ws?.send<JCGPRecv.AddItem>({
+				command: "add_item",
+				props,
+				index
+			});
+		}
+	}
+
+	function delete_item(position: number) {
+		Globals.ws?.send<JCGPRecv.DeleteItem>({
+			command: "delete_item",
+			position
 		});
 	}
 </script>
@@ -129,11 +142,13 @@
 				:scroll="scroll"
 				@click="emit('selection', index)"
 				@dblclick="emit('set_active', index)"
-				@set_active="emit('set_active', index)"
+				@keydown.enter="emit('set_active', index)"
+				@keydown.delete.prevent="delete_item(index)"
+				@keydown.ctrl.d.prevent="duplicate_item(index)"
+				@keydown.ctrl.e.prevent="emit('edit', index)"
 				@keydown.up="navigate_selection($event.target, index, -1)"
 				@keydown.down="navigate_selection($event.target, index, 1)"
 				@contextmenu="show_context_menu($event, element, index)"
-				@keydown.ctrl.e="emit('edit', index)"
 			/>
 		</Draggable>
 	</div>
@@ -152,7 +167,7 @@
 		<div
 			@click="
 				context_menu_picker_item
-					? duplicate_item(context_menu_picker_item.element, context_menu_picker_item.index)
+					? duplicate_item(context_menu_picker_item.index, context_menu_picker_item.element)
 					: undefined
 			"
 		>
