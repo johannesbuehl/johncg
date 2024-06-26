@@ -239,7 +239,7 @@
 
 		// filter out empty metadata
 		song_data_object.metadata = Object.fromEntries(
-			Object.entries(metadata.value).filter(([key, value]) => value !== "")
+			Object.entries(song_data_object.metadata).filter(([key, value]) => value !== "")
 		) as SongFileMetadata;
 
 		// filter out the last, empty element
@@ -428,7 +428,10 @@
 				<div class="header">Song-File</div>
 				<div class="content">
 					<div class="row_container">
-						<MenuButton :disabled="song_file_name === ''" @click="save_song(true)">
+						<MenuButton
+							:disabled="song_file_name === ''"
+							@click="song_file_name !== '' ? save_song(true) : undefined"
+						>
 							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">
