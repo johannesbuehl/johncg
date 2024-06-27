@@ -1,4 +1,4 @@
-log_level: INFO # log-leve - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
+log_level: INFO # log-level - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
 behaviour:
   show_on_load: true # show the first slide when loading - valid-values: true false
 path: # path to the different files

@@ -1,5 +1,7 @@
 import ChildProcess from "child_process";
 import { logger } from "./logger";
+import fs from "fs";
+import path from "path";
 
 export default class CasparCGServer {
 	private server_process: ChildProcess.ChildProcess;
@@ -23,7 +25,22 @@ export default class CasparCGServer {
 				break;
 		}
 
-		this.launch();
+		// only proceed if both files exists
+		if (!fs.existsSync(path.join(this.casparcg_path, this.server_path))) {
+			const error = new Error(
+				`CasparCG: casparcg-executable not found: ${path.join(this.casparcg_path, this.server_path)}`
+			);
+
+			throw error;
+		} else if (!fs.existsSync(path.join(this.casparcg_path, this.scanner_path))) {
+			const error = new Error(
+				`CasparCG: scanner-executable not found: ${path.join(this.casparcg_path, this.scanner_path)}`
+			);
+
+			throw error;
+		} else {
+			this.launch();
+		}
 	}
 
 	launch() {

@@ -1,4 +1,4 @@
-log_level: DEBUG # log-leve - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
+log_level: INFO # log-level - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
 behaviour:
   show_on_load: true # show the first slide when loading - valid-values: true false
 path: # path to the different files
@@ -22,4 +22,3 @@ client_server:
     port: 8888 # port for the client-interface web-server
   websocket:
     port: 8765 # port for the websocket-communication between client and server (needs to be changed in client/assets/main-*.js - search for 'port:"')
-
