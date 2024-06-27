@@ -155,17 +155,20 @@
 	watch(
 		() => search_strings.value,
 		() => {
-			file_tree.value = search_string(get_current_files());
+			file_tree.value = search_string(get_current_files(true));
 		},
 		{ deep: true }
 	);
 
-	function get_current_files(): Node<T>[] {
-		const files =
-			file_tree.value ??
-			(directory_stack.value.length > 0
-				? directory_stack.value.slice(-1)[0].children
-				: props.files);
+	function get_current_files(renew: boolean = false): Node<T>[] {
+		let files: Node<T>[] | undefined = undefined;
+
+		if (!renew) {
+			files = file_tree.value;
+		}
+
+		files ??=
+			directory_stack.value.length > 0 ? directory_stack.value.slice(-1)[0].children : props.files;
 
 		return files ?? [];
 	}
@@ -365,7 +368,11 @@
 											class="file_path"
 											v-if="search_strings?.some((search_string) => search_string.value !== '')"
 										>
-											{{ element.path.slice(0, element.path.lastIndexOf(element.name))
+											{{
+												element.path.slice(
+													(directory_stack.slice(-1)?.[0]?.name.length ?? -1) + 1,
+													element.path.lastIndexOf(element.name)
+												)
 											}}{{ element.name }}
 										</span>
 									</PlaylistItemDummy>
