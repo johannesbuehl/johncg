@@ -6,14 +6,13 @@ import * as JCGPRecv from "@server/JCGPReceiveMessages";
 import type * as JCGPSend from "@server/JCGPSendMessages";
 import { LogLevel } from "@server/JCGPSendMessages";
 import type {
-	ItemFileMapped,
-	ItemFileType,
-	MediaFile,
+	CasparFile,
+	ItemNodeMap,
+	ItemNodeMapped,
 	PDFFile,
 	PlaylistFile,
 	PsalmFile,
-	SongFile,
-	TemplateFile
+	SongFile
 } from "@server/search_part";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
 import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
@@ -171,7 +170,7 @@ class Global {
 	}
 
 	// Item-Files
-	item_files = ref<{ [key in keyof ItemFileType]: ItemFileMapped<key>[] }>({
+	item_files = ref<{ [key in keyof ItemNodeMap]: ItemNodeMapped<key>[] }>({
 		song: [],
 		media: [],
 		pdf: [],
@@ -179,7 +178,7 @@ class Global {
 		template: [],
 		psalm: []
 	});
-	private item_files_last_requests: { [key in keyof ItemFileType]: number } = {
+	private item_files_last_requests: { [key in keyof ItemNodeMap]: number } = {
 		song: 0,
 		media: 0,
 		pdf: 0,
@@ -208,7 +207,7 @@ class Global {
 
 		return this.item_files.value.song;
 	}
-	get_media_files(force: boolean = false): MediaFile[] {
+	get_media_files(force: boolean = false): CasparFile[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -274,7 +273,7 @@ class Global {
 
 		return this.item_files.value.playlist;
 	}
-	get_template_files(force: boolean = false): TemplateFile[] {
+	get_template_files(force: boolean = false): CasparFile[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -340,9 +339,9 @@ class Global {
 
 	// Thumbnails
 	_thumbnails = ref<JCGPSend.MediaThumbnails["thumbnails"]>({});
-	get_thumbnails(files?: MediaFile[]): Record<string, string> {
+	get_thumbnails(files?: CasparFile[]): Record<string, string> {
 		if (files !== undefined) {
-			const thumbnails_result: [MediaFile, string | undefined][] = files.map((ff) => [
+			const thumbnails_result: [CasparFile, string | undefined][] = files.map((ff) => [
 				ff,
 				this._thumbnails.value[ff.path]
 			]);

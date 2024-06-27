@@ -8,7 +8,7 @@
 	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { MediaFile } from "@server/search_part";
+	import type { CasparFile, Node } from "@server/search_part";
 	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faRepeat);
@@ -17,16 +17,16 @@
 		add: [item_props: MediaProps];
 	}>();
 
-	const selection = defineModel<MediaFile>({});
+	const selection = defineModel<CasparFile>({});
 	const loop = ref<boolean>(false);
 
-	function add_media(file: MediaFile | undefined) {
-		if (file !== undefined && file.children === undefined) {
+	function add_media(file: Node<CasparFile> | undefined) {
+		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}
 	}
 
-	function create_props(file: MediaFile): MediaProps {
+	function create_props(file: CasparFile): MediaProps {
 		return {
 			type: "media",
 			caption: file.name,
@@ -43,13 +43,7 @@
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop
 			</MenuButton>
-			<MenuButton
-				@click="
-					selection !== undefined && selection.children === undefined
-						? add_media(selection)
-						: undefined
-				"
-			>
+			<MenuButton @click="add_media(selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Media
 			</MenuButton>
 		</template>

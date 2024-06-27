@@ -7,17 +7,14 @@
 	import FileDialogue from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
 	import Globals from "@/Globals";
-	import { ControlWindowState } from "@/Enums";
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { PlaylistFile } from "@server/search_part";
-	import type * as JCGPSend from "@server/JCGPSendMessages";
-	import { random_id } from "@/App.vue";
+	import type { Directory, Node, PlaylistFile } from "@server/search_part";
 
 	library.add(fas.faFolderOpen);
 
 	const file_dialogue_selection = ref<PlaylistFile>();
-	const file_dialogue_directory_stack = ref<PlaylistFile[]>([]);
+	const file_dialogue_directory_stack = ref<Directory<PlaylistFile>[]>([]);
 	const playlist_file = ref<PlaylistFile>();
 
 	const playlist_file_name = defineModel<string>("playlist_file_name", { required: true });
@@ -26,15 +23,16 @@
 		Globals.get_playlist_files();
 	});
 
-	function save_playlist(playlist?: PlaylistFile) {
+	function save_playlist(playlist?: Node<PlaylistFile>) {
 		// if the selection is a directory, exit
-		if (playlist?.children !== undefined) {
+		if (playlist?.is_dir) {
 			return;
 		}
 
 		// if there is no playlist-file argument, create it
-		if (playlist === undefined) {
-			playlist = playlist_file.value ?? {
+
+		const new_playlist = playlist ??
+			playlist_file.value ?? {
 				path:
 					(file_dialogue_directory_stack.value.length > 0
 						? file_dialogue_directory_stack.value.slice(-1)[0].path + "/"
@@ -43,7 +41,6 @@
 					".jcg",
 				name: playlist_file_name.value
 			};
-		}
 
 		const id = Globals.add_confirm((state: boolean) => {
 			if (state === true) {
@@ -53,7 +50,7 @@
 
 		Globals.ws?.send<JCGPRecv.SavePlaylist>({
 			command: "save_playlist",
-			playlist: playlist.path,
+			playlist: new_playlist.path,
 			id: id
 		});
 	}

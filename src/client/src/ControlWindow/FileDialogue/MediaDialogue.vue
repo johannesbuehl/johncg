@@ -7,140 +7,60 @@
 	import Globals from "@/Globals";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { MediaFile } from "@server/search_part";
+	import type { CasparFile, Directory, Node } from "@server/search_part";
 
 	const props = defineProps<{
 		hide_header?: boolean;
-		create_props_callback?: (file: MediaFile) => MediaProps;
+		create_props_callback?: (file: CasparFile) => MediaProps;
 	}>();
 
 	const emit = defineEmits<{
-		choose: [file: MediaFile];
+		choose: [file: CasparFile];
 	}>();
 
-	const selection = defineModel<MediaFile>("selection");
+	const selection = defineModel<CasparFile>("selection");
 
-	const directory_stack = defineModel<MediaFile[]>("directory_stack", {
+	const directory_stack = defineModel<Directory<CasparFile>[]>("directory_stack", {
 		default: () => reactive([])
 	});
 
-	const search_strings = ref<SearchInputDefinitions<"name">>([
-		{ id: "name", placeholder: "Name", value: "" }
+	const search_strings = ref<SearchInputDefinitions<"name", CasparFile>>([
+		{ id: "name", placeholder: "Name", value: "", get: (ff: Node<CasparFile>) => ff.name }
 	]);
-
-	const file_tree = ref<MediaFile[]>([]);
-
-	type SearchMapFile = MediaFile & { search_data?: { name: string } };
-	let search_map: SearchMapFile[] = [];
 
 	watch(
 		() => Globals.get_media_files(),
 		() => {
-			search_map = create_search_map();
-
-			search_media();
-
 			// if there are no fitting thumbnails , retrieve them also
 			// if the directory-stack is populated, use it
-			let files: MediaFile[];
+			let files: Node<CasparFile>[];
 			if (directory_stack.value.length > 0) {
-				files = directory_stack.value.slice(-1)[0].children ?? [];
+				files = directory_stack.value.slice(-1)?.[0].children ?? [];
 			} else {
 				files = Globals.get_media_files();
 			}
 
-			Globals.get_thumbnails(files.filter((ff) => ff.children === undefined));
+			Globals.get_thumbnails(files.filter((ff) => !ff.is_dir) as CasparFile[]);
 		},
 		{ immediate: true }
 	);
 
-	watch(search_strings.value, () => {
-		search_media();
-	});
+	function get_media_thumbnails(files: Node<CasparFile>[] | undefined) {
+		const request_files: CasparFile[] = (files ?? Globals.get_media_files()).filter(
+			(ff) => !ff.is_dir
+		) as CasparFile[];
 
-	function search_media() {
-		file_tree.value = search_string();
-	}
-
-	function create_search_map(
-		files: MediaFile[] | undefined = Globals.get_media_files()
-	): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				return_map.push({
-					...f,
-					search_data: {
-						name: f.name.toLowerCase()
-					}
-				});
-
-				if (f.children !== undefined) {
-					return_map.push(...create_search_map(f.children));
-				}
-			});
-		}
-
-		return return_map;
-	}
-
-	function search_string(files: SearchMapFile[] | undefined = search_map): MediaFile[] {
-		// if there are no search-strings, return the default files
-		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return Globals.get_media_files();
-		}
-
-		const return_files: MediaFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (
-					search_strings.value.every((search_string) => {
-						if (f.search_data !== undefined) {
-							if (f.search_data[search_string.id] !== undefined) {
-								f.hidden = !f.search_data[search_string.id]?.includes(
-									search_string.value.toLowerCase()
-								);
-							} else {
-								f.hidden = search_string.value !== "";
-							}
-						} else {
-							f.hidden = false;
-						}
-
-						return f.hidden !== true;
-					})
-				) {
-					return_files.push(f);
-				} else if (f.children !== undefined) {
-					if (f.children.length > 0) {
-						return_files.push({
-							...f,
-							children: search_string(f.children)
-						});
-					}
-				}
-			});
-		}
-
-		return return_files;
-	}
-
-	function get_media_thumbnails(files: MediaFile[] | undefined) {
-		files = (files ?? Globals.get_media_files()).filter((ff) => ff.children === undefined);
-
-		Globals.get_thumbnails(files);
+		Globals.get_thumbnails(request_files);
 	}
 </script>
 
 <template>
 	<FileDialogue
-		:files="file_tree"
+		:files="Globals.get_media_files()"
 		:thumbnails="Globals.get_thumbnails()"
 		:clone_callback="
 			create_props_callback !== undefined
-				? (file) => create_props_callback!(file as MediaFile)
+				? (file) => create_props_callback!(file as CasparFile)
 				: undefined
 		"
 		:item_color="Globals.color.media"
@@ -151,11 +71,11 @@
 		@refresh_files="() => Globals.get_media_files(true)"
 		@choose="
 			(file) => {
-				if (file?.children !== undefined) {
-					get_media_thumbnails(file?.children);
+				if (file?.is_dir) {
+					get_media_thumbnails(file.children);
 				}
 
-				$emit('choose', file as MediaFile);
+				$emit('choose', file as CasparFile);
 			}
 		"
 	>

@@ -20,7 +20,7 @@
 	import PopUp from "@/ControlWindow/PopUp.vue";
 	import Globals from "@/Globals";
 
-	import type { PsalmFile } from "@server/search_part";
+	import type { Directory, PsalmFile } from "@server/search_part";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
@@ -29,10 +29,9 @@
 	const emit = defineEmits<{}>();
 
 	const show_save_file_dialogue = ref<boolean>(false);
-	const psalm_file_tree = ref<PsalmFile[]>();
 	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
-	const psalm_search_strings = ref<SearchInputDefinitions<"name">>([
-		{ id: "name", placeholder: "Name", value: "" }
+	const psalm_search_strings = ref<SearchInputDefinitions<"name", PsalmFile>>([
+		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 	const psalm_file_name = ref<string>("");
 	const metadata = defineModel<PsalmData["metadata"]>("metadata", {
@@ -45,24 +44,14 @@
 	watch(
 		() => file_selection.value,
 		() => {
-			if (file_selection.value !== undefined && file_selection.value.children === undefined) {
+			if (file_selection.value !== undefined && !file_selection.value.is_dir) {
 				psalm_file_name.value = file_selection.value.name.replace(/\.psm$/, "");
 			}
 		},
 		{ immediate: true }
 	);
 
-	// watch for new psalm-files
-	watch(
-		() => Globals.get_psalm_files(),
-		() => {
-			psalm_search_map = create_search_map(Globals.get_psalm_files());
-
-			search_psalm();
-		}
-	);
-
-	const directory_stack = ref<PsalmFile[]>([]);
+	const directory_stack = ref<Directory<PsalmFile>[]>([]);
 	watch(
 		() => [file_selection.value, Globals.get_psalm_files()],
 		() => {
@@ -74,68 +63,6 @@
 		},
 		{ immediate: true }
 	);
-
-	type SearchMapFile = PsalmFile & {
-		children?: PsalmFile[];
-		search_data?: { name: string };
-	};
-	let psalm_search_map: SearchMapFile[] = [];
-	function create_search_map(files: PsalmFile[]): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			return_map.push({
-				...f,
-				search_data: {
-					name: f.name.toLowerCase()
-				},
-				children: f.children !== undefined ? create_search_map(f.children) : undefined
-			});
-		});
-
-		return return_map;
-	}
-	// process psalm-file-search-queries
-	function search_psalm() {
-		psalm_file_tree.value = search_string(psalm_search_map, psalm_search_strings.value);
-	}
-
-	// create search-trees
-	function search_string(
-		files: SearchMapFile[],
-		search_inputs: SearchInputDefinitions<"name">
-	): PsalmFile[] {
-		const return_files: PsalmFile[] = [];
-
-		files.forEach((f) => {
-			if (
-				search_inputs.every((search_string) => {
-					if (f.search_data !== undefined) {
-						if (f.search_data[search_string.id] !== undefined) {
-							return f.search_data[search_string.id]?.includes(search_string.value.toLowerCase());
-						} else {
-							return search_string.value === "";
-						}
-					} else {
-						return true;
-					}
-				})
-			) {
-				return_files.push(f);
-			} else if (f.children !== undefined) {
-				const children = search_string(f.children, search_inputs);
-
-				if (children.length > 0) {
-					return_files.push({
-						...f,
-						children: search_string(f.children, search_inputs)
-					});
-				}
-			}
-		});
-
-		return return_files;
-	}
 
 	function on_text_change() {
 		let indent_state: boolean = false;
@@ -390,7 +317,7 @@
 	<PopUp title="Save Psalm" v-model:active="show_save_file_dialogue" :maximize="true">
 		<FileDialogue
 			class="file_dialogue"
-			:files="psalm_file_tree"
+			:files="Globals.get_psalm_files()"
 			:select_dirs="true"
 			:new_directory="true"
 			v-model:selection="file_selection"

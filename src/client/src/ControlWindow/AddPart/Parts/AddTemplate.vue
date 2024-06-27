@@ -12,7 +12,7 @@
 	import Globals from "@/Globals";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import type { TemplateFile } from "@server/search_part";
+	import type { CasparFile, Node } from "@server/search_part";
 
 	library.add(fas.faPlus);
 
@@ -20,40 +20,20 @@
 		add: [item_props: TemplateProps];
 	}>();
 
-	const selection = defineModel<TemplateFile>("selection", {});
+	const selection = defineModel<Node<CasparFile>>("selection", {});
 	const template_data = defineModel<object>("template_data", { default: {} });
 
-	const search_strings = ref<SearchInputDefinitions<"name">>([
-		{ id: "name", placeholder: "Name", value: "" }
+	const search_strings = ref<SearchInputDefinitions<"name", CasparFile>>([
+		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	const file_tree = defineModel<TemplateFile[]>("file_tree");
-
-	type SearchMapFile = TemplateFile & {
-		search_data?: { name: string };
-	};
-	let search_map: SearchMapFile[] = [];
-	watch(
-		() => Globals.get_template_files(),
-		() => {
-			search_map = create_search_map(Globals.get_template_files());
-
-			search_template();
-		},
-		{ immediate: true }
-	);
-
-	watch(search_strings.value, () => {
-		search_template();
-	});
-
-	function add_template(file?: TemplateFile) {
-		if (file !== undefined && file.children === undefined) {
-			emit("add", create_props(file));
+	function add_template(ff?: Node<CasparFile>) {
+		if (ff !== undefined && !ff.is_dir) {
+			emit("add", create_props(ff));
 		}
 	}
 
-	function create_props(file: TemplateFile): TemplateProps {
+	function create_props(file: CasparFile): TemplateProps {
 		return {
 			type: "template",
 			caption: file.name,
@@ -64,79 +44,12 @@
 			}
 		};
 	}
-
-	function search_template() {
-		file_tree.value = search_string();
-	}
-
-	function create_search_map(files: TemplateFile[]): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			return_map.push({
-				...f,
-				search_data: {
-					name: f.name.toLowerCase()
-				}
-			});
-
-			if (f.children !== undefined) {
-				return_map.push(...create_search_map(f.children));
-			}
-		});
-
-		return return_map;
-	}
-
-	function search_string(files: SearchMapFile[] | undefined = search_map): TemplateFile[] {
-		// if there are no search-strings, return the default files
-		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return Globals.get_template_files();
-		}
-
-		const return_files: TemplateFile[] = [];
-
-		if (files !== undefined) {
-			files.forEach((f) => {
-				if (
-					search_strings.value.every((search_string) => {
-						if (f.search_data !== undefined) {
-							if (f.search_data[search_string.id] !== undefined) {
-								f.hidden = !f.search_data[search_string.id]?.includes(
-									search_string.value.toLowerCase()
-								);
-							} else {
-								f.hidden = search_string.value !== "";
-							}
-						} else {
-							f.hidden = false;
-						}
-
-						return f.hidden !== true;
-					})
-				) {
-					return_files.push(f);
-				} else if (f.children !== undefined) {
-					const children = search_string(f.children);
-
-					if (children.length > 0) {
-						return_files.push({
-							...f,
-							children: search_string(f.children)
-						});
-					}
-				}
-			});
-		}
-
-		return return_files;
-	}
 </script>
 
 <template>
 	<FileDialogue
-		:files="file_tree"
-		:clone_callback="(ff) => create_props(ff as TemplateFile)"
+		:files="Globals.get_template_files()"
+		:clone_callback="(ff) => create_props(ff)"
 		:item_color="Globals.color.template"
 		name="Template"
 		v-model:selection="selection"

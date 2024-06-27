@@ -17,12 +17,12 @@
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import type { ItemFileMapped, ItemFileType, SongFile } from "@server/search_part";
+	import type { ItemNode, ItemNodeMap, ItemNodeMapped, SongFile } from "@server/search_part";
 
 	library.add(fas.faPen);
 
 	const props = defineProps<{
-		files?: { [key in keyof ItemFileType]: ItemFileMapped<key>[] };
+		files?: { [key in keyof ItemNodeMap]: ItemNodeMapped<key>[] };
 		item_index: number | null;
 		item_data: ItemData;
 	}>();

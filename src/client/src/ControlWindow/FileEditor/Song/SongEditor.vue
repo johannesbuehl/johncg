@@ -26,7 +26,7 @@
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 	import { create_directory_stack } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
-	import type { MediaFile, SongFile } from "@server/search_part";
+	import type { CasparFile, Directory, Node, SongFile } from "@server/search_part";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -48,8 +48,8 @@
 	});
 
 	const show_media_selector = ref<boolean>(false);
-	const media_selection = ref<MediaFile>();
-	const background_media = ref<MediaFile>();
+	const media_selection = ref<CasparFile>();
+	const background_media = ref<CasparFile>();
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const song_file_name = ref<string>("");
@@ -67,13 +67,13 @@
 	watch(
 		() => song_selection.value,
 		() => {
-			if (song_selection.value !== undefined && song_selection.value.children === undefined) {
+			if (song_selection.value !== undefined && !song_selection.value.is_dir) {
 				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
 			}
 		}
 	);
 
-	const media_directory_stack = ref<MediaFile[]>([]);
+	const media_directory_stack = ref<Directory<CasparFile>[]>([]);
 	watch(
 		() => [metadata.value.BackgroundImage, Globals.get_media_files()],
 		() => {
@@ -82,16 +82,19 @@
 				media_directory_stack.value = create_directory_stack(Globals.get_media_files(), dir_stack);
 
 				// select the media-file
-				media_selection.value = media_directory_stack.value
+				const potential_selection = media_directory_stack.value
 					.slice(-1)[0]
 					?.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
-				background_media.value = media_selection.value;
+				if (!potential_selection.is_dir) {
+					media_selection.value = potential_selection;
+					background_media.value = potential_selection;
+				}
 			}
 		},
 		{ immediate: true }
 	);
 
-	const song_directory_stack = ref<SongFile[]>([]);
+	const song_directory_stack = ref<Directory<SongFile>[]>([]);
 	watch(
 		() => Globals.get_song_files(),
 		() => {
@@ -178,8 +181,8 @@
 		}
 	}
 
-	function select_media(selection: MediaFile) {
-		if (selection && selection.children === undefined) {
+	function select_media(selection: CasparFile) {
+		if (selection && !selection.is_dir) {
 			background_media.value = selection;
 			media_selection.value = selection;
 			show_media_selector.value = false;
@@ -499,7 +502,7 @@
 			:hide_header="true"
 			v-model:directory_stack="media_directory_stack"
 			v-model:selection="media_selection"
-			@choose="(ff) => select_media(ff as MediaFile)"
+			@choose="(ff) => select_media(ff as CasparFile)"
 		>
 			<template v-slot:buttons>
 				<MenuButton

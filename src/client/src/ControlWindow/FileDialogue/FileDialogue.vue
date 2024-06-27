@@ -1,38 +1,35 @@
 <script lang="ts">
-	export interface SearchInputDefinition<K> {
+	export interface SearchInputDefinition<K, T extends ItemFile> {
 		id: K;
 		placeholder: string;
 		value: string;
 		size?: number;
+		get: (ff: Node<T>) => string;
 	}
 
-	export type SearchInputDefinitions<K> = SearchInputDefinition<K>[];
+	export type SearchInputDefinitions<K, T extends ItemFile> = SearchInputDefinition<K, T>[];
 
-	export function sort_dirs<K extends keyof ItemFileType>(
-		files: ItemFileMapped<K>[]
-	): Directory<K>[] {
-		return files
-			?.filter((fil) => fil.children !== undefined)
-			.sort((a, b) => {
-				if (a.name === b.name) {
-					return 0;
+	export function sort_dirs<K extends ItemFile>(files: Node<K>[]): Directory<K>[] {
+		const dirs = files.filter((ff) => ff.is_dir) as Directory<K>[];
+
+		return dirs.sort((a, b) => {
+			if (a.name === b.name) {
+				return 0;
+			} else {
+				const sort_array = [a.name, b.name].sort();
+
+				if (sort_array[0] === a.name) {
+					return -1;
 				} else {
-					const sort_array = [a.name, b.name].sort();
-
-					if (sort_array[0] === a.name) {
-						return -1;
-					} else {
-						return 1;
-					}
+					return 1;
 				}
-			}) as Directory<K>[];
+			}
+		});
 	}
 
-	export function sort_files<K extends keyof ItemFileType>(
-		files: ItemFileMapped<K>[]
-	): ItemFileMapped<K>[] {
+	export function sort_files<K extends ItemNode>(files: K[]): K[] {
 		return files
-			?.filter((fil) => fil.children === undefined)
+			?.filter((fil) => !fil.is_dir)
 			.sort((a, b) => {
 				if (a.name === b.name) {
 					return 0;
@@ -48,21 +45,21 @@
 			});
 	}
 
-	export function create_directory_stack<T extends keyof ItemFileType>(
-		item_files: ItemFileMapped<T>[],
+	export function create_directory_stack<K extends ItemFile>(
+		item_files: Node<K>[],
 		path_stack: string[]
-	) {
-		const directory_stack: ItemFileMapped<T>[] = [];
+	): Directory<K>[] {
+		const directory_stack: Directory<K>[] = [];
 
 		while (path_stack.length > 0) {
 			const files = (directory_stack[directory_stack.length - 1]?.children ?? item_files).filter(
 				(ff) => {
-					return ff.children !== undefined && ff.name.toLowerCase() === path_stack[0].toLowerCase();
+					return ff.is_dir && ff.name.toLowerCase() === path_stack[0].toLowerCase();
 				}
 			);
 
-			if (files.length === 1 && files[0].children !== undefined) {
-				directory_stack.push(files[0] as ItemFileMapped<T>);
+			if (files.length === 1 && files[0].is_dir) {
+				directory_stack.push(files[0]);
 
 				path_stack.shift();
 			} else {
@@ -74,7 +71,7 @@
 	}
 </script>
 
-<script setup lang="ts" generic="T extends keyof ItemFileType">
+<script setup lang="ts" generic="T extends ItemFile">
 	import { onMounted, reactive, ref, useSlots, watch } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
@@ -84,9 +81,8 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import PopUp from "../PopUp.vue";
 
-	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import type { Directory, ItemFileMapped, ItemFileType } from "@server/search_part";
+	import type { Directory, ItemFile, ItemNode, Node } from "@server/search_part";
 	import PlaylistItemDummy from "../Playlist/PlaylistItemDummy.vue";
 
 	library.add(
@@ -102,9 +98,9 @@
 	const props = defineProps<{
 		name?: string;
 		select_dirs?: boolean;
-		files?: JCGPSend.ItemFiles<keyof ItemFileType>["files"];
+		files: Node<T>[];
 		thumbnails?: Record<string, string>;
-		clone_callback?: (arg: JCGPSend.ItemFiles<keyof ItemFileType>["files"][0]) => ItemProps;
+		clone_callback?: (arg: T) => ItemProps;
 		new_button?: boolean;
 		new_directory?: boolean;
 		search_disabled?: boolean;
@@ -114,25 +110,29 @@
 	const emit = defineEmits<{
 		new_file: [];
 		new_directory: [path: string];
-		choose: [file: ItemFileMapped<T> | undefined];
+		choose: [file: Node<T> | undefined];
 		refresh_files: [];
 	}>();
 
 	const slots = useSlots();
 
-	const search_strings = defineModel<SearchInputDefinitions<unknown>>("search_strings");
+	const search_strings = defineModel<SearchInputDefinitions<unknown, T>>("search_strings", {
+		default: []
+	});
 
 	const show_new_directory = ref<boolean>(false);
 	const directory_name = ref<string>("");
 	const directory_name_input = ref<HTMLInputElement>();
 	const rotate_button = ref<boolean>(false);
-	const directory_stack = defineModel<ItemFileMapped<T>[]>("directory_stack", {
+	const directory_stack = defineModel<Directory<T>[]>("directory_stack", {
 		default: () => reactive([])
 	});
 
-	const selection = defineModel<ItemFileMapped<T> | undefined>("selection", { required: true });
+	const selection = defineModel<Node<T> | undefined>("selection", { required: true });
 
 	const input_refs = ref<HTMLInputElement[]>([]);
+
+	const file_tree = ref<Node<T>[]>();
 
 	onMounted(() => {
 		input_refs.value[0]?.focus();
@@ -143,25 +143,35 @@
 		() => props.files,
 		() => {
 			if (props.files && directory_stack.value.length > 0) {
-				directory_stack.value = create_directory_stack(
+				directory_stack.value = create_directory_stack<T>(
 					props.files,
 					directory_stack.value.slice(-1)[0].path.split(/[\/\\]/g)
-				) as ItemFileMapped<T>[];
+				);
 			}
-		}
+		},
+		{ immediate: true }
 	);
 
-	function get_current_files(): ItemFileMapped<T>[] {
-		const files =
-			directory_stack.value[directory_stack.value.length - 1]?.children !== undefined
-				? directory_stack.value[directory_stack.value.length - 1].children
-				: props.files;
+	watch(
+		() => search_strings.value,
+		() => {
+			file_tree.value = search_string(get_current_files());
+		},
+		{ deep: true }
+	);
 
-		return files as ItemFileMapped<T>[];
+	function get_current_files(): Node<T>[] {
+		const files =
+			file_tree.value ??
+			(directory_stack.value.length > 0
+				? directory_stack.value.slice(-1)[0].children
+				: props.files);
+
+		return files ?? [];
 	}
 
-	function on_choose(file: ItemFileMapped<T>) {
-		if (file.children !== undefined) {
+	function on_choose(file: Node<T>) {
+		if (file.is_dir) {
 			directory_stack.value.push(file);
 		}
 
@@ -177,6 +187,42 @@
 
 		emit("new_directory", directory + directory_name.value);
 		show_new_directory.value = false;
+	}
+
+	function search_string(files: Node<T>[]): Node<T>[] | undefined {
+		// if there are no search-strings, return the default files
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return undefined;
+		}
+		const return_files: Node<T>[] = [];
+
+		// check all the given files
+		files.forEach((ff) => {
+			// if atleast one of the search-strings matches, use the file and all it's children
+			if (
+				search_strings.value.some((search_string) => {
+					// only proceed if the search_box isn't empty
+					if (search_string.value !== "") {
+						return search_string.get(ff).toLowerCase().includes(search_string.value.toLowerCase());
+					} else {
+						return false;
+					}
+				})
+			) {
+				return_files.push(ff);
+			}
+
+			// search the children too
+			if (ff.is_dir) {
+				const results = search_string(ff.children);
+
+				if (results && results.length > 0) {
+					return_files.push(...results);
+				}
+			}
+		});
+
+		return return_files;
 	}
 </script>
 
@@ -279,10 +325,9 @@
 							<div>
 								<div
 									v-for="element of sort_dirs(get_current_files())"
-									v-show="!element.hidden"
 									class="file_item"
 									:class="{
-										selectable: element.children === undefined,
+										selectable: !element.is_dir,
 										active: element === selection
 									}"
 									@keydown.enter.prevent="on_choose(element as Directory<T>)"
@@ -309,7 +354,6 @@
 								>
 									<PlaylistItemDummy
 										v-for="element of sort_files(get_current_files())"
-										v-show="!element.hidden"
 										:active="element === selection"
 										:color="item_color ?? ''"
 										@keydown.enter.prevent="on_choose(element)"
@@ -345,10 +389,7 @@
 							delay="250"
 						>
 							<template v-for="element of sort_files(get_current_files())">
-								<PlaylistItemDummy
-									v-if="!element.hidden && thumbnails[element.path]"
-									:color="item_color ?? ''"
-								>
+								<PlaylistItemDummy v-if="thumbnails[element.path]" :color="item_color ?? ''">
 									<div class="file_thumbnail selectable" :class="{ active: element === selection }">
 										<img
 											:src="thumbnails[element.path]"

@@ -8,7 +8,7 @@
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 	import SongPartSelector from "@/ControlWindow/ItemDialogue/SongPartSelector.vue";
 
-	import type { SongFile } from "@server/search_part";
+	import type { Node, SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
 	import Globals from "@/Globals";
 
@@ -38,8 +38,8 @@
 		}
 	);
 
-	function add_song(file?: SongFile) {
-		if (file !== undefined && file?.children === undefined) {
+	function add_song(file?: Node<SongFile>) {
+		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}
 	}

@@ -10,7 +10,7 @@
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import type { PsalmFile } from "@server/search_part";
+	import type { Node, PsalmFile } from "@server/search_part";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 
 	library.add(fas.faPlus);
@@ -21,36 +21,24 @@
 	}>();
 
 	const selection = ref<PsalmFile>();
-
-	interface SearchMapData {
-		id: string;
-		caption: string;
-	}
-	type SearchMapFile = PsalmFile & { search_data?: SearchMapData };
-	let search_map: SearchMapFile[] = [];
-	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData>>([
-		{ id: "id", placeholder: "Psalm ID", value: "", size: 5 },
-		{ id: "caption", placeholder: "Title", value: "" }
+	const search_strings = ref<SearchInputDefinitions<"id" | "caption", PsalmFile>>([
+		{
+			id: "id",
+			placeholder: "Psalm ID",
+			value: "",
+			size: 5,
+			get: (ff) => (!ff.is_dir ? ff.data.metadata.id ?? "" : "")
+		},
+		{
+			id: "caption",
+			placeholder: "Title",
+			value: "",
+			get: (ff) => (!ff.is_dir ? ff.data.metadata.caption : "")
+		}
 	]);
 
-	const file_tree = ref<PsalmFile[]>();
-
-	watch(
-		() => Globals.get_psalm_files(),
-		() => {
-			search_map = create_search_map(Globals.get_psalm_files());
-
-			search_psalm();
-		},
-		{ immediate: true }
-	);
-
-	watch(search_strings.value, () => {
-		search_psalm();
-	});
-
-	function add_psalm(file?: PsalmFile) {
-		if (file !== undefined && file.children === undefined) {
+	function add_psalm(file?: Node<PsalmFile>) {
+		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}
 	}
@@ -63,79 +51,11 @@
 			file: file.path
 		};
 	}
-
-	function search_psalm() {
-		file_tree.value = search_string();
-	}
-
-	function create_search_map(files: PsalmFile[]): SearchMapFile[] {
-		const return_map: SearchMapFile[] = [];
-
-		files.forEach((f) => {
-			if (f.children !== undefined) {
-				return_map.push(...create_search_map(f.children));
-			} else {
-				return_map.push({
-					...f,
-					search_data: {
-						id: f.data?.metadata.id?.toLowerCase() ?? "",
-						caption: f.data?.metadata?.caption?.toLowerCase() ?? ""
-					}
-				});
-			}
-		});
-
-		return return_map;
-	}
-
-	function search_string(files: SearchMapFile[] | undefined = search_map): PsalmFile[] {
-		// if there are no search-strings, return the default files
-		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			return Globals.get_psalm_files();
-		}
-
-		const return_files: PsalmFile[] = [];
-
-		files.forEach((f) => {
-			if (f.children !== undefined) {
-				const children = search_string(f.children);
-
-				if (children.length > 0) {
-					return_files.push({
-						...f,
-						children: search_string(f.children)
-					});
-				}
-			} else {
-				if (
-					search_strings.value.every((search_string) => {
-						if (f.search_data !== undefined && search_string) {
-							if (f.search_data[search_string.id] !== undefined) {
-								f.hidden = !f.search_data[search_string.id]?.includes(
-									search_string.value.toLowerCase()
-								);
-							} else {
-								f.hidden = search_string.value !== "";
-							}
-						} else {
-							f.hidden = false;
-						}
-
-						return f.hidden !== true;
-					})
-				) {
-					return_files.push(f);
-				}
-			}
-		});
-
-		return return_files;
-	}
 </script>
 
 <template>
 	<FileDialogue
-		:files="file_tree"
+		:files="Globals.get_psalm_files()"
 		:clone_callback="(ff) => create_props(ff as PsalmFile)"
 		:new_button="true"
 		:item_color="Globals.color.psalm"

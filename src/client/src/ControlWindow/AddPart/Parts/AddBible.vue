@@ -11,7 +11,7 @@
 	} from "@/ControlWindow/ItemDialogue/BibleSelector.vue";
 	import Globals from "@/Globals";
 
-	import type { BibleFile, BibleProps, Book } from "@server/PlaylistItems/Bible";
+	import type { BibleProps, Book } from "@server/PlaylistItems/Bible";
 	import { create_bible_citation_string } from "@server/lib";
 
 	library.add(fas.faPlus);

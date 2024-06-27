@@ -15,7 +15,7 @@ import * as JCGPSend from "./JCGPSendMessages.ts";
 import * as JCGPRecv from "./JCGPReceiveMessages.ts";
 
 import Config, { CasparCGConnectionSettings } from "./config/config.ts";
-import SearchPart, { ItemFileMapped, ItemFileType, MediaFile } from "./search_part.ts";
+import SearchPart, { CasparFile, ItemNodeMap, ItemNodeMapped, Node } from "./search_part.ts";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
@@ -827,10 +827,10 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private async get_item_files<K extends keyof ItemFileType>(type: K, ws: WebSocket) {
+	private async get_item_files<K extends keyof ItemNodeMap>(type: K, ws: WebSocket) {
 		logger.debug(`retrieving item-files: '${type}'`);
 
-		const search_map: { [T in keyof ItemFileType]: () => Promise<ItemFileMapped<T>[]> } = {
+		const search_map: { [T in keyof ItemNodeMap]: () => Promise<Node<ItemNodeMapped<T>>[]> } = {
 			media: async () => await this.search_part.get_casparcg_media(),
 			template: async () => await this.search_part.get_casparcg_template(),
 			song: () => Promise.resolve(this.search_part.find_sng_files()),
@@ -842,7 +842,7 @@ export default class Control {
 		const files = await search_map[type]();
 
 		if (files !== undefined) {
-			const message: JCGPSend.ItemFiles<K> = {
+			const message: JCGPSend.ItemFiles<ItemNodeMapped<K>> = {
 				command: "item_files",
 				type,
 				files,
@@ -876,7 +876,7 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
-	private async get_media_thumbnails(files: MediaFile[], ws: WebSocket) {
+	private async get_media_thumbnails(files: CasparFile[], ws: WebSocket) {
 		const thumbnails: Record<string, string> = {};
 
 		for (const file of files) {
@@ -912,6 +912,8 @@ export default class Control {
 			case "psalm":
 				data = await this.search_part.get_psalm_file(path);
 				break;
+			default:
+				return;
 		}
 
 		const message: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]> = {
@@ -1015,15 +1017,15 @@ export default class Control {
 				ws_send_response(`Created directory: ${directory_path}`, true, ws);
 
 				const search_map: {
-					[T in JCGPRecv.NewDirectory["type"]]: () => Promise<ItemFileMapped<T>[]>;
+					[T in JCGPRecv.NewDirectory["type"]]: () => Promise<Node<ItemNodeMapped<T>>[]>;
 				} = {
-					song: () => Promise.resolve(this.search_part.find_sng_files()),
-					playlist: () => Promise.resolve(this.search_part.find_jcg_files()),
-					psalm: () => Promise.resolve(this.search_part.find_psalm_files())
+					song: () => this.search_part.find_sng_files(),
+					playlist: () => this.search_part.find_jcg_files(),
+					psalm: () => this.search_part.find_psalm_files()
 				};
 
 				// send the new files to the client
-				this.send_all_clients<JCGPSend.ItemFiles<Type>>({
+				this.send_all_clients<JCGPSend.ItemFiles<ItemNodeMapped<Type>>>({
 					command: "item_files",
 					type,
 					files: await search_map[type](),
