@@ -1,1 +1,2 @@
-npm run format-check && npm run lint || (npm run format-write && exit 1)
+npm run format-write && npm run lint
+node build-scripts/swap-config.js

@@ -3,6 +3,14 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
+const external_packages = [
+	"@img",
+	"canvas",
+	"pdfjs-dist",
+	"hidefile",
+	"winattr"
+];
+
 console.log("Building JohnCG release");
 console.log();
 
@@ -29,6 +37,7 @@ switch (process.platform) {
 		exec_name = "node";
 		break;
 }
+
 const build_dir = "dist/build";
 const release_dir = path.join("dist", build_name);
 
@@ -59,7 +68,7 @@ const copy_build_file = (file: string, dest?: string) => fs.copyFileSync(file, p
 const copy_release_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(release_dir, dest ?? path.basename(file)));
 const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(release_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
 const copy_module = (name: string) => {
-	console.log(`\t\tCopying '${name}'`);
+	console.log(`\t\t${name}`);
 	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
 };
 
@@ -113,7 +122,7 @@ copy_release_file(path.join(build_dir, "main.js"));
 
 console.log(`\tCopying example files`);
 fs.readdirSync("files").forEach((dir) => {
-	console.log(`\t\tCopying '${path.join("files", dir)}'`);
+	console.log(`\t\${path.join("files", dir)}`);
 	copy_release_dir(path.join("files", dir));
 });
 
@@ -134,13 +143,7 @@ copy_release_file("pandoc/texlive.profile", "pandoc/texlive.profile");
 
 console.log("\tCopying external node-modules");
 
-copy_module("@img");
-
-copy_module("canvas");
-
-copy_module("pdfjs-dist");
-
-copy_module("hidefile");
+external_packages.forEach((module) => copy_module(module));
 
 console.log();
 

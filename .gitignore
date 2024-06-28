@@ -6,6 +6,7 @@ miktex
 out
 dist
 pandoc/*
+config_temp.yaml
 
 casparcg/Templates/JohnCG/*.js
 build-scripts/build.js
