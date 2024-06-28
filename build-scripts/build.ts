@@ -58,7 +58,10 @@ const copy_build_file = (file: string, dest?: string) => fs.copyFileSync(file, p
 // const copy_build_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(build_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
 const copy_release_file = (file: string, dest?: string) => fs.copyFileSync(file, path.join(release_dir, dest ?? path.basename(file)));
 const copy_release_dir = (dir: string, dest?: string, args?: fs.CopySyncOptions) => fs.cpSync(dir, path.join(release_dir, dest ?? path.basename(dir)), { recursive: true, ...args });
-const copy_module = (name: string) => copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
+const copy_module = (name: string) => {
+	console.log(`\t\tCopying '${name}'`);
+	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
+};
 
 // write the version-number to config/version.ts
 const config_ts_path = "src/server/config/version.ts";
@@ -131,14 +134,13 @@ copy_release_file("pandoc/texlive.profile", "pandoc/texlive.profile");
 
 console.log("\tCopying external node-modules");
 
-console.log("\t\tCopying '@img'");
 copy_module("@img");
 
-console.log("\t\tCopying 'canvas'");
 copy_module("canvas");
 
-console.log("\t\tCopying 'pdfjs-dist'");
 copy_module("pdfjs-dist");
+
+copy_module("hidefile");
 
 console.log();
 

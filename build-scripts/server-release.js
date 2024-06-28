@@ -9,6 +9,7 @@ esbuild.build({
 	bundle: true,
 	external: [
 		"pdfjs-dist",
-		"canvas"
+		"canvas",
+		"hidefile"
 	]
 });

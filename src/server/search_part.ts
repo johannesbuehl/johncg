@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs/promises";
+import hidefile from "hidefile";
 
 import Config from "./config/config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
@@ -91,6 +92,12 @@ export default class SearchPart {
 			const extension_index = f.lastIndexOf(extension);
 
 			const ff = path.join(pth, f);
+
+			// if the file is hidden, skip it
+			if (hidefile.shouldBeHiddenSync(ff)) {
+				return undefined;
+			}
+
 			const is_directory = (await fs.stat(ff)).isDirectory();
 
 			if (is_directory) {
@@ -218,7 +225,7 @@ export default class SearchPart {
 	}
 }
 
-async function build_files(input_array: string[][], root?: string): Promise<Node<CasparFile>[]> {
+function build_files(input_array: string[][], root?: string): Node<CasparFile>[] {
 	const temp_object: Record<string, string[][]> = {};
 
 	input_array.forEach((m) => {
@@ -239,28 +246,29 @@ async function build_files(input_array: string[][], root?: string): Promise<Node
 		}
 	});
 
-	const promises = Object.entries(temp_object).map(
-		async ([key, files]): Promise<Node<CasparFile>> => {
-			const file_path = (root ? root + "/" : "") + key;
-
-			const is_dir = files.length !== 0;
-
-			if (is_dir) {
-				return {
-					is_dir: true,
-					name: key,
-					path: file_path,
-					children: await build_files(files, file_path)
-				};
-			} else {
-				return {
-					is_dir: false,
-					name: key,
-					path: file_path
-				};
-			}
+	return Object.entries(temp_object).map(([key, files]): Node<CasparFile> => {
+		// if the file is hidden, skip it
+		if (key[0] === ".") {
+			return undefined;
 		}
-	);
 
-	return await Promise.all(promises);
+		const file_path = (root ? root + "/" : "") + key;
+
+		const is_dir = files.length !== 0;
+
+		if (is_dir) {
+			return {
+				is_dir: true,
+				name: key,
+				path: file_path,
+				children: build_files(files, file_path)
+			};
+		} else {
+			return {
+				is_dir: false,
+				name: key,
+				path: file_path
+			};
+		}
+	});
 }

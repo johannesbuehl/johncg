@@ -10,6 +10,6 @@ esbuild.build({
 	external: [
 		"pdfjs-dist",
 		"canvas",
-		"note-art"
+		"hidefile"
 	]
 });
