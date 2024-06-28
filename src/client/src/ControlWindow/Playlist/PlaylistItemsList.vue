@@ -11,11 +11,11 @@
 	import { stop_event } from "@/App.vue";
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
-	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
+	import * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPlaylistItem, ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
-	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen);
+	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen, fas.faArrowRotateRight);
 
 	export interface DragEndEvent {
 		oldIndex: number;
@@ -95,6 +95,13 @@
 
 	const items_list = ref<(typeof PlaylistItem)[]>([]);
 
+	function reload_item(index: number) {
+		Globals.ws?.send<JCGPRecv.ReloadItem>({
+			command: "reload_item",
+			index
+		});
+	}
+
 	function duplicate_item(index: number, props?: ItemProps) {
 		if (props === undefined) {
 			props = playlist.value?.playlist_items[index];
@@ -158,11 +165,17 @@
 		:position="context_menu_position ?? { x: 0, y: 0 }"
 		@close="context_menu_position = undefined"
 	>
-		<div
+	<div
 			@click="context_menu_picker_item ? emit('edit', context_menu_picker_item.index) : undefined"
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />
-			Edit item
+			Edit
+		</div>
+		<div
+			@click="context_menu_picker_item ? reload_item(context_menu_picker_item.index) : undefined"
+		>
+			<FontAwesomeIcon :icon="['fas', 'arrow-rotate-right']" />
+			Reload
 		</div>
 		<div
 			@click="

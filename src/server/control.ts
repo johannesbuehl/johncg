@@ -64,6 +64,7 @@ export default class Control {
 			this.add_item(msg.props, msg.index, msg.set_active, ws),
 		update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
 			this.update_item(msg.index, msg.props, ws),
+		reload_item: (msg: JCGPRecv.ReloadItem, ws: WebSocket) => this.reload_item(msg.index, ws),
 		delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
 		get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
 			this.get_item_files(msg.type, ws),
@@ -771,6 +772,17 @@ export default class Control {
 
 			ws_send_response(`item has been updated: position: '${index}'`, true, ws);
 		}
+	}
+
+	// reload an item from the disk
+	private reload_item(index: number, ws: WebSocket) {
+		logger.log(`reloading item: position '${index}'`);
+
+		this.playlist.reload_item(index, () => this.send_playlist());
+
+		this.send_playlist();
+
+		ws_send_response(`reloaded item: position ${index}`, true, ws);
 	}
 
 	private update_playlist_caption(playlist_caption: string, ws: WebSocket) {

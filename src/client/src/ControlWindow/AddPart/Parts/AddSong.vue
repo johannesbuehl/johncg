@@ -52,17 +52,20 @@
 			file: file.path
 		};
 
-		// if the selected parts differ from the default ones, save them in the playlist
-		if (file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])) {
-			props.verse_order = verse_order.value;
-		}
+		// only create custom props if the song is selected
+		if (file === selection.value) {
+			// if the selected parts differ from the default ones, save them in the playlist
+			if (file.data?.metadata.VerseOrder?.length !== verse_order.value.length || file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])) {
+				props.verse_order = verse_order.value;
 
-		// if not all languages are checked or the order isn't default, add it to the props
-		if (languages.value.some(([lang, state], index) => lang !== index || !state)) {
-			props.languages = languages.value.filter(([lang, state]) => state).map((ele) => ele[0]);
-		} else {
-			// delete them from the props
-			delete props.languages;
+				console.warn(file.data.metadata.VerseOrder);
+				console.warn(verse_order.value);
+			}
+
+			// if not all languages are checked or the order isn't default, add it to the props
+			if (languages.value.some(([lang, state], index) => lang !== index || !state)) {
+				props.languages = languages.value.filter(([lang, state]) => state).map((ele) => ele[0]);
+			}
 		}
 
 		return props;

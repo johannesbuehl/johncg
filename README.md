@@ -20,6 +20,8 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- / psalm-editor: auto_resizse textarea on mount
+- item-context-menu: reload item from disk
+- on file-save (song and psalm): 
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))
@@ -35,3 +37,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - support other browser than Chrome and phone / tablet resolution
 - add-song to playlist after creation
 - add english bible-file
+- performer-view with website and custom HTML-template and iFrame for casparcg-templates

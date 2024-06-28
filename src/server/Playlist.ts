@@ -110,11 +110,11 @@ export default class Playlist {
 	add_item(
 		item: ItemProps,
 		set_active: boolean = false,
-		callback?: () => void,
+		callback?: (playlist_item: PlaylistItem) => void,
 		index: number = this.playlist_items.length
 	) {
 		const item_class_map: {
-			[key in ItemProps["type"]]: new (props: ItemProps, callback: () => void) => PlaylistItem;
+			[key in ItemProps["type"]]: new (props: ItemProps, callback: (playlist_item: PlaylistItem) => void) => PlaylistItem;
 		} = {
 			song: Song,
 			psalm: Psalm,
@@ -128,8 +128,8 @@ export default class Playlist {
 			comment: Comment
 		};
 
-		const new_item = new item_class_map[item.type](item, () => {
-			callback();
+		const new_item = new item_class_map[item.type](item, (playlist_item: PlaylistItem) => {
+			callback(playlist_item);
 
 			if (set_active) {
 				this.set_active_item(index, 0);
@@ -167,6 +167,15 @@ export default class Playlist {
 		} else {
 			return false;
 		}
+	}
+
+	reload_item(index: number, callback: (item: PlaylistItem) => void) {
+		index = this.validate_item_number(index);
+
+		const set_active = index === this.active_item_number;
+
+		this.add_item(this.playlist_items[index].props, set_active, callback, index);
+		this.delete_item(index + 1);
 	}
 
 	delete_item(position: number): boolean {

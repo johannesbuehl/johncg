@@ -30,7 +30,7 @@ export default class PDF extends PlaylistItemBase {
 
 	protected active_slide_number: number = 0;
 
-	constructor(props: PDFProps, callback: () => void) {
+	constructor(props: PDFProps, callback: (pdf_item: PDF) => void) {
 		super();
 
 		this.item_props = props;
@@ -103,7 +103,7 @@ export default class PDF extends PlaylistItemBase {
 
 				this.is_displayable = displayable;
 
-				callback();
+				callback(this);
 			})();
 		}
 	}

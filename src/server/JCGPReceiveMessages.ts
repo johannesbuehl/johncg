@@ -111,6 +111,11 @@ export interface UpdateItem extends Base {
 	index: number;
 }
 
+export interface ReloadItem extends Base {
+	command: "reload_item";
+	index: number;
+}
+
 export interface UpdatePlaylistCaption extends Base {
 	command: "update_playlist_caption";
 	caption: string;
@@ -158,6 +163,7 @@ export type Message =
 	| MovePlaylistItem
 	| AddItem
 	| UpdateItem
+	| ReloadItem
 	| UpdatePlaylistCaption
 	| DeleteItem
 	| NewPlaylist
