@@ -114,7 +114,10 @@ export default class Playlist {
 		index: number = this.playlist_items.length
 	) {
 		const item_class_map: {
-			[key in ItemProps["type"]]: new (props: ItemProps, callback: (playlist_item: PlaylistItem) => void) => PlaylistItem;
+			[key in ItemProps["type"]]: new (
+				props: ItemProps,
+				callback: (playlist_item: PlaylistItem) => void
+			) => PlaylistItem;
 		} = {
 			song: Song,
 			psalm: Psalm,

@@ -165,7 +165,7 @@
 		:position="context_menu_position ?? { x: 0, y: 0 }"
 		@close="context_menu_position = undefined"
 	>
-	<div
+		<div
 			@click="context_menu_picker_item ? emit('edit', context_menu_picker_item.index) : undefined"
 		>
 			<FontAwesomeIcon :icon="['fas', 'pen']" />

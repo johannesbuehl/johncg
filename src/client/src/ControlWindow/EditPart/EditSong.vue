@@ -22,7 +22,10 @@
 		() => props.song_data,
 		(song_data) => {
 			if (song_data !== undefined) {
-				verse_order.value = song_props.value.verse_order ?? song_data.metadata.VerseOrder ?? [];
+				verse_order.value =
+					song_props.value.verse_order ??
+					structuredClone(toRaw(song_data.metadata.VerseOrder)) ??
+					[];
 
 				const default_languages: [number, boolean][] = Array(song_data.metadata.Title?.length)
 					.fill([])
@@ -75,6 +78,8 @@
 	function create_props(): ClientSongItem | undefined {
 		const return_props = structuredClone(toRaw(song_props.value));
 
+		console.error(props.song_data?.metadata.VerseOrder);
+
 		// only return the verse-order if it is different than the default
 		const default_parts = props.song_data?.metadata.VerseOrder ?? [];
 		if (
@@ -87,6 +92,10 @@
 		} else {
 			return_props.verse_order = undefined;
 		}
+
+		console.warn(default_parts);
+		console.warn(verse_order.value);
+		console.warn(return_props.verse_order);
 
 		if (
 			languages.value.some((val, index) => {

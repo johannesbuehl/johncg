@@ -55,7 +55,10 @@
 		// only create custom props if the song is selected
 		if (file === selection.value) {
 			// if the selected parts differ from the default ones, save them in the playlist
-			if (file.data?.metadata.VerseOrder?.length !== verse_order.value.length || file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])) {
+			if (
+				file.data?.metadata.VerseOrder?.length !== verse_order.value.length ||
+				file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])
+			) {
 				props.verse_order = verse_order.value;
 
 				console.warn(file.data.metadata.VerseOrder);
