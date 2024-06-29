@@ -6,9 +6,7 @@ import path from "path";
 const external_packages = [
 	"@img",
 	"canvas",
-	"pdfjs-dist",
-	"hidefile",
-	"winattr"
+	"pdfjs-dist"
 ];
 
 console.log("Building JohnCG release");

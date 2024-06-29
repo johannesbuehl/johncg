@@ -1,6 +1,5 @@
 import path from "path";
 import fs from "fs/promises";
-import hidefile from "hidefile";
 
 import Config from "./config/config";
 import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
@@ -89,14 +88,14 @@ export default class SearchPart {
 		const files = await fs.readdir(pth);
 
 		const promises = files.map(async (f) => {
+			// if the file is hidden, skip it
+			if (f[0] === ".") {
+				return undefined;
+			}
+
 			const extension_index = f.lastIndexOf(extension);
 
 			const ff = path.join(pth, f);
-
-			// if the file is hidden, skip it
-			if (hidefile.shouldBeHiddenSync(ff)) {
-				return undefined;
-			}
 
 			const is_directory = (await fs.stat(ff)).isDirectory();
 

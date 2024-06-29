@@ -37,7 +37,6 @@
 		"canvas": "^2.11.2",
 		"casparcg-connection": "6.3.0-nightly-master-20240412-065100-23103b26.0",
 		"fast-xml-parser": "^4.3.4",
-		"hidefile": "^3.0.0",
 		"iconv-lite": "^0.6.3",
 		"log4js": "^6.9.1",
 		"mime-types": "^2.1.35",
