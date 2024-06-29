@@ -1,6 +1,6 @@
 {
 	"name": "johncg",
-	"version": "0.9.0-rc.0",
+	"version": "0.9.0-rc.1",
 	"license": "MIT",
 	"author": "Simon Ziegler <simon.ziegler.1998+github@pm.me>",
 	"bin": "out/main.js",
