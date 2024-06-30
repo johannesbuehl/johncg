@@ -549,7 +549,7 @@
 			<MenuButton
 				@click="
 					show_save_confirm = false;
-					save_callback(save_song());
+					save_callback(save_song(true));
 				"
 			>
 				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save

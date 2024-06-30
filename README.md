@@ -20,7 +20,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - song- / psalm-editor: auto_resizse textarea on mount
-- on file-save (song and psalm): reload file in playlist and cache
 - 
 - reload psalm and song after file-edit
 - update-item: reload changed media (somehow handle video / audio - or just don't care (maybe detect wether it actually changed))

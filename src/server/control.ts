@@ -22,8 +22,10 @@ import { logger } from "./logger.ts";
 import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConnection.js";
 import { random_id, recurse_object_check } from "./lib.ts";
 import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
-import { PsalmFile } from "./PlaylistItems/Psalm.ts";
+import Psalm, { PsalmFile } from "./PlaylistItems/Psalm.ts";
 import { Chord } from "./PlaylistItems/SongFile/Chord.ts";
+import Song from "./PlaylistItems/Song.ts";
+import path from "path";
 
 export interface CasparCGConnection {
 	connection: CasparCG;
@@ -365,13 +367,13 @@ export default class Control {
 	}
 
 	private save_file(
-		path: string,
+		file: string,
 		id: string,
 		message: JCGPRecv.SaveFile,
 		ws: WebSocket,
 		overwrite: boolean = false
 	) {
-		let test_result: boolean = typeof path === "string";
+		let test_result: boolean = typeof file === "string";
 
 		switch (message.type) {
 			case "song":
@@ -388,11 +390,11 @@ export default class Control {
 			let save_path: string;
 			switch (message.type) {
 				case "song":
-					save_path = Config.get_path("song", path);
+					save_path = Config.get_path("song", file);
 					file_string = new SongFile(message.data).sng_file;
 					break;
 				case "psalm":
-					save_path = Config.get_path("psalm", path);
+					save_path = Config.get_path("psalm", file);
 					file_string = JSON.stringify(message.data, undefined, "\t");
 					break;
 			}
@@ -402,7 +404,7 @@ export default class Control {
 				const client_confirm_id = this.task_list_add(
 					(option: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => {
 						if (option === true) {
-							this.save_file(path, id, message, ws, true);
+							this.save_file(file, id, message, ws, true);
 						}
 					}
 				);
@@ -412,7 +414,7 @@ export default class Control {
 					id: client_confirm_id,
 					text: {
 						header: "File already exists",
-						text: `file '${path}' already exists. Overwrite?`
+						text: `file '${file}' already exists. Overwrite?`
 					},
 					options: [
 						{ text: "Overwrite", icon: "check", value: true },
@@ -449,9 +451,25 @@ export default class Control {
 
 				ws.send(JSON.stringify(confirm_message));
 
-				logger.log(`Saved file '${path}'`);
+				logger.log(`Saved file '${file}'`);
 
-				ws_send_response(`Saved file '${path}'`, true, ws);
+				ws_send_response(`Saved file '${file}'`, true, ws);
+
+				// check wether the file is used in the current playlist.
+				let send_new_playlist = false;
+				this.playlist.playlist_items.forEach((item, index) => {
+					if (
+						(item instanceof Song || item instanceof Psalm) &&
+						path.resolve(item.props.file) === path.resolve(file)
+					) {
+						this.reload_item(index);
+						send_new_playlist = true;
+					}
+				});
+
+				if (send_new_playlist) {
+					this.send_playlist();
+				}
 			}
 		}
 	}
@@ -775,14 +793,16 @@ export default class Control {
 	}
 
 	// reload an item from the disk
-	private reload_item(index: number, ws: WebSocket) {
+	private reload_item(index: number, ws?: WebSocket) {
 		logger.log(`reloading item: position '${index}'`);
 
 		this.playlist.reload_item(index, () => this.send_playlist());
 
-		this.send_playlist();
+		if (ws !== undefined) {
+			this.send_playlist();
 
-		ws_send_response(`reloaded item: position ${index}`, true, ws);
+			ws_send_response(`reloaded item: position ${index}`, true, ws);
+		}
 	}
 
 	private update_playlist_caption(playlist_caption: string, ws: WebSocket) {
