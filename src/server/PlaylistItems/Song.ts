@@ -64,7 +64,7 @@ export default class Song extends PlaylistItemBase {
 
 	recalculate_slide_count() {
 		// add the title-slide to the counter
-		this.slide_count++;
+		this.slide_count = 1;
 
 		// count the slides
 		for (const part of this.get_verse_order()) {

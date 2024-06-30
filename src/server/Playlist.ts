@@ -166,6 +166,8 @@ export default class Playlist {
 				}
 			});
 
+			this.changes = true;
+
 			return result;
 		} else {
 			return false;
