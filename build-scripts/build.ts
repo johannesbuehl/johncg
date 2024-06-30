@@ -123,6 +123,8 @@ fs.readdirSync("files").forEach((dir) => {
 	console.log(`\t\${path.join("files", dir)}`);
 	copy_release_dir(path.join("files", dir));
 });
+// create directories without example files
+["Playlist", "PDF"].forEach(type => fs.mkdirSync(path.join(release_dir, type)));
 
 console.log(`\tCopying '${path.join(build_dir, "client")}'`);
 copy_release_dir(path.join(build_dir, "client"));
@@ -219,7 +221,10 @@ function create_launch_script(pth: string, destination: string) {
 			}
 			break;
 		case "linux":
-			fs.writeFileSync(path.join(release_dir, destination + ".sh"), `${relative_path_prefix}./${exec_name} ${pth}\nread -n1 -r -p "Press any key to continue..." key`);
+			fs.writeFileSync(
+				path.join(release_dir, destination + ".sh"),
+				`${relative_path_prefix}./${exec_name} ${pth}\nread -n1 -r -p "Press any key to continue..." key`
+			);
 			break;
 	}
 }
