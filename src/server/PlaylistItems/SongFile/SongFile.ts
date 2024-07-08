@@ -18,7 +18,7 @@ export interface SongFileMetadata {
 	Melody?: string;
 	Translation?: string;
 	Copyright?: string;
-	Chords?: Chords;
+	Chords?: ChordParts;
 	Transpose?: number;
 	Key?: string;
 	Speed?: string;
@@ -61,11 +61,11 @@ export interface LyricPartClient extends BasePartClient {
 }
 
 export type ItemPartClient = TitlePartClient | LyricPartClient;
-
 export type SongPart = string[][][];
 export type SongParts = Record<string, SongPart>;
 
-export type Chords = Record<number, Record<number, Chord>>;
+export type ChordPart = Record<number, Chord>[][][];
+export type ChordParts = Record<string, ChordPart>;
 
 /**
  * processes and saves song-files (*.sng)
@@ -100,9 +100,14 @@ export default class SongFile {
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
 	 */
-	private parse_metadata(header: string, fast: boolean): void {
+	private parse_metadata(
+		header: string,
+		fast: boolean
+	): Record<number, Record<number, Chord>> | undefined {
 		// split the header into the individual lines
 		const header_data: string[] = header.split("\n");
+
+		let chords;
 
 		header_data.forEach((row) => {
 			const components = row.split("=");
@@ -135,7 +140,7 @@ export default class SongFile {
 					break;
 				case "Chords":
 					if (!fast) {
-						this.metadata.Chords = parse_base64_chords(value);
+						chords = parse_base64_chords(value);
 					}
 					break;
 				case "Transpose":
@@ -157,6 +162,8 @@ export default class SongFile {
 					break;
 			}
 		});
+
+		return chords;
 	}
 
 	// parse the text-content
@@ -187,13 +194,19 @@ export default class SongFile {
 		const data = raw_data.replaceAll("\r", "").split(/\n---?(?:\n|$)/);
 
 		// parse metadata of the header
-		this.parse_metadata(data[0], fast);
+		const chords = this.parse_metadata(data[0], fast);
+
+		// if chords are available, add them to metadata
+		if (chords) {
+			this.metadata.Chords = {};
+		}
 
 		// remove the header of the array
 		data.splice(0, 1);
 
 		// go through all the text blocks and save them to the text-dictionary
 		let key = "";
+		let line_number = 0;
 		for (const data_block of data) {
 			// split the block into the individual lines
 			const lines = data_block.split("\n");
@@ -210,9 +223,15 @@ export default class SongFile {
 
 				// remove the first row
 				lines.splice(0, 1);
+				line_number++;
 
 				// if it is the element with the key, there is no entry in the text-dictionary --> create it
 				this.song_parts[key] = [];
+
+				// if there are chords, create an entry in the chord-object
+				if (chords) {
+					this.metadata.Chords[key] = [];
+				}
 			}
 
 			// pad the text with empty lines so that every language has an equal amount of lines
@@ -220,19 +239,30 @@ export default class SongFile {
 				lines.push("");
 			}
 
-			const slide: string[][] = Array.from(
+			const text_slide: string[][] = Array.from(
 				Array(Math.ceil(lines.length / this.metadata.LangCount)),
 				(): string[] => []
 			);
 
-			// split the lines into the different languages
-			lines.forEach((vv, ii) => {
-				slide[Math.floor(ii / this.metadata.LangCount)].push(vv);
-			});
+			const chord_slide: ChordPart[number] = Array.from(
+				Array(Math.ceil(lines.length / this.metadata.LangCount)),
+				(): Record<number, Chord>[] => []
+			);
 
-			if (this.song_parts[key] !== undefined) {
-				this.song_parts[key].push(slide);
-			}
+			// split the lines into the different languages
+			lines.forEach((ll, ii) => {
+				text_slide[Math.floor(ii / this.metadata.LangCount)].push(ll);
+
+				// store the chords
+				chord_slide[Math.floor(ii / this.metadata.LangCount)].push(chords?.[line_number] ?? []);
+				line_number++;
+			});
+			// add the line for the new-slide line to the counter
+			line_number++;
+
+			this.song_parts[key]?.push(text_slide);
+
+			this.metadata.Chords?.[key]?.push(chord_slide);
 		}
 	}
 
@@ -349,13 +379,32 @@ export default class SongFile {
 						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;
 
 					case "Chords": {
-						const chord_string = Object.entries(val as SongFileMetadata["Chords"])
-							.map(([line, val2]) =>
-								Object.entries(val2).map(([char, chord]: [string, Chord]) => {
-									return `${char},${line},${get_chord_string(chord)}`;
-								})
-							)
-							.flat()
+						let line_number = 0;
+						const chord_string = Object.entries(this.metadata.Chords)
+							.map(([, chords]) => {
+								const res = chords.map((slide) =>
+									slide.map((line) => {
+										const res = line.map((lang) => {
+											line_number++;
+
+											return Object.entries(lang).map(
+												([char, chord]) => `${char},${line_number},${get_chord_string(chord)}`
+											);
+										});
+
+										// increase for the new-slide line
+										line_number++;
+
+										return res;
+									})
+								);
+
+								// increase for the part-name line
+								line_number++;
+
+								return res;
+							})
+							.flat(Infinity)
 							.join("\r");
 
 						return `#Chords=${Buffer.from(chord_string).toString("base64")}`;
@@ -386,8 +435,8 @@ export default class SongFile {
 	}
 }
 
-function parse_base64_chords(base64: string): Chords {
-	const return_object: Chords = {};
+function parse_base64_chords(base64: string): Record<number, Record<number, Chord>> {
+	const return_object: Record<number, Record<number, Chord>> = {};
 
 	const chords = Buffer.from(base64, "base64").toString();
 

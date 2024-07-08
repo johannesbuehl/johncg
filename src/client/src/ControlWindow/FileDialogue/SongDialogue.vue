@@ -18,7 +18,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		choose: [Node<SongFile> | undefined];
+		choose: [Node<"song"> | undefined];
 		new_song: [];
 		new_directory: [path: string];
 	}>();
@@ -26,14 +26,14 @@
 	// currently selected song
 	const selection = defineModel<SongFile>("selection");
 
-	const directory_stack = defineModel<Directory<SongFile>[]>("directory_stack", {
+	const directory_stack = defineModel<Directory<"song">[]>("directory_stack", {
 		default: () => reactive([])
 	});
 
 	const verse_order = ref<string[]>([]);
 	const languages = ref<[number, boolean][]>([]);
 
-	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData, SongFile>>([
+	const search_strings = ref<SearchInputDefinitions<keyof SearchMapData, "song">>([
 		{
 			id: "id",
 			placeholder: "Song ID",

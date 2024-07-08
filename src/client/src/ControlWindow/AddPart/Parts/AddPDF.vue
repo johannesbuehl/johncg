@@ -21,11 +21,11 @@
 
 	const selection = defineModel<PDFFile>({});
 
-	const search_strings = ref<SearchInputDefinitions<"name", PDFFile>>([
+	const search_strings = ref<SearchInputDefinitions<"name", "pdf">>([
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	function add_pdf(file?: Node<PDFFile>) {
+	function add_pdf(file?: Node<"pdf">) {
 		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}

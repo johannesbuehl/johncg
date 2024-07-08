@@ -28,7 +28,7 @@
 
 	const media_selection = defineModel<CasparFile>({});
 
-	function add_countdown(file_selection: Node<CasparFile>) {
+	function add_countdown(file_selection: Node<"media">) {
 		if (!file_selection.is_dir) {
 			const return_props = create_props();
 

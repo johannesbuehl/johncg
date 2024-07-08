@@ -14,7 +14,7 @@
 	library.add(fas.faFolderOpen);
 
 	const file_dialogue_selection = ref<PlaylistFile>();
-	const file_dialogue_directory_stack = ref<Directory<PlaylistFile>[]>([]);
+	const file_dialogue_directory_stack = ref<Directory<"playlist">[]>([]);
 	const playlist_file = ref<PlaylistFile>();
 
 	const playlist_file_name = defineModel<string>("playlist_file_name", { required: true });
@@ -23,7 +23,7 @@
 		Globals.get_playlist_files();
 	});
 
-	function save_playlist(playlist?: Node<PlaylistFile>) {
+	function save_playlist(playlist?: Node<"playlist">) {
 		// if the selection is a directory, exit
 		if (playlist?.is_dir) {
 			return;

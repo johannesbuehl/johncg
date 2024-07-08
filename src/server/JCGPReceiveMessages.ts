@@ -1,7 +1,7 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
-import type { CasparFile, ItemNodeMap } from "./search_part";
+import type { CasparFile, ItemFileMap } from "./search_part";
 import * as JCGPSend from "./JCGPSendMessages";
 
 /**
@@ -85,7 +85,7 @@ export interface MovePlaylistItem extends Base {
 
 export interface GetItemFiles extends Base {
 	command: "get_item_files";
-	type: keyof ItemNodeMap;
+	type: keyof ItemFileMap;
 }
 
 export interface GetBible extends Base {

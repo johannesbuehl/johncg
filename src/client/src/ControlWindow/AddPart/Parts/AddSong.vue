@@ -38,7 +38,7 @@
 		}
 	);
 
-	function add_song(file?: Node<SongFile>) {
+	function add_song(file?: Node<"song">) {
 		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}

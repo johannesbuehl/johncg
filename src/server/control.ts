@@ -15,7 +15,7 @@ import * as JCGPSend from "./JCGPSendMessages.ts";
 import * as JCGPRecv from "./JCGPReceiveMessages.ts";
 
 import Config, { CasparCGConnectionSettings } from "./config/config.ts";
-import SearchPart, { CasparFile, ItemNodeMap, ItemNodeMapped, Node } from "./search_part.ts";
+import SearchPart, { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part.ts";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
 import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { logger } from "./logger.ts";
@@ -859,10 +859,10 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
-	private async get_item_files<K extends keyof ItemNodeMap>(type: K, ws: WebSocket) {
+	private async get_item_files<K extends keyof ItemFileMap>(type: K, ws: WebSocket) {
 		logger.debug(`retrieving item-files: '${type}'`);
 
-		const search_map: { [T in keyof ItemNodeMap]: () => Promise<Node<ItemNodeMapped<T>>[]> } = {
+		const search_map: { [T in keyof ItemFileMap]: () => Promise<ItemNodeMapped<T>[]> } = {
 			media: async () => await this.search_part.get_casparcg_media(),
 			template: async () => await this.search_part.get_casparcg_template(),
 			song: () => Promise.resolve(this.search_part.find_sng_files()),
@@ -874,10 +874,10 @@ export default class Control {
 		const files = await search_map[type]();
 
 		if (files !== undefined) {
-			const message: JCGPSend.ItemFiles<ItemNodeMapped<K>> = {
+			const message: JCGPSend.ItemFiles<K> = {
 				command: "item_files",
 				type,
-				files,
+				files: files as Node<K>[],
 				server_id
 			};
 
@@ -1031,9 +1031,9 @@ export default class Control {
 		});
 	}
 
-	private new_directory<Type extends JCGPRecv.NewDirectory["type"]>(
+	private new_directory<T extends JCGPRecv.NewDirectory["type"]>(
 		path: string,
-		type: Type,
+		type: T,
 		ws: WebSocket
 	) {
 		const directory_path = Config.get_path(type, path);
@@ -1049,15 +1049,14 @@ export default class Control {
 				ws_send_response(`Created directory: ${directory_path}`, true, ws);
 
 				const search_map: {
-					[T in JCGPRecv.NewDirectory["type"]]: () => Promise<Node<ItemNodeMapped<T>>[]>;
+					[K in JCGPRecv.NewDirectory["type"]]: () => Promise<ItemNodeMapped<K>[]>;
 				} = {
 					song: () => this.search_part.find_sng_files(),
 					playlist: () => this.search_part.find_jcg_files(),
 					psalm: () => this.search_part.find_psalm_files()
 				};
 
-				// send the new files to the client
-				this.send_all_clients<JCGPSend.ItemFiles<ItemNodeMapped<Type>>>({
+				this.send_all_clients<JCGPSend.ItemFiles<T>>({
 					command: "item_files",
 					type,
 					files: await search_map[type](),
@@ -1249,19 +1248,21 @@ function check_song_data(song_data: SongData): boolean {
 			typeof chord.chord_descriptors === "string" &&
 			(chord.bass_note === undefined || typeof chord.bass_note === "string");
 
-		test_result &&= Object.entries(song_data.metadata.Chords).every(
-			([line_number, line_chords]) => {
-				const check =
-					!isNaN(Number(line_number)) &&
-					Object.entries(line_chords).every(([pos_number, chord]) => {
-						const check = !isNaN(Number(pos_number)) && chord_check(chord);
+		test_result &&= Object.entries(song_data.metadata.Chords).every(([part, slides]) => {
+			const check =
+				typeof part === "string" &&
+				slides.every((slide) =>
+					slide.every((line) =>
+						line.every((lang) =>
+							Object.entries(lang).every(
+								([char, chord]) => /^(-1|\d+)$/.test(char) && chord_check(chord)
+							)
+						)
+					)
+				);
 
-						return check;
-					});
-
-				return check;
-			}
-		);
+			return check;
+		});
 	}
 
 	if (song_data.metadata.Transpose !== undefined) {

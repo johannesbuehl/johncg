@@ -269,7 +269,12 @@ export default class Playlist {
 		} else {
 			const save_object: PlaylistObject = {
 				caption: this.caption,
-				items: this.playlist_items.map((item) => item.props)
+				items: this.playlist_items.map(
+					(item) =>
+						Object.fromEntries(
+							Object.entries(item.props).filter(([key]) => key !== "displayable")
+						) as ItemProps
+				)
 			};
 
 			fs.writeFileSync(

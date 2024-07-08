@@ -1,5 +1,5 @@
 <script lang="ts">
-	export interface SearchInputDefinition<K, T extends ItemFile> {
+	export interface SearchInputDefinition<K, T extends keyof ItemFileMap> {
 		id: K;
 		placeholder: string;
 		value: string;
@@ -7,9 +7,12 @@
 		get: (ff: Node<T>) => string;
 	}
 
-	export type SearchInputDefinitions<K, T extends ItemFile> = SearchInputDefinition<K, T>[];
+	export type SearchInputDefinitions<K, T extends keyof ItemFileMap> = SearchInputDefinition<
+		K,
+		T
+	>[];
 
-	export function sort_dirs<K extends ItemFile>(files: Node<K>[]): Directory<K>[] {
+	export function sort_dirs<K extends keyof ItemFileMap>(files: Node<K>[]): Directory<K>[] {
 		const dirs = files.filter((ff) => ff.is_dir) as Directory<K>[];
 
 		return dirs.sort((a, b) => {
@@ -27,7 +30,9 @@
 		});
 	}
 
-	export function sort_files<K extends ItemNode>(files: K[]): K[] {
+	export function sort_files<K extends keyof ItemFileMap>(
+		files: ItemNodeMapped<K>[]
+	): ItemNodeMapped<K>[] {
 		return files
 			?.filter((fil) => !fil.is_dir)
 			.sort((a, b) => {
@@ -45,7 +50,7 @@
 			});
 	}
 
-	export function create_directory_stack<K extends ItemFile>(
+	export function create_directory_stack<K extends keyof ItemFileMap>(
 		item_files: Node<K>[],
 		path_stack: string[]
 	): Directory<K>[] {
@@ -71,7 +76,7 @@
 	}
 </script>
 
-<script setup lang="ts" generic="T extends ItemFile">
+<script setup lang="ts" generic="T extends keyof ItemFileMap">
 	import { onMounted, reactive, ref, useSlots, watch } from "vue";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { library } from "@fortawesome/fontawesome-svg-core";
@@ -82,7 +87,13 @@
 	import PopUp from "../PopUp.vue";
 
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import type { Directory, ItemFile, ItemNode, Node } from "@server/search_part";
+	import type {
+		Directory,
+		ItemFileMap,
+		ItemFileMapped,
+		ItemNodeMapped,
+		Node
+	} from "@server/search_part";
 	import PlaylistItemDummy from "../Playlist/PlaylistItemDummy.vue";
 
 	library.add(
@@ -100,7 +111,7 @@
 		select_dirs?: boolean;
 		files: Node<T>[];
 		thumbnails?: Record<string, string>;
-		clone_callback?: (arg: T) => ItemProps;
+		clone_callback?: (arg: ItemFileMapped<T>) => ItemProps;
 		new_button?: boolean;
 		new_directory?: boolean;
 		search_disabled?: boolean;

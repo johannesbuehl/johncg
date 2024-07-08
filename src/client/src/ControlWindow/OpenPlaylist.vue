@@ -16,11 +16,11 @@
 
 	const selection = ref<PlaylistFile>();
 
-	const search_strings = ref<SearchInputDefinitions<"name", PlaylistFile>>([
+	const search_strings = ref<SearchInputDefinitions<"name", "playlist">>([
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	function load_playlist(playlist?: Node<PlaylistFile>) {
+	function load_playlist(playlist?: Node<"playlist">) {
 		// if the selection is a directory, exit
 		if (playlist !== undefined && !playlist.is_dir) {
 			const id = Globals.add_confirm((state: boolean) => {

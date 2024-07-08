@@ -151,6 +151,7 @@
 						tag="span"
 						:list="Object.entries(song_data?.text ?? {})"
 						:group="{ name: 'song_part', pull: 'clone', put: false }"
+						handle=".text_part_handle"
 						:clone="on_clone"
 						:sort="false"
 						delay-on-touch-only="true"
@@ -158,18 +159,25 @@
 					>
 						<div
 							v-for="([part_name, part], index) of Object.entries(song_data?.text ?? {})"
-							class="song_part"
-							:class="{ active: selected_available_song_part === index }"
-							@click="selected_available_song_part = index"
+							class="song_part_container"
 						>
-							<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
-								{{ part_name }}
-							</div>
-							<div class="song_slides_wrapper">
-								<div v-for="slide in part">
-									<div v-for="line in slide">
-										<div class="song_language_line" v-for="lang in get_language_lines(line)">
-											{{ lang }}
+							<MenuButton :square="true" @click="selected_parts.push(part_name)">
+								<FontAwesomeIcon :icon="['fas', 'plus']" />
+							</MenuButton>
+							<div
+								class="song_part text_part_handle"
+								:class="{ active: selected_available_song_part === index }"
+								@click="selected_available_song_part = index"
+							>
+								<div class="song_part_header" :style="{ color: get_song_part_color(part_name) }">
+									{{ part_name }}
+								</div>
+								<div class="song_slides_wrapper">
+									<div v-for="slide in part">
+										<div v-for="line in slide">
+											<div class="song_language_line" v-for="lang in get_language_lines(line)">
+												{{ lang }}
+											</div>
 										</div>
 									</div>
 								</div>
@@ -318,8 +326,23 @@
 		overflow-x: hidden;
 	}
 
+	.song_part_container {
+		display: flex;
+
+		gap: inherit;
+
+		padding-left: 0.25rem;
+
+		overflow: visible;
+	}
+
+	.song_part_container > .button {
+		margin: 0;
+	}
+
 	.song_part {
 		overflow: visible;
+		width: 100%;
 
 		border-radius: 0.25rem;
 
@@ -397,15 +420,20 @@
 		background-color: var(--color-active-hover) !important;
 	}
 
-	.dragging.song_part {
+	.dragging.song_part_container {
 		padding: 0;
 	}
 
-	.dragging > .song_slides_wrapper {
+	.dragging > :not(.song_part) {
 		display: none;
 	}
 
-	.dragging > .song_part_header {
+	.dragging > .song_part > .song_slides_wrapper {
+		display: none;
+	}
+
+	.dragging > .song_part {
 		background-color: var(--color-item-hover);
+		padding: 0.25rem;
 	}
 </style>

@@ -30,7 +30,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
-	const psalm_search_strings = ref<SearchInputDefinitions<"name", PsalmFile>>([
+	const psalm_search_strings = ref<SearchInputDefinitions<"name", "psalm">>([
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 	const psalm_file_name = ref<string>("");
@@ -51,7 +51,7 @@
 		{ immediate: true }
 	);
 
-	const directory_stack = ref<Directory<PsalmFile>[]>([]);
+	const directory_stack = ref<Directory<"psalm">[]>([]);
 	watch(
 		() => [file_selection.value, Globals.get_psalm_files()],
 		() => {

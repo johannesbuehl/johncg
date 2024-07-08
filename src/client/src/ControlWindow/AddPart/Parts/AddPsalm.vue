@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { ref } from "vue";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
@@ -21,7 +21,7 @@
 	}>();
 
 	const selection = ref<PsalmFile>();
-	const search_strings = ref<SearchInputDefinitions<"id" | "caption", PsalmFile>>([
+	const search_strings = ref<SearchInputDefinitions<"id" | "caption", "psalm">>([
 		{
 			id: "id",
 			placeholder: "Psalm ID",
@@ -37,7 +37,7 @@
 		}
 	]);
 
-	function add_psalm(file?: Node<PsalmFile>) {
+	function add_psalm(file?: Node<"psalm">) {
 		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}

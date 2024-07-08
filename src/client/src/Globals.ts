@@ -7,8 +7,9 @@ import type * as JCGPSend from "@server/JCGPSendMessages";
 import { LogLevel } from "@server/JCGPSendMessages";
 import type {
 	CasparFile,
-	ItemNodeMap,
+	ItemFileMap,
 	ItemNodeMapped,
+	Node,
 	PDFFile,
 	PlaylistFile,
 	PsalmFile,
@@ -170,7 +171,7 @@ class Global {
 	}
 
 	// Item-Files
-	item_files = ref<{ [key in keyof ItemNodeMap]: ItemNodeMapped<key>[] }>({
+	item_files = ref<{ [key in keyof ItemFileMap]: ItemNodeMapped<key>[] }>({
 		song: [],
 		media: [],
 		pdf: [],
@@ -178,7 +179,7 @@ class Global {
 		template: [],
 		psalm: []
 	});
-	private item_files_last_requests: { [key in keyof ItemNodeMap]: number } = {
+	private item_files_last_requests: { [key in keyof ItemFileMap]: number } = {
 		song: 0,
 		media: 0,
 		pdf: 0,
@@ -186,7 +187,7 @@ class Global {
 		template: 0,
 		psalm: 0
 	};
-	get_song_files(force: boolean = false): SongFile[] {
+	get_song_files(force: boolean = false): Node<"song">[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -207,7 +208,7 @@ class Global {
 
 		return this.item_files.value.song;
 	}
-	get_media_files(force: boolean = false): CasparFile[] {
+	get_media_files(force: boolean = false): Node<"media">[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -231,7 +232,7 @@ class Global {
 
 		return this.item_files.value.media;
 	}
-	get_pdf_files(force: boolean = false): PDFFile[] {
+	get_pdf_files(force: boolean = false): Node<"pdf">[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -252,7 +253,7 @@ class Global {
 
 		return this.item_files.value.pdf;
 	}
-	get_playlist_files(force: boolean = false): PlaylistFile[] {
+	get_playlist_files(force: boolean = false): Node<"playlist">[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -273,7 +274,7 @@ class Global {
 
 		return this.item_files.value.playlist;
 	}
-	get_template_files(force: boolean = false): CasparFile[] {
+	get_template_files(force: boolean = false): Node<"template">[] {
 		const now = new Date().valueOf();
 
 		if (
@@ -294,7 +295,7 @@ class Global {
 
 		return this.item_files.value.template;
 	}
-	get_psalm_files(force: boolean = false): PsalmFile[] {
+	get_psalm_files(force: boolean = false): Node<"psalm">[] {
 		const now = new Date().valueOf();
 
 		if (

@@ -4,7 +4,7 @@ import { BibleFile } from "./PlaylistItems/Bible.ts";
 import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
 import { CasparCGResolution } from "./CasparCGConnection.js";
 import { RequireAtLeastOne } from "./lib.ts";
-import { ItemFile, ItemNodeMapped, Node } from "./search_part.ts";
+import { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "./search_part.ts";
 
 /**
  * Base interface for sent JCGP-messages
@@ -52,16 +52,15 @@ interface ItemSlidesBase extends Base {
 
 export type ItemSlides = ClientItemSlides & ItemSlidesBase;
 
-export interface ItemFiles<K extends ItemFile> extends Base {
-	command: "item_files";
-	type: GetItemFiles["type"];
-	files: Node<K>[];
-}
+export type ItemFiles<K extends keyof ItemFileMap> = Base & { command: "item_files" } & {
+	type: K;
+	files: ItemNodeMapped<K>[];
+};
 
 export type ItemData<K extends GetItemData["type"]> = {
 	command: "item_data";
 	type: K;
-	data: ItemNodeMapped<K>;
+	data: ItemFileMapped<K>;
 } & Base;
 
 export interface Bible extends Base {
@@ -121,7 +120,7 @@ export type Message =
 	| Playlist
 	| State
 	| ItemSlides
-	| ItemFiles<ItemFile>
+	| ItemFiles<GetItemFiles["type"]>
 	| ItemData<GetItemData["type"]>
 	| Bible
 	| PlaylistPDF

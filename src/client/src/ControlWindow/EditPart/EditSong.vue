@@ -78,8 +78,6 @@
 	function create_props(): ClientSongItem | undefined {
 		const return_props = structuredClone(toRaw(song_props.value));
 
-		console.error(props.song_data?.metadata.VerseOrder);
-
 		// only return the verse-order if it is different than the default
 		const default_parts = props.song_data?.metadata.VerseOrder ?? [];
 		if (
@@ -92,10 +90,6 @@
 		} else {
 			return_props.verse_order = undefined;
 		}
-
-		console.warn(default_parts);
-		console.warn(verse_order.value);
-		console.warn(return_props.verse_order);
 
 		if (
 			languages.value.some((val, index) => {

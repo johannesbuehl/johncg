@@ -28,13 +28,16 @@ export interface PsalmFile extends FileBase {
 export type CasparFile = FileBase;
 export type PDFFile = FileBase;
 export type PlaylistFile = FileBase;
-// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
-export type ItemFile = SongFile | PsalmFile | CasparFile | PDFFile | PlaylistFile;
 
-export type Node<K extends ItemFile> = K | Directory<K>;
-export type Directory<K extends ItemFile> = NodeBase & { children: Node<K>[]; is_dir: true };
-export type ItemNode = Node<ItemFile>;
-export interface ItemNodeMap {
+export type Node<K extends keyof ItemFileMap> = ItemFileMapped<K> | Directory<K>;
+export type Directory<K extends keyof ItemFileMap> = NodeBase &
+	{
+		[T in K]: {
+			children: Node<T>[];
+			is_dir: true;
+		};
+	}[K];
+export interface ItemFileMap {
 	song: SongFile;
 	psalm: PsalmFile;
 	media: CasparFile;
@@ -42,7 +45,8 @@ export interface ItemNodeMap {
 	pdf: PDFFile;
 	playlist: PlaylistFile;
 }
-export type ItemNodeMapped<K extends keyof ItemNodeMap> = ItemNodeMap[K];
+export type ItemFileMapped<K extends keyof ItemFileMap> = ItemFileMap[K];
+export type ItemNodeMapped<K extends keyof ItemFileMap> = Node<K>;
 
 export default class SearchPart {
 	constructor() {}
@@ -79,11 +83,11 @@ export default class SearchPart {
 		};
 	}
 
-	private async find_files<K extends ItemFile>(
+	private async find_files<K extends keyof ItemFileMap>(
 		pth: string,
 		root: string,
 		extension: string,
-		file_converter: (f: FileBase) => Promise<K>
+		file_converter: (f: FileBase) => Promise<ItemFileMapped<K>>
 	): Promise<Node<K>[]> {
 		const files = await fs.readdir(pth);
 
@@ -120,10 +124,10 @@ export default class SearchPart {
 		return (await Promise.all(promises)).filter((el) => el !== undefined);
 	}
 
-	async find_sng_files(pth: string = Config.path.song): Promise<Node<SongFile>[]> {
+	async find_sng_files(pth: string = Config.path.song): Promise<Node<"song">[]> {
 		logger.log("searching song-files");
 
-		return this.find_files<SongFile>(
+		return this.find_files<"song">(
 			pth,
 			pth,
 			".sng",
@@ -131,25 +135,25 @@ export default class SearchPart {
 		);
 	}
 
-	async find_jcg_files(pth: string = Config.path.playlist): Promise<Node<PlaylistFile>[]> {
+	async find_jcg_files(pth: string = Config.path.playlist): Promise<Node<"playlist">[]> {
 		logger.log("searching jcg-files");
 
-		return this.find_files<PlaylistFile>(pth, pth, ".jcg", (f) => Promise.resolve(f));
+		return this.find_files<"playlist">(pth, pth, ".jcg", (f) => Promise.resolve(f));
 	}
 
-	async find_pdf_files(pth: string = Config.path.pdf): Promise<Node<PDFFile>[]> {
+	async find_pdf_files(pth: string = Config.path.pdf): Promise<Node<"pdf">[]> {
 		logger.log("searching PDF-files");
 
-		return this.find_files<PDFFile>(pth, pth, ".pdf", (f) => Promise.resolve(f));
+		return this.find_files<"pdf">(pth, pth, ".pdf", (f) => Promise.resolve(f));
 	}
 
-	async find_psalm_files(pth: string = Config.path.psalm): Promise<Node<PsalmFile>[]> {
+	async find_psalm_files(pth: string = Config.path.psalm): Promise<Node<"psalm">[]> {
 		logger.log("searching psalm-files");
 
-		return this.find_files<PsalmFile>(pth, pth, ".psm", (f) => this.create_psalm_file(f));
+		return this.find_files<"psalm">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
 	}
 
-	async get_casparcg_media(): Promise<Node<CasparFile>[]> {
+	async get_casparcg_media(): Promise<Node<"media">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-media-list: no connection added");
 			return;
@@ -166,7 +170,7 @@ export default class SearchPart {
 		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
-	async get_casparcg_template(): Promise<Node<CasparFile>[]> {
+	async get_casparcg_template(): Promise<Node<"template">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-template-list: no connection added");
 			return;
@@ -224,7 +228,10 @@ export default class SearchPart {
 	}
 }
 
-function build_files(input_array: string[][], root?: string): Node<CasparFile>[] {
+function build_files<K extends "media" | "template">(
+	input_array: string[][],
+	root?: string
+): Node<K>[] {
 	const temp_object: Record<string, string[][]> = {};
 
 	input_array.forEach((m) => {
@@ -245,7 +252,7 @@ function build_files(input_array: string[][], root?: string): Node<CasparFile>[]
 		}
 	});
 
-	return Object.entries(temp_object).map(([key, files]): Node<CasparFile> => {
+	return Object.entries(temp_object).map(([key, files]): Node<K> => {
 		// if the file is hidden, skip it
 		if (key[0] === ".") {
 			return undefined;

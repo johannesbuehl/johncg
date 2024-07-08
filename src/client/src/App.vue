@@ -28,7 +28,7 @@
 
 	import * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { ItemFileMapped, ItemFileType } from "@server/search_part";
+	import type { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "@server/search_part";
 
 	library.add(fas.faCheck, fas.faXmark);
 
@@ -250,22 +250,34 @@
 		});
 	}
 
-	function parse_item_files(data: JCGPSend.ItemFiles<keyof ItemFileType>) {
+	function parse_item_files<T extends keyof ItemFileMap>(data: JCGPSend.ItemFiles<T>) {
 		if (Object.keys(Globals.item_files.value).includes(data.type)) {
-			Globals.item_files.value[data.type] = data.files;
+			// trickery because of typescripts (too) strict typing
+			switch (data.type) {
+				case "media":
+					Globals.item_files.value.media = data.files as ItemNodeMapped<T>[];
+					break;
+				case "pdf":
+					Globals.item_files.value.pdf = data.files as ItemNodeMapped<T>[];
+					break;
+				case "playlist":
+					Globals.item_files.value.playlist = data.files as ItemNodeMapped<T>[];
+					break;
+				case "template":
+					Globals.item_files.value.template = data.files as ItemNodeMapped<T>[];
+					break;
+				case "psalm":
+					Globals.item_files.value.psalm = data.files as ItemNodeMapped<"psalm">[];
+					break;
+				case "song":
+					Globals.item_files.value.song = data.files as ItemNodeMapped<"song">[];
+					break;
+			}
 		}
 	}
 
-	function store_item_data(data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>) {
-		// work around typescripts conservative type-system
-		switch (data.type) {
-			case "song":
-				item_data.value.song = data.data;
-				break;
-			case "psalm":
-				item_data.value.psalm = data.data;
-				break;
-		}
+	function store_item_data<K extends JCGPRecv.GetItemData["type"]>(data: JCGPSend.ItemData<K>) {
+		item_data.value[data.type] = data.data;
 	}
 
 	function store_thumbnails(data: JCGPSend.MediaThumbnails) {

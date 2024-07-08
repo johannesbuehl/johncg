@@ -73,7 +73,7 @@
 		}
 	);
 
-	const media_directory_stack = ref<Directory<CasparFile>[]>([]);
+	const media_directory_stack = ref<Directory<"media">[]>([]);
 	watch(
 		() => [metadata.value.BackgroundImage, Globals.get_media_files()],
 		() => {
@@ -94,7 +94,7 @@
 		{ immediate: true }
 	);
 
-	const song_directory_stack = ref<Directory<SongFile>[]>([]);
+	const song_directory_stack = ref<Directory<"song">[]>([]);
 	watch(
 		() => Globals.get_song_files(),
 		() => {

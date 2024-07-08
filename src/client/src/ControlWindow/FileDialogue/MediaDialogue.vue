@@ -20,12 +20,12 @@
 
 	const selection = defineModel<CasparFile>("selection");
 
-	const directory_stack = defineModel<Directory<CasparFile>[]>("directory_stack", {
+	const directory_stack = defineModel<Directory<"media">[]>("directory_stack", {
 		default: () => reactive([])
 	});
 
-	const search_strings = ref<SearchInputDefinitions<"name", CasparFile>>([
-		{ id: "name", placeholder: "Name", value: "", get: (ff: Node<CasparFile>) => ff.name }
+	const search_strings = ref<SearchInputDefinitions<"name", "media">>([
+		{ id: "name", placeholder: "Name", value: "", get: (ff: Node<"media">) => ff.name }
 	]);
 
 	watch(
@@ -33,7 +33,7 @@
 		() => {
 			// if there are no fitting thumbnails , retrieve them also
 			// if the directory-stack is populated, use it
-			let files: Node<CasparFile>[];
+			let files: Node<"media">[];
 			if (directory_stack.value.length > 0) {
 				files = directory_stack.value.slice(-1)?.[0].children ?? [];
 			} else {
@@ -45,7 +45,7 @@
 		{ immediate: true }
 	);
 
-	function get_media_thumbnails(files: Node<CasparFile>[] | undefined) {
+	function get_media_thumbnails(files: Node<"media">[] | undefined) {
 		const request_files: CasparFile[] = (files ?? Globals.get_media_files()).filter(
 			(ff) => !ff.is_dir
 		) as CasparFile[];

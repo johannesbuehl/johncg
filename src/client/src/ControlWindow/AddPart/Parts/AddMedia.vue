@@ -20,7 +20,7 @@
 	const selection = defineModel<CasparFile>({});
 	const loop = ref<boolean>(false);
 
-	function add_media(file: Node<CasparFile> | undefined) {
+	function add_media(file: Node<"media"> | undefined) {
 		if (file !== undefined && !file.is_dir) {
 			emit("add", create_props(file));
 		}

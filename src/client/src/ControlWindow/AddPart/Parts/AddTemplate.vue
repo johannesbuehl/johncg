@@ -20,14 +20,14 @@
 		add: [item_props: TemplateProps];
 	}>();
 
-	const selection = defineModel<Node<CasparFile>>("selection", {});
+	const selection = defineModel<Node<"template">>("selection", {});
 	const template_data = defineModel<object>("template_data", { default: {} });
 
-	const search_strings = ref<SearchInputDefinitions<"name", CasparFile>>([
+	const search_strings = ref<SearchInputDefinitions<"name", "template">>([
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	function add_template(ff?: Node<CasparFile>) {
+	function add_template(ff?: Node<"template">) {
 		if (ff !== undefined && !ff.is_dir) {
 			emit("add", create_props(ff));
 		}

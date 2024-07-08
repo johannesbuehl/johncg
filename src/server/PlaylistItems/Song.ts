@@ -5,7 +5,7 @@ import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile/SongFile.ts";
-import type { Chords, ItemPart, LyricPart } from "./SongFile/SongFile.ts";
+import type { ChordParts, ItemPart, LyricPart } from "./SongFile/SongFile.ts";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -27,7 +27,7 @@ export interface SongTemplateData {
 	command: "data";
 	parts: ItemPart[];
 	languages?: number[];
-	chords?: Chords;
+	chords?: ChordParts;
 	slide: number;
 }
 
@@ -94,7 +94,8 @@ export default class Song extends PlaylistItemBase {
 			command: "data",
 			slide: this.active_slide,
 			parts: [this.song_file.part_title],
-			languages: this.props.languages ?? this.song_file.languages
+			languages: this.props.languages ?? this.song_file.languages,
+			chords: this.song_file.metadata.Chords
 		};
 
 		// add the individual parts to the output-object
@@ -311,10 +312,21 @@ export default class Song extends PlaylistItemBase {
 		if (full) {
 			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
 
-			parts.forEach((part) => {
-				return_string += `**${part}**  `;
+			parts.forEach((part_name) => {
+				return_string += `**${part_name}**  `;
 
-				this.song_file.get_part(part).slides.forEach((slide) => {
+				let part_text: LyricPart;
+
+				try {
+					part_text = this.song_file.get_part(part_name);
+				} catch (e) {
+					if (!(e instanceof ReferenceError)) {
+						throw e;
+					} else {
+						return;
+					}
+				}
+				part_text.slides?.forEach((slide) => {
 					slide.forEach((line) => {
 						languages.forEach((language_index) => {
 							if (line[language_index].length > 0) {
