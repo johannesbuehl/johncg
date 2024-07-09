@@ -84,14 +84,17 @@
 				ref="lyric_slides"
 			>
 				<template v-for="(line, line_index) of slide">
-					<TextLine
-						v-for="(lang_index, lang_number) in data.languages ??
-						Array.from(Array(line.length).keys())"
-						class="textline"
-						:class="[`language_${lang_number}`]"
-						:text="line[lang_index]"
-						:chords="data.chords?.[part.part][slide_index][line_index][lang_index]"
-					/>
+					<template v-for="lang_number in data.languages">
+						<template v-for="(lang, lang_index) in line">
+							<TextLine
+								v-if="lang.lang === lang_number"
+								class="textline"
+								:class="[`language_${lang_number}`]"
+								:text="lang.text"
+								:chords="data.chords?.[part.part][slide_index][line_index][lang_index].chords"
+							/>
+						</template>
+					</template>
 				</template>
 			</div>
 		</template>

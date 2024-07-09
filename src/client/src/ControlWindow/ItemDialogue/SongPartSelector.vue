@@ -45,7 +45,7 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
-	import type { SongData, SongPart } from "@server/PlaylistItems/SongFile/SongFile";
+	import type { SongData, SongPart, TextLine } from "@server/PlaylistItems/SongFile/SongFile";
 	import { nextTick } from "process";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
@@ -101,12 +101,12 @@
 		}
 	}
 
-	function get_language_lines(line: string[]): string[] {
-		const ret_lines: string[] = [];
+	function get_language_lines(line: TextLine[]): TextLine[] {
+		const ret_lines: TextLine[] = [];
 
 		selected_languages.value.forEach(([index, state]) => {
 			if (state) {
-				ret_lines.push(line[index]);
+				ret_lines.push(...line.filter((lang) => lang.lang === index));
 			}
 		});
 
@@ -176,7 +176,7 @@
 									<div v-for="slide in part">
 										<div v-for="line in slide">
 											<div class="song_language_line" v-for="lang in get_language_lines(line)">
-												{{ lang }}
+												{{ lang.text }}
 											</div>
 										</div>
 									</div>

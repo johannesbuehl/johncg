@@ -113,7 +113,7 @@ export default class Countdown extends PlaylistItemBase {
 			title,
 			type: this.props.type,
 			media: this.media,
-			template: this.template
+			template: this.get_template()
 		});
 	}
 
@@ -162,7 +162,7 @@ export default class Countdown extends PlaylistItemBase {
 		return true;
 	}
 
-	get template(): CountdownTemplate {
+	get_template(): CountdownTemplate {
 		return {
 			template: "JohnCG/Countdown",
 			data: {

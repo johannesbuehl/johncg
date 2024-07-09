@@ -274,7 +274,7 @@
 
 				return Array.from(Array(slide_line_count_max).keys()).map((line_index) => {
 					return Array.from(Array(metadata.value.LangCount).keys()).map((lang_index) => {
-						return slide[lang_index].split("\n")[line_index] ?? "";
+						return { lang: lang_index, text: slide[lang_index].split("\n")[line_index] ?? "" };
 					});
 				});
 			});

@@ -132,7 +132,7 @@ export default class AMCP extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get template(): undefined {
+	get_template(): undefined {
 		return undefined;
 	}
 

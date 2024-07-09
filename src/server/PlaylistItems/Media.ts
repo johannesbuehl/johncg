@@ -90,7 +90,7 @@ export default class Media extends PlaylistItemBase {
 		return this.props.loop;
 	}
 
-	get template(): undefined {
+	get_template(): undefined {
 		return undefined;
 	}
 

@@ -40,7 +40,7 @@ export default class TemplateItem extends PlaylistItemBase {
 			caption: this.props.caption,
 			title: this.props.template.template,
 			media: undefined,
-			template: this.template
+			template: this.get_template()
 		});
 	}
 
@@ -90,7 +90,7 @@ export default class TemplateItem extends PlaylistItemBase {
 		return false;
 	}
 
-	get template(): TemplateTemplate {
+	get_template(): TemplateTemplate {
 		return this.props.template;
 	}
 

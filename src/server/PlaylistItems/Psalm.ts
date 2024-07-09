@@ -127,7 +127,7 @@ export default class Psalm extends PlaylistItemBase {
 			caption: this.item_props.caption,
 			title,
 			media: this.media,
-			template: this.template
+			template: this.get_template()
 		};
 
 		return Promise.resolve(return_item);
@@ -238,7 +238,7 @@ export default class Psalm extends PlaylistItemBase {
 		return this.validate_psalm_file(psalm_content_string);
 	}
 
-	get template(): PsalmTemplate {
+	get_template(): PsalmTemplate {
 		const psalm_file = this.psalm_file;
 
 		const template: PsalmTemplate = {

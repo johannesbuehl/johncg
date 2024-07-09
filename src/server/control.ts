@@ -1191,7 +1191,7 @@ function check_song_data(song_data: SongData): boolean {
 	const data_template: JCGPRecv.SaveFile["data"] = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		metadata: { Title: ["template"], LangCount: 1 },
-		text: { template: [[["template"]]] }
+		text: { template: [[[{ lang: 0, text: "template" }]]] }
 	};
 
 	// check required data
@@ -1253,10 +1253,12 @@ function check_song_data(song_data: SongData): boolean {
 				typeof part === "string" &&
 				slides.every((slide) =>
 					slide.every((line) =>
-						line.every((lang) =>
-							Object.entries(lang).every(
-								([char, chord]) => /^(-1|\d+)$/.test(char) && chord_check(chord)
-							)
+						line.every(
+							(lang) =>
+								typeof lang.lang === "number" &&
+								Object.entries(lang.chords).every(
+									([char, chord]) => /^(-1|\d+)$/.test(char) && chord_check(chord)
+								)
 						)
 					)
 				);

@@ -56,7 +56,7 @@ export default class Bible extends PlaylistItemBase {
 			title: create_bible_citation_string(this.props.book_id, this.props.chapters),
 			caption: this.props.caption,
 			media: undefined,
-			template: this.template
+			template: this.get_template()
 		});
 	}
 
@@ -103,7 +103,7 @@ export default class Bible extends PlaylistItemBase {
 		return false;
 	}
 
-	get template(): BibleTemplate {
+	get_template(): BibleTemplate {
 		return {
 			template: "JohnCG/Bible",
 			data: {

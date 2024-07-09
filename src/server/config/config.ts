@@ -16,6 +16,7 @@ export interface CasparCGConnectionSettings {
 		template: number;
 	};
 	path?: string;
+	stageview?: boolean;
 }
 
 export interface ConfigYAML {
@@ -144,6 +145,10 @@ class ConfigClass {
 
 			if (connection.path !== undefined) {
 				check &&= typeof connection.path === "string";
+			}
+
+			if (connection.stageview !== undefined) {
+				check &&= typeof connection.stageview === "boolean";
 			}
 
 			return check;

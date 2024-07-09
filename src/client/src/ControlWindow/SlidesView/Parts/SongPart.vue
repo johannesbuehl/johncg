@@ -102,16 +102,6 @@
 				{{ slides.title }}
 			</div>
 			<div class="thumbnails">
-				<!-- <ItemSlide
-					:key="`${JSON.stringify(slides.template)}_${part_index}_${0}`"
-					:media="slides.media"
-					:template="slides.template"
-					:aspect_ratio="aspect_ratio"
-					:active="is_active(part_index, 0)"
-					:scroll="scroll"
-					@onLoaded="template_loaded($event, part_slide_map[part_index][0])"
-					@click="emit('select_slide', part_slide_map[part_index][0])"
-				/> -->
 				<ItemSlideWrapper
 					:media="slides.media"
 					:aspect_ratio="aspect_ratio"

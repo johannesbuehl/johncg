@@ -45,7 +45,7 @@ export default class Text extends PlaylistItemBase {
 			caption: this.props.caption,
 			title: this.props.text.slice(0, 100),
 			media: undefined,
-			template: this.template
+			template: this.get_template()
 		});
 	}
 
@@ -88,7 +88,7 @@ export default class Text extends PlaylistItemBase {
 		return false;
 	}
 
-	get template(): ClientTextSlides["template"] {
+	get_template(): ClientTextSlides["template"] {
 		return {
 			template: "JohnCG/Text",
 			data: {

@@ -73,7 +73,7 @@ export default class Comment extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get template(): undefined {
+	get_template(): undefined {
 		return undefined;
 	}
 

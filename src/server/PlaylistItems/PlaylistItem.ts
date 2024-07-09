@@ -229,8 +229,24 @@ export abstract class PlaylistItemBase {
 		}
 	}
 
+	protected hide_media(casparcg_connection: CasparCGConnection) {
+		return catch_casparcg_timeout(
+			async () =>
+				// fade-out the media
+				casparcg_connection.connection.play({
+					/* eslint-disable @typescript-eslint/naming-convention */
+					channel: casparcg_connection.settings.channel,
+					layer: casparcg_connection.settings.layers.media,
+					clip: "EMPTY",
+					transition: get_casparcg_transition()
+					/* eslint-enable @typescript-eslint/naming-convention */
+				}),
+			"STOP - hide media"
+		);
+	}
+
 	private play_template(casparcg_connection: CasparCGConnection) {
-		const template = this.template;
+		const template = this.get_template(!!casparcg_connection.settings.stageview);
 
 		// if a template was specified, load it
 		if (template !== undefined) {
@@ -280,7 +296,7 @@ export abstract class PlaylistItemBase {
 	}
 
 	update_template(casparcg_connection: CasparCGConnection) {
-		const template = this.template;
+		const template = this.get_template(!!casparcg_connection.settings.stageview);
 
 		if (template !== undefined) {
 			logger.log(
@@ -343,21 +359,7 @@ export abstract class PlaylistItemBase {
 					];
 
 					if (connection.settings.layers.media !== undefined) {
-						promises.push(
-							catch_casparcg_timeout(
-								async () =>
-									// fade-out the media
-									connection.connection.play({
-										/* eslint-disable @typescript-eslint/naming-convention */
-										channel: connection.settings.channel,
-										layer: connection.settings.layers.media,
-										clip: "EMPTY",
-										transition: get_casparcg_transition()
-										/* eslint-enable @typescript-eslint/naming-convention */
-									}),
-								"STOP - hide media"
-							)
-						);
+						promises.push(this.hide_media(connection));
 					}
 
 					return Promise.allSettled(promises);
@@ -410,7 +412,7 @@ export abstract class PlaylistItemBase {
 
 	abstract get loop(): boolean;
 
-	abstract get template(): Template | undefined;
+	abstract get_template(stageview: boolean): Template | undefined;
 
 	get displayable(): boolean {
 		return this.is_displayable;

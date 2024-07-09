@@ -36,14 +36,14 @@ export interface TitlePart {
 export interface LyricPart {
 	type: "lyric";
 	part: string;
-	slides: string[][][];
+	slides: TextPart;
 }
 
-export type ItemPart = TitlePart | LyricPart;
+export type SongPart = TitlePart | LyricPart;
 
 export interface SongData {
 	metadata: SongFileMetadata;
-	text: SongParts;
+	text: TextParts;
 }
 
 interface BasePartClient {
@@ -61,10 +61,18 @@ export interface LyricPartClient extends BasePartClient {
 }
 
 export type ItemPartClient = TitlePartClient | LyricPartClient;
-export type SongPart = string[][][];
-export type SongParts = Record<string, SongPart>;
+export interface TextLine {
+	lang: number;
+	text: string;
+}
+export type TextPart = TextLine[][][];
+export type TextParts = Record<string, TextPart>;
 
-export type ChordPart = Record<number, Chord>[][][];
+export interface ChordLine {
+	lang: number;
+	chords: Record<number, Chord>;
+}
+export type ChordPart = ChordLine[][][];
 export type ChordParts = Record<string, ChordPart>;
 
 /**
@@ -75,7 +83,7 @@ export default class SongFile {
 	private song_file_path?: string;
 
 	// private variables
-	private song_parts: SongParts = {};
+	private song_parts: TextParts = {};
 
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -234,28 +242,57 @@ export default class SongFile {
 				}
 			}
 
-			// pad the text with empty lines so that every language has an equal amount of lines
-			while (lines.length % this.metadata.LangCount !== 0) {
-				lines.push("");
-			}
+			// const text_slide: TextLine[] = [];
+			// const chord_slide: ChordLine[] = [];
 
-			const text_slide: string[][] = Array.from(
+			// let lang_counter = 0;
+			// lines.forEach((ll) => {
+			// 	// if lang_counter reached the language-count, reset it and increase the line-counter
+			// 	if (lang_counter === this.metadata.LangCount) {
+			// 		lang_counter = 0;
+			// 	}
+
+			// 	text_slide.push({ lang: lang_counter, text: ll });
+
+			// 	// store the chords
+			// 	chord_slide.push({ lang: lang_counter, chords: chords?.[line_number] ?? [] })
+			// 	line_number++;
+
+			// 	// only increase the language-counter, if the slide isn't empty
+			// 	if (ll !== "") {
+			// 		lang_counter++;
+			// 	}
+			// });
+
+			const text_slide: TextPart[number] = Array.from(
 				Array(Math.ceil(lines.length / this.metadata.LangCount)),
-				(): string[] => []
+				(): TextLine[] => []
 			);
 
 			const chord_slide: ChordPart[number] = Array.from(
 				Array(Math.ceil(lines.length / this.metadata.LangCount)),
-				(): Record<number, Chord>[] => []
+				(): ChordLine[] => []
 			);
 
 			// split the lines into the different languages
-			lines.forEach((ll, ii) => {
-				text_slide[Math.floor(ii / this.metadata.LangCount)].push(ll);
+			let lang_counter = 0;
+			let line_counter = 0;
+			lines.forEach((ll) => {
+				if (lang_counter === this.metadata.LangCount) {
+					lang_counter = 0;
+					line_counter++;
+				}
+
+				text_slide[line_counter].push({ lang: lang_counter, text: ll });
 
 				// store the chords
-				chord_slide[Math.floor(ii / this.metadata.LangCount)].push(chords?.[line_number] ?? []);
+				chord_slide[line_counter].push({ lang: lang_counter, chords: chords?.[line_number] ?? [] });
 				line_number++;
+
+				// only increase the lang-counter, if the line isn't empty
+				if (ll !== "") {
+					lang_counter++;
+				}
 			});
 			// add the line for the new-slide line to the counter
 			line_number++;
@@ -335,7 +372,7 @@ export default class SongFile {
 		return Object.keys(this.song_parts);
 	}
 
-	get all_parts(): SongParts {
+	get all_parts(): TextParts {
 		return this.song_parts;
 	}
 
@@ -347,7 +384,7 @@ export default class SongFile {
 		return this.metadata.LangCount;
 	}
 
-	get text(): Record<string, string[][][]> {
+	get text(): TextParts {
 		return this.song_parts;
 	}
 
@@ -382,22 +419,22 @@ export default class SongFile {
 						let line_number = 0;
 						const chord_string = Object.entries(this.metadata.Chords)
 							.map(([, chords]) => {
-								const res = chords.map((slide) =>
-									slide.map((line) => {
-										const res = line.map((lang) => {
-											line_number++;
+								const res = chords.map((slide) => {
+									// increase for the line-count for the slide-seperator
+									line_number++;
 
-											return Object.entries(lang).map(
+									return slide.map((line) => {
+										return line.map((lang) => {
+											const return_value = Object.entries(lang.chords).map(
 												([char, chord]) => `${char},${line_number},${get_chord_string(chord)}`
 											);
+
+											line_number++;
+
+											return return_value;
 										});
-
-										// increase for the new-slide line
-										line_number++;
-
-										return res;
-									})
-								);
+									});
+								});
 
 								// increase for the part-name line
 								line_number++;
@@ -423,7 +460,10 @@ export default class SongFile {
 
 				part_text += text
 					.map((slide) => {
-						return slide.flat().join("\n");
+						return slide
+							.flat()
+							.map((line) => line.text)
+							.join("\n");
 					})
 					.join("\n---\n");
 

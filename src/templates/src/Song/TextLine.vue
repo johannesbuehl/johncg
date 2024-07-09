@@ -160,7 +160,6 @@
 
 	.chord {
 		color: orange;
-		font-style: italic;
 		margin-right: 0.5rem;
 
 		overflow: visible;

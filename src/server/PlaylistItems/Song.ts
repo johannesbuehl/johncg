@@ -1,11 +1,12 @@
-import { TemplateSlideJump } from "../CasparCGConnection.ts";
+import { APIRequest, Commands } from "casparcg-connection";
+import { CasparCGConnection, TemplateSlideJump } from "../CasparCGConnection.ts";
 import Config from "../config/config.ts";
 import { recurse_object_check } from "../lib.ts";
 import { logger } from "../logger.ts";
 import { PlaylistItemBase } from "./PlaylistItem.ts";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
 import SongFile from "./SongFile/SongFile.ts";
-import type { ChordParts, ItemPart, LyricPart } from "./SongFile/SongFile.ts";
+import type { ChordParts, SongPart, LyricPart } from "./SongFile/SongFile.ts";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -25,8 +26,8 @@ export type SongTemplateMessage = SongTemplateData | TemplateSlideJump;
 
 export interface SongTemplateData {
 	command: "data";
-	parts: ItemPart[];
-	languages?: number[];
+	parts: SongPart[];
+	languages: number[];
 	chords?: ChordParts;
 	slide: number;
 }
@@ -89,13 +90,13 @@ export default class Song extends PlaylistItemBase {
 		}
 	}
 
-	create_template_data() {
+	create_template_data(stageview: boolean = false) {
 		const return_object: SongTemplateData = {
 			command: "data",
 			slide: this.active_slide,
 			parts: [this.song_file.part_title],
 			languages: this.props.languages ?? this.song_file.languages,
-			chords: this.song_file.metadata.Chords
+			chords: stageview ? this.song_file.metadata.Chords : undefined
 		};
 
 		// add the individual parts to the output-object
@@ -178,8 +179,18 @@ export default class Song extends PlaylistItemBase {
 			caption: this.item_props.caption,
 			title,
 			media: this.media,
-			template: this.template
+			template: this.get_template(!!Config.casparcg.connections[0].stageview)
 		});
+	}
+
+	protected play_media(
+		casparcg_connection: CasparCGConnection
+	): Promise<APIRequest<Commands.Play>> {
+		if (!casparcg_connection.settings.stageview) {
+			return super.play_media(casparcg_connection);
+		} else {
+			return this.hide_media(casparcg_connection);
+		}
 	}
 
 	protected validate_props(props: SongProps): boolean {
@@ -242,10 +253,10 @@ export default class Song extends PlaylistItemBase {
 		return true;
 	}
 
-	get template(): SongTemplate {
+	get_template(stageview: boolean = false): SongTemplate {
 		const template: SongTemplate = {
 			template: "JohnCG/Song",
-			data: this.create_template_data()
+			data: this.create_template_data(stageview)
 		};
 
 		template.data.slide = this.active_slide;
@@ -329,13 +340,15 @@ export default class Song extends PlaylistItemBase {
 				part_text.slides?.forEach((slide) => {
 					slide.forEach((line) => {
 						languages.forEach((language_index) => {
-							if (line[language_index].length > 0) {
-								if (language_index !== languages[0]) {
-									return_string += `\n*${line[language_index]}*  `;
-								} else {
-									return_string += `\n${line[language_index]}  `;
+							line.filter((lang) => {
+								if (lang.lang === language_index && lang.text.length > 0) {
+									if (language_index === languages[0]) {
+										return_string += `\n${line[language_index].text}  `;
+									} else {
+										return_string += `\n*${line[language_index].text}*  `;
+									}
 								}
-							}
+							});
 						});
 					});
 				});

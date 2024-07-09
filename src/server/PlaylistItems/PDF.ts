@@ -199,7 +199,7 @@ export default class PDF extends PlaylistItemBase {
 		return false;
 	}
 
-	get template(): undefined {
+	get_template(): undefined {
 		return undefined;
 	}
 
