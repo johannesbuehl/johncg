@@ -1,9 +1,11 @@
 {
-	"compilerOptions": {
-		"target": "ES2015",
-		"module": "ES2015",
-		"moduleResolution": "bundler",
-		"outDir": "casparcg/Templates/JohnCG",
-		"removeComments": true
-	}
+	"files": [],
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		},
+		{
+			"path": "./tsconfig.app.json"
+		}
+	]
 }

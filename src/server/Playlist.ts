@@ -27,6 +27,7 @@ import {
 	add_casparcg_listener,
 	casparcg,
 	casparcg_clear,
+	catch_casparcg_timeout,
 	thumbnail_generate,
 	thumbnail_retrieve
 } from "./CasparCGConnection.js";
@@ -210,7 +211,7 @@ export default class Playlist {
 
 		// if the deleted item was the active one, load the new-active-item into casparcg
 		if (old_active_item === position) {
-			void this.active_playlist_item?.play();
+			void catch_casparcg_timeout(async () => await this.active_playlist_item?.play(), "PLAY");
 		}
 
 		if (this.active_item === null) {

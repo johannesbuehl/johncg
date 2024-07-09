@@ -13,16 +13,24 @@
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
+		
 		"build": "node build-scripts/build-build.js && node build-scripts/build.js",
+
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
-		"templates-build": "node build-scripts/templates-build.js",
-		"templates-watch": "node build-scripts/templates-watch.js",
+
+		"template-dev": "vite -c src/templates/vite.config.ts",
+		"template-build": "run-p template-type-check \"template-build-only {@}\" --",
+		"template-preview": "vite -c src/templates/vite.config.ts preview",
+		"template-build-only": "vite -c src/templates/vite.config.ts build",
+		"template-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
+
 		"client-dev": "vite -c src/client/vite.config.ts",
 		"client-build": "run-p client-type-check \"client-build-only {@}\" --",
 		"client-preview": "vite -c src/client/vite.config.ts preview",
 		"client-build-only": "vite -c src/client/vite.config.ts build",
 		"client-type-check": "vue-tsc --noEmit -p src/client/tsconfig.json",
+
 		"prepare": "husky",
 		"pandoc-build": "node build-scripts/pandoc-build.js"
 	},

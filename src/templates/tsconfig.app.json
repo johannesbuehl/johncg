@@ -1,6 +1,15 @@
 {
 	"extends": "@vue/tsconfig/tsconfig.dom.json",
-	"include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../server/**/*", "../templates/src/**/*"],
+	"include": [
+		"env.d.ts",
+		"src/**/*",
+		"src/**/*.vue",
+		"../server/**/*",
+		"Text.ts",
+		"Bible.ts",
+		"Countdown.ts",
+		"Psalm.ts"
+	],
 	"exclude": ["src/**/__tests__/*"],
 	"compilerOptions": {
 		"rootDir": "..",
@@ -10,8 +19,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
-			"@server/*": ["../server/*"],
-			"@templates/*": ["../templates/src/*"]
+			"@server/*": ["../server/*"]
 		},
 		"lib": ["ES2021", "DOM"]
 	}

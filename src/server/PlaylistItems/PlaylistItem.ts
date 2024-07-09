@@ -246,7 +246,7 @@ export abstract class PlaylistItemBase {
 						cgLayer: 0,
 						playOnLoad: casparcg.visibility,
 						template: template.template,
-						// escape quotation-marks by hand, since the old chrom-version of CasparCG appears to have a bug
+						// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
 						data: JSON.stringify(
 							JSON.stringify(template.data, (_key, val: unknown) => {
 								if (typeof val === "string") {

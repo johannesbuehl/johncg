@@ -15,7 +15,7 @@
 </script>
 
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { defineComponent, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -112,7 +112,7 @@
 			// reset the window-state
 			Globals.ControlWindowState === ControlWindowState.Slides;
 
-			Globals.server_connection.value = ServerConnection.connected;
+			Globals.server_connection.value = ServerConnection.Connected;
 
 			Globals.message.log("Connected to JohnCG");
 		});
@@ -175,7 +175,7 @@
 		Globals.ws?.ws.addEventListener("close", () => {
 			Globals.message.log("No connection to server. Retrying in 1s");
 
-			Globals.server_connection.value = ServerConnection.disconnected;
+			Globals.server_connection.value = ServerConnection.Disconnected;
 
 			setTimeout(() => {
 				ws_connect();

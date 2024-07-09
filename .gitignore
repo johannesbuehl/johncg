@@ -8,7 +8,7 @@ dist
 pandoc/*
 config_temp.yaml
 
-casparcg/Templates/JohnCG/*.js
+casparcg/Templates/JohnCG/*
 build-scripts/build.js
 build-scripts/3rdpartylicenses.json
 *.map

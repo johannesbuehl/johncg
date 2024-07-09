@@ -4,7 +4,7 @@ let mute_transition: boolean = false;
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function update(str_args: string) {
-	let json_args: BibleJSON;
+	let json_args: BibleJSON | undefined = undefined;
 	try {
 		json_args = JSON.parse(str_args) as BibleJSON;
 	} catch (error) {
@@ -13,7 +13,7 @@ function update(str_args: string) {
 		}
 	}
 
-	if (json_args.text !== undefined) {
+	if (json_args?.text !== undefined) {
 		document.querySelector("#text").innerHTML = json_args.text;
 	}
 

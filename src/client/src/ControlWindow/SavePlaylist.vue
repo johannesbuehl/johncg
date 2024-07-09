@@ -44,7 +44,7 @@
 
 		const id = Globals.add_confirm((state: boolean) => {
 			if (state === true) {
-				Globals.previousControlWindowState();
+				Globals.previous_control_window_state();
 			}
 		});
 

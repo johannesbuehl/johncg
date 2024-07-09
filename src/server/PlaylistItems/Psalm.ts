@@ -21,7 +21,7 @@ export type PsalmTemplateMessage = PsalmTemplateData | TemplateSlideJump;
 
 export interface PsalmTemplateData {
 	command: "data";
-	data?: PsalmFile;
+	data: PsalmFile;
 	slide: number;
 }
 

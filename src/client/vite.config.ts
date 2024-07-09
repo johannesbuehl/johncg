@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { fileURLToPath, URL } from "node:url";
 
 import { defineConfig } from "vite";
@@ -27,7 +28,11 @@ export default defineConfig(({ command }) => ({
 	resolve: {
 		alias: [
 			{ find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
-			{ find: "@server", replacement: fileURLToPath(new URL("../server", import.meta.url)) }
+			{ find: "@server", replacement: fileURLToPath(new URL("../server", import.meta.url)) },
+			{
+				find: "@templates",
+				replacement: fileURLToPath(new URL("../templates/src", import.meta.url))
+			}
 		]
 	}
 }));

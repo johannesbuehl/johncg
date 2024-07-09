@@ -212,7 +212,7 @@
 
 		const id = Globals.add_confirm((state: boolean) => {
 			if (state) {
-				Globals.ControlWindowStateConfirm = undefined;
+				Globals.control_window_state_confirm = undefined;
 
 				// reset the item-files
 				Globals.item_files.value.song = [];
@@ -311,7 +311,7 @@
 	watch(
 		() => [metadata, text_parts, background_media],
 		() => {
-			Globals.ControlWindowStateConfirm = confirm_dialog;
+			Globals.control_window_state_confirm = confirm_dialog;
 		},
 		{ deep: true }
 	);

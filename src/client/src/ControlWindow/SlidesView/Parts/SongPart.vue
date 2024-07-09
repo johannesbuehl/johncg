@@ -1,10 +1,13 @@
 <script setup lang="ts">
-	import ItemSlide from "./ItemSlide.vue";
+	import { onBeforeUpdate, watch } from "vue";
+
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
+
+	import SongTemplate from "@templates/Song/SongTemplate.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { SongTemplateData } from "@server/PlaylistItems/Song";
 	import type { ClientSongSlides } from "@server/PlaylistItems/Song";
-	import { watch } from "vue";
 
 	const props = defineProps<{
 		slides: ClientSongSlides;
@@ -76,13 +79,14 @@
 		}
 	}
 
-	function template_loaded(template_object: HTMLObjectElement, index: number) {
-		const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
-
-		contentWindow.update(JSON.stringify({ ...props.slides.template?.data, mute_transition: true }));
-		contentWindow.jump(index);
-		contentWindow.play();
+	let slide_count = 0;
+	function get_slide_index(): number {
+		return slide_count++;
 	}
+
+	onBeforeUpdate(() => {
+		slide_count = 0;
+	});
 </script>
 
 <template>
@@ -98,7 +102,7 @@
 				{{ slides.title }}
 			</div>
 			<div class="thumbnails">
-				<ItemSlide
+				<!-- <ItemSlide
 					:key="`${JSON.stringify(slides.template)}_${part_index}_${0}`"
 					:media="slides.media"
 					:template="slides.template"
@@ -107,7 +111,20 @@
 					:scroll="scroll"
 					@onLoaded="template_loaded($event, part_slide_map[part_index][0])"
 					@click="emit('select_slide', part_slide_map[part_index][0])"
-				/>
+				/> -->
+				<ItemSlideWrapper
+					:media="slides.media"
+					:aspect_ratio="aspect_ratio"
+					:active="is_active(part_index, 0)"
+					:scroll="scroll"
+					@click="emit('select_slide', part_slide_map[part_index][0])"
+				>
+					<SongTemplate
+						:data="slides.template.data"
+						:active_slide="get_slide_index()"
+						:mute_transition="true"
+					/>
+				</ItemSlideWrapper>
 			</div>
 		</div>
 		<div class="slides_wrapper" v-if="part.type === 'lyric'">
@@ -121,17 +138,20 @@
 				{{ part.part }}
 			</div>
 			<div class="thumbnails">
-				<ItemSlide
+				<ItemSlideWrapper
 					v-for="(_, slide_index) in part?.slides"
-					:key="`${JSON.stringify(slides.template)}_${part_index}_${slide_index}`"
 					:media="slides.media"
-					:template="slides.template"
 					:aspect_ratio="aspect_ratio"
 					:active="is_active(part_index, slide_index)"
 					:scroll="scroll"
-					@onLoaded="template_loaded($event, part_slide_map[part_index][slide_index])"
 					@click="emit('select_slide', part_slide_map[part_index][slide_index])"
-				/>
+				>
+					<SongTemplate
+						:data="slides.template.data"
+						:active_slide="get_slide_index()"
+						:mute_transition="true"
+					/>
+				</ItemSlideWrapper>
 			</div>
 		</div>
 	</template>

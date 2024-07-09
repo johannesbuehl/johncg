@@ -83,7 +83,7 @@
 
 <template>
 	<div class="menubar">
-		<template v-if="Globals.server_connection.value === ServerConnection.connected">
+		<template v-if="Globals.server_connection.value === ServerConnection.Connected">
 			<MenuButton :square="true" @click="new_playlist()">
 				<FontAwesomeIcon :icon="['fas', 'file']" />
 			</MenuButton>
@@ -103,8 +103,8 @@
 						save_playlist();
 
 						// backroll two states, since a double-click triggers two normal clicks
-						Globals.previousControlWindowState();
-						Globals.previousControlWindowState();
+						Globals.previous_control_window_state();
+						Globals.previous_control_window_state();
 					}
 				"
 			>

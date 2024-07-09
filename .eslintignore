@@ -2,7 +2,6 @@ node_modules*
 out
 dist
 casparcg/Templates
-client
 license-generator.ts
 license-reporter.config.ts
 build-scripts/*.js

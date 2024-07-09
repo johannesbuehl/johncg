@@ -116,7 +116,7 @@
 		@set_visibility="visibility"
 	/>
 	<div id="main_view">
-		<template v-if="Globals.server_connection.value === ServerConnection.connected">
+		<template v-if="Globals.server_connection.value === ServerConnection.Connected">
 			<OpenPlaylist v-if="Globals.ControlWindowState === ControlWindowState.OpenPlaylist" />
 			<SavePlaylist
 				v-if="Globals.ControlWindowState === ControlWindowState.SavePlaylist"

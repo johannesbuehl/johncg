@@ -1,4 +1,4 @@
-import { PsalmTemplateData, PsalmTemplateMessage } from "../server/PlaylistItems/Psalm";
+import type { PsalmTemplateData, PsalmTemplateMessage } from "../server/PlaylistItems/Psalm";
 
 let data: PsalmTemplateData & { mute_transition: boolean };
 
@@ -139,7 +139,7 @@ function stop() {
 
 // clamp the counter to valid values
 function clamp_slide_counter(counter_raw: number) {
-	return Math.max(0, Math.min(data.data.text.length - 1, counter_raw));
+	return Math.max(0, Math.min(data.data?.text.length - 1, counter_raw));
 }
 
 function create_slide(title_data: PsalmTemplateData["data"]["metadata"], slide_data: string[][]) {

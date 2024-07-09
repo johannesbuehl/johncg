@@ -5,16 +5,7 @@ import { ControlWindowState } from "./Enums";
 import * as JCGPRecv from "@server/JCGPReceiveMessages";
 import type * as JCGPSend from "@server/JCGPSendMessages";
 import { LogLevel } from "@server/JCGPSendMessages";
-import type {
-	CasparFile,
-	ItemFileMap,
-	ItemNodeMapped,
-	Node,
-	PDFFile,
-	PlaylistFile,
-	PsalmFile,
-	SongFile
-} from "@server/search_part";
+import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "@server/search_part";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
 import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 import { random_id } from "@server/lib";
@@ -26,16 +17,18 @@ export interface LogMessage {
 }
 
 export const enum ServerConnection {
-	disconnected = 0,
-	connected = 1
+	Disconnected = 0,
+	Connected = 1
 }
 
 class Log {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private _messages = ref<LogMessage[]>([]);
 	get messages(): LogMessage[] {
 		return this._messages.value;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private _log_level = ref<Record<LogLevel, boolean>>({
 		debug: false,
 		log: true,
@@ -72,6 +65,7 @@ class Log {
 }
 
 export class WSWrapper {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private _ws: WebSocket;
 	get ws(): WebSocket {
 		return this._ws;
@@ -103,6 +97,7 @@ export interface ClientSettings {
 
 class Global {
 	// Settings
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private _settings: ClientSettings = {
 		client_server: {
 			websocket: {
@@ -120,17 +115,20 @@ class Global {
 	}
 
 	// WebSocket
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	_ws: WSWrapper | undefined;
 	get ws(): WSWrapper | undefined {
 		return this._ws;
 	}
-	server_connection = ref<ServerConnection>(ServerConnection.disconnected);
+	server_connection = ref<ServerConnection>(ServerConnection.Disconnected);
 
 	// ControlWindowState
 	private control_window_state = ref<ControlWindowState[]>([ControlWindowState.Slides]);
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	get ControlWindowState(): ControlWindowState {
 		return this.control_window_state.value.slice(-1)[0];
 	}
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	set ControlWindowState(state: ControlWindowState) {
 		if (this.control_window_state_change_confirm === undefined) {
 			this.control_window_state.value.push(state);
@@ -150,7 +148,7 @@ class Global {
 			});
 		}
 	}
-	previousControlWindowState() {
+	previous_control_window_state() {
 		this.control_window_state.value.pop();
 	}
 
@@ -158,7 +156,7 @@ class Global {
 	private control_window_state_change_confirm:
 		| ((callback: (change_state: boolean) => void) => void)
 		| undefined = undefined;
-	set ControlWindowStateConfirm(
+	set control_window_state_confirm(
 		callback: ((callback: (change_state: boolean) => void) => void) | undefined
 	) {
 		this.control_window_state_change_confirm = callback;
@@ -339,6 +337,7 @@ class Global {
 	}
 
 	// Thumbnails
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	_thumbnails = ref<JCGPSend.MediaThumbnails["thumbnails"]>({});
 	get_thumbnails(files?: CasparFile[]): Record<string, string> {
 		if (files !== undefined) {
@@ -348,7 +347,7 @@ class Global {
 			]);
 
 			const missing_thumbnails = thumbnails_result
-				.filter(([ff, thumbnail]) => thumbnail === undefined)
+				.filter(([, thumbnail]) => thumbnail === undefined)
 				.map(([ff]) => ff);
 
 			if (missing_thumbnails.length > 0) {
@@ -377,6 +376,7 @@ class Global {
 	};
 
 	// ConfirmID
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	_confirm_id_functions: Record<string, (state: boolean) => void> = {};
 	add_confirm(callback: (state: boolean) => void) {
 		const id = random_id();
@@ -392,6 +392,7 @@ class Global {
 	}
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const Globals = new Global();
 
 export default Globals;
