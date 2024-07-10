@@ -1,13 +1,12 @@
 export interface Chord {
 	note: string;
-	chord_descriptors: string;
+	chord_descriptors?: string;
 	bass_note?: string;
 }
 
 export function create_chord(note: string): Chord {
 	const chord: Chord = {
-		note: "",
-		chord_descriptors: ""
+		note: ""
 	};
 
 	const regex_chord_parts = /^(?<Note>\w[<#=]?)(?<descriptor>.*?)?(?:\/(?<Bass>\w[<#=]?m?))?$/;

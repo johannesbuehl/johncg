@@ -178,7 +178,7 @@ export default class Song extends PlaylistItemBase {
 			type: "song",
 			caption: this.item_props.caption,
 			title,
-			media: this.media,
+			media: Config.casparcg.connections[0].stageview ? undefined : this.media,
 			template: this.get_template(!!Config.casparcg.connections[0].stageview)
 		});
 	}

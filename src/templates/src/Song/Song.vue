@@ -9,7 +9,8 @@
 		command: "data",
 		mute_transition: true,
 		parts: [],
-		slide: 0
+		slide: 0,
+		languages: []
 	});
 	const visible = ref<boolean>(false);
 

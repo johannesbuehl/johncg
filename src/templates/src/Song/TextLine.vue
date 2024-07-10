@@ -1,3 +1,14 @@
+<script lang="ts">
+	export interface RenderChord {
+		note: string;
+		descriptor?: {
+			text?: string;
+			super?: string;
+		};
+		bass_note?: string;
+	}
+</script>
+
 <script setup lang="ts">
 	import type { Chord } from "@server/PlaylistItems/SongFile/Chord";
 
@@ -9,7 +20,7 @@
 	function create_text_line(
 		lang: string,
 		chords?: Record<number, Chord>
-	): { text_packet: string; chord?: Chord }[] {
+	): { text_packet: string; chord?: RenderChord }[] {
 		const return_snippets: { text_packet: string; chord?: Chord }[] = [];
 
 		// if there are no chords, create a single text-element
@@ -35,7 +46,7 @@
 			if (line_chords_entries[0]?.[0] < 0) {
 				return_snippets.push({
 					text_packet: " ",
-					chord: line_chords_entries[0][1]
+					chord: format_chord(line_chords_entries[0][1])
 				});
 
 				// remove the chord from the array
@@ -83,7 +94,7 @@
 
 					return_snippets.push({
 						text_packet: text.length === 0 ? " " : text,
-						chord
+						chord: format_chord(chord)
 					});
 				});
 			}
@@ -92,29 +103,57 @@
 		return return_snippets;
 	}
 
-	function format_chord(chord: Chord | undefined): string {
+	function format_chord(chord: Chord | undefined): RenderChord | undefined {
 		if (chord === undefined) {
-			return "";
+			return undefined;
 		} else {
-			let chord_string = chord.note;
+			function format_note(note: string): string {
+				const note_replacer = {
+					"<": "♭",
+					"=": "♮",
+					"#": "♯"
+				};
 
-			chord_string += chord.chord_descriptors;
+				Object.entries(note_replacer).forEach(
+					([pattern, replacement]) => (note = note.replace(pattern, replacement))
+				);
 
-			if (chord.bass_note !== undefined) {
-				chord_string += `/${chord.bass_note}`;
+				return note;
 			}
 
-			const replacers = {
-				"<": "♭",
-				"=": "♮",
-				"#": "♯"
+			function format_descriptor(descriptor: string): Required<RenderChord>["descriptor"] {
+				const descriptor_object: Required<RenderChord>["descriptor"] = {};
+
+				const descriptor_replacer = {
+					M: "maj"
+				};
+
+				[...descriptor].forEach((c) => {
+					if (parseInt(c)) {
+						descriptor_object.super = (descriptor_object.super ?? "") + c;
+					} else {
+						descriptor_object.text = (descriptor_object.text ?? "") + c;
+					}
+				});
+
+				if (descriptor_object.text !== undefined) {
+					Object.entries(descriptor_replacer).forEach(
+						([pattern, replacement]) =>
+							(descriptor_object.text = descriptor_object.text?.replace(pattern, replacement))
+					);
+				}
+
+				return descriptor_object;
+			}
+
+			return {
+				note: format_note(chord.note),
+				descriptor:
+					chord.chord_descriptors !== undefined
+						? format_descriptor(chord.chord_descriptors)
+						: undefined,
+				bass_note: chord.bass_note !== undefined ? "/" + format_note(chord.bass_note) : undefined
 			};
-
-			Object.entries(replacers).forEach(
-				([pattern, replacement]) => (chord_string = chord_string.replaceAll(pattern, replacement))
-			);
-
-			return chord_string;
 		}
 	}
 </script>
@@ -122,7 +161,11 @@
 <template>
 	<div class="line">
 		<div v-for="{ text_packet, chord } of create_text_line(text, chords)" class="chord-letter">
-			<div class="chord">{{ format_chord(chord) }}</div>
+			<div class="chord">
+				{{ chord?.note }}{{ chord?.descriptor?.text
+				}}<sup v-if="chord?.descriptor?.super !== undefined">{{ chord?.descriptor?.super }}</sup
+				>{{ chord?.bass_note }}
+			</div>
 			<pre>{{ text_packet }}</pre>
 		</div>
 	</div>
@@ -160,7 +203,7 @@
 
 	.chord {
 		color: orange;
-		margin-right: 0.5rem;
+		margin-right: 0.5ch;
 
 		overflow: visible;
 	}

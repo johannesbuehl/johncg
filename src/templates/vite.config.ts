@@ -15,10 +15,10 @@ export default defineConfig(() => ({
 			}
 		},
 		outDir: "../../casparcg/Templates/JohnCG",
-		emptyOutDir: true
+		emptyOutDir: true,
 		// assetsDir: "."
 		// chunkSizeWarningLimit: 2000
-		// minify: false,
+		minify: false
 		// sourcemap: true
 	},
 	server: {
