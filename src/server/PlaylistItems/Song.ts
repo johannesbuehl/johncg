@@ -29,6 +29,7 @@ export interface SongTemplateData {
 	parts: SongPart[];
 	languages: number[];
 	chords?: ChordParts;
+	transpose_steps?: number;
 	slide: number;
 }
 
@@ -96,7 +97,8 @@ export default class Song extends PlaylistItemBase {
 			slide: this.active_slide,
 			parts: [this.song_file.part_title],
 			languages: this.props.languages ?? this.song_file.languages,
-			chords: stageview ? this.song_file.metadata.Chords : undefined
+			chords: stageview ? this.song_file.metadata.Chords : undefined,
+			transpose_steps: this.song_file.metadata.Transpose
 		};
 
 		// add the individual parts to the output-object

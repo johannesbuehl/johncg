@@ -10,11 +10,12 @@
 </script>
 
 <script setup lang="ts">
-	import type { Chord } from "@server/PlaylistItems/SongFile/Chord";
+	import { type Chord, transpose_chord } from "@server/PlaylistItems/SongFile/Chord";
 
-	defineProps<{
+	const props = defineProps<{
 		text: string;
 		chords?: Record<number, Chord>;
+		transpose_steps?: number;
 	}>();
 
 	function create_text_line(
@@ -27,10 +28,14 @@
 		if (chords === undefined) {
 			return_snippets.push({ text_packet: lang });
 		} else {
-			const line_chords_entries = Object.entries(chords).map(([cc, chord]): [number, Chord] => [
-				parseFloat(cc),
-				chord
-			]);
+			const line_chords_entries = Object.entries(chords).map(
+				([cc, chord]: [string, Chord]): [number, RenderChord] => [
+					parseFloat(cc),
+					format_chord(
+						props.transpose_steps ? transpose_chord(chord, props.transpose_steps) : chord
+					)
+				]
+			);
 
 			line_chords_entries.sort((a, b) => {
 				if (a[0] > b[0]) {
@@ -46,7 +51,7 @@
 			if (line_chords_entries[0]?.[0] < 0) {
 				return_snippets.push({
 					text_packet: " ",
-					chord: format_chord(line_chords_entries[0][1])
+					chord: line_chords_entries[0][1]
 				});
 
 				// remove the chord from the array
@@ -94,7 +99,7 @@
 
 					return_snippets.push({
 						text_packet: text.length === 0 ? " " : text,
-						chord: format_chord(chord)
+						chord
 					});
 				});
 			}
@@ -103,6 +108,8 @@
 		return return_snippets;
 	}
 
+	function format_chord(chord: Chord): RenderChord;
+	function format_chord(chord: undefined): undefined;
 	function format_chord(chord: Chord | undefined): RenderChord | undefined {
 		if (chord === undefined) {
 			return undefined;

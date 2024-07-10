@@ -52,10 +52,15 @@ function transpose(note: string, steps: number): string {
 		return note;
 	}
 
+	// remove a potential natural sign
+	note = note.replace("=", "");
+
 	// convert the note to a number between 0 and 11
-	let note_number = notes_sharp.indexOf(note);
+	let note_number;
 	if (note_number === -1) {
 		note_number = notes_flat.indexOf(note);
+	} else {
+		note_number = notes_sharp.indexOf(note);
 	}
 	if (note_number === -1) {
 		return note;
@@ -67,6 +72,16 @@ function transpose(note: string, steps: number): string {
 	note_number = ((note_number % 12) + 12) % 12;
 
 	return steps > 0 ? notes_sharp[note_number] : notes_flat[note_number];
+}
+
+export function transpose_chord(chord: Chord, steps: number): Chord {
+	console.debug(chord);
+
+	return {
+		note: transpose(chord.note, steps),
+		chord_descriptors: chord.chord_descriptors,
+		bass_note: chord.bass_note !== undefined ? transpose(chord.bass_note, steps) : undefined
+	};
 }
 
 function standardize_note(raw_note: string): string {

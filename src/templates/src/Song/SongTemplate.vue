@@ -92,6 +92,7 @@
 								:class="[`language_${lang_number}`]"
 								:text="lang.text"
 								:chords="data.chords?.[part.part][slide_index][line_index][lang_index].chords"
+								:transpose_steps="data.transpose_steps"
 							/>
 						</template>
 					</template>
