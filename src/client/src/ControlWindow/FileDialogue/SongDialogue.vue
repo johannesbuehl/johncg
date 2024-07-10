@@ -51,7 +51,13 @@
 			id: "text",
 			placeholder: "Text",
 			value: "",
-			get: (ff) => (ff.is_dir ? "" : Object.values(ff.data.text).flat(2).join(" "))
+			get: (ff) =>
+				ff.is_dir
+					? ""
+					: Object.values(ff.data.text)
+							.flat(3)
+							.map((ll) => ll.text)
+							.join(" ")
 		}
 	]);
 
