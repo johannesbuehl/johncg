@@ -70,8 +70,8 @@
 				}
 
 				// add the individual chords
-				line_chords_entries.forEach(([chord_index, chord], ii) => {
-					let text: string = "";
+				line_chords_entries.forEach(([chord_index, chord], chord_number) => {
+					let return_snippet: { text_packet: string; chord?: Chord } = { text_packet: "", chord };
 
 					// if the chord is between two chars, add it with an hyphen
 					if (chord_index % 1 === 0.5) {
@@ -82,25 +82,48 @@
 								(char) => regex_is_char.test(char)
 							)
 						) {
-							text += "-";
+							return_snippet.text_packet += "-";
 							chord_index++;
 						} else {
 							// elese add an extra space
-							text += " ";
+							return_snippet.text_packet += " ";
 						}
 					}
 
 					// if it is the last chord of the line, use the rest of the text
-					if (ii === line_chords_entries.length - 1) {
-						text += lang.slice(Math.floor(chord_index));
+					if (chord_number === line_chords_entries.length - 1) {
+						return_snippet.text_packet += lang.slice(Math.floor(chord_index));
 					} else {
-						text += lang.slice(Math.floor(chord_index), Math.ceil(line_chords_entries[ii + 1][0]));
+						// take the text until the next space
+						const next_space =
+							lang
+								.slice(Math.floor(chord_index), Math.ceil(line_chords_entries[chord_number + 1][0]))
+								.indexOf(" ") + 1;
+
+						// if there is a space before the next chord, take only the text until the chord
+						if (next_space) {
+							return_snippets.push({
+								text_packet:
+									return_snippet.text_packet +
+									lang.slice(Math.floor(chord_index), Math.floor(chord_index) + next_space),
+								chord
+							});
+
+							return_snippet.text_packet = lang.slice(
+								Math.floor(chord_index) + next_space,
+								Math.ceil(line_chords_entries[chord_number + 1][0])
+							);
+
+							return_snippet.chord = undefined;
+						} else {
+							return_snippet.text_packet += lang.slice(
+								Math.floor(chord_index),
+								Math.ceil(line_chords_entries[chord_number + 1][0])
+							);
+						}
 					}
 
-					return_snippets.push({
-						text_packet: text.length === 0 ? " " : text,
-						chord
-					});
+					return_snippets.push(return_snippet);
 				});
 			}
 		}
