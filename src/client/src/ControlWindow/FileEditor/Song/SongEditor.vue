@@ -427,6 +427,13 @@
 						>
 							<FontAwesomeIcon :icon="['fas', 'trash']" />
 						</MenuButton>
+						<MenuButton
+							:square="true"
+							:disabled="text_parts.length <= 1 || index === text_parts.length - 1"
+							@click="metadata.VerseOrder?.push(part.part)"
+						>
+							<FontAwesomeIcon :icon="['fas', 'plus']" />
+						</MenuButton>
 					</div>
 				</Draggable>
 			</div>

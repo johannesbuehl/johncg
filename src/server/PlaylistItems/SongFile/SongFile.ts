@@ -12,7 +12,7 @@ export interface SongFileMetadata {
 	LangCount: number;
 	ChurchSongID?: string;
 	Songbook?: string;
-	VerseOrder?: string[];
+	VerseOrder: string[];
 	BackgroundImage?: string;
 	Author?: string;
 	Melody?: string;
@@ -88,7 +88,8 @@ export default class SongFile {
 	metadata: SongFileMetadata = {
 		/* eslint-disable @typescript-eslint/naming-convention */
 		Title: [],
-		LangCount: 1 // set it by default to 1. if there are more languages, they will be read from the header
+		LangCount: 1, // set it by default to 1. if there are more languages, they will be read from the header,
+		VerseOrder: []
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 

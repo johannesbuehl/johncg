@@ -1190,7 +1190,7 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 function check_song_data(song_data: SongData): boolean {
 	const data_template: JCGPRecv.SaveFile["data"] = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		metadata: { Title: ["template"], LangCount: 1 },
+		metadata: { Title: ["template"], LangCount: 1, VerseOrder: [] },
 		text: { template: [[[{ lang: 0, text: "template" }]]] }
 	};
 
