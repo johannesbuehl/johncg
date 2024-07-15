@@ -22,7 +22,7 @@ casparcg:
       port: 5250
       channel: 2
       layers:
-        media: 20 # used for media-playback - Can be removed to don't show media
+        # media: 20 # used for media-playback - Can be removed to don't show media
         template: 21 # used for templates and song-/psalm-/countdown-text
       # path: D:/Streaming-neu/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
       stageview: true # optional - show song-chords and hide song-backgrounds

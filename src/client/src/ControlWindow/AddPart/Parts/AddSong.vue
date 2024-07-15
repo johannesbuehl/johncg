@@ -60,9 +60,6 @@
 				file.data?.metadata.VerseOrder?.some((val, index) => val !== verse_order.value[index])
 			) {
 				props.verse_order = verse_order.value;
-
-				console.warn(file.data.metadata.VerseOrder);
-				console.warn(verse_order.value);
 			}
 
 			// if not all languages are checked or the order isn't default, add it to the props

@@ -191,18 +191,20 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 
 	return connections.map((casparcg_connection) => {
 		return Promise.allSettled([
-			catch_casparcg_timeout(
-				async () =>
-					casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media,
-						clip: "EMPTY",
-						transition: get_casparcg_transition()
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
-				"PLAY EMPTY on media-layer"
-			),
+			casparcg_connection.settings.layers.media !== undefined
+				? catch_casparcg_timeout(
+						async () =>
+							casparcg_connection.connection.play({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.media,
+								clip: "EMPTY",
+								transition: get_casparcg_transition()
+								/* eslint-enable @typescript-eslint/naming-convention */
+							}),
+						"PLAY EMPTY on media-layer"
+					)
+				: undefined,
 			catch_casparcg_timeout(
 				async () =>
 					casparcg_connection.connection.play({

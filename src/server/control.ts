@@ -1245,7 +1245,7 @@ function check_song_data(song_data: SongData): boolean {
 	if (song_data.metadata.Chords !== undefined) {
 		const chord_check = (chord: Chord): boolean =>
 			typeof chord.note === "string" &&
-			typeof chord.chord_descriptors === "string" &&
+			(chord.chord_descriptors === undefined || typeof chord.chord_descriptors === "string") &&
 			(chord.bass_note === undefined || typeof chord.bass_note === "string");
 
 		test_result &&= Object.entries(song_data.metadata.Chords).every(([part, slides]) => {
@@ -1257,7 +1257,7 @@ function check_song_data(song_data: SongData): boolean {
 							(lang) =>
 								typeof lang.lang === "number" &&
 								Object.entries(lang.chords).every(
-									([char, chord]) => /^(-1|\d+)$/.test(char) && chord_check(chord)
+									([char, chord]) => /^(-1|\d+)(\.5)?$/.test(char) && chord_check(chord)
 								)
 						)
 					)

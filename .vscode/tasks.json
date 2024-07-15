@@ -10,10 +10,10 @@
 		},
 		{
 			"type": "npm",
-			"script": "templates-watch",
+			"script": "templates-dev",
 			"group": "build",
 			"problemMatcher": [],
-			"label": "templates-watch"
+			"label": "templates-dev"
 		},
 		{
 			"type": "npm",

@@ -19,10 +19,10 @@
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
 
-		"template-dev": "vite -c src/templates/vite.config.ts",
-		"template-build": "run-p template-type-check \"template-build-only {@}\" --",
+		"templates-dev": "vite -c src/templates/vite.config.ts",
+		"templates-build": "run-p template-type-check \"templates-build-only {@}\" --",
 		"template-preview": "vite -c src/templates/vite.config.ts preview",
-		"template-build-only": "vite -c src/templates/vite.config.ts build",
+		"templates-build-only": "vite -c src/templates/vite.config.ts build",
 		"template-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
 
 		"client-dev": "vite -c src/client/vite.config.ts",

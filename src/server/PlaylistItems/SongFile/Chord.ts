@@ -35,7 +35,7 @@ export function create_chord(note: string): Chord {
 }
 
 export function get_chord_string(chord: Chord, transpose_steps: number = 0): string {
-	let chord_string = `${transpose(chord.note, transpose_steps)}${chord.chord_descriptors}`;
+	let chord_string = `${transpose(chord.note, transpose_steps)}${chord.chord_descriptors ?? ""}`;
 
 	if (chord.bass_note !== undefined) {
 		chord_string += `/${transpose(chord.bass_note, transpose_steps)}`;
@@ -75,8 +75,6 @@ function transpose(note: string, steps: number): string {
 }
 
 export function transpose_chord(chord: Chord, steps: number): Chord {
-	console.debug(chord);
-
 	return {
 		note: transpose(chord.note, steps),
 		chord_descriptors: chord.chord_descriptors,

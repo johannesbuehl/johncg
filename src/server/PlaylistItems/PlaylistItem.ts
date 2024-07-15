@@ -195,37 +195,39 @@ export abstract class PlaylistItemBase {
 	stop(_casparcg_connection?: CasparCGConnection) {}
 
 	protected play_media(casparcg_connection: CasparCGConnection) {
-		if (casparcg.visibility) {
-			const clip = this.media ?? "#00000000";
+		if (casparcg_connection.settings.layers.media !== undefined) {
+			if (casparcg.visibility) {
+				const clip = this.media ?? "#00000000";
 
-			logger.log(`loading CasparCG-media: '${clip}'`);
+				logger.log(`loading CasparCG-media: '${clip}'`);
 
-			return catch_casparcg_timeout(
-				async () =>
-					casparcg_connection.connection.play({
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media,
-						clip,
-						loop: this.loop,
-						transition: get_casparcg_transition()
-					}),
-				"PLAY MEDIA"
-			);
-		} else {
-			logger.log(`loading CasparCG-media in the background: '${this.media}'`);
+				return catch_casparcg_timeout(
+					async () =>
+						casparcg_connection.connection.play({
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.media,
+							clip,
+							loop: this.loop,
+							transition: get_casparcg_transition()
+						}),
+					"PLAY MEDIA"
+				);
+			} else {
+				logger.log(`loading CasparCG-media in the background: '${this.media}'`);
 
-			//  if the current stat is invisible, only load it in the background
-			return catch_casparcg_timeout(
-				async () =>
-					casparcg_connection.connection.loadbg({
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media,
-						clip: this.media,
-						loop: this.loop,
-						transition: get_casparcg_transition()
-					}),
-				"LOADBG MEDIA"
-			);
+				//  if the current stat is invisible, only load it in the background
+				return catch_casparcg_timeout(
+					async () =>
+						casparcg_connection.connection.loadbg({
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.media,
+							clip: this.media,
+							loop: this.loop,
+							transition: get_casparcg_transition()
+						}),
+					"LOADBG MEDIA"
+				);
+			}
 		}
 	}
 

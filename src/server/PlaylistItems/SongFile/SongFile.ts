@@ -242,28 +242,6 @@ export default class SongFile {
 				}
 			}
 
-			// const text_slide: TextLine[] = [];
-			// const chord_slide: ChordLine[] = [];
-
-			// let lang_counter = 0;
-			// lines.forEach((ll) => {
-			// 	// if lang_counter reached the language-count, reset it and increase the line-counter
-			// 	if (lang_counter === this.metadata.LangCount) {
-			// 		lang_counter = 0;
-			// 	}
-
-			// 	text_slide.push({ lang: lang_counter, text: ll });
-
-			// 	// store the chords
-			// 	chord_slide.push({ lang: lang_counter, chords: chords?.[line_number] ?? [] })
-			// 	line_number++;
-
-			// 	// only increase the language-counter, if the slide isn't empty
-			// 	if (ll !== "") {
-			// 		lang_counter++;
-			// 	}
-			// });
-
 			const text_slide: TextPart[number] = Array.from(
 				Array(Math.ceil(lines.length / this.metadata.LangCount)),
 				(): TextLine[] => []
@@ -289,10 +267,7 @@ export default class SongFile {
 				chord_slide[line_counter].push({ lang: lang_counter, chords: chords?.[line_number] ?? [] });
 				line_number++;
 
-				// only increase the lang-counter, if the line isn't empty
-				if (ll !== "") {
-					lang_counter++;
-				}
+				lang_counter++;
 			});
 			// add the line for the new-slide line to the counter
 			line_number++;

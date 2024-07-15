@@ -29,19 +29,25 @@
 				text_parts.value = Object.entries(props.song_file.data.text).map(([part, text]) => {
 					const part_text: SongTextPart["text"] = text.map((slide) => {
 						return Array.apply(null, Array(4)).map((_, lang_index) => {
-							return slide
-								.map((line) => {
-									return line[lang_index] ?? undefined;
-								})
+							const sl = slide
+								.map(
+									(line) =>
+										line
+											.filter((ll) => ll.lang === lang_index)
+											.map((ll) => ll.text)
+											.join("\n") ?? ""
+								)
 								.filter((line) => line !== undefined)
 								.join("\n");
+
+							return sl;
 						});
 					}) as SongTextPart["text"];
 
-					// if the last line is empty and it isn't the only one, append an empty one
+					// if the last slide is empty and it isn't the only one, append an empty one
 					if (
 						!is_slide_empty(part_text[part_text.length - 1], metadata.value?.LangCount ?? 1) &&
-						part_text.length > 1
+						part_text.length > 0
 					) {
 						part_text.push(["", "", "", ""]);
 					}
@@ -52,7 +58,8 @@
 					};
 				});
 			}
-		}
+		},
+		{ immediate: true }
 	);
 </script>
 

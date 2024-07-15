@@ -28,7 +28,12 @@
 
 	import type { CasparFile, Directory, Node, SongFile } from "@server/search_part";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
+	import type {
+		SongFileMetadata,
+		SongData,
+		TextParts,
+		TextPart
+	} from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faUpDownLeftRight, fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 

@@ -318,7 +318,7 @@ export default class Playlist {
 							thumbnails = await thumbnail_retrieve(client_object.media);
 						}
 
-						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : "";
+						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : undefined;
 					} else {
 						client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 					}

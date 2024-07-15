@@ -4,6 +4,7 @@
 	import SongTemplate from "./SongTemplate.vue";
 
 	import type { SongTemplateData, SongTemplateMessage } from "@server/PlaylistItems/Song";
+	import type CasparCGGlobalFunctions from "@/CasparCGGlobals";
 
 	const data = ref<SongTemplateData & { mute_transition: boolean }>({
 		command: "data",
@@ -72,11 +73,10 @@
 		visible.value = false;
 	}
 
-	(globalThis as any).update = update;
-	(globalThis as any).play = play;
-	(globalThis as any).stop = stop;
-	(globalThis as any).next = next;
-	(globalThis as any).jump = jump;
+	(globalThis as unknown as CasparCGGlobalFunctions).update = update;
+	(globalThis as unknown as CasparCGGlobalFunctions).play = play;
+	(globalThis as unknown as CasparCGGlobalFunctions).stop = stop;
+	(globalThis as unknown as CasparCGGlobalFunctions).next = next;
 </script>
 
 <template>

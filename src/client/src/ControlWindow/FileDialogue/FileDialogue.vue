@@ -355,11 +355,6 @@
 								<Draggable
 									class="draggable"
 									:list="sort_files(get_current_files())"
-									:group="{
-										name: 'playlist',
-										pull: clone_callback !== undefined ? 'clone' : false,
-										put: false
-									}"
 									tag="div"
 									:clone="clone_callback"
 									:sort="false"
@@ -395,11 +390,15 @@
 							id="file_thumbnail_wrapper"
 							class="draggable"
 							:list="sort_files(get_current_files())"
-							:group="{
-								name: 'playlist',
-								pull: clone_callback !== undefined ? 'clone' : false,
-								put: false
-							}"
+							:group="
+								clone_callback !== undefined
+									? {
+											name: 'playlist',
+											pull: 'clone',
+											put: false
+										}
+									: undefined
+							"
 							tag="div"
 							:clone="clone_callback"
 							:sort="false"

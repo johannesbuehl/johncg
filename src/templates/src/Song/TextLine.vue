@@ -95,22 +95,22 @@
 						return_snippet.text_packet += lang.slice(Math.floor(chord_index));
 					} else {
 						// take the text until the next space
-						const next_space =
+						const last_space =
 							lang
 								.slice(Math.floor(chord_index), Math.ceil(line_chords_entries[chord_number + 1][0]))
-								.indexOf(" ") + 1;
+								.lastIndexOf(" ") + 1;
 
-						// if there is a space before the next chord, take only the text until the chord
-						if (next_space) {
+						// if there is a space before the next chord, take only the text until the next-chords-word
+						if (last_space) {
 							return_snippets.push({
 								text_packet:
 									return_snippet.text_packet +
-									lang.slice(Math.floor(chord_index), Math.floor(chord_index) + next_space),
+									lang.slice(Math.floor(chord_index), Math.floor(chord_index) + last_space - 1),
 								chord
 							});
 
 							return_snippet.text_packet = lang.slice(
-								Math.floor(chord_index) + next_space,
+								Math.floor(chord_index) + last_space - 1,
 								Math.ceil(line_chords_entries[chord_number + 1][0])
 							);
 
@@ -121,6 +121,10 @@
 								Math.ceil(line_chords_entries[chord_number + 1][0])
 							);
 						}
+					}
+
+					if (return_snippet.text_packet === "") {
+						return_snippet.text_packet = " ";
 					}
 
 					return_snippets.push(return_snippet);

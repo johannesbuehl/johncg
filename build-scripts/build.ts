@@ -120,7 +120,7 @@ copy_release_file(path.join(build_dir, "main.js"));
 
 console.log(`\tCopying example files`);
 fs.readdirSync("files").forEach((dir) => {
-	console.log(`\t\${path.join("files", dir)}`);
+	console.log(`\t${path.join("files", dir)}`);
 	copy_release_dir(path.join("files", dir));
 });
 // create directories without example files
@@ -130,7 +130,7 @@ console.log(`\tCopying '${path.join(build_dir, "client")}'`);
 copy_release_dir(path.join(build_dir, "client"));
 
 console.log("\tCopying CasparCG-templates");
-copy_release_dir(path.join(build_dir, "Templates"));
+copy_release_dir("casparcg/Templates");
 
 console.log("\tCopying CasparCG-media");
 copy_release_dir("casparcg/Media");

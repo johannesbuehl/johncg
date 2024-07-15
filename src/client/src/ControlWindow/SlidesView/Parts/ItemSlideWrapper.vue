@@ -19,7 +19,15 @@
 
 	const slide = ref<HTMLDivElement>();
 
-	const is_color = props.media?.match(/^#(?:(?:[\dA-Fa-f]{2}){3,4})$/);
+	const is_color = ref<boolean>(true);
+
+	watch(
+		() => props.media,
+		() => {
+			is_color.value = !!props.media?.match(/^#(?:(?:[\dA-Fa-f]{2}){3,4})$/);
+		},
+		{ immediate: true }
+	);
 
 	watch(
 		() => [props.active, props.scroll],
@@ -59,7 +67,6 @@
 		<div class="template">
 			<slot></slot>
 		</div>
-		<!-- <div class="slide" /> -->
 	</div>
 </template>
 
