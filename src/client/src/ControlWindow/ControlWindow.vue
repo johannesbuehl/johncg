@@ -87,8 +87,7 @@
 	function visibility(state: boolean) {
 		Globals.ws?.send<JCGPRecv.SetVisibility>({
 			command: "set_visibility",
-			visibility: state,
-			client_id: props.client_id
+			visibility: state
 		});
 	}
 

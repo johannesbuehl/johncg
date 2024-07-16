@@ -1,4 +1,3 @@
-import { APIRequest, Commands } from "casparcg-connection";
 import { CasparCGConnection, TemplateSlideJump } from "../CasparCGConnection.ts";
 import Config from "../config/config.ts";
 import { recurse_object_check } from "../lib.ts";
@@ -185,9 +184,7 @@ export default class Song extends PlaylistItemBase {
 		});
 	}
 
-	protected play_media(
-		casparcg_connection: CasparCGConnection
-	): Promise<APIRequest<Commands.Play>> {
+	protected play_media(casparcg_connection: CasparCGConnection) {
 		if (!casparcg_connection.settings.stageview) {
 			return super.play_media(casparcg_connection);
 		} else {

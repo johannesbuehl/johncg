@@ -68,8 +68,11 @@
 				v-show="ready && get_slide_index() === active_slide"
 			>
 				<div id="title_container">
-					<div v-for="(title, title_index) of part.title" :class="[`language_${title_index}`]">
-						{{ title }}
+					<div
+						v-for="(title_index, title_number) of data.languages"
+						:class="[`language_${title_number}`]"
+					>
+						{{ part.title[title_index] }}
 					</div>
 				</div>
 				<div id="song_id">
@@ -84,14 +87,14 @@
 				ref="lyric_slides"
 			>
 				<template v-for="(line, line_index) of slide">
-					<template v-for="lang_number in data.languages">
-						<template v-for="(lang, lang_index) in line">
+					<template v-for="(lang_number, lang_index) in data.languages">
+						<template v-for="(lang, lang_line_index) in line">
 							<TextLine
 								v-if="lang.lang === lang_number"
 								class="textline"
-								:class="[`language_${lang_number}`]"
+								:class="[`language_${lang_index}`]"
 								:text="lang.text"
-								:chords="data.chords?.[part.part][slide_index][line_index][lang_index].chords"
+								:chords="data.chords?.[part.part][slide_index][line_index][lang_line_index].chords"
 								:transpose_steps="data.transpose_steps"
 							/>
 						</template>

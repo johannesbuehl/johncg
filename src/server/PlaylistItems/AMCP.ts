@@ -7,7 +7,6 @@ import {
 	ItemPropsBase,
 	PlaylistItemBase
 } from "./PlaylistItem";
-import { APIRequest, Commands } from "casparcg-connection";
 
 export interface AMCPProps extends ItemPropsBase {
 	type: "amcp";
@@ -81,22 +80,24 @@ export default class AMCP extends PlaylistItemBase {
 			connections.map((connection) => {
 				return catch_casparcg_timeout(
 					async () =>
-						connection.connection.sendCustom({
-							command
-						}),
+						(
+							await connection.connection.sendCustom({
+								command
+							})
+						).request,
 					command
 				);
 			})
 		);
 	}
 
-	play(casparcg_connection?: CasparCGConnection): Promise<APIRequest<Commands.Custom>[]> {
+	play(casparcg_connection?: CasparCGConnection) {
 		if (this.props.commands.set_active !== undefined) {
 			return this.send_custom_command(this.props.commands.set_active, casparcg_connection);
 		}
 	}
 
-	stop(casparcg_connection?: CasparCGConnection): Promise<APIRequest<Commands.Custom>[]> {
+	stop(casparcg_connection?: CasparCGConnection) {
 		if (this.props.commands.set_inactive !== undefined) {
 			return this.send_custom_command(this.props.commands.set_inactive, casparcg_connection);
 		}

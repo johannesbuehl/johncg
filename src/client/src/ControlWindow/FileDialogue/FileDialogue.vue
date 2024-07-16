@@ -406,7 +406,7 @@
 							delay="250"
 						>
 							<template v-for="element of sort_files(get_current_files())">
-								<PlaylistItemDummy v-if="thumbnails[element.path]" :color="item_color ?? ''">
+								<PlaylistItemDummy v-show="thumbnails[element.path]" :color="item_color ?? ''">
 									<div class="file_thumbnail selectable" :class="{ active: element === selection }">
 										<img
 											:src="thumbnails[element.path]"

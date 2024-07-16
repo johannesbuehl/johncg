@@ -175,11 +175,7 @@
 								<div class="song_slides_wrapper">
 									<div v-for="slide in part">
 										<div v-for="line in slide">
-											<div
-												class="song_language_line"
-												:class="[`language_${lang.lang}`]"
-												v-for="lang in get_language_lines(line)"
-											>
+											<div class="song_language_line" v-for="lang in get_language_lines(line)">
 												{{ lang.text }}
 											</div>
 										</div>
@@ -372,7 +368,7 @@
 		font-weight: lighter;
 	}
 
-	.song_language_line:not(.language_0) {
+	.song_language_line:not(:first-child) {
 		color: var(--color-text-disabled);
 		font-style: italic;
 	}

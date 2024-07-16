@@ -9,7 +9,7 @@ export function create_chord(note: string): Chord {
 		note: ""
 	};
 
-	const regex_chord_parts = /^(?<Note>\w[<#=]?)(?<descriptor>.*?)?(?:\/(?<Bass>\w[<#=]?m?))?$/;
+	const regex_chord_parts = /^(?<Note>\w[<#=]?)(?<descriptor>[^/]*?)?(?:\/(?<Bass>\w[<#=]?m?))?$/;
 
 	const result = regex_chord_parts.exec(note);
 
@@ -35,10 +35,12 @@ export function create_chord(note: string): Chord {
 }
 
 export function get_chord_string(chord: Chord, transpose_steps: number = 0): string {
-	let chord_string = `${transpose(chord.note, transpose_steps)}${chord.chord_descriptors ?? ""}`;
+	const transposed_chord = transpose_chord(chord, transpose_steps);
 
-	if (chord.bass_note !== undefined) {
-		chord_string += `/${transpose(chord.bass_note, transpose_steps)}`;
+	let chord_string = `${transposed_chord.note}${transposed_chord.chord_descriptors ?? ""}`;
+
+	if (transposed_chord.bass_note !== undefined) {
+		chord_string += `/${transposed_chord.bass_note}`;
 	}
 
 	return chord_string;

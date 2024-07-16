@@ -18,6 +18,7 @@
 		:disabled="!item_props.displayable"
 		:selected="selected"
 		:active="active"
+		:scroll="scroll"
 	>
 		{{ item_props.caption }}
 	</PlaylistItemDummy>

@@ -72,7 +72,7 @@
 	watch(
 		() => song_selection.value,
 		() => {
-			if (song_selection.value !== undefined && !song_selection.value.is_dir) {
+			if (song_selection.value !== undefined && !song_selection.value?.is_dir) {
 				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
 			}
 		}
@@ -90,7 +90,8 @@
 				const potential_selection = media_directory_stack.value
 					.slice(-1)[0]
 					?.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
-				if (!potential_selection.is_dir) {
+
+				if (potential_selection !== undefined && !potential_selection?.is_dir) {
 					media_selection.value = potential_selection;
 					background_media.value = potential_selection;
 				}

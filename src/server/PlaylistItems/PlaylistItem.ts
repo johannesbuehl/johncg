@@ -203,13 +203,15 @@ export abstract class PlaylistItemBase {
 
 				return catch_casparcg_timeout(
 					async () =>
-						casparcg_connection.connection.play({
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.media,
-							clip,
-							loop: this.loop,
-							transition: get_casparcg_transition()
-						}),
+						(
+							await casparcg_connection.connection.play({
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.media,
+								clip,
+								loop: this.loop,
+								transition: get_casparcg_transition()
+							})
+						).request,
 					"PLAY MEDIA"
 				);
 			} else {
@@ -235,14 +237,16 @@ export abstract class PlaylistItemBase {
 		return catch_casparcg_timeout(
 			async () =>
 				// fade-out the media
-				casparcg_connection.connection.play({
-					/* eslint-disable @typescript-eslint/naming-convention */
-					channel: casparcg_connection.settings.channel,
-					layer: casparcg_connection.settings.layers.media,
-					clip: "EMPTY",
-					transition: get_casparcg_transition()
-					/* eslint-enable @typescript-eslint/naming-convention */
-				}),
+				(
+					await casparcg_connection.connection.play({
+						/* eslint-disable @typescript-eslint/naming-convention */
+						channel: casparcg_connection.settings.channel,
+						layer: casparcg_connection.settings.layers.media,
+						clip: "EMPTY",
+						transition: get_casparcg_transition()
+						/* eslint-enable @typescript-eslint/naming-convention */
+					})
+				).request,
 			"STOP - hide media"
 		);
 	}
@@ -257,25 +261,27 @@ export abstract class PlaylistItemBase {
 
 			return catch_casparcg_timeout(
 				async () =>
-					casparcg_connection.connection.cgAdd({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						cgLayer: 0,
-						playOnLoad: casparcg.visibility,
-						template: template.template,
-						// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
-						data: JSON.stringify(
-							JSON.stringify(template.data, (_key, val: unknown) => {
-								if (typeof val === "string") {
-									return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
-								} else {
-									return val;
-								}
-							})
-						)
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
+					(
+						await casparcg_connection.connection.cgAdd({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.template,
+							cgLayer: 0,
+							playOnLoad: casparcg.visibility,
+							template: template.template,
+							// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
+							data: JSON.stringify(
+								JSON.stringify(template.data, (_key, val: unknown) => {
+									if (typeof val === "string") {
+										return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
+									} else {
+										return val;
+									}
+								})
+							)
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					).request,
 				"PLAY TEMPLATE"
 			);
 		} else {
@@ -284,14 +290,16 @@ export abstract class PlaylistItemBase {
 			// if not, clear the previous template
 			return catch_casparcg_timeout(
 				async () =>
-					casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						clip: "EMPTY",
-						transition: get_casparcg_transition()
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
+					(
+						await casparcg_connection.connection.play({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.template,
+							clip: "EMPTY",
+							transition: get_casparcg_transition()
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					).request,
 				"CLEAR TEMPLATE"
 			);
 		}

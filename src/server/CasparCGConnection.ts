@@ -194,27 +194,31 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 			casparcg_connection.settings.layers.media !== undefined
 				? catch_casparcg_timeout(
 						async () =>
-							casparcg_connection.connection.play({
-								/* eslint-disable @typescript-eslint/naming-convention */
-								channel: casparcg_connection.settings.channel,
-								layer: casparcg_connection.settings.layers.media,
-								clip: "EMPTY",
-								transition: get_casparcg_transition()
-								/* eslint-enable @typescript-eslint/naming-convention */
-							}),
+							(
+								await casparcg_connection.connection.play({
+									/* eslint-disable @typescript-eslint/naming-convention */
+									channel: casparcg_connection.settings.channel,
+									layer: casparcg_connection.settings.layers.media,
+									clip: "EMPTY",
+									transition: get_casparcg_transition()
+									/* eslint-enable @typescript-eslint/naming-convention */
+								})
+							).request,
 						"PLAY EMPTY on media-layer"
 					)
 				: undefined,
 			catch_casparcg_timeout(
 				async () =>
-					casparcg_connection.connection.play({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						clip: "EMPTY",
-						transition: get_casparcg_transition()
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
+					(
+						await casparcg_connection.connection.play({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.template,
+							clip: "EMPTY",
+							transition: get_casparcg_transition()
+							/* eslint-enable @typescript-eslint/naming-convention */
+						})
+					).request,
 				"PLAY EMPTY on template-layer"
 			)
 		]);
@@ -274,9 +278,11 @@ export function thumbnail_retrieve(file_path: string) {
 export function thumbnail_generate(file_path: string) {
 	return catch_casparcg_timeout(
 		async () =>
-			await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
-				filename: `"${file_path}"`
-			}),
+			(
+				await casparcg.casparcg_connections[0].connection.thumbnailGenerate({
+					filename: `"${file_path}"`
+				})
+			).request,
 		"THUMBNAIL GENERATE"
 	);
 }
