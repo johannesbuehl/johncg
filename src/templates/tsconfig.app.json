@@ -1,14 +1,6 @@
 {
 	"extends": "@vue/tsconfig/tsconfig.dom.json",
-	"include": [
-		"env.d.ts",
-		"src/**/*",
-		"src/**/*.vue",
-		"../server/**/*",
-		"Text.ts",
-		"Bible.ts",
-		"Countdown.ts"
-	],
+	"include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../server/**/*", "Countdown.ts"],
 	"exclude": ["src/**/__tests__/*"],
 	"compilerOptions": {
 		"rootDir": "..",
