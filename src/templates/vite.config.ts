@@ -11,7 +11,8 @@ export default defineConfig(() => ({
 	build: {
 		rollupOptions: {
 			input: {
-				Song: path.resolve(__dirname, "Song.html")
+				Song: path.resolve(__dirname, "Song.html"),
+				Psalm: path.resolve(__dirname, "Psalm.html")
 			}
 		},
 		outDir: "../../casparcg/Templates/JohnCG",

@@ -60,7 +60,7 @@
 </script>
 
 <template>
-	<div id="slide_wrapper" :class="{ ready, hidden }">
+	<div id="slide_wrapper" :class="{ ready, hidden, transition: !mute_transition }">
 		<template v-for="part of data.parts">
 			<div
 				v-if="part.type === 'title'"
@@ -156,6 +156,10 @@
 
 		transition: opacity 0.5s linear;
 		opacity: 1;
+	}
+
+	#slide_wrapper.ready.transition {
+		transition: opacity 0.5s linear;
 	}
 
 	#slide_wrapper.hidden > .slide {

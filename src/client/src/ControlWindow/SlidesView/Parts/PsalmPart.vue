@@ -3,6 +3,8 @@
 
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPsalmSlides } from "@server/PlaylistItems/Psalm";
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
+	import PsalmTemplate from "@templates/Psalm/PsalmTemplate.vue";
 
 	const props = defineProps<{
 		slides: ClientPsalmSlides;
@@ -45,17 +47,16 @@
 			{{ slides?.title }}
 		</div>
 		<div class="slides_wrapper">
-			<ItemSlide
+			<ItemSlideWrapper
 				v-for="(_media, index) in slides.template.data.data?.text"
-				:key="index"
 				:media="slides.media"
-				:template="slides.template"
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"
-				@onLoaded="template_loaded($event, index)"
 				@click="emit('select_slide', index)"
-			/>
+			>
+				<PsalmTemplate :data="slides.template.data" :active_slide="index" :mute_transition="true" />
+			</ItemSlideWrapper>
 		</div>
 	</div>
 </template>
