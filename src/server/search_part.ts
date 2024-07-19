@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs/promises";
 
 import Config from "./config/config";
-import SngFile, { SongData } from "./PlaylistItems/SongFile/SongFile";
+import SngFile, { SongData, SongFileFast } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
 import { casparcg, catch_casparcg_timeout } from "./CasparCGConnection";
@@ -52,22 +52,21 @@ export default class SearchPart {
 	constructor() {}
 
 	create_song_file(f: FileBase, fast: boolean = true): SongFile {
-		const song = new SngFile(Config.get_path("song", f.path), fast);
+		let song;
+
+		if (fast) {
+			song = new SongFileFast(Config.get_path("song", f.path));
+		} else {
+			song = new SngFile(Config.get_path("song", f.path));
+		}
 
 		const song_value: SongFile = {
 			...f,
 			data: {
-				text: song.all_parts,
+				text: song.text,
 				metadata: song.metadata
 			}
 		};
-
-		const this_song_text: string[] = [];
-		Object.values(song.text).forEach((part) => {
-			part.forEach((slide) => {
-				this_song_text.push(slide.map((line) => line.join("\n")).join("\n"));
-			});
-		});
 
 		return song_value;
 	}
@@ -131,7 +130,7 @@ export default class SearchPart {
 			pth,
 			pth,
 			".sng",
-			(f): Promise<SongFile> => Promise.resolve(this.create_song_file(f))
+			(f): Promise<SongFile> => Promise.resolve(this.create_song_file(f, true))
 		);
 	}
 
@@ -195,7 +194,7 @@ export default class SearchPart {
 		};
 
 		try {
-			return this.create_song_file(item_file, false);
+			return this.create_song_file(item_file);
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't open song: '${path}' does not exist`);

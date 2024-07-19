@@ -33,7 +33,15 @@ export function is_song_element(x: any): x is SongElement {
 		return false;
 	}
 
-	const stem = x.split(" ", 1)[0];
+	const [stem, enumerator] = x.split(" ", 1);
+
+	if (enumerator !== undefined && isNaN(parseInt(enumerator))) {
+		return false;
+	}
+
+	if (!verse_types.includes(stem.toLowerCase() as SongElement)) {
+		return false;
+	}
 
 	return verse_types.includes(stem.toLowerCase() as SongElement);
 }

@@ -93,13 +93,13 @@ export default class SongFile {
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
 
-	constructor(path: string, fast?: boolean);
+	constructor(path: string);
 	constructor(data: SongData);
-	constructor(arg: string | SongData, fast?: boolean) {
+	constructor(arg: string | SongData) {
 		if (typeof arg === "string") {
 			this.song_file_path = arg;
 
-			this.parse_song_file(fast);
+			this.parse_song_file();
 		} else {
 			this.load_song_data(arg);
 		}
@@ -109,10 +109,7 @@ export default class SongFile {
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
 	 */
-	private parse_metadata(
-		header: string,
-		fast: boolean
-	): Record<number, Record<number, Chord>> | undefined {
+	private parse_metadata(header: string): Record<number, Record<number, Chord>> | undefined {
 		// split the header into the individual lines
 		const header_data: string[] = header.split("\n");
 
@@ -148,9 +145,7 @@ export default class SongFile {
 					});
 					break;
 				case "Chords":
-					if (!fast) {
-						chords = parse_base64_chords(value);
-					}
+					chords = parse_base64_chords(value);
 					break;
 				case "Transpose":
 					this.metadata.Transpose = Number(value);
@@ -176,7 +171,7 @@ export default class SongFile {
 	}
 
 	// parse the text-content
-	private parse_song_file(fast?: boolean) {
+	private parse_song_file() {
 		if (!this.song_file_path) {
 			return;
 		}
@@ -203,7 +198,7 @@ export default class SongFile {
 		const data = raw_data.replaceAll("\r", "").split(/\n---?(?:\n|$)/);
 
 		// parse metadata of the header
-		const chords = this.parse_metadata(data[0], fast);
+		const chords = this.parse_metadata(data[0]);
 
 		// if chords are available, add them to metadata
 		if (chords) {
@@ -348,7 +343,7 @@ export default class SongFile {
 		return Object.keys(this.song_parts);
 	}
 
-	get all_parts(): TextParts {
+	get text(): TextParts {
 		return this.song_parts;
 	}
 
@@ -358,10 +353,6 @@ export default class SongFile {
 
 	get language_count(): number {
 		return this.metadata.LangCount;
-	}
-
-	get text(): TextParts {
-		return this.song_parts;
 	}
 
 	get sng_file(): string {
@@ -430,7 +421,7 @@ export default class SongFile {
 
 		sng_file += `\n#Editor=JohnCG ${Version}\n---\n`;
 
-		sng_file += Object.entries(this.all_parts)
+		sng_file += Object.entries(this.text)
 			.map(([part, text]) => {
 				let part_text = `${part}\n`;
 
@@ -484,4 +475,122 @@ function parse_base64_chords(base64: string): Record<number, Record<number, Chor
 	}
 
 	return return_object;
+}
+
+export class SongFileFast {
+	private song_metadata: SongFileMetadata = {
+		/* eslint-disable @typescript-eslint/naming-convention */
+		LangCount: 1,
+		Title: [],
+		VerseOrder: []
+		/* eslint-enable @typescript-eslint/naming-convention */
+	};
+
+	private song_parts: TextParts = {};
+
+	constructor(path: string) {
+		// read the song-file in a byte-array
+		const raw_data_buffer = fs.readFileSync(path);
+		// utf-8-BOM
+		const bom = Buffer.from([239, 187, 191]);
+
+		let encoding: string;
+
+		// check wether the song-file starts with the utf-8-BOM
+		if (raw_data_buffer.subarray(0, 3).compare(bom) === 0) {
+			encoding = "utf8";
+			// no utf-8-BOM -> encoding is cp1252
+		} else {
+			encoding = "cp1252";
+		}
+
+		// decode the song-file-bytes with the fitting encoding
+		const raw_data = iconv.decode(raw_data_buffer, encoding);
+
+		// the different slides are seperated by a line of 2 or 3 dashes
+		const data = raw_data.replaceAll("\r", "").split(/\n---?(?:\n|$)/);
+
+		this.parse_metadata(data.shift());
+		this.parse_text(data);
+	}
+
+	parse_metadata(metadata_string: string) {
+		metadata_string.split(/\n\r?/).forEach((metadata_line) => {
+			if (metadata_line[0] === "#") {
+				const [key, value] = metadata_line.slice(1).split("=");
+
+				switch (key) {
+					// direct string data
+					case "Title":
+						this.song_metadata["Title"][0] = value;
+						break;
+					case "TitleLang2":
+					case "TitleLang3":
+					case "TitleLang4":
+						this.song_metadata["Title"][Number(key.charAt(key.length - 1)) - 1] = value;
+						break;
+					case "VerseOrder":
+						this.song_metadata[key] = value.split(",") as SongElement[];
+						break;
+					case "LangCount":
+						this.song_metadata[key] = Number(value);
+
+						// populate titles
+						Array.from(Array(Number(value)).keys()).forEach((lang_index) => {
+							this.song_metadata.Title[lang_index] ??= "";
+						});
+						break;
+					case "Songbook":
+					case "ChurchSongID":
+					default:
+						break;
+				}
+			}
+		});
+	}
+
+	parse_text(raw_slides: string[]) {
+		let key: string = "";
+
+		raw_slides.forEach((raw_slide) => {
+			const lines = raw_slide.split(/\n\r?/);
+
+			// check wether the first-line describes a part
+			if (is_song_element(lines[0])) {
+				key = lines.shift();
+
+				this.song_parts[key] ??= [];
+			}
+
+			const slide: TextPart[number] = Array.from(
+				Array(Math.ceil(lines.length / this.metadata.LangCount)),
+				(): TextLine[] => []
+			);
+
+			// split the lines into the different languages
+			// split the lines into the different languages
+			let lang_counter = 0;
+			let line_counter = 0;
+			lines.forEach((ll) => {
+				if (lang_counter === this.metadata.LangCount) {
+					lang_counter = 0;
+					line_counter++;
+				}
+
+				slide[line_counter].push({ lang: lang_counter, text: ll });
+
+				lang_counter++;
+			});
+
+			this.song_parts[key]?.push(slide);
+		});
+	}
+
+	get metadata(): SongFileMetadata {
+		return this.song_metadata;
+	}
+
+	get text(): TextParts {
+		return this.song_parts;
+	}
 }
