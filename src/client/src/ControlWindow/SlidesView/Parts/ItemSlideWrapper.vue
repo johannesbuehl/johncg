@@ -93,8 +93,6 @@
 
 	:slotted(*) {
 		position: absolute;
-
-		inset: 0;
 	}
 
 	.template {

@@ -3,6 +3,8 @@
 	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
+	import CountdownTemplate from "@templates/Countdown/CountdownTemplate.vue";
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 
 	const props = defineProps<{
 		slide?: ClientCountdownSlides;
@@ -39,14 +41,15 @@
 			{{ slide?.title }}
 		</div>
 		<div class="slides_wrapper">
-			<ItemSlide
-				:media="slide?.media"
-				:template="slide?.template"
+			<ItemSlideWrapper
+				v-if="slide !== undefined"
+				:media="slide.media"
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
-				@onLoaded="template_loaded"
 				@click="emit('select_slide', 0)"
-			/>
+			>
+				<CountdownTemplate :data="slide.template.data" :mute_transition="true" />
+			</ItemSlideWrapper>
 		</div>
 	</div>
 </template>
