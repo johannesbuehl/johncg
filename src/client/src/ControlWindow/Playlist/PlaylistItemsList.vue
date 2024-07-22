@@ -188,11 +188,7 @@
 			Duplicate
 		</div>
 		<div
-			@click="
-				context_menu_picker_item
-					? items_list[context_menu_picker_item.index].value.delete_item()
-					: undefined
-			"
+			@click="context_menu_picker_item ? delete_item(context_menu_picker_item.index) : undefined"
 		>
 			<FontAwesomeIcon :icon="['fas', 'trash']" />
 			Delete
