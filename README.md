@@ -19,6 +19,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
+- rethink direct integration of song- / psalm- / etc. template integration
 
 ## Planned
 - make keyboard-navigation better

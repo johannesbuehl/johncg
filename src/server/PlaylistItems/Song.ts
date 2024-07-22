@@ -100,6 +100,11 @@ export default class Song extends PlaylistItemBase {
 			transpose_steps: this.song_file.metadata.Transpose
 		};
 
+		// in stageview-mode only show the first language
+		if (stageview) {
+			return_object.languages = [return_object.languages[0]];
+		}
+
 		// add the individual parts to the output-object
 		for (const part_name of this.get_verse_order()) {
 			let part: LyricPart | undefined = undefined;

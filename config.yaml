@@ -2,10 +2,10 @@ log_level: INFO # log-level - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR
 behaviour:
   show_on_load: true # show the first slide when loading - valid-values: true false
 path: # path to the different files
-  playlist: g:/Meine Ablage/Streaming/12_Abläufe/ # song-files
-  song: G:/Meine Ablage/Streaming/80_Songs/Lieder # pdf-files
-  psalm: G:/Meine Ablage/Streaming/80_Songs/Psalme # psalm-files
-  pdf: g:/Meine Ablage/Streaming/60_PDF/ # playlist-files
+  playlist: D:/JohnCG-Johannes/12_Abläufe/ # song-files
+  song: D:/JohnCG-Johannes/80_Songs/Lieder # pdf-files
+  psalm: D:/JohnCG-Johannes/80_Songs/Psalme # psalm-files
+  pdf: D:/JohnCG-Johannes/60_PDF/ # playlist-files
   bible: files/Bible/Luther-Bibel.json # used bible
 casparcg:
   transition_length: 12.5 # transition-length in frames

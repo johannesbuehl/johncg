@@ -382,6 +382,9 @@ export default class SongFile {
 					case "VerseOrder":
 						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;
 
+					case "Copyright":
+						return `(c)=${val}`;
+
 					case "Chords": {
 						let line_number = 0;
 						const chord_string = Object.entries(this.metadata.Chords)

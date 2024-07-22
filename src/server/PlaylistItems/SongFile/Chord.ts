@@ -15,13 +15,13 @@ export function create_chord(note: string): Chord {
 
 	if (result) {
 		if (result.groups?.Note) {
-			chord.note = standardize_note(result.groups?.Note);
+			chord.note = result.groups?.Note;
 		} else {
 			throw new SyntaxError("invalid chord");
 		}
 
 		if (result.groups?.Bass) {
-			chord.bass_note = standardize_note(result.groups?.Bass);
+			chord.bass_note = result.groups?.Bass;
 		}
 
 		if (result.groups?.descriptor) {
@@ -46,24 +46,28 @@ export function get_chord_string(chord: Chord, transpose_steps: number = 0): str
 	return chord_string;
 }
 
-const notes_sharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-const notes_flat = ["C", "D<", "D", "E<", "E", "F", "G<", "G", "A<", "A", "B<", "B"];
-function transpose(note: string, steps: number): string {
+const notes_major = ["F#", "G", "A<", "A", "B<", "B", "C", "D<", "D", "E<", "E", "F", "G<"];
+const notes_minor = ["E<", "E", "F", "F#", "G", "G#", "A", "B<", "B", "C", "C#", "D", "D#"];
+function transpose(note: string, steps: number, minor: boolean): string {
 	// if there are no transposing steps, return the note
 	if (steps === 0) {
 		return note;
 	}
 
-	// remove a potential natural sign
-	note = note.replace("=", "");
+	// normalize the note
+	note = standardize_note(note);
 
-	// convert the note to a number between 0 and 11
-	let note_number;
-	if (note_number === -1) {
-		note_number = notes_flat.indexOf(note);
+	// handle major and minor different
+	let scale: string[];
+	if (minor) {
+		scale = notes_minor;
 	} else {
-		note_number = notes_sharp.indexOf(note);
+		scale = notes_major;
 	}
+
+	let note_number = scale.indexOf(note);
+
+	// if the note is not in the scale, return the note
 	if (note_number === -1) {
 		return note;
 	}
@@ -73,17 +77,28 @@ function transpose(note: string, steps: number): string {
 	// flatten to the positive 12-step range
 	note_number = ((note_number % 12) + 12) % 12;
 
-	return steps > 0 ? notes_sharp[note_number] : notes_flat[note_number];
+	// if the index is 0 (first entry, but could also be the last one), decide on the transposing steps
+	if (note_number === 0 && steps < 0) {
+		return scale[12];
+	}
+
+	return scale[note_number];
 }
 
 export function transpose_chord(chord: Chord, steps: number): Chord {
+	const minor = is_minor(chord);
+
 	return {
-		note: transpose(chord.note, steps),
+		note: transpose(chord.note, steps, minor),
 		chord_descriptors: chord.chord_descriptors,
-		bass_note: chord.bass_note !== undefined ? transpose(chord.bass_note, steps) : undefined
+		bass_note: chord.bass_note !== undefined ? transpose(chord.bass_note, steps, minor) : undefined
 	};
 }
 
 function standardize_note(raw_note: string): string {
-	return raw_note.replace("H", "B");
+	return raw_note.replace("H", "B").replace("=", "");
+}
+
+function is_minor(chord: Chord): boolean {
+	return chord.chord_descriptors?.[0] === "m";
 }
