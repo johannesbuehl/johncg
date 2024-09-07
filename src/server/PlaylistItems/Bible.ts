@@ -1,4 +1,6 @@
-import { create_bible_citation_string, recurse_object_check } from "../lib";
+import { JSONSchemaType } from "ajv";
+
+import { ajv, create_bible_citation_string } from "../lib";
 import {
 	type ClientItemSlidesBase,
 	type ItemPropsBase,
@@ -17,7 +19,7 @@ export interface Book {
 export interface BibleProps extends ItemPropsBase {
 	type: "bible";
 	book_id: string;
-	chapters: Record<number, number[]>;
+	chapters: Record<string, number[]>;
 }
 
 export type ClientBibleItem = BibleProps & ClientItemBase;
@@ -37,6 +39,40 @@ export interface ClientBibleSlides extends ClientItemSlidesBase {
 	template: BibleTemplate;
 }
 
+const bible_props_schema: JSONSchemaType<BibleProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "bible"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		book_id: {
+			type: "string"
+		},
+		chapters: {
+			type: "object",
+			required: [],
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			additionalProperties: {
+				type: "array",
+				items: {
+					type: "number"
+				}
+			}
+		}
+	},
+	required: ["book_id", "caption", "chapters", "color", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+const validate_bible_props = ajv.compile(bible_props_schema);
 export default class Bible extends PlaylistItemBase {
 	protected item_props: BibleProps;
 
@@ -68,20 +104,7 @@ export default class Bible extends PlaylistItemBase {
 		return steps;
 	}
 
-	protected validate_props(props: BibleProps): boolean {
-		const template: BibleProps = {
-			type: "bible",
-			caption: "Template",
-			color: "Template",
-			book_id: "Template",
-			chapters: {
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				0: [0]
-			}
-		};
-
-		return props.type === "bible" && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_bible_props;
 
 	get active_slide(): number {
 		return 0;

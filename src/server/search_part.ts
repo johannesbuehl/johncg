@@ -51,7 +51,7 @@ export type ItemNodeMapped<K extends keyof ItemFileMap> = Node<K>;
 export default class SearchPart {
 	constructor() {}
 
-	create_song_file(f: FileBase, fast: boolean = true): SongFile {
+	create_song_file(f: FileBase, fast: boolean): SongFile {
 		let song;
 
 		if (fast) {
@@ -120,7 +120,7 @@ export default class SearchPart {
 			}
 		});
 
-		return (await Promise.all(promises)).filter((el) => el !== undefined);
+		return (await Promise.all(promises)).filter((el) => el !== undefined) as Node<K>[];
 	}
 
 	async find_sng_files(pth: string = Config.path.song): Promise<Node<"song">[]> {
@@ -155,7 +155,7 @@ export default class SearchPart {
 	async get_casparcg_media(): Promise<Node<"media">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-media-list: no connection added");
-			return;
+			return [];
 		}
 
 		logger.debug("requesting CasparCG-media-list");
@@ -172,7 +172,7 @@ export default class SearchPart {
 	async get_casparcg_template(): Promise<Node<"template">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-template-list: no connection added");
-			return;
+			return [];
 		}
 
 		logger.debug("requesting CasparCG-template-list");
@@ -194,7 +194,7 @@ export default class SearchPart {
 		};
 
 		try {
-			return this.create_song_file(item_file);
+			return this.create_song_file(item_file, false);
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't open song: '${path}' does not exist`);
@@ -206,7 +206,7 @@ export default class SearchPart {
 		}
 	}
 
-	async get_psalm_file(path: string): Promise<PsalmFile> | undefined {
+	async get_psalm_file(path: string): Promise<PsalmFile | undefined> {
 		const item_file: FileBase = {
 			name: path.split(/[\\/]/g).slice(-1)[0],
 			path,
@@ -251,29 +251,32 @@ function build_files<K extends "media" | "template">(
 		}
 	});
 
-	return Object.entries(temp_object).map(([key, files]): Node<K> => {
-		// if the file is hidden, skip it
-		if (key[0] === ".") {
-			return undefined;
-		}
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+	return Object.entries(temp_object)
+		.map(([key, files]): Node<K> | undefined => {
+			// if the file is hidden, skip it
+			if (key[0] === ".") {
+				return undefined;
+			}
 
-		const file_path = (root ? root + "/" : "") + key;
+			const file_path = (root ? root + "/" : "") + key;
 
-		const is_dir = files.length !== 0;
+			const is_dir = files.length !== 0;
 
-		if (is_dir) {
-			return {
-				is_dir: true,
-				name: key,
-				path: file_path,
-				children: build_files(files, file_path)
-			};
-		} else {
-			return {
-				is_dir: false,
-				name: key,
-				path: file_path
-			};
-		}
-	});
+			if (is_dir) {
+				return {
+					is_dir: true,
+					name: key,
+					path: file_path,
+					children: build_files(files, file_path)
+				};
+			} else {
+				return {
+					is_dir: false,
+					name: key,
+					path: file_path
+				};
+			}
+		})
+		.filter((ele) => ele !== undefined) as Node<K>[];
 }

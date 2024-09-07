@@ -1,11 +1,12 @@
-import { CasparCGConnection, TemplateSlideJump } from "../CasparCGConnection.ts";
-import Config from "../config/config.ts";
-import { recurse_object_check } from "../lib.ts";
-import { logger } from "../logger.ts";
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import SongFile from "./SongFile/SongFile.ts";
-import type { ChordParts, SongPart, LyricPart } from "./SongFile/SongFile.ts";
+import { CasparCGConnection, TemplateSlideJump } from "../CasparCGConnection";
+import Config from "../config/config";
+import { logger } from "../logger";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import SongFile from "./SongFile/SongFile";
+import type { ChordParts, SongPart, LyricPart } from "./SongFile/SongFile";
+import { ajv } from "../lib";
+import { JSONSchemaType } from "ajv";
 
 export interface SongTemplate {
 	template: "JohnCG/Song";
@@ -36,7 +37,44 @@ export interface ClientSongSlides extends ClientItemSlidesBase {
 	type: "song";
 	template: SongTemplate;
 }
+const song_props_schema: JSONSchemaType<SongProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "song"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		file: {
+			type: "string"
+		},
+		verse_order: {
+			type: "array",
+			items: {
+				type: "string"
+			},
+			nullable: true
+		},
+		languages: {
+			type: "array",
+			items: {
+				type: "number"
+			},
+			nullable: true
+		}
+	},
+	required: ["caption", "color", "file", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
 
+const validate_song_props = ajv.compile(song_props_schema);
 export default class Song extends PlaylistItemBase {
 	protected item_props: SongProps;
 
@@ -197,38 +235,7 @@ export default class Song extends PlaylistItemBase {
 		}
 	}
 
-	protected validate_props(props: SongProps): boolean {
-		const template: SongProps = {
-			type: "song",
-			caption: "Template",
-			color: "Template",
-			file: "template"
-		};
-
-		let result = props.type === "song";
-
-		if (props.languages) {
-			result &&= Array.isArray(props.languages);
-
-			if (result) {
-				props.languages.forEach((ele) => {
-					result &&= typeof ele === "number";
-				});
-			}
-		}
-
-		if (props.verse_order) {
-			result &&= Array.isArray(props.verse_order);
-
-			if (result) {
-				props.verse_order.forEach((ele) => {
-					result &&= typeof ele === "string";
-				});
-			}
-		}
-
-		return result && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_song_props;
 
 	get props(): SongProps {
 		const props = structuredClone(this.item_props);

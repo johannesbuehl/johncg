@@ -9,6 +9,8 @@
 		"noImplicitThis": true,
 		// "strict": true,
 		"noEmit": true,
-		"allowImportingTsExtensions": true
+		// "allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"strictNullChecks": true
 	}
 }

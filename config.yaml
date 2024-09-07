@@ -8,7 +8,7 @@ path: # path to the different files
   pdf: D:/JohnCG-Johannes/60_PDF/ # playlist-files
   bible: files/Bible/Luther-Bibel.json # used bible
 casparcg:
-  transition_length: 12.5 # transition-length in frames
+  transition_length: 12 # transition-length in frames
   connections: # individual CasparCG-connections
     - host: 127.0.0.1
       port: 5250

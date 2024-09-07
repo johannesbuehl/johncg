@@ -1,11 +1,15 @@
 import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
-import { recurse_object_check } from "../lib";
+import yaml from "yaml";
+import { ErrorObject, JSONSchemaType } from "ajv";
+
+import config_schema from "../../../config.schema.json";
+
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import { CasparCGResolution } from "../CasparCGConnection";
-import yaml from "yaml";
+import { ajv } from "../lib";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -45,44 +49,8 @@ export interface ConfigYAML {
 	};
 }
 
+const validate_config_file = ajv.compile(config_schema);
 const config_path = "config.yaml";
-
-// validate the config file
-const config_template: ConfigYAML = {
-	log_level: "INFO",
-	behaviour: {
-		show_on_load: true
-	},
-	path: {
-		playlist: "template",
-		song: "template",
-		psalm: "template",
-		pdf: "template",
-		bible: "template"
-	},
-	casparcg: {
-		transition_length: 5,
-		connections: [
-			{
-				channel: 0,
-				host: "template",
-				layers: {
-					template: 0
-				},
-				port: 0
-			}
-		]
-	},
-	client_server: {
-		http: {
-			port: 0
-		},
-		websocket: {
-			port: 0
-		}
-	}
-};
-
 class ConfigClass {
 	private config_path: string;
 
@@ -95,94 +63,50 @@ class ConfigClass {
 	};
 
 	constructor(pth: string = config_path) {
-		if (!this.open(pth)) {
-			throw new SyntaxError("invalid config file");
+		const open_result = this.open(pth);
+
+		if (open_result !== null) {
+			const errors = open_result
+				.map((error) => `${error.instancePath}: ${error.message}`)
+				.join(", ");
+
+			throw new SyntaxError(`invalid config file: ${errors}`);
 		}
 	}
 
-	open(pth: string = config_path): boolean {
+	open(pth: string = config_path): null | ErrorObject[] {
 		const new_config = yaml.parse(fs.readFileSync(pth, "utf-8")) as ConfigYAML;
 
-		if (this.check_config(new_config)) {
+		if (validate_config_file(new_config)) {
 			this.config_path = pth;
 
 			this.config = new_config;
 
-			return true;
+			return null;
 		} else {
-			return false;
+			return validate_config_file.errors ?? null;
 		}
-	}
-
-	reload(): boolean {
-		return this.open(this.config_path);
 	}
 
 	save(pth: string = this.config_path) {
 		fs.writeFileSync(pth, JSON.stringify(this.config, undefined, "\t"));
 	}
 
-	private check_config(config: ConfigYAML): boolean {
-		let file_check = recurse_object_check(config, config_template);
-
-		file_check &&= [
-			"ALL",
-			"MARK",
-			"TRACE",
-			"DEBUG",
-			"INFO",
-			"WARN",
-			"ERROR",
-			"FATAL",
-			"OFF"
-		].includes(config?.log_level);
-		file_check &&= config?.casparcg?.transition_length > 0;
-		file_check &&= config?.casparcg?.connections?.every(
-			(connection) => connection?.layers?.media !== connection?.layers?.template
-		);
-		file_check &&= config?.casparcg?.connections?.every((connection) => {
-			let check = Object.values(connection?.layers).every((layer) => layer >= 0);
-
-			if (connection.path !== undefined) {
-				check &&= typeof connection.path === "string";
-			}
-
-			if (connection.stageview !== undefined) {
-				check &&= typeof connection.stageview === "boolean";
-			}
-
-			return check;
-		});
-
-		const check_valid_port = (port: unknown) =>
-			typeof port === "number" && Number.isInteger(port) && port >= 0 && port <= 65535;
-
-		file_check &&= config?.casparcg?.connections?.every((connection) =>
-			check_valid_port(connection?.port)
-		);
-		file_check &&= check_valid_port(config?.client_server?.http?.port);
-		file_check &&= check_valid_port(config?.client_server?.websocket?.port);
-
-		return file_check;
-	}
-
 	get_path(type: keyof ConfigYAML["path"] | "template", pth?: string): string {
-		let base_path: string;
+		let base_path: string = "";
 
 		if (type === "template") {
-			base_path = this.config_internal.casparcg_template_path;
+			base_path = this.config_internal.casparcg_template_path ?? "Templates";
 		} else if (Object.keys(this.config.path).includes(type)) {
 			base_path = this.config.path[type];
 		}
 
-		if (base_path !== undefined) {
-			if (pth !== undefined) {
-				const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
+		if (pth !== undefined) {
+			const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
 
-				return return_path.replaceAll("\\", "/");
-			} else {
-				return base_path;
-			}
+			return return_path.replaceAll("\\", "/");
+		} else {
+			return base_path;
 		}
 	}
 
@@ -193,16 +117,30 @@ class ConfigClass {
 	}
 
 	set casparcg_resolution(res: CasparCGResolution) {
-		const template: CasparCGResolution = {
-			height: 0,
-			width: 0
+		const casparcg_resolution_schema: JSONSchemaType<CasparCGResolution> = {
+			/* eslint-disable @typescript-eslint/naming-convention */
+			$schema: "http://json-schema.org/draft-07/schema#",
+			type: "object",
+			properties: {
+				width: {
+					type: "integer",
+
+					exclusiveMinimum: 0
+				},
+				height: {
+					type: "integer",
+					exclusiveMinimum: 0
+				}
+			},
+			required: ["width", "height"],
+			additionalProperties: false,
+			definitions: {}
+			/* eslint-enable @typescript-eslint/naming-convention */
 		};
 
-		let result = recurse_object_check(res, template);
+		const validate = ajv.compile(casparcg_resolution_schema);
 
-		result &&= res?.height > 0 && res?.width > 0;
-
-		if (result) {
+		if (validate(res)) {
 			this.config_internal.casparcg_resolution = structuredClone(res);
 		}
 	}
@@ -236,10 +174,12 @@ class ConfigClass {
 const Config = new ConfigClass();
 export default Config;
 
-export function get_casparcg_transition(): TransitionParameters {
-	return {
-		duration: Config.casparcg.transition_length,
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		transitionType: TransitionType.Mix
-	};
+export function get_casparcg_transition(): TransitionParameters | undefined {
+	if (Config.casparcg.transition_length) {
+		return {
+			duration: Config.casparcg.transition_length,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			transitionType: TransitionType.Mix
+		};
+	}
 }

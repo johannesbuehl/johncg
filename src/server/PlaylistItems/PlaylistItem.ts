@@ -1,31 +1,31 @@
-import type Song from "./Song.ts";
-import type { ClientSongItem, ClientSongSlides, SongProps, SongTemplate } from "./Song.ts";
-import type Countdown from "./Countdown.ts";
+import type Song from "./Song";
+import type { ClientSongItem, ClientSongSlides, SongProps, SongTemplate } from "./Song";
+import type Countdown from "./Countdown";
 import type {
 	ClientCountdownItem,
 	ClientCountdownSlides,
 	CountdownProps,
 	CountdownTemplate
 } from "./Countdown.ts";
-import type { ClientCommentItem, ClientCommentSlides, CommentProps } from "./Comment.ts";
-import type Media from "./Media.ts";
-import type { ClientMediaItem, ClientMediaProps, MediaProps } from "./Media.ts";
-import type TemplateItem from "./Template.ts";
+import type { ClientCommentItem, ClientCommentSlides, CommentProps } from "./Comment";
+import type Media from "./Media";
+import type { ClientMediaItem, ClientMediaProps, MediaProps } from "./Media";
+import type TemplateItem from "./Template";
 import type {
 	ClientTemplateItem,
 	ClientTemplateSlides,
 	TemplateProps,
 	TemplateTemplate
 } from "./Template.ts";
-import type PDF from "./PDF.ts";
-import type { ClientPDFItem, ClientPDFSlides, PDFProps } from "./PDF.ts";
-import type Comment from "./Comment.ts";
-import type Bible from "./Bible.ts";
-import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } from "./Bible.ts";
-import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm.ts";
-import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP.ts";
-import { logger } from "../logger.ts";
-import { get_casparcg_transition } from "../config/config.ts";
+import type PDF from "./PDF";
+import type { ClientPDFItem, ClientPDFSlides, PDFProps } from "./PDF";
+import type Comment from "./Comment";
+import type Bible from "./Bible";
+import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } from "./Bible";
+import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm";
+import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP";
+import { logger } from "../logger";
+import { get_casparcg_transition } from "../config/config";
 import {
 	CasparCGConnection,
 	TemplateSlideJump,
@@ -33,7 +33,7 @@ import {
 	catch_casparcg_timeout,
 	stringify_json_for_tempalte
 } from "../CasparCGConnection.js";
-import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text.ts";
+import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text";
 
 export type PlaylistItem =
 	| Song
@@ -129,7 +129,7 @@ export abstract class PlaylistItemBase {
 
 	protected is_displayable: boolean = true;
 
-	abstract create_client_object_item_slides(): Promise<ClientItemSlides>;
+	abstract create_client_object_item_slides(): Promise<ClientItemSlides | false>;
 	abstract set_active_slide(slide?: number): number;
 
 	/**
@@ -181,12 +181,14 @@ export abstract class PlaylistItemBase {
 		}
 	}
 
-	play(casparcg_connection?: CasparCGConnection): Promise<unknown> {
+	// Promise<[Response<unknown> | APIRequest<Commands.Loadbg> | undefined, Response<unknown> | undefined]>[]
+
+	play(casparcg_connection?: CasparCGConnection): Promise<PromiseSettledResult<void>[]> {
 		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
 		return Promise.allSettled(
-			connections.map((connection) => {
-				return Promise.all([this.play_media(connection), this.play_template(connection)]);
+			connections.map(async (connection) => {
+				await Promise.all([this.play_media(connection), this.play_template(connection)]);
 			})
 		);
 	}
@@ -196,9 +198,9 @@ export abstract class PlaylistItemBase {
 
 	protected play_media(casparcg_connection: CasparCGConnection) {
 		if (casparcg_connection.settings.layers.media !== undefined) {
-			if (casparcg.visibility) {
-				const clip = this.media ?? "#00000000";
+			const clip = this.media ?? "#00000000";
 
+			if (casparcg.visibility) {
 				logger.log(`loading CasparCG-media: '${clip}'`);
 
 				return catch_casparcg_timeout(
@@ -206,7 +208,7 @@ export abstract class PlaylistItemBase {
 						(
 							await casparcg_connection.connection.play({
 								channel: casparcg_connection.settings.channel,
-								layer: casparcg_connection.settings.layers.media,
+								layer: casparcg_connection.settings.layers.media ?? 20,
 								clip,
 								loop: this.loop,
 								transition: get_casparcg_transition()
@@ -222,8 +224,8 @@ export abstract class PlaylistItemBase {
 					async () =>
 						casparcg_connection.connection.loadbg({
 							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.media,
-							clip: this.media,
+							layer: casparcg_connection.settings.layers.media ?? 20,
+							clip,
 							loop: this.loop,
 							transition: get_casparcg_transition()
 						}),
@@ -241,7 +243,7 @@ export abstract class PlaylistItemBase {
 					await casparcg_connection.connection.play({
 						/* eslint-disable @typescript-eslint/naming-convention */
 						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media,
+						layer: casparcg_connection.settings.layers.media ?? 20,
 						clip: "EMPTY",
 						transition: get_casparcg_transition()
 						/* eslint-enable @typescript-eslint/naming-convention */
@@ -408,19 +410,19 @@ export abstract class PlaylistItemBase {
 		});
 	}
 
-	protected abstract validate_props(props: ItemProps): boolean;
+	protected abstract validate_props: (props: ItemProps) => boolean;
 
 	abstract get props(): ItemProps;
 
 	abstract get playlist_item(): ClientPlaylistItem;
 
-	abstract get media(): string;
+	abstract get media(): string | undefined;
 
 	get multi_media(): boolean {
 		return false;
 	}
 
-	abstract get loop(): boolean;
+	abstract get loop(): boolean | undefined;
 
 	abstract get_template(stageview: boolean): Template | undefined;
 

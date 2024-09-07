@@ -1,27 +1,28 @@
 import type { TransitionParameters } from "casparcg-connection";
 
 import type {
+	ClientItemBase,
 	ClientItemSlides,
 	ClientPlaylistItem,
 	ItemProps,
 	PlaylistItem
 } from "./PlaylistItems/PlaylistItem.ts";
-import Song from "./PlaylistItems/Song.ts";
+import Song from "./PlaylistItems/Song";
 
-import * as JCGPSend from "./JCGPSendMessages.ts";
+import * as JCGPSend from "./JCGPSendMessages";
 
-import Config from "./config/config.ts";
-import PlaylistObject from "./PlaylistFile.ts";
-import Comment from "./PlaylistItems/Comment.ts";
-import Countdown from "./PlaylistItems/Countdown.ts";
-import Media from "./PlaylistItems/Media.ts";
-import PDF from "./PlaylistItems/PDF.ts";
-import TemplateItem from "./PlaylistItems/Template.ts";
+import Config from "./config/config";
+import PlaylistObject from "./PlaylistFile";
+import Comment from "./PlaylistItems/Comment";
+import Countdown from "./PlaylistItems/Countdown";
+import Media from "./PlaylistItems/Media";
+import PDF from "./PlaylistItems/PDF";
+import TemplateItem from "./PlaylistItems/Template";
 import * as fs from "fs";
-import Bible from "./PlaylistItems/Bible.ts";
-import Psalm from "./PlaylistItems/Psalm.ts";
-import { logger } from "./logger.ts";
-import AMCP from "./PlaylistItems/AMCP.ts";
+import Bible from "./PlaylistItems/Bible";
+import Psalm from "./PlaylistItems/Psalm";
+import { logger } from "./logger";
+import AMCP from "./PlaylistItems/AMCP";
 import {
 	CasparCGConnection,
 	add_casparcg_listener,
@@ -32,8 +33,8 @@ import {
 	thumbnail_retrieve
 } from "./CasparCGConnection.js";
 import path from "path";
-import Text from "./PlaylistItems/Text.ts";
-import { server_id } from "./servers/websocket-server.ts";
+import Text from "./PlaylistItems/Text";
+import { server_id } from "./servers/websocket-server";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -133,7 +134,7 @@ export default class Playlist {
 		};
 
 		const new_item = new item_class_map[item.type](item, (playlist_item: PlaylistItem) => {
-			callback(playlist_item);
+			callback?.(playlist_item);
 
 			if (set_active) {
 				this.set_active_item(index, 0);
@@ -142,7 +143,7 @@ export default class Playlist {
 
 		this.playlist_items.splice(index, 0, new_item);
 
-		if (this.active_item >= index) {
+		if (this.active_item !== null && this.active_item >= index && this.active_item_number) {
 			this.active_item_number++;
 		}
 
@@ -153,15 +154,15 @@ export default class Playlist {
 		this.changes = true;
 	}
 
-	update_item(position: number, props: ClientPlaylistItem): boolean {
+	update_item<T extends ClientPlaylistItem>(position: number, props: T): boolean {
 		position = this.validate_item_number(position);
 
 		// check, wether the props are of the same type as the item at the position
 		if (props.type === this.playlist_items[position].props.type) {
-			const update_props = structuredClone(props);
-			delete update_props.displayable;
+			const update_props: Omit<T, keyof ClientItemBase> = structuredClone(props);
+			delete (update_props as Partial<T>).displayable;
 
-			const result = this.playlist_items[position].update(update_props, () => {
+			const result = this.playlist_items[position].update(update_props as ItemProps, () => {
 				if (this.active_item === position) {
 					this.casparcg_update_template();
 				}
@@ -192,7 +193,11 @@ export default class Playlist {
 		const old_active_item = this.active_item;
 
 		// if the deleted item was the last item or lower than the active-item, adjust the index of the active-item
-		if (position < this.active_item || position === this.playlist_items.length - 1) {
+		if (
+			((this.active_item !== null && position < this.active_item) ||
+				position === this.playlist_items.length - 1) &&
+			this.active_item_number !== null
+		) {
 			this.active_item_number--;
 
 			if (this.active_item === -1) {
@@ -211,7 +216,11 @@ export default class Playlist {
 
 		// if the deleted item was the active one, load the new-active-item into casparcg
 		if (old_active_item === position) {
-			void catch_casparcg_timeout(async () => await this.active_playlist_item?.play(), "PLAY");
+			void catch_casparcg_timeout(async () => {
+				if (this.active_playlist_item) {
+					await this.active_playlist_item.play();
+				}
+			}, "PLAY");
 		}
 
 		if (this.active_item === null) {
@@ -261,7 +270,7 @@ export default class Playlist {
 
 		// if there is no path specified, abort
 		if (this.path === undefined) {
-			return;
+			return false;
 		}
 
 		// if overwrite isn't give, check wether the file exists
@@ -298,19 +307,19 @@ export default class Playlist {
 		return return_playlist;
 	}
 
-	async create_client_object_item_slides(item: number): Promise<ClientItemSlides> {
+	async create_client_object_item_slides(item: number): Promise<ClientItemSlides | undefined> {
 		if (this.playlist_items[item] !== undefined) {
 			if (this.playlist_items[item].displayable) {
 				const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
-				if (client_object.media !== undefined) {
+				if (!!client_object && client_object.media !== undefined) {
 					// check wether it is a color string
 					const test_rgb_string = client_object.media.match(
 						/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
 					);
 
 					if (!test_rgb_string) {
-						let thumbnails: string[] = await thumbnail_retrieve(client_object.media);
+						let thumbnails: string[] | undefined = await thumbnail_retrieve(client_object.media);
 
 						if (thumbnails === undefined) {
 							await thumbnail_generate(client_object.media);
@@ -322,14 +331,14 @@ export default class Playlist {
 					} else {
 						client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 					}
-				}
 
-				return client_object;
+					return client_object;
+				}
 			}
 		}
 	}
 
-	set_active_item(item: number, slide: number = 0): ActiveItemSlide | false {
+	set_active_item(item: number, slide: number = 0): ActiveItemSlide | null {
 		item = this.validate_item_number(item);
 
 		if (this.playlist_items[item].displayable) {
@@ -337,30 +346,29 @@ export default class Playlist {
 
 			this.active_item_number = item;
 
-			this.active_playlist_item.set_active_slide(slide);
+			this.active_playlist_item?.set_active_slide(slide);
 
 			void old_playlist_item?.stop();
 
-			void this.active_playlist_item.play();
+			void this.active_playlist_item?.play();
 
 			return this.active_item_slide;
 		} else {
-			return false;
+			return null;
 		}
 	}
 
-	set_active_slide(slide: number): number {
-		const response = this.active_playlist_item.set_active_slide(slide);
+	set_active_slide(slide: number): number | null {
+		const response = this.active_playlist_item?.set_active_slide(slide);
 
-		return response;
+		return response ?? null;
 	}
 
 	/**
 	 * Navigate to the next or previous item
-	 * @param direction navigate forward ('next') or backward ('prev')
 	 */
 	// navigate_item(direction: NavigateDirection, slide: number = 0): void {
-	navigate_item(steps: number, slide: number = 0): boolean {
+	navigate_item(steps: number, slide: number = 0) {
 		if (typeof steps !== "number") {
 			// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 			throw new TypeError(`steps ('${steps}') is no number`);
@@ -371,29 +379,35 @@ export default class Playlist {
 		}
 
 		let new_active_item_number = this.active_item;
-		// steps until there is a displayable item
-		do {
-			new_active_item_number += steps;
+		if (new_active_item_number !== null) {
+			// steps until there is a displayable item
+			do {
+				new_active_item_number += steps;
 
-			// if the new_active_item_number is back at the start, break, since there are no displayable items
-			if (new_active_item_number === this.active_item) {
-				logger.error("can't determine new_item, there is no selectable");
-				return;
+				// if the new_active_item_number is back at the start, break, since there are no displayable items
+				if (new_active_item_number === this.active_item) {
+					logger.error("can't determine new_item, there is no selectable");
+					return;
+				}
+
+				// sanitize the item-number
+				new_active_item_number = this.sanitize_item_number(new_active_item_number);
+
+				if (new_active_item_number === null) {
+					return;
+				}
+			} while (!this.playlist_items[new_active_item_number].displayable);
+
+			// new active item has negative index -> roll over to other end
+			if (new_active_item_number < 0) {
+				new_active_item_number = this.playlist_items.length - 1;
+				// index is bigger than the slide-count -> roll over to zero
+			} else if (new_active_item_number > this.playlist_items.length - 1) {
+				new_active_item_number = 0;
 			}
 
-			// sanitize the item-number
-			new_active_item_number = this.sanitize_item_number(new_active_item_number);
-		} while (!this.playlist_items[new_active_item_number].displayable);
-
-		// new active item has negative index -> roll over to other end
-		if (new_active_item_number < 0) {
-			new_active_item_number = this.playlist_items.length - 1;
-			// index is bigger than the slide-count -> roll over to zero
-		} else if (new_active_item_number > this.playlist_items.length - 1) {
-			new_active_item_number = 0;
+			this.set_active_item(new_active_item_number, slide);
 		}
-
-		this.set_active_item(new_active_item_number, slide);
 	}
 
 	/**
@@ -420,7 +434,11 @@ export default class Playlist {
 			this.active_item_number = to;
 
 			// if one of the move-positions lays before and the other after the active-item, adjust the active-item-number
-		} else if (this.active_item < from !== this.active_item < to) {
+		} else if (
+			this.active_item !== null &&
+			this.active_item < from !== this.active_item < to &&
+			this.active_item_number
+		) {
 			// if the moved item is the active one, set it accordingly
 			if (this.active_item < from) {
 				// if the item gets moved from before the active-item to after, increase the active-item-number
@@ -463,9 +481,9 @@ export default class Playlist {
 	 * @param item
 	 * @returns sanitized number; active_item_number if no integer was given
 	 */
-	private sanitize_item_number(item: number): number {
+	private sanitize_item_number(item: number): number | null {
 		if (!Number.isInteger(item)) {
-			return this.active_item;
+			return null;
 		}
 
 		// clamp the range
@@ -484,7 +502,7 @@ export default class Playlist {
 			casparcg_connection !== undefined ? [casparcg_connection] : casparcg.casparcg_connections;
 
 		connections.forEach((casparcg_connection) => {
-			this.active_playlist_item.update_template(casparcg_connection);
+			this.active_playlist_item?.update_template(casparcg_connection);
 		});
 	}
 
@@ -507,11 +525,13 @@ export default class Playlist {
 	}
 
 	get active_playlist_item(): PlaylistItem | undefined {
-		return this.playlist_items[this.active_item];
+		if (this.active_item !== null) {
+			return this.playlist_items[this.active_item];
+		}
 	}
 
-	get active_slide(): number {
-		return this.active_playlist_item.active_slide;
+	get active_slide(): number | null {
+		return this.active_playlist_item?.active_slide ?? null;
 	}
 
 	get active_item_slide(): ActiveItemSlide {

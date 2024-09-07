@@ -38,7 +38,11 @@
 </script>
 
 <template>
-	<MediaDialogue :create_props_callback="create_props" @choose="add_media">
+	<MediaDialogue
+		:create_props_callback="create_props"
+		v-model:selection="selection"
+		@choose="add_media"
+	>
 		<template v-slot:buttons>
 			<MenuButton @click="loop = !loop" :active="loop">
 				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop

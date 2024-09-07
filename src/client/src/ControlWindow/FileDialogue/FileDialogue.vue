@@ -357,6 +357,15 @@
 									:list="sort_files(get_current_files())"
 									tag="div"
 									:clone="clone_callback"
+									:group="
+										clone_callback !== undefined
+											? {
+													name: 'playlist',
+													pull: 'clone',
+													put: false
+												}
+											: undefined
+									"
 									:sort="false"
 									delay-on-touch-only="true"
 									delay="250"
@@ -406,14 +415,16 @@
 							delay="250"
 						>
 							<template v-for="element of sort_files(get_current_files())">
-								<PlaylistItemDummy v-show="thumbnails[element.path]" :color="item_color ?? ''">
-									<div class="file_thumbnail selectable" :class="{ active: element === selection }">
-										<img
-											:src="thumbnails[element.path]"
-											@keydown.enter.prevent="on_choose(element)"
-											@dblclick="on_choose(element)"
-											@click="selection = element"
-										/>
+								<PlaylistItemDummy
+									v-show="thumbnails[element.path]"
+									:active="element === selection"
+									:color="item_color ?? ''"
+									@click="selection = element"
+									@keydown.enter.prevent="on_choose(element)"
+									@dblclick="on_choose(element)"
+								>
+									<div class="file_thumbnail selectable">
+										<img :src="thumbnails[element.path]" />
 										<div class="file_thumbnail_name">
 											{{ element.name }}
 										</div>
@@ -421,7 +432,7 @@
 								</PlaylistItemDummy>
 							</template>
 						</Draggable>
-						<slot name="edit" />
+						<slot name="edit"></slot>>
 					</div>
 					<div class="button_wrapper" v-if="!!slots.buttons">
 						<slot name="buttons" />
@@ -704,14 +715,6 @@
 		background-color: var(--color-item-hover);
 	}
 
-	.file_item.selectable.active {
-		background-color: var(--color-active);
-	}
-
-	.file_item.selectable.active:hover {
-		background-color: var(--color-active-hover);
-	}
-
 	.file_thumbnail {
 		cursor: pointer;
 
@@ -723,14 +726,6 @@
 		font-weight: lighter;
 
 		border-radius: 0.25rem;
-	}
-
-	.playlist_item_wrapper .file_thumbnail.active {
-		background-color: var(--color-active);
-	}
-
-	.file_thumbnail.selectable.active:hover {
-		background-color: var(--color-active-hover);
 	}
 
 	.file_thumbnail > img {
@@ -788,15 +783,16 @@
 		height: 100%;
 	}
 
+	/* don't show playliste-elements in file-dialogue */
 	.draggable:deep(.item_color_indicator) {
 		display: none !important;
 	}
 
-	#file_thumbnail_wrapper:deep(.playlist_item) {
+	.draggable#file_thumbnail_wrapper:deep(.playlist_item) {
 		padding: 0;
 	}
 
-	#file_thumbnail_wrapper:deep(img) {
+	.draggable#file_thumbnail_wrapper:deep(img) {
 		display: unset;
 	}
 </style>

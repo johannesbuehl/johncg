@@ -1,42 +1,10 @@
+import Ajv from "ajv";
+import formatsPlugin from "ajv-formats";
+
 import type { BibleProps } from "./PlaylistItems/Bible";
 
-export function recurse_object_check<K>(obj: K, template: K): boolean {
-	if (typeof obj === "object" && typeof template === "object") {
-		const results: boolean[] = [];
-
-		if (Array.isArray(obj) && Array.isArray(template)) {
-			results.push(
-				...obj.map((ele): boolean => {
-					return recurse_object_check(ele, template[0]);
-				})
-			);
-			// check that none of them are arrays
-		} else if (Array.isArray(obj) === Array.isArray(template)) {
-			const obj_keys = Object.keys(obj);
-
-			results.push(
-				...Object.entries(template).map(([key, item]): boolean => {
-					if (obj_keys.includes(key)) {
-						return recurse_object_check(item, (template as Record<string, unknown>)[key]);
-					} else {
-						return false;
-					}
-				})
-			);
-		} else {
-			return false;
-		}
-
-		return results.every((res) => res);
-	} else {
-		// check, wether the object and the template are of the same type
-		if (typeof obj !== typeof template) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-}
+export const ajv = new Ajv();
+formatsPlugin(ajv);
 
 export function create_bible_citation_string(book_id: string, chapters: BibleProps["chapters"]) {
 	// add the individual chapters

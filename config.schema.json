@@ -1,0 +1,200 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "log_level": {
+            "type": "string",
+            "enum": [
+                "ALL",
+                "MARK",
+                "TRACE",
+                "DEBUG",
+                "INFO",
+                "WARN",
+                "ERROR",
+                "FATAL",
+                "OFF"
+            ],
+			"default": "INFO"
+        },
+        "behaviour": {
+            "type": "object",
+            "properties": {
+                "show_on_load": {
+					"description": "Show the first item when loading a playlist / set newly added elements active",
+                    "type": "boolean",
+					"default": true
+                }
+            },
+            "required": [
+                "show_on_load"
+            ],
+            "additionalProperties": false
+        },
+        "path": {
+			"description": "paths to different files",
+            "type": "object",
+            "properties": {
+                "playlist": {
+					"description": "directory with playlist-files",
+                    "type": "string",
+					"default": "Playlist"
+                },
+                "song": {
+					"description": "directory with song-files",
+                    "type": "string",
+					"default": "Song"
+                },
+                "psalm": {
+					"description": "directory with psalm-files",
+                    "type": "string",
+					"default": "Psalm"
+                },
+                "pdf": {
+					"description": "directory with pdf-files",
+                    "type": "string",
+					"default": "PDF"
+                },
+                "bible": {
+					"description": "bible-file",
+                    "type": "string",
+					"default": "Bible/Luther-Bibel.json"
+                }
+            },
+            "required": [
+                "playlist",
+                "song",
+                "psalm",
+                "pdf",
+                "bible"
+            ],
+            "additionalProperties": false
+        },
+        "casparcg": {
+            "type": "object",
+            "properties": {
+                "transition_length": {
+					"description": "crossfade-length between different items in frames. Omit for cuts",
+                    "type": "integer",
+					"default": 12,
+					"minimum": 0
+                },
+                "connections": {
+					"description": "individual casparCG instances",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {
+								"type": "string",
+								"format": "hostname",
+								"default": "localhost"
+                            },
+                            "port": {
+                                "type": "integer",
+								"minimum": 0,
+								"maximum": 65535,
+								"default": "5250"
+                            },
+                            "channel": {
+                                "type": "integer",
+								"minimum": 1,
+								"default": 1
+                            },
+                            "layers": {
+                                "type": "object",
+                                "properties": {
+                                    "media": {
+										"description": "used for media-playback - leave empty to don't show media",
+                                        "type": "integer",
+										"default": 20,
+										"minimum": 0
+                                    },
+                                    "template": {
+										"description": "used for templates and song-/psalm-/countdown-text",
+                                        "type": "integer",
+										"default": 21,
+										"minimum": 0
+                                    }
+                                },
+                                "required": [
+                                    "template"
+                                ],
+                                "additionalProperties": false
+                            },
+                            "path": {
+								"description": "path to the casparCG-directory to autostart at launch",
+                                "type": "string",
+								"default": "casparcg_2.4.0"
+                            },
+                            "stageview": {
+								"description": "show song-chords and hide song-backgrounds",
+                                "type": "boolean",
+								"default": false
+                            }
+                        },
+                        "required": [
+                            "host",
+                            "port",
+                            "channel",
+                            "layers"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "required": [
+                "connections"
+            ],
+            "additionalProperties": false
+        },
+        "client_server": {
+            "type": "object",
+            "properties": {
+                "http": {
+                    "type": "object",
+                    "properties": {
+                        "port": {
+                            "type": "integer",
+							"minimum": 0,
+							"maximum": 65535,
+							"default": 8888
+                        }
+                    },
+                    "required": [
+                        "port"
+                    ],
+                    "additionalProperties": false
+                },
+                "websocket": {
+                    "type": "object",
+                    "properties": {
+                        "port": {
+                            "type": "integer",
+							"minimum": 0,
+							"maximum": 65535,
+							"default": 8888
+                        }
+                    },
+                    "required": [
+                        "port"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "http",
+                "websocket"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "log_level",
+        "behaviour",
+        "path",
+        "casparcg",
+        "client_server"
+    ],
+    "additionalProperties": false
+}

@@ -1,6 +1,7 @@
-import { recurse_object_check } from "../lib.ts";
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { JSONSchemaType } from "ajv";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { ajv } from "../lib";
 
 export interface CommentProps extends ItemPropsBase {
 	type: "comment";
@@ -11,6 +12,27 @@ export type ClientCommentItem = CommentProps & ClientItemBase;
 export interface ClientCommentSlides extends ClientItemSlidesBase {
 	type: "comment";
 }
+
+const comment_props_schema: JSONSchemaType<CommentProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "comment"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		}
+	},
+	required: ["caption", "color", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+const validate_comment_props = ajv.compile(comment_props_schema);
 
 export default class Comment extends PlaylistItemBase {
 	protected item_props: CommentProps;
@@ -43,15 +65,7 @@ export default class Comment extends PlaylistItemBase {
 		return 0;
 	}
 
-	protected validate_props(props: CommentProps): boolean {
-		const template: CommentProps = {
-			type: "comment",
-			caption: "Template",
-			color: "Template"
-		};
-
-		return props.type === "comment" && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_comment_props;
 
 	get active_slide(): number {
 		return -1;

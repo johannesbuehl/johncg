@@ -1,11 +1,12 @@
 import fs from "fs";
 
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { recurse_object_check } from "../lib.ts";
-import Config from "../config/config.ts";
-import { logger } from "../logger.ts";
-import { TemplateSlideJump } from "../CasparCGConnection.ts";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import Config from "../config/config";
+import { logger } from "../logger";
+import { TemplateSlideJump } from "../CasparCGConnection";
+import { ajv } from "../lib";
+import { JSONSchemaType } from "ajv";
 
 export interface PsalmFile {
 	metadata: {
@@ -42,6 +43,29 @@ export interface ClientPsalmSlides extends ClientItemSlidesBase {
 	template: PsalmTemplate;
 }
 
+const psalm_props_schema: JSONSchemaType<PsalmProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "psalm"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		file: {
+			type: "string"
+		}
+	},
+	required: ["caption", "color", "file", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+const validate_psalm_props = ajv.compile(psalm_props_schema);
 export default class Psalm extends PlaylistItemBase {
 	protected item_props: PsalmProps;
 
@@ -110,86 +134,36 @@ export default class Psalm extends PlaylistItemBase {
 		return slide_steps;
 	}
 
-	create_client_object_item_slides(): Promise<ClientPsalmSlides> {
-		let title: string = "";
-		const psalm_file = this.psalm_file;
+	create_client_object_item_slides(): Promise<ClientPsalmSlides | false> {
+		const template = this.get_template();
 
-		if (psalm_file !== false) {
-			if (psalm_file.metadata.id !== undefined) {
-				title = `${psalm_file.metadata.id} - `;
+		if (template !== undefined) {
+			let title: string = "";
+			const psalm_file = this.psalm_file;
+
+			if (psalm_file !== false) {
+				if (psalm_file.metadata.id !== undefined) {
+					title = `${psalm_file.metadata.id} - `;
+				}
+
+				title += psalm_file.metadata.caption;
 			}
 
-			title += psalm_file.metadata.caption;
-		}
+			const return_item: ClientPsalmSlides = {
+				type: "psalm",
+				caption: this.item_props.caption,
+				title,
+				media: this.media,
+				template
+			};
 
-		const return_item: ClientPsalmSlides = {
-			type: "psalm",
-			caption: this.item_props.caption,
-			title,
-			media: this.media,
-			template: this.get_template()
-		};
-
-		return Promise.resolve(return_item);
-	}
-
-	protected validate_props(props: PsalmProps): boolean {
-		const template: PsalmProps = {
-			type: "psalm",
-			caption: "Template",
-			color: "Template",
-			file: "Template"
-		};
-
-		return props.type === "psalm" && recurse_object_check(props, template);
-	}
-
-	protected validate_psalm_file(psalm_string: string): PsalmFile | false {
-		let psalm: PsalmFile;
-
-		try {
-			psalm = JSON.parse(psalm_string) as PsalmFile;
-		} catch (e) {
-			if (e instanceof SyntaxError) {
-				return false;
-			}
-		}
-
-		// check, that is no array
-		if (Array.isArray(psalm)) {
-			return false;
-		}
-
-		const template: PsalmFile = {
-			metadata: {
-				caption: "Template",
-				indent: false
-			},
-			text: [[["Template"]]]
-		};
-
-		let result = true;
-
-		if (psalm.metadata.book) {
-			result &&= typeof psalm.metadata.book === "string";
-		}
-
-		if (psalm.metadata.id) {
-			result &&= typeof psalm.metadata.id === "string";
-		}
-
-		if (psalm.metadata.indent) {
-			result &&= typeof psalm.metadata.indent === "boolean";
-		}
-
-		result &&= recurse_object_check(psalm, template);
-
-		if (result) {
-			return psalm;
+			return Promise.resolve(return_item);
 		} else {
-			return false;
+			return Promise.resolve(false);
 		}
 	}
+
+	protected validate_props = validate_psalm_props;
 
 	get props(): PsalmProps {
 		return this.item_props;
@@ -222,37 +196,53 @@ export default class Psalm extends PlaylistItemBase {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`psalm '${this.props.file}' does not exist`);
-				return;
+				return false;
 			} else if (e instanceof SyntaxError) {
 				logger.error(`psalm '${this.props.file}' has invalid json`);
-				return;
+				return false;
 			} else {
 				throw e;
 			}
 		}
 
-		const psalm_content = this.validate_psalm_file(psalm_content_string);
+		let psalm: PsalmFile;
+
+		try {
+			psalm = JSON.parse(psalm_content_string) as PsalmFile;
+		} catch (e) {
+			if (e instanceof SyntaxError) {
+				return false;
+			} else {
+				throw e;
+			}
+		}
+
+		const psalm_content = validate_psalm_file(psalm);
 
 		this.slide_count = psalm_content !== false ? psalm_content.text.length : 0;
 
-		return this.validate_psalm_file(psalm_content_string);
+		return psalm_content;
 	}
 
-	get_template(): PsalmTemplate {
+	get_template(): PsalmTemplate | undefined {
 		const psalm_file = this.psalm_file;
 
-		const template: PsalmTemplate = {
-			template: "JohnCG/Psalm",
-			data: {
-				command: "data",
-				slide: this.active_slide,
-				data: psalm_file !== false ? psalm_file : undefined
-			}
-		};
+		if (psalm_file !== false) {
+			const template: PsalmTemplate = {
+				template: "JohnCG/Psalm",
+				data: {
+					command: "data",
+					slide: this.active_slide,
+					data: psalm_file
+				}
+			};
 
-		template.data.slide = this.active_slide;
+			template.data.slide = this.active_slide;
 
-		return template;
+			return template;
+		} else {
+			return undefined;
+		}
 	}
 
 	get_markdown_export_string(full: boolean): string {
@@ -284,4 +274,54 @@ export default class Psalm extends PlaylistItemBase {
 
 		return return_string;
 	}
+}
+
+export function validate_psalm_file(psalm: PsalmFile): PsalmFile | false {
+	const psalm_file_schema: JSONSchemaType<PsalmFile> = {
+		/* eslint-disable @typescript-eslint/naming-convention */
+		$schema: "http://json-schema.org/draft-07/schema#",
+		type: "object",
+		properties: {
+			metadata: {
+				type: "object",
+				properties: {
+					caption: {
+						type: "string"
+					},
+					id: {
+						type: "string",
+						nullable: true
+					},
+					book: {
+						type: "string",
+						nullable: true
+					},
+					indent: {
+						type: "boolean"
+					}
+				},
+				required: ["caption", "indent"],
+				additionalProperties: false
+			},
+			text: {
+				type: "array",
+				items: {
+					type: "array",
+					items: {
+						type: "array",
+						items: {
+							type: "string"
+						}
+					}
+				}
+			}
+		},
+		required: ["metadata", "text"],
+		additionalProperties: false
+		/* eslint-enable @typescript-eslint/naming-convention */
+	};
+
+	const validate = ajv.compile(psalm_file_schema);
+
+	return validate(psalm) ? psalm : false;
 }

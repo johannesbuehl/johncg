@@ -1,13 +1,14 @@
 import sharp from "sharp";
 import Canvas from "canvas";
 import tmp from "tmp";
+import { JSONSchemaType } from "ajv";
 
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
-import { logger } from "../logger.ts";
-import { recurse_object_check } from "../lib.ts";
-import Config from "../config/config.ts";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { logger } from "../logger";
+import Config from "../config/config";
 import { CasparCGResolution } from "../CasparCGConnection.js";
+import { ajv } from "../lib";
 
 export interface PDFProps extends ItemPropsBase {
 	type: "pdf";
@@ -21,6 +22,30 @@ export interface ClientPDFSlides extends ClientItemSlidesBase {
 	slides: string[];
 }
 
+const pdf_props_schema: JSONSchemaType<PDFProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "pdf"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		file: {
+			type: "string"
+		}
+	},
+	required: ["caption", "color", "file", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+
+const validate_pdf_props = ajv.compile(pdf_props_schema);
 export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
@@ -164,16 +189,7 @@ export default class PDF extends PlaylistItemBase {
 		return "data:image/png;base64," + (await img.toBuffer()).toString("base64");
 	}
 
-	protected validate_props(props: PDFProps): boolean {
-		const template: PDFProps = {
-			type: "pdf",
-			caption: "Template",
-			color: "Template",
-			file: "Template"
-		};
-
-		return props.type === "pdf" && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_pdf_props;
 
 	get active_slide(): number {
 		return this.active_slide_number;

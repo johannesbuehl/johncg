@@ -1,10 +1,12 @@
-import { recurse_object_check } from "../lib";
+import { JSONSchemaType } from "ajv";
+
 import {
 	type ClientItemSlidesBase,
 	type ItemPropsBase,
 	PlaylistItemBase,
 	ClientItemBase
 } from "./PlaylistItem";
+import { ajv } from "../lib";
 
 export interface TextProps extends ItemPropsBase {
 	type: "text";
@@ -26,6 +28,30 @@ export interface ClientTextSlides extends ClientItemSlidesBase {
 	};
 }
 
+const text_props_schema: JSONSchemaType<TextProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "text"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		text: {
+			type: "string"
+		}
+	},
+	required: ["caption", "color", "text", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+
+const validate_text_props = ajv.compile(text_props_schema);
 export default class Text extends PlaylistItemBase {
 	protected item_props: TextProps;
 
@@ -57,16 +83,7 @@ export default class Text extends PlaylistItemBase {
 		return steps;
 	}
 
-	protected validate_props(props: TextProps): boolean {
-		const template: TextProps = {
-			type: "text",
-			caption: "Template",
-			color: "Template",
-			text: "Template"
-		};
-
-		return props.type === "text" && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_text_props;
 
 	get active_slide(): number {
 		return 0;

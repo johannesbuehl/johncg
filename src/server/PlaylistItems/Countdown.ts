@@ -1,8 +1,8 @@
-import { CountdownMode, countdown_title_map, recurse_object_check } from "../lib.ts";
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { JSONSchemaType } from "ajv";
 
-const countdown_mode_items = ["duration", "end_time", "stopwatch", "clock"];
+import { CountdownMode, ajv, countdown_title_map } from "../lib";
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
 
 interface CountdownPosition {
 	x: number;
@@ -35,6 +35,76 @@ export interface CountdownTemplateData {
 	mode: CountdownMode;
 }
 
+const countdown_props_schema: JSONSchemaType<CountdownProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		position: {
+			type: "object",
+			properties: {
+				x: {
+					type: "number"
+				},
+				y: {
+					type: "number"
+				}
+			},
+			required: ["x", "y"],
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			additionalProperties: false
+		},
+		font_size: {
+			type: "number"
+		},
+		font_color: {
+			type: "string"
+		},
+		time: {
+			type: "string"
+		},
+		show_seconds: {
+			type: "boolean"
+		},
+		mode: {
+			type: "string",
+			enum: [
+				CountdownMode.Duration,
+				CountdownMode.EndTime,
+				CountdownMode.Stopwatch,
+				CountdownMode.Clock
+			]
+		},
+		type: {
+			type: "string",
+			const: "countdown"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		media: {
+			type: "string"
+		}
+	},
+	required: [
+		"caption",
+		"color",
+		"font_color",
+		"font_size",
+		"media",
+		"mode",
+		"position",
+		"show_seconds",
+		"time",
+		"type"
+	],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+
+const validate_countdown_props = ajv.compile(countdown_props_schema);
 export default class Countdown extends PlaylistItemBase {
 	protected item_props: CountdownProps;
 
@@ -71,31 +141,33 @@ export default class Countdown extends PlaylistItemBase {
 			/(?<hours>\d+)(?::)(?<minutes>\d\d)((?::)(?<seconds>\d\d))?/
 		);
 
-		// depending on the countdown_mode, set the counter to now
-		switch (this.props.mode) {
-			case CountdownMode.Stopwatch:
-				this.time = new Date();
-				break;
-			case CountdownMode.EndTime:
-				this.time = new Date();
+		if (time?.groups !== undefined) {
+			// depending on the countdown_mode, set the counter to now
+			switch (this.props.mode) {
+				case CountdownMode.Stopwatch:
+					this.time = new Date();
+					break;
+				case CountdownMode.EndTime:
+					this.time = new Date();
 
-				this.time.setHours(parseInt(time.groups.hours));
-				this.time.setMinutes(parseInt(time.groups.minutes));
-				this.time.setSeconds(parseInt(time.groups?.seconds ?? "0"));
+					this.time.setHours(parseInt(time.groups.hours));
+					this.time.setMinutes(parseInt(time.groups.minutes));
+					this.time.setSeconds(parseInt(time.groups?.seconds ?? "0"));
 
-				// if the end-time is already passed, advance a day;
-				if (this.time < new Date()) {
-					this.time.setDate(this.time.getDate() + 1);
-				}
+					// if the end-time is already passed, advance a day;
+					if (this.time < new Date()) {
+						this.time.setDate(this.time.getDate() + 1);
+					}
 
-				break;
-			case CountdownMode.Duration:
-				this.time = new Date();
+					break;
+				case CountdownMode.Duration:
+					this.time = new Date();
 
-				this.time.setHours(this.time.getHours() + parseInt(time.groups.hours));
-				this.time.setMinutes(this.time.getMinutes() + parseInt(time.groups.minutes));
-				this.time.setSeconds(this.time.getSeconds() + parseInt(time.groups?.seconds ?? "0"));
-				break;
+					this.time.setHours(this.time.getHours() + parseInt(time.groups.hours));
+					this.time.setMinutes(this.time.getMinutes() + parseInt(time.groups.minutes));
+					this.time.setSeconds(this.time.getSeconds() + parseInt(time.groups?.seconds ?? "0"));
+					break;
+			}
 		}
 
 		return slide;
@@ -117,29 +189,7 @@ export default class Countdown extends PlaylistItemBase {
 		});
 	}
 
-	protected validate_props(props: CountdownProps): boolean {
-		const template: CountdownProps = {
-			type: "countdown",
-			caption: "Template",
-			color: "Template",
-			position: {
-				x: 0,
-				y: 0
-			},
-			font_size: 0,
-			font_color: "Template",
-			time: "Template",
-			show_seconds: false,
-			mode: CountdownMode.Clock,
-			media: "Template"
-		};
-
-		return (
-			props.type === "countdown" &&
-			countdown_mode_items.includes(props.mode) &&
-			recurse_object_check(props, template)
-		);
-	}
+	protected validate_props = validate_countdown_props;
 
 	get active_slide(): number {
 		// always return 0, because there is only 1 slide

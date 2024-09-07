@@ -13,24 +13,19 @@
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
-		
 		"build": "node build-scripts/build-build.js && node build-scripts/build.js",
-
 		"server-build": "node build-scripts/server-release.js",
 		"server-debug": "node build-scripts/server-debug.js",
-
 		"templates-dev": "vite -c src/templates/vite.config.ts",
 		"templates-build": "run-p template-type-check \"templates-build-only {@}\" --",
 		"template-preview": "vite -c src/templates/vite.config.ts preview",
 		"templates-build-only": "vite -c src/templates/vite.config.ts build",
 		"template-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
-
 		"client-dev": "vite -c src/client/vite.config.ts",
 		"client-build": "run-p client-type-check \"client-build-only {@}\" --",
 		"client-preview": "vite -c src/client/vite.config.ts preview",
 		"client-build-only": "vite -c src/client/vite.config.ts build",
 		"client-type-check": "vue-tsc --noEmit -p src/client/tsconfig.json",
-
 		"prepare": "husky",
 		"pandoc-build": "node build-scripts/pandoc-build.js"
 	},
@@ -42,6 +37,8 @@
 		"@fortawesome/free-regular-svg-icons": "^6.5.1",
 		"@fortawesome/free-solid-svg-icons": "^6.5.1",
 		"@fortawesome/vue-fontawesome": "^3.0.6",
+		"ajv": "^8.17.1",
+		"ajv-formats": "^3.0.1",
 		"canvas": "^2.11.2",
 		"casparcg-connection": "6.3.0-nightly-master-20240412-065100-23103b26.0",
 		"fast-xml-parser": "^4.3.4",
@@ -64,6 +61,7 @@
 		"@tsconfig/node20": "^20.1.2",
 		"@types/archiver": "^6.0.2",
 		"@types/hidefile": "^3.0.3",
+		"@types/json-schema-faker": "^0.5.4",
 		"@types/mime-types": "^2.1.4",
 		"@types/node": "^20.11.16",
 		"@types/tar": "^6.1.11",
@@ -82,6 +80,7 @@
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-vue": "^9.17.0",
 		"husky": "^9.0.11",
+		"json-schema-faker": "^0.5.6",
 		"npm-run-all2": "^6.1.1",
 		"postject": "^1.0.0-alpha.6",
 		"prettier": "^3.0.3",

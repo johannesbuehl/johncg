@@ -1,6 +1,8 @@
-import { recurse_object_check } from "../lib.ts";
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { JSONSchemaType } from "ajv";
+
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { ajv } from "../lib";
 
 export interface TemplateTemplate {
 	template: string;
@@ -19,6 +21,42 @@ export interface ClientTemplateSlides extends ClientItemSlidesBase {
 	template: TemplateTemplate;
 }
 
+const template_props_schema: JSONSchemaType<TemplateProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		type: {
+			type: "string",
+			const: "template"
+		},
+		template: {
+			type: "object",
+			properties: {
+				template: {
+					type: "string"
+				},
+				data: {
+					type: "object",
+					nullable: true
+				}
+			},
+			required: ["template"],
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			additionalProperties: false
+		}
+	},
+	required: ["caption", "color", "type", "template"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false,
+	definitions: {}
+};
+const validate_template_props = ajv.compile(template_props_schema);
 export default class TemplateItem extends PlaylistItemBase {
 	protected item_props: TemplateProps;
 
@@ -53,22 +91,7 @@ export default class TemplateItem extends PlaylistItemBase {
 		return 0;
 	}
 
-	protected validate_props(props: TemplateProps): boolean {
-		const template: TemplateProps = {
-			type: "template",
-			caption: "Template",
-			color: "Template",
-			template: {
-				template: "Template"
-			}
-		};
-
-		let result = props.type === "template";
-
-		result &&= props.template.data ? typeof props.template.data === "object" : true;
-
-		return result && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_template_props;
 
 	get active_slide(): number {
 		return 0;

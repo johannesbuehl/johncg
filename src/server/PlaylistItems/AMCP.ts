@@ -1,5 +1,6 @@
+import { JSONSchemaType } from "ajv";
+
 import { CasparCGConnection, casparcg, catch_casparcg_timeout } from "../CasparCGConnection";
-import { recurse_object_check } from "../lib";
 import {
 	ClientItemBase,
 	ClientItemSlidesBase,
@@ -7,6 +8,7 @@ import {
 	ItemPropsBase,
 	PlaylistItemBase
 } from "./PlaylistItem";
+import { ajv } from "../lib";
 
 export interface AMCPProps extends ItemPropsBase {
 	type: "amcp";
@@ -25,7 +27,41 @@ export interface ClientAMCPSlides extends ClientItemSlidesBase {
 		commands: AMCPProps["commands"];
 	};
 }
+const amcpprops_schema: JSONSchemaType<AMCPProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "amcp"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		commands: {
+			type: "object",
+			properties: {
+				set_active: {
+					type: "string",
+					nullable: true
+				},
+				set_inactive: {
+					type: "string",
+					nullable: true
+				}
+			},
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			additionalProperties: false
+		}
+	},
+	required: ["caption", "color", "commands", "type"],
+	definitions: {}
+};
 
+const validate_amcp_props = ajv.compile(amcpprops_schema);
 export default class AMCP extends PlaylistItemBase {
 	protected is_displayable: boolean = true;
 
@@ -73,12 +109,15 @@ export default class AMCP extends PlaylistItemBase {
 		return steps;
 	}
 
-	private send_custom_command(command: string, casparcg_connection?: CasparCGConnection) {
+	private send_custom_command(
+		command: string,
+		casparcg_connection?: CasparCGConnection
+	): Promise<PromiseSettledResult<void>[]> {
 		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
-		return Promise.all(
-			connections.map((connection) => {
-				return catch_casparcg_timeout(
+		return Promise.allSettled(
+			connections.map(async (connection) => {
+				await catch_casparcg_timeout(
 					async () =>
 						(
 							await connection.connection.sendCustom({
@@ -91,9 +130,11 @@ export default class AMCP extends PlaylistItemBase {
 		);
 	}
 
-	play(casparcg_connection?: CasparCGConnection) {
+	async play(casparcg_connection?: CasparCGConnection): Promise<PromiseSettledResult<void>[]> {
 		if (this.props.commands.set_active !== undefined) {
 			return this.send_custom_command(this.props.commands.set_active, casparcg_connection);
+		} else {
+			return Promise.allSettled([await Promise.resolve()]);
 		}
 	}
 
@@ -103,27 +144,7 @@ export default class AMCP extends PlaylistItemBase {
 		}
 	}
 
-	protected validate_props(props: AMCPProps): boolean {
-		const template: AMCPProps = {
-			type: "amcp",
-			caption: "Template",
-			color: "Template",
-			commands: {}
-		};
-
-		const valid_command_types: (keyof AMCPProps["commands"])[] = ["set_active", "set_inactive"];
-
-		return (
-			props.type === "amcp" &&
-			recurse_object_check(props, template) &&
-			Object.entries(props.commands).every(([key, command]) => {
-				return (
-					(valid_command_types as string[]).includes(key) &&
-					["string", "undefined"].includes(typeof command)
-				);
-			})
-		);
-	}
+	protected validate_props = validate_amcp_props;
 
 	get media(): undefined {
 		return undefined;

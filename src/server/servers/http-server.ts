@@ -4,8 +4,8 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-import Config from "../config/config.ts";
-import { logger } from "../logger.ts";
+import Config from "../config/config";
+import { logger } from "../logger";
 
 class HTTPServer {
 	private port: number;

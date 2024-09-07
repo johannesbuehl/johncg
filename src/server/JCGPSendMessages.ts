@@ -1,10 +1,10 @@
-import * as PlaylistClass from "../server/Playlist.ts";
-import { ClientItemSlides } from "./PlaylistItems/PlaylistItem.ts";
-import { BibleFile } from "./PlaylistItems/Bible.ts";
-import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages.ts";
+import * as PlaylistClass from "../server/Playlist";
+import { ClientItemSlides } from "./PlaylistItems/PlaylistItem";
+import { BibleFile } from "./PlaylistItems/Bible";
+import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages";
 import { CasparCGResolution } from "./CasparCGConnection.js";
-import { RequireAtLeastOne } from "./lib.ts";
-import { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "./search_part.ts";
+import { RequireAtLeastOne } from "./lib";
+import { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "./search_part";
 
 /**
  * Base interface for sent JCGP-messages
@@ -44,7 +44,7 @@ export interface State extends Base {
 }
 
 interface ItemSlidesBase extends Base {
-	client_id: string;
+	client_id?: string;
 	item: number;
 	command: "item_slides";
 	resolution: CasparCGResolution;

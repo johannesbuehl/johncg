@@ -4,27 +4,23 @@ import { CasparCG } from "casparcg-connection";
 import child_process from "child_process";
 import tmp from "tmp";
 
-import Playlist from "./Playlist.ts";
-import type { ActiveItemSlide } from "./Playlist.ts";
-import WebsocketServer, { server_id } from "./servers/websocket-server.ts";
-import type {
-	WebsocketServerArguments,
-	WebsocketMessageHandler
-} from "./servers/websocket-server.ts";
-import * as JCGPSend from "./JCGPSendMessages.ts";
-import * as JCGPRecv from "./JCGPReceiveMessages.ts";
+import Playlist from "./Playlist";
+import type { ActiveItemSlide } from "./Playlist";
+import WebsocketServer, { server_id } from "./servers/websocket-server";
+import type { WebsocketServerArguments, WebsocketMessageHandler } from "./servers/websocket-server";
+import * as JCGPSend from "./JCGPSendMessages";
+import * as JCGPRecv from "./JCGPReceiveMessages";
 
-import Config, { CasparCGConnectionSettings } from "./config/config.ts";
-import SearchPart, { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part.ts";
-import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem.ts";
-import { BibleFile } from "./PlaylistItems/Bible.ts";
-import { logger } from "./logger.ts";
+import Config, { CasparCGConnectionSettings } from "./config/config";
+import SearchPart, { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part";
+import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
+import { BibleFile } from "./PlaylistItems/Bible";
+import { logger } from "./logger";
 import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConnection.js";
-import { random_id, recurse_object_check } from "./lib.ts";
-import SongFile, { SongData, SongFileMetadata } from "./PlaylistItems/SongFile/SongFile.ts";
-import Psalm, { PsalmFile } from "./PlaylistItems/Psalm.ts";
-import { Chord } from "./PlaylistItems/SongFile/Chord.ts";
-import Song from "./PlaylistItems/Song.ts";
+import { random_id } from "./lib";
+import SongFile, { validate_song_data } from "./PlaylistItems/SongFile/SongFile";
+import Psalm, { validate_psalm_file } from "./PlaylistItems/Psalm";
+import Song from "./PlaylistItems/Song";
 import path from "path";
 
 export interface CasparCGConnection {
@@ -52,7 +48,7 @@ export default class Control {
 		save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
 			this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
 		request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
-			this.get_item_slides(msg?.item, msg?.client_id, ws),
+			this.get_item_slides(msg.item, msg?.client_id, ws),
 		select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
 			this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
 		navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
@@ -188,7 +184,7 @@ export default class Control {
 						: undefined,
 					{ icon: "trash", text: "Discard", value: "discard" },
 					{ icon: "xmark", text: "Cancel", value: "cancel" }
-				].filter((option) => option !== undefined),
+				].filter((option) => option !== undefined) as JCGPSend.ClientConfirmation["options"],
 				server_id
 			};
 
@@ -239,7 +235,7 @@ export default class Control {
 						: undefined,
 					{ icon: "trash", text: "Discard", value: "discard" },
 					{ icon: "xmark", text: "Cancel", value: "cancel" }
-				].filter((option) => option !== undefined),
+				].filter((option) => option !== undefined) as JCGPSend.ClientConfirmation["options"],
 				server_id
 			};
 
@@ -377,10 +373,10 @@ export default class Control {
 
 		switch (message.type) {
 			case "song":
-				test_result &&= check_song_data(message.data);
+				test_result &&= validate_song_data(message.data) !== false;
 				break;
 			case "psalm":
-				test_result &&= check_psalm_data(message.data);
+				test_result &&= validate_psalm_file(message.data) !== false;
 		}
 
 		if (test_result) {
@@ -527,20 +523,28 @@ export default class Control {
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
 				if (casparcg.casparcg_connections.length > 0) {
-					const message: JCGPSend.ItemSlides = {
-						command: "item_slides",
-						item,
-						client_id,
-						resolution: Config.casparcg_resolution,
-						...(await this.playlist?.create_client_object_item_slides(item)),
-						server_id
-					};
+					const client_item_slides = await this.playlist?.create_client_object_item_slides(item);
 
-					logger.debug(`sending item-slides for item '${item}' to client`);
+					if (client_item_slides !== undefined) {
+						const message: JCGPSend.ItemSlides = {
+							command: "item_slides",
+							item,
+							client_id,
+							resolution: Config.casparcg_resolution,
+							...client_item_slides,
+							server_id
+						};
 
-					ws?.send(JSON.stringify(message));
+						logger.debug(`sending item-slides for item '${item}' to client`);
 
-					ws_send_response("slides have been sent", true, ws);
+						ws?.send(JSON.stringify(message));
+
+						ws_send_response("slides have been sent", true, ws);
+					} else {
+						logger.warn(`can't get item-slides for item '${item}': no item with this number`);
+
+						ws_send_response(`can't get item-slides: no item with this number`, false, ws);
+					}
 				} else {
 					logger.log("Can't send item-slides to client: no active CasparCG-connections");
 
@@ -569,7 +573,7 @@ export default class Control {
 		}
 
 		// try to execute the item and slide change
-		let result: false | ActiveItemSlide | number;
+		let result: number | null | ActiveItemSlide;
 
 		logger.log(`selecting slide: item: '${item}', slide: '${slide}'`);
 
@@ -601,7 +605,7 @@ export default class Control {
 			}
 		}
 
-		if (result !== false) {
+		if (result !== null) {
 			this.send_all_clients({
 				command: "state",
 				active_item_slide: this.playlist?.active_item_slide,
@@ -725,7 +729,12 @@ export default class Control {
 		ws_send_response(`playlist-item has been moved: from '${from}' to '${to}`, true, ws);
 	}
 
-	private add_item(props: ItemProps, index: number, set_active: boolean, ws: WebSocket) {
+	private add_item(
+		props: ItemProps,
+		index: number | undefined,
+		set_active: boolean | undefined,
+		ws: WebSocket
+	) {
 		logger.log(
 			`adding item to playlist: ${index !== undefined ? `position: '${index}'` : "append"} ' ${JSON.stringify(props)}`
 		);
@@ -759,7 +768,7 @@ export default class Control {
 	}
 
 	private update_item(index: number, props: ClientPlaylistItem, ws: WebSocket) {
-		let result: boolean;
+		let result: boolean = false;
 
 		logger.log(`updating item: position: '${index}' ${JSON.stringify(props)}`);
 
@@ -822,7 +831,7 @@ export default class Control {
 	}
 
 	private delete_item(position: number, ws: WebSocket) {
-		let state_change: boolean;
+		let state_change: boolean = false;
 
 		logger.log(`Deleting item from playlist: position '${position}'`);
 
@@ -912,7 +921,7 @@ export default class Control {
 		const thumbnails: Record<string, string> = {};
 
 		for (const file of files) {
-			let thumbnail: string[] = await thumbnail_retrieve(file.path);
+			let thumbnail: string[] | undefined = await thumbnail_retrieve(file.path);
 
 			if (thumbnail === undefined) {
 				await thumbnail_generate(file.path);
@@ -935,7 +944,7 @@ export default class Control {
 	private async get_item_data(type: JCGPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
-		let data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>["data"];
+		let data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>["data"] | undefined;
 
 		switch (type) {
 			case "song":
@@ -948,14 +957,16 @@ export default class Control {
 				return;
 		}
 
-		const message: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]> = {
-			command: "item_data",
-			type,
-			data,
-			server_id
-		};
+		if (data !== undefined) {
+			const message: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]> = {
+				command: "item_data",
+				type,
+				data,
+				server_id
+			};
 
-		ws?.send(JSON.stringify(message));
+			ws?.send(JSON.stringify(message));
+		}
 	}
 
 	private create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
@@ -966,7 +977,7 @@ export default class Control {
 
 		fs.writeFile(markdown_file.name, markdown, { encoding: "utf-8" }, () => {
 			// use different commands based on the operating system
-			let command: string;
+			let command: string = "";
 
 			switch (process.platform) {
 				case "win32":
@@ -1159,7 +1170,7 @@ export default class Control {
 		}
 	}
 
-	private check_playlist_loaded(ws: WebSocket): boolean {
+	private check_playlist_loaded(ws?: WebSocket): boolean {
 		if (this.playlist) {
 			return true;
 		} else {
@@ -1185,115 +1196,4 @@ function ws_send_response(message: string, success: boolean, ws?: WebSocket) {
 	};
 
 	ws?.send(JSON.stringify(response));
-}
-
-function check_song_data(song_data: SongData): boolean {
-	const data_template: JCGPRecv.SaveFile["data"] = {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		metadata: { Title: ["template"], LangCount: 1, VerseOrder: [] },
-		text: { template: [[[{ lang: 0, text: "template" }]]] }
-	};
-
-	// check required data
-	let test_result: boolean = recurse_object_check(song_data, data_template);
-
-	// check optional data
-
-	// ChurchSongID
-	if (song_data.metadata.ChurchSongID !== undefined) {
-		test_result &&= typeof song_data.metadata.ChurchSongID === "string";
-	}
-
-	// SongBook
-	if (song_data.metadata.Songbook !== undefined) {
-		test_result &&= typeof song_data.metadata.Songbook === "string";
-	}
-
-	// VerseOrder
-	if (song_data.metadata.VerseOrder !== undefined) {
-		const verse_order_template: SongFileMetadata["VerseOrder"] = ["template"];
-
-		test_result &&= recurse_object_check(song_data.metadata.VerseOrder, verse_order_template);
-	}
-
-	// BackgroundImage
-	if (song_data.metadata.BackgroundImage !== undefined) {
-		test_result &&= typeof song_data.metadata.BackgroundImage === "string";
-	}
-
-	// Author
-	if (song_data.metadata.Author !== undefined) {
-		test_result &&= typeof song_data.metadata.Author === "string";
-	}
-
-	// Melody
-	if (song_data.metadata.Melody !== undefined) {
-		test_result &&= typeof song_data.metadata.Melody === "string";
-	}
-
-	// Translation
-	if (song_data.metadata.Translation !== undefined) {
-		test_result &&= typeof song_data.metadata.Translation === "string";
-	}
-
-	// Copyright
-	if (song_data.metadata.Copyright !== undefined) {
-		test_result &&= typeof song_data.metadata.Copyright === "string";
-	}
-
-	// Chords
-	if (song_data.metadata.Chords !== undefined) {
-		const chord_check = (chord: Chord): boolean =>
-			typeof chord.note === "string" &&
-			(chord.chord_descriptors === undefined || typeof chord.chord_descriptors === "string") &&
-			(chord.bass_note === undefined || typeof chord.bass_note === "string");
-
-		test_result &&= Object.entries(song_data.metadata.Chords).every(([part, slides]) => {
-			const check =
-				typeof part === "string" &&
-				slides.every((slide) =>
-					slide.every((line) =>
-						line.every(
-							(lang) =>
-								typeof lang.lang === "number" &&
-								Object.entries(lang.chords).every(
-									([char, chord]) => /^(-1|\d+)(\.5)?$/.test(char) && chord_check(chord)
-								)
-						)
-					)
-				);
-
-			return check;
-		});
-	}
-
-	if (song_data.metadata.Transpose !== undefined) {
-		test_result &&= typeof song_data.metadata.Transpose === "number";
-	}
-
-	return test_result;
-}
-
-function check_psalm_data(psalm_data: PsalmFile): boolean {
-	const data_template: JCGPRecv.SaveFile["data"] = {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		metadata: { caption: "template", indent: true },
-		text: [[["template"]]]
-	};
-
-	let test_result: boolean = recurse_object_check(psalm_data, data_template);
-
-	if (psalm_data.metadata.id !== undefined) {
-		test_result &&= typeof psalm_data.metadata.id === "string";
-	}
-
-	if (psalm_data.metadata.book !== undefined) {
-		test_result &&= typeof psalm_data.metadata.book === "string";
-	}
-
-	if (psalm_data.metadata.indent !== undefined) {
-		test_result &&= typeof psalm_data.metadata.indent === "boolean";
-	}
-
-	return test_result;
 }

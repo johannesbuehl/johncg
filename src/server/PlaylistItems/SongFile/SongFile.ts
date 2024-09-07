@@ -1,9 +1,11 @@
 import fs from "fs";
 import iconv from "iconv-lite";
+import { JSONSchemaType } from "ajv";
 
 import { type SongElement, is_song_element } from "./SongElements";
 import { Version } from "../../config/version";
 import { Chord, create_chord, get_chord_string } from "./Chord";
+import { ajv } from "../../lib";
 
 // metadata of the songfile
 export interface SongFileMetadata {
@@ -70,10 +72,165 @@ export type TextParts = Record<string, TextPart>;
 
 export interface ChordLine {
 	lang: number;
-	chords: Record<number, Chord>;
+	chords: Record<string, Chord>;
 }
 export type ChordPart = ChordLine[][][];
 export type ChordParts = Record<string, ChordPart>;
+
+const psalm_file_schema: JSONSchemaType<SongData> = {
+	/* eslint-disable @typescript-eslint/naming-convention */
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		metadata: {
+			type: "object",
+			properties: {
+				Title: {
+					type: "array",
+					items: {
+						type: "string"
+					}
+				},
+				LangCount: {
+					type: "number"
+				},
+				ChurchSongID: {
+					type: "string",
+					nullable: true
+				},
+				Songbook: {
+					type: "string",
+					nullable: true
+				},
+				VerseOrder: {
+					type: "array",
+					items: {
+						type: "string"
+					}
+				},
+				BackgroundImage: {
+					type: "string",
+					nullable: true
+				},
+				Author: {
+					type: "string",
+					nullable: true
+				},
+				Melody: {
+					type: "string",
+					nullable: true
+				},
+				Translation: {
+					type: "string",
+					nullable: true
+				},
+				Copyright: {
+					type: "string",
+					nullable: true
+				},
+				Chords: {
+					type: "object",
+					required: [],
+					nullable: true,
+					additionalProperties: {
+						type: "array",
+						items: {
+							type: "array",
+							items: {
+								type: "array",
+								items: {
+									type: "object",
+									properties: {
+										lang: {
+											type: "number"
+										},
+										chords: {
+											type: "object",
+											required: [],
+											additionalProperties: {
+												type: "object",
+												properties: {
+													note: {
+														type: "string"
+													},
+													chord_descriptors: {
+														type: "string",
+														nullable: true
+													},
+													bass_note: {
+														type: "string",
+														nullable: true
+													}
+												},
+												required: ["note"],
+												additionalProperties: false
+											}
+										}
+									},
+									required: ["lang", "chords"],
+									additionalProperties: false
+								}
+							}
+						}
+					}
+				},
+				Transpose: {
+					type: "number",
+					nullable: true
+				},
+				Key: {
+					type: "string",
+					nullable: true
+				},
+				Speed: {
+					type: "string",
+					nullable: true
+				},
+				Tempo: {
+					type: "string",
+					nullable: true
+				},
+				Time: {
+					type: "string",
+					nullable: true
+				}
+			},
+			required: ["Title", "LangCount", "VerseOrder"],
+			additionalProperties: false
+		},
+		text: {
+			type: "object",
+			required: [],
+			additionalProperties: {
+				type: "array",
+				items: {
+					type: "array",
+					items: {
+						type: "array",
+						items: {
+							type: "object",
+							properties: {
+								lang: {
+									type: "number"
+								},
+								text: {
+									type: "string"
+								}
+							},
+							required: ["lang", "text"],
+							additionalProperties: false
+						}
+					}
+				}
+			}
+		}
+	},
+	required: ["metadata", "text"],
+	additionalProperties: false,
+	definitions: {}
+	/* eslint-enable @typescript-eslint/naming-convention */
+};
+export const validate_song_data = ajv.compile(psalm_file_schema);
 
 /**
  * processes and saves song-files (*.sng)
@@ -200,11 +357,6 @@ export default class SongFile {
 		// parse metadata of the header
 		const chords = this.parse_metadata(data[0]);
 
-		// if chords are available, add them to metadata
-		if (chords) {
-			this.metadata.Chords = {};
-		}
-
 		// remove the header of the array
 		data.splice(0, 1);
 
@@ -234,6 +386,8 @@ export default class SongFile {
 
 				// if there are chords, create an entry in the chord-object
 				if (chords) {
+					this.metadata.Chords ??= {};
+
 					this.metadata.Chords[key] = [];
 				}
 			}
@@ -383,38 +537,41 @@ export default class SongFile {
 						return `#VerseOrder=${(val as SongFileMetadata["VerseOrder"]).join(",")}`;
 
 					case "Copyright":
-						return `(c)=${val}`;
+						return `#(c)=${val}`;
 
 					case "Chords": {
-						let line_number = 0;
-						const chord_string = Object.entries(this.metadata.Chords)
-							.map(([, chords]) => {
-								const res = chords.map((slide) => {
-									// increase for the line-count for the slide-seperator
-									line_number++;
+						if (this.metadata.Chords !== undefined) {
+							let line_number = 0;
+							const chord_string = Object.entries(this.metadata.Chords)
+								.map(([, chords]) => {
+									const res = chords.map((slide) => {
+										// increase for the line-count for the slide-seperator
+										line_number++;
 
-									return slide.map((line) => {
-										return line.map((lang) => {
-											const return_value = Object.entries(lang.chords).map(
-												([char, chord]) => `${char},${line_number},${get_chord_string(chord)}`
-											);
+										return slide.map((line) => {
+											return line.map((lang) => {
+												const return_value = Object.entries(lang.chords).map(
+													([char, chord]) => `${char},${line_number},${get_chord_string(chord)}`
+												);
 
-											line_number++;
+												line_number++;
 
-											return return_value;
+												return return_value;
+											});
 										});
 									});
-								});
 
-								// increase for the part-name line
-								line_number++;
+									// increase for the part-name line
+									line_number++;
 
-								return res;
-							})
-							.flat(Infinity)
-							.join("\r");
+									return res;
+								})
+								.flat(Infinity)
+								.join("\r");
 
-						return `#Chords=${Buffer.from(chord_string).toString("base64")}`;
+							return `#Chords=${Buffer.from(chord_string).toString("base64")}`;
+						}
+						break;
 					}
 					default:
 						return `#${key}=${val}`;
@@ -453,7 +610,7 @@ function parse_base64_chords(base64: string): Record<number, Record<number, Chor
 	const chord_regex = /(?<position>.+?),(?<line>.+?),(?<chord>.*)\r/g;
 
 	let match = chord_regex.exec(chords);
-	while (match !== null) {
+	while (match?.groups?.line !== undefined && match.groups.position !== undefined) {
 		const check_number = (val: string): number | false => {
 			const number = Number(val);
 
@@ -464,8 +621,8 @@ function parse_base64_chords(base64: string): Record<number, Record<number, Chor
 			}
 		};
 
-		const line = check_number(match.groups?.line);
-		const position = check_number(match.groups?.position);
+		const line = check_number(match.groups.line);
+		const position = check_number(match.groups.position);
 		const chord = match.groups?.chord;
 
 		if (line !== false && position !== false && typeof chord === "string") {
@@ -513,7 +670,7 @@ export class SongFileFast {
 		// the different slides are seperated by a line of 2 or 3 dashes
 		const data = raw_data.replaceAll("\r", "").split(/\n---?(?:\n|$)/);
 
-		this.parse_metadata(data.shift());
+		this.parse_metadata(data.shift() ?? "");
 		this.parse_text(data);
 	}
 
@@ -543,8 +700,10 @@ export class SongFileFast {
 							this.song_metadata.Title[lang_index] ??= "";
 						});
 						break;
-					case "Songbook":
 					case "ChurchSongID":
+						this.song_metadata[key] = value;
+						break;
+					case "Songbook":
 					default:
 						break;
 				}
@@ -559,8 +718,8 @@ export class SongFileFast {
 			const lines = raw_slide.split(/\n\r?/);
 
 			// check wether the first-line describes a part
-			if (is_song_element(lines[0])) {
-				key = lines.shift();
+			if (lines.length > 0 && is_song_element(lines[0])) {
+				key = lines.shift()!;
 
 				this.song_parts[key] ??= [];
 			}

@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { recurse_object_check } from "../lib.ts";
-import { PlaylistItemBase } from "./PlaylistItem.ts";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem.ts";
+import { JSONSchemaType } from "ajv";
+
+import { PlaylistItemBase } from "./PlaylistItem";
+import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import { ajv } from "../lib";
 
 export interface MediaProps extends ItemPropsBase {
 	type: "media";
@@ -16,6 +17,33 @@ export interface ClientMediaProps extends ClientItemSlidesBase {
 	template?: undefined;
 }
 
+const media_props_schema: JSONSchemaType<MediaProps> = {
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		type: {
+			type: "string",
+			const: "media"
+		},
+		caption: {
+			type: "string"
+		},
+		color: {
+			type: "string"
+		},
+		media: {
+			type: "string"
+		},
+		loop: {
+			type: "boolean"
+		}
+	},
+	required: ["caption", "color", "loop", "media", "type"],
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	additionalProperties: false
+};
+
+const validate_media_props = ajv.compile(media_props_schema);
 export default class Media extends PlaylistItemBase {
 	protected item_props: MediaProps;
 
@@ -58,17 +86,7 @@ export default class Media extends PlaylistItemBase {
 		return steps;
 	}
 
-	protected validate_props(props: MediaProps): boolean {
-		const template: MediaProps = {
-			type: "media",
-			caption: "Template",
-			color: "Template",
-			loop: false,
-			media: "Template"
-		};
-
-		return props.type === "media" && recurse_object_check(props, template);
-	}
+	protected validate_props = validate_media_props;
 
 	get active_slide(): number {
 		return 0;

@@ -72,7 +72,7 @@ void (async () => {
 	casparcg.casparcg_connections = Config.casparcg.connections.map((connection_setting) => {
 		logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
-		let server: CasparCGServer;
+		let server: CasparCGServer | undefined = undefined;
 
 		// if a path is specified, try to launch it
 		if (connection_setting.path !== undefined) {
@@ -198,7 +198,7 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 								await casparcg_connection.connection.play({
 									/* eslint-disable @typescript-eslint/naming-convention */
 									channel: casparcg_connection.settings.channel,
-									layer: casparcg_connection.settings.layers.media,
+									layer: casparcg_connection.settings.layers.media ?? 20,
 									clip: "EMPTY",
 									transition: get_casparcg_transition()
 									/* eslint-enable @typescript-eslint/naming-convention */
@@ -242,7 +242,7 @@ export async function catch_casparcg_timeout<T>(
 	func: () => Promise<T>,
 	handle: string | ((e: unknown) => void)
 ): Promise<T | undefined> {
-	let result: T;
+	let result: T | undefined = undefined;
 
 	try {
 		result = await func();
