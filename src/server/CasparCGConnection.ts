@@ -1,5 +1,5 @@
 import { CasparCG } from "casparcg-connection";
-import Config, { CasparCGConnectionSettings, get_casparcg_transition } from "./config/config";
+import Config, { CasparCGConnectionSettings } from "./config/config";
 import { logger } from "./logger";
 import { XMLParser } from "fast-xml-parser";
 import CasparCGServer from "./CasparCGServer";
@@ -203,7 +203,7 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 									channel: casparcg_connection.settings.channel,
 									layer: casparcg_connection.settings.layers.media ?? 20,
 									clip: "EMPTY",
-									transition: get_casparcg_transition()
+									transition: Config.casparcg_transition
 									/* eslint-enable @typescript-eslint/naming-convention */
 								})
 							).request,
@@ -218,7 +218,7 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 							channel: casparcg_connection.settings.channel,
 							layer: casparcg_connection.settings.layers.template,
 							clip: "EMPTY",
-							transition: get_casparcg_transition()
+							transition: Config.casparcg_transition
 							/* eslint-enable @typescript-eslint/naming-convention */
 						})
 					).request,

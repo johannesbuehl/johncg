@@ -25,7 +25,6 @@ import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } fr
 import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm";
 import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP";
 import { logger } from "../logger";
-import { get_casparcg_transition } from "../config/config";
 import {
 	CasparCGConnection,
 	TemplateSlideJump,
@@ -34,6 +33,7 @@ import {
 	stringify_json_for_tempalte
 } from "../CasparCGConnection.js";
 import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text";
+import Config from "../config/config";
 
 export type PlaylistItem =
 	| Song
@@ -211,7 +211,7 @@ export abstract class PlaylistItemBase {
 								layer: casparcg_connection.settings.layers.media ?? 20,
 								clip,
 								loop: this.loop,
-								transition: get_casparcg_transition()
+								transition: Config.casparcg_transition
 							})
 						).request,
 					"PLAY MEDIA"
@@ -227,7 +227,7 @@ export abstract class PlaylistItemBase {
 							layer: casparcg_connection.settings.layers.media ?? 20,
 							clip,
 							loop: this.loop,
-							transition: get_casparcg_transition()
+							transition: Config.casparcg_transition
 						}),
 					"LOADBG MEDIA"
 				);
@@ -245,7 +245,7 @@ export abstract class PlaylistItemBase {
 						channel: casparcg_connection.settings.channel,
 						layer: casparcg_connection.settings.layers.media ?? 20,
 						clip: "EMPTY",
-						transition: get_casparcg_transition()
+						transition: Config.casparcg_transition
 						/* eslint-enable @typescript-eslint/naming-convention */
 					})
 				).request,
@@ -298,7 +298,7 @@ export abstract class PlaylistItemBase {
 							channel: casparcg_connection.settings.channel,
 							layer: casparcg_connection.settings.layers.template,
 							clip: "EMPTY",
-							transition: get_casparcg_transition()
+							transition: Config.casparcg_transition
 							/* eslint-enable @typescript-eslint/naming-convention */
 						})
 					).request,

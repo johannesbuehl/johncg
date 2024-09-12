@@ -149,6 +149,16 @@ class ConfigClass {
 		return structuredClone(this.config_internal.casparcg_resolution);
 	}
 
+	get casparcg_transition(): TransitionParameters | undefined {
+		if (Config.casparcg.transition_length) {
+			return {
+				duration: Config.casparcg.transition_length,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				transitionType: TransitionType.Mix
+			};
+		}
+	}
+
 	get path(): ConfigYAML["path"] {
 		return structuredClone(this.config.path);
 	}
@@ -173,13 +183,3 @@ class ConfigClass {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Config = new ConfigClass();
 export default Config;
-
-export function get_casparcg_transition(): TransitionParameters | undefined {
-	if (Config.casparcg.transition_length) {
-		return {
-			duration: Config.casparcg.transition_length,
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			transitionType: TransitionType.Mix
-		};
-	}
-}
