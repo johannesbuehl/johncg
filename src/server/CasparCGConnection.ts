@@ -155,12 +155,15 @@ void (async () => {
 				}
 			} else {
 				Config.casparcg_resolution = {
-					width:
-						Number(video_mode_regex_results.groups.width) ??
-						(Number(video_mode_regex_results.groups.height) / 9) * 16,
+					width: Number(video_mode_regex_results.groups.width),
 					height: Number(video_mode_regex_results.groups.height)
 				};
 				framerate = Number(video_mode_regex_results.groups.framerate) / 100;
+
+				if (!isNaN(Config.casparcg_resolution.width) || Config.casparcg_resolution.width === 0) {
+					Config.casparcg_resolution.width =
+						(Number(video_mode_regex_results.groups.height) / 9) * 16;
+				}
 			}
 		}
 

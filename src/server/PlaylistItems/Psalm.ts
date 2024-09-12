@@ -217,11 +217,15 @@ export default class Psalm extends PlaylistItemBase {
 			}
 		}
 
-		const psalm_content = validate_psalm_file(psalm);
+		if (validate_psalm_file(psalm)) {
+			this.slide_count = psalm.text.length;
 
-		this.slide_count = psalm_content !== false ? psalm_content.text.length : 0;
+			return psalm;
+		} else {
+			this.slide_count = 0;
 
-		return psalm_content;
+			return false;
+		}
 	}
 
 	get_template(): PsalmTemplate | undefined {
@@ -276,52 +280,48 @@ export default class Psalm extends PlaylistItemBase {
 	}
 }
 
-export function validate_psalm_file(psalm: PsalmFile): PsalmFile | false {
-	const psalm_file_schema: JSONSchemaType<PsalmFile> = {
-		/* eslint-disable @typescript-eslint/naming-convention */
-		$schema: "http://json-schema.org/draft-07/schema#",
-		type: "object",
-		properties: {
-			metadata: {
-				type: "object",
-				properties: {
-					caption: {
-						type: "string"
-					},
-					id: {
-						type: "string",
-						nullable: true
-					},
-					book: {
-						type: "string",
-						nullable: true
-					},
-					indent: {
-						type: "boolean"
-					}
+const psalm_file_schema: JSONSchemaType<PsalmFile> = {
+	/* eslint-disable @typescript-eslint/naming-convention */
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		metadata: {
+			type: "object",
+			properties: {
+				caption: {
+					type: "string"
 				},
-				required: ["caption", "indent"],
-				additionalProperties: false
+				id: {
+					type: "string",
+					nullable: true
+				},
+				book: {
+					type: "string",
+					nullable: true
+				},
+				indent: {
+					type: "boolean"
+				}
 			},
-			text: {
+			required: ["caption", "indent"],
+			additionalProperties: false
+		},
+		text: {
+			type: "array",
+			items: {
 				type: "array",
 				items: {
 					type: "array",
 					items: {
-						type: "array",
-						items: {
-							type: "string"
-						}
+						type: "string"
 					}
 				}
 			}
-		},
-		required: ["metadata", "text"],
-		additionalProperties: false
-		/* eslint-enable @typescript-eslint/naming-convention */
-	};
+		}
+	},
+	required: ["metadata", "text"],
+	additionalProperties: false
+	/* eslint-enable @typescript-eslint/naming-convention */
+};
 
-	const validate = ajv.compile(psalm_file_schema);
-
-	return validate(psalm) ? psalm : false;
-}
+export const validate_psalm_file = ajv.compile(psalm_file_schema);

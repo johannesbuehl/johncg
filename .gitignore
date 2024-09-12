@@ -6,13 +6,10 @@ miktex
 out
 dist
 pandoc/*
-config_temp.yaml
 
 casparcg/Templates/JohnCG/*
-build-scripts/build.js
-build-scripts/3rdpartylicenses.json
+build/release.js
 *.map
 install-tl.log
 
-!pandoc/install.py
 !pandoc/texlive.profile

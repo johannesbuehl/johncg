@@ -1,0 +1,48 @@
+builds:
+  server:
+    script: server-build
+    entry: main.js
+    script_path: JohnCG_0.9.0-rc.1_win32
+    files:
+      - main.js
+  client:
+    script: client-build
+    files:
+      - client
+  templates:
+    script: templates-build
+    files: []
+  pandoc:
+    script: pandoc-build
+    entry: pandoc/pandoc-installer.js
+    script_path: pandoc/pandoc-installer
+    files:
+      - pandoc
+configs:
+  server:
+    schema: config.schema.json
+    dest: config.yaml
+external_packages:
+  - "@img"
+  - canvas
+  - pdfjs-dist
+copy:
+  - orig: casparcg
+  - orig: files/Bible
+    dest: Bible
+  - orig: files/Psalm
+    dest: Psalm
+  - orig: files/Song
+    dest: Song
+  - orig: pandoc/texlive.profile
+mkdir:
+  - Playlist
+  - PDF
+release_dir: dist
+license_report:
+  config:
+    ignore:
+      - dist/*
+  path: licenses
+  license:
+    path: LICENSE

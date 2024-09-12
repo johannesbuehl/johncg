@@ -23,7 +23,7 @@ void (async () => {
 		process.exit(0);
 	}
 
-	const urls: Record<string, Record<string, string>> = {
+	const urls = {
 		win32: {
 			pandoc: "https://github.com/jgm/pandoc/releases/download/3.1.13/pandoc-3.1.13-windows-x86_64.zip",
 			texlive: "https://de.mirrors.cicku.me/ctan/systems/texlive/tlnet/install-tl.zip",
@@ -35,13 +35,14 @@ void (async () => {
 	};
 
 	if (!Object.keys(urls).includes(process.platform)) {
-		return;
+		process.exit(1);
 	}
+	const platform = process.platform as keyof typeof urls;
 
 	const download_dir = tmp.dirSync();
 
 	// download the files
-	await Promise.all(Object.values(urls[process.platform]).map(async (url) => {
+	await Promise.all(Object.values(platform).map(async (url) => {
 		const response = await fetch(url);
 		
 		const data = await response.arrayBuffer();
@@ -51,10 +52,16 @@ void (async () => {
 		fs.writeFileSync(zip_file, Buffer.from(data));
 
 		const zip = new StreamZip.async({ file: zip_file });
-		const unpacked_files_dir = zip_file.match(/(.*)\.zip$/)[1];
-		fs.mkdirSync(unpacked_files_dir);
-		
-		await zip.extract(null, unpacked_files_dir);
+
+		const path_parse_zip_file = path.parse(zip_file);
+
+		const unpacked_files_dir = path.join(path_parse_zip_file.dir, path_parse_zip_file.name);
+
+		if (unpacked_files_dir !== undefined) {
+			fs.mkdirSync(unpacked_files_dir);
+
+			await zip.extract(null, unpacked_files_dir);
+		}
 			
 		await zip.close();
 	}));
@@ -62,11 +69,11 @@ void (async () => {
 	fs.copyFileSync(path.join(download_dir.name, "Eisvogel", "eisvogel.latex"), "eisvogel.latex");
 
 	if (process.platform === "win32") {
-		fs.copyFileSync(path.join(download_dir.name, path.basename(urls.win32.pandoc).match(/(.*)\.zip$/)[1], "pandoc-3.1.13", "pandoc.exe"), "pandoc.exe");
-	
+		fs.copyFileSync(path.join(download_dir.name, path.parse(urls.win32.pandoc).name, "pandoc-3.1.13", "pandoc.exe"), "pandoc.exe");
+		
 		// get the path with its changed filename
 		const dir = fs.readdirSync(path.join(download_dir.name, "install-tl")).filter((ele) => ele.match(/^install-tl-\d{8}$/))[0];
-
+		
 		child_process.execSync(`${path.join(download_dir.name, "install-tl", dir, "install-tl-windows.bat")} -portable -no-gui --profile texlive.profile`, { stdio: "inherit" });
 	}
 

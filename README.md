@@ -20,8 +20,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - rethink direct integration of song- / psalm- / etc. template integration
-- move ajv-compile out of function to only create them once
 - use http-status-codes in answer to client
+- create new demo-song-file with songbeamer-editor
+- test changed pandoc-installer (win and linux)
 
 ## Planned
 - make keyboard-navigation better

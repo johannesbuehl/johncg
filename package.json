@@ -13,12 +13,13 @@
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
-		"build": "node build-scripts/build-build.js && node build-scripts/build.js",
-		"server-build": "node build-scripts/server-release.js",
-		"server-debug": "node build-scripts/server-debug.js",
+		"release": "run-s lint format-check release-build",
+		"release-build": "node build/build-release.js && node build/release.js",
+		"server-build": "node build/server.js release",
+		"server-debug": "node build/server.js debug",
 		"templates-dev": "vite -c src/templates/vite.config.ts",
 		"templates-build": "run-p template-type-check \"templates-build-only {@}\" --",
-		"template-preview": "vite -c src/templates/vite.config.ts preview",
+		"templates-preview": "vite -c src/templates/vite.config.ts preview",
 		"templates-build-only": "vite -c src/templates/vite.config.ts build",
 		"template-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
 		"client-dev": "vite -c src/client/vite.config.ts",
@@ -27,7 +28,7 @@
 		"client-build-only": "vite -c src/client/vite.config.ts build",
 		"client-type-check": "vue-tsc --noEmit -p src/client/tsconfig.json",
 		"prepare": "husky",
-		"pandoc-build": "node build-scripts/pandoc-build.js"
+		"pandoc-build": "node build/pandoc-build.js"
 	},
 	"dependencies": {
 		"@babel/types": "^7.24.0",
@@ -57,7 +58,8 @@
 		"yaml": "^2.4.5"
 	},
 	"devDependencies": {
-		"@rushstack/eslint-patch": "^1.3.3",
+		"@eslint/eslintrc": "^3.1.0",
+		"@eslint/js": "^9.9.1",
 		"@tsconfig/node20": "^20.1.2",
 		"@types/archiver": "^6.0.2",
 		"@types/hidefile": "^3.0.3",
@@ -78,6 +80,7 @@
 		"esbuild": "^0.20.0",
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-jsdoc": "^50.2.2",
 		"eslint-plugin-vue": "^9.17.0",
 		"husky": "^9.0.11",
 		"json-schema-faker": "^0.5.6",

@@ -376,7 +376,7 @@ export default class Control {
 				test_result &&= validate_song_data(message.data) !== false;
 				break;
 			case "psalm":
-				test_result &&= validate_psalm_file(message.data) !== false;
+				test_result &&= validate_psalm_file(message.data);
 		}
 
 		if (test_result) {

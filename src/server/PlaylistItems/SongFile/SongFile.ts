@@ -3,7 +3,7 @@ import iconv from "iconv-lite";
 import { JSONSchemaType } from "ajv";
 
 import { type SongElement, is_song_element } from "./SongElements";
-import { Version } from "../../config/version";
+import { Version } from "../../../version";
 import { Chord, create_chord, get_chord_string } from "./Chord";
 import { ajv } from "../../lib";
 

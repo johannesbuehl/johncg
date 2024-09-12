@@ -1,8 +1,0 @@
-node_modules*
-out
-dist
-casparcg/Templates
-license-generator.ts
-license-reporter.config.ts
-build-scripts/*.js
-pandoc
