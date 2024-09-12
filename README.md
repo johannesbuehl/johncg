@@ -34,4 +34,3 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - add-song to playlist after creation
 - add english bible-file
 - performer-view with website and custom HTML-template and iFrame for casparcg-templates
-- song- / psalm-editor: auto_resizse textarea on mount

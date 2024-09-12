@@ -12,7 +12,7 @@
 </script>
 
 <script setup lang="ts">
-	import { nextTick, reactive, ref, watch } from "vue";
+	import { reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -28,12 +28,7 @@
 
 	import type { CasparFile, Directory, Node, SongFile } from "@server/search_part";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type {
-		SongFileMetadata,
-		SongData,
-		TextParts,
-		TextPart
-	} from "@server/PlaylistItems/SongFile/SongFile";
+	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
 	library.add(fas.faUpDownLeftRight, fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
 
@@ -59,15 +54,6 @@
 	const show_save_file_dialogue = ref<boolean>(false);
 	const song_file_name = ref<string>("");
 	const song_selection = defineModel<SongFile | undefined>("song_file", { default: undefined });
-
-	const textarea_refs = ref<HTMLTextAreaElement[]>([]);
-
-	watch(
-		() => metadata.value.LangCount,
-		() => {
-			textarea_refs.value.forEach(auto_resize_textarea);
-		}
-	);
 
 	watch(
 		() => song_selection.value,
@@ -326,13 +312,6 @@
 		save_callback = callback;
 		show_save_confirm.value = true;
 	}
-
-	function auto_resize_textarea(textarea: HTMLTextAreaElement) {
-		textarea.style.minHeight = "1px";
-		nextTick(() => {
-			textarea.style.minHeight = textarea.scrollHeight + "px";
-		});
-	}
 </script>
 
 <template>
@@ -403,15 +382,12 @@
 										<textarea
 											v-show="clamp_lang_count() > language_index"
 											ref="textarea_refs"
-											class="song_text_language"
 											v-model="part.text[slide_index][language_index]"
 											:rows="(language.match(/\n/g) || []).length + 1"
 											:placeholder="
 												`Slide ${slide_index + 1}` +
 												(metadata.LangCount > 1 ? ` - Language ${language_index + 1}` : '')
 											"
-											@input="auto_resize_textarea($event.target as HTMLTextAreaElement)"
-											@change="auto_resize_textarea($event.target as HTMLTextAreaElement)"
 										/>
 									</template>
 								</div>
@@ -770,12 +746,7 @@
 
 	.song_text_language > textarea {
 		flex: 1;
-	}
-
-	.song_text_language {
 		resize: none;
-
-		width: auto;
 	}
 
 	#verse_order_container {
