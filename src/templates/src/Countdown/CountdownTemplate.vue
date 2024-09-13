@@ -110,14 +110,20 @@
 			color: data.font_color
 		}"
 	>
-		<span v-if="date_object.hours !== '00'" id="hours"
-			><span v-for="cc in date_object.hours" class="time_char">{{ cc }}</span></span
-		>
+		<span v-if="date_object.hours !== '00'" id="hours">
+			<span v-for="(cc, index) in date_object.hours" :key="index" class="time_char">
+				{{ cc }}
+			</span>
+		</span>
 		<span id="minutes"
-			><span v-for="cc in date_object.minutes" class="time_char">{{ cc }}</span></span
+			><span v-for="(cc, index) in date_object.minutes" :key="index" class="time_char">{{
+				cc
+			}}</span></span
 		>
 		<span v-if="data.show_seconds" id="seconds"
-			><span v-for="cc in date_object.seconds" class="time_char">{{ cc }}</span></span
+			><span v-for="(cc, index) in date_object.seconds" :key="index" class="time_char">{{
+				cc
+			}}</span></span
 		>
 	</div>
 </template>

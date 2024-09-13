@@ -3,7 +3,8 @@
 
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		index: number;
 		item_props: ClientPlaylistItem;
 		selected?: boolean;

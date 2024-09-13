@@ -10,7 +10,6 @@
 	import EditAMCP from "./EditAMCP.vue";
 	import EditText from "./EditText.vue";
 	import MenuButton from "../MenuBar/MenuButton.vue";
-	import EditDummy from "./EditDummy.vue";
 	import { ControlWindowState } from "@/Enums";
 	import type { ItemData } from "@/App.vue";
 	import Globals from "@/Globals";
@@ -21,7 +20,8 @@
 
 	library.add(fas.faPen);
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		files?: { [key in keyof ItemFileMap]: ItemNodeMapped<key>[] };
 		item_index: number | null;
 		item_data: ItemData;
@@ -113,12 +113,6 @@
 		<div v-else-if="item_props?.type === undefined" id="edit_part_placeholder">
 			Select an item in the playlist for editing
 		</div>
-		<EditDummy
-			v-else
-			:key="`${item_index}_dummy`"
-			v-model:item_props="item_props"
-			:item_index="item_index"
-		/>
 	</div>
 </template>
 

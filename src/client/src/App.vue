@@ -15,7 +15,7 @@
 </script>
 
 <script setup lang="ts">
-	import { defineComponent, ref, watch } from "vue";
+	import { ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -32,6 +32,7 @@
 
 	library.add(fas.faCheck, fas.faXmark);
 
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const Config = {
 		client_server: {
 			websocket: {
@@ -110,7 +111,7 @@
 
 		Globals.ws?.ws.addEventListener("open", () => {
 			// reset the window-state
-			Globals.ControlWindowState === ControlWindowState.Slides;
+			Globals.ControlWindowState = ControlWindowState.Slides;
 
 			Globals.server_connection.value = ServerConnection.Connected;
 
@@ -144,7 +145,7 @@
 				window.location.reload();
 			}
 
-			const command_parser_map: { [key in JCGPSend.Message["command"]]: (...args: any) => void } = {
+			const command_parser_map: { [key in JCGPSend.Message["command"]]: (arg: never) => void } = {
 				playlist_items: load_playlist_items,
 				state: parse_state,
 				item_slides: load_item_slides,
@@ -389,7 +390,8 @@
 				</div>
 				<div id="confirm_button_wrapper">
 					<MenuButton
-						v-for="option of confirm_dialog_request?.options"
+						v-for="(option, index) of confirm_dialog_request?.options"
+						:key="index"
 						@click="answer_confirmation_dialogue(option.value)"
 					>
 						<FontAwesomeIcon

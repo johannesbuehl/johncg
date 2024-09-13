@@ -81,7 +81,7 @@ void (async () => {
 
 				// wait for a few seconds before trying to connect
 				sleep(5);
-			} catch (e) {
+			} catch {
 				logger.error(`Can't launch CasparCG at ${connection_setting.path}`);
 			}
 		}

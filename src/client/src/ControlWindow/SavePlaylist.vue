@@ -76,7 +76,7 @@
 		"
 	>
 		<template v-slot:buttons>
-			<input class="file_name_box" v-model="playlist_file_name" placeholder="Filename" @input="" />
+			<input class="file_name_box" v-model="playlist_file_name" placeholder="Filename" />
 			<MenuButton @click="save_playlist()">
 				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Playlist
 			</MenuButton>

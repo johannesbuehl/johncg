@@ -33,9 +33,19 @@
 			<span>{{ data.data.metadata.caption }}</span>
 			<span id="psalm_id">{{ data.data.metadata.id }}</span>
 		</div>
-		<div v-for="slide of data.data.text" v-show="active_slide === get_slide_number()" class="slide">
-			<div v-for="block of slide" class="block" :class="{ indent: get_indent() }">
-				<div v-for="line of block">
+		<div
+			v-for="(slide, slide_index) of data.data.text"
+			:key="slide_index"
+			v-show="active_slide === get_slide_number()"
+			class="slide"
+		>
+			<div
+				v-for="(block, block_index) of slide"
+				:key="block_index"
+				class="block"
+				:class="{ indent: get_indent() }"
+			>
+				<div v-for="(line, line_index) of block" :key="line_index">
 					{{ line }}
 				</div>
 			</div>

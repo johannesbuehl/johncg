@@ -1,5 +1,5 @@
 import { createApp, type Component } from "vue";
-import App from "./Text.vue";
+import App from "./LowerThirdsText.vue";
 
 const app = createApp(App as Component);
 

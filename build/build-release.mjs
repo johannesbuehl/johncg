@@ -1,7 +1,7 @@
-const esbuild = require("esbuild");
-const yaml = require("yaml");
-const fs = require("fs");
-const path = require("path");
+import esbuild from "esbuild";
+import yaml from "yaml";
+import fs from "fs";
+import path from "path";
 
 const build_config = yaml.parse(fs.readFileSync(path.join(__dirname, "build_config.yaml"), "utf-8"));
 
@@ -15,6 +15,7 @@ fs.writeFileSync(path.join(__dirname, "build_config.yaml"), yaml.stringify(build
 fs.writeFileSync("src/version.ts", `export const Version = "${package_json.version}";\n`);
 
 esbuild.build({
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	entryPoints: ["./build/release.ts"],
 	outfile: "./build/release.js",
 	tsconfig: "./build/tsconfig.json",

@@ -23,6 +23,8 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - use http-status-codes in answer to client
 - create new demo-song-file with songbeamer-editor
 - test changed pandoc-installer (win and linux)
+- reenable eslint vue-indent
+- vue: move ts-file into html-script
 
 ## Planned
 - make keyboard-navigation better

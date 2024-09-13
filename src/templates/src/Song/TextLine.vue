@@ -143,9 +143,11 @@
 		} else {
 			function format_note(note: string): string {
 				const note_replacer = {
+					/* eslint-disable @typescript-eslint/naming-convention */
 					"<": "♭",
 					"=": "♮",
 					"#": "♯"
+					/* eslint-enablee @typescript-eslint/naming-convention */
 				};
 
 				Object.entries(note_replacer).forEach(
@@ -194,7 +196,11 @@
 
 <template>
 	<div class="line">
-		<div v-for="{ text_packet, chord } of create_text_line(text, chords)" class="chord-letter">
+		<div
+			v-for="({ text_packet, chord }, index) of create_text_line(text, chords)"
+			:key="index"
+			class="chord-letter"
+		>
 			<div class="chord">
 				{{ chord?.note }}{{ chord?.descriptor?.text
 				}}<sup v-if="chord?.descriptor?.super !== undefined">{{ chord?.descriptor?.super }}</sup

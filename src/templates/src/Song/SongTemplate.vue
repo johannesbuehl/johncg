@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { nextTick, onBeforeUpdate, onUpdated, ref, watch } from "vue";
+	import { nextTick, onBeforeUpdate, ref, watch } from "vue";
 
 	import TextLine from "./TextLine.vue";
 
@@ -61,7 +61,7 @@
 
 <template>
 	<div id="slide_wrapper" :class="{ ready, hidden, transition: !mute_transition }">
-		<template v-for="part of data.parts">
+		<template v-for="(part, part_index) of data.parts" :key="part_index">
 			<div
 				v-if="part.type === 'title'"
 				class="slide title"
@@ -70,6 +70,7 @@
 				<div id="title_container">
 					<div
 						v-for="(title_index, title_number) of data.languages"
+						:key="title_index"
 						:class="[`language_${title_number}`]"
 					>
 						{{ part.title[title_index] }}
@@ -82,13 +83,14 @@
 			<div
 				v-else-if="part.type === 'lyric'"
 				v-for="(slide, slide_index) of part.slides"
+				:key="slide_index"
 				v-show="!ready || get_slide_index() === active_slide"
 				class="slide lyrics"
 				ref="lyric_slides"
 			>
-				<template v-for="(line, line_index) of slide">
-					<template v-for="(lang_number, lang_index) in data.languages">
-						<template v-for="(lang, lang_line_index) in line">
+				<template v-for="(line, line_index) of slide" :key="line_index">
+					<template v-for="(lang_number, lang_index) in data.languages" :key="lang_index">
+						<template v-for="(lang, lang_line_index) in line" :key="lang_line_index">
 							<TextLine
 								v-if="lang.lang === lang_number"
 								class="textline"

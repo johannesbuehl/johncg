@@ -64,7 +64,7 @@
 
 			// if not all languages are checked or the order isn't default, add it to the props
 			if (languages.value.some(([lang, state], index) => lang !== index || !state)) {
-				props.languages = languages.value.filter(([lang, state]) => state).map((ele) => ele[0]);
+				props.languages = languages.value.filter(([_lang, state]) => state).map((ele) => ele[0]);
 			}
 		}
 

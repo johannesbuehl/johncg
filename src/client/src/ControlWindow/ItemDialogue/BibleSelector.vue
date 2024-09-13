@@ -24,8 +24,8 @@
 			if (selection_aray.some((ele) => ele)) {
 				return_object[Number(chapter) + 1] = selection_aray
 					.map((state, index): [boolean, number] => [state, index])
-					.filter(([state, index]) => state)
-					.map(([state, index]) => index + 1);
+					.filter(([state, _index]) => state)
+					.map(([_state, index]) => index + 1);
 			}
 		});
 
@@ -141,13 +141,16 @@
 	<div id="add_bible_wrapper">
 		<div id="bible_viewer">
 			<div class="divisions">
-				<template v-for="[division, book_groups] in Object.entries(Globals.get_bible_file() ?? {})">
+				<template
+					v-for="[division, book_groups] in Object.entries(Globals.get_bible_file() ?? {})"
+					:key="division"
+				>
 					<div class="header">
 						{{ division }}
 					</div>
-					<template v-for="{ name, books } in book_groups">
+					<template v-for="({ name, books }, group_index) in book_groups" :key="group_index">
 						<div class="book_group">{{ name }}</div>
-						<template v-for="book in books">
+						<template v-for="book in books" :key="book">
 							<input
 								type="radio"
 								style="display: none"
@@ -170,7 +173,7 @@
 				<div>
 					<div class="header">Chapter</div>
 					<div class="chapters">
-						<template v-for="(verse_count, chapter) of book_selection?.chapters">
+						<template v-for="(verse_count, chapter) of book_selection?.chapters" :key="chapter">
 							<input
 								type="radio"
 								style="display: none"
@@ -197,7 +200,10 @@
 				<div>
 					<div class="header">Verse</div>
 					<div class="chapters">
-						<template v-for="(state, verse) of chapter_verse_selection[chapter_selection]">
+						<template
+							v-for="(state, verse) of chapter_verse_selection[chapter_selection]"
+							:key="verse"
+						>
 							<input
 								type="checkbox"
 								style="display: none"

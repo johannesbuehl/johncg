@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { nextTick, onMounted, onUpdated, ref, watch } from "vue";
+	import { ref } from "vue";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";
@@ -18,11 +18,14 @@
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen, fas.faArrowRotateRight);
 
 	export interface DragEndEvent {
+		/* eslint-disable @typescript-eslint/naming-convention */
 		oldIndex: number;
 		newIndex: number;
+		/* eslint-enable @typescript-eslint/naming-convention */
 	}
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		selected: number | null;
 		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
@@ -46,6 +49,7 @@
 		}
 	}
 
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	function on_change(evt: { added: { element: ClientPlaylistItem; newIndex: number } }) {
 		Object.entries(evt).forEach(([type, data]) => {
 			if (type === "added") {
@@ -141,6 +145,7 @@
 		>
 			<PlaylistItem
 				v-for="(element, index) in playlist?.playlist_items"
+				:key="index"
 				ref="items_list"
 				:index="index"
 				:item_props="element"

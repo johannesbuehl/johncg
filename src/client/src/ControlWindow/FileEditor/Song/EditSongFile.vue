@@ -10,8 +10,6 @@
 		song_file: SongFile;
 	}>();
 
-	const emit = defineEmits<{}>();
-
 	const metadata = ref<SongFileMetadata>();
 	const text_parts = ref<SongTextPart[]>([]);
 

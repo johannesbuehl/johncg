@@ -2,7 +2,8 @@
 	import { stop_event } from "@/App.vue";
 	import { onMounted, onUnmounted } from "vue";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		position: {
 			x: number;
 			y: number;

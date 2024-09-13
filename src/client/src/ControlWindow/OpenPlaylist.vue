@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, ref, watch } from "vue";
+	import { ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { library } from "@fortawesome/fontawesome-svg-core";
 	import * as fas from "@fortawesome/free-solid-svg-icons";

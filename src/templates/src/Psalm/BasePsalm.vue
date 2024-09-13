@@ -20,7 +20,6 @@
 	const visible = ref<boolean>(false);
 
 	const active_slide = ref<number>(0);
-	let slide_count = 0;
 
 	// CasparCG-function: transmits data
 	function update(s_data: string) {
@@ -53,8 +52,6 @@
 		data.value = recieved_data;
 
 		active_slide.value = data.value.slide;
-
-		slide_count = 0;
 	}
 
 	// CasparCG-function: displays the template

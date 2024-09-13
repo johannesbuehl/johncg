@@ -97,8 +97,8 @@
 			})
 		) {
 			return_props.languages = languages.value
-				.filter(([number, active]) => active)
-				.map(([number, active]) => number);
+				.filter(([_number, active]) => active)
+				.map(([number, _active]) => number);
 		} else {
 			return_props.languages = undefined;
 		}

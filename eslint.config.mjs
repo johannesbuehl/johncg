@@ -1,93 +1,116 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
+import globals from "globals";
+// import pluginJs from "@eslint/js";
+import tseslint from "typescript-eslint";
+import pluginVue from "eslint-plugin-vue";
 import jsdoc from "eslint-plugin-jsdoc";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
 
-export default [{
-    ignores: [
-		"eslint.config.mjs",
-        "node_modules",
-        "out",
-        "dist",
-        "casparcg/Templates",
-        "build/license-reporter.config.ts",
-        "build/*.js",
-        "pandoc",
-		"src/version.ts"
-    ],
-}, ...compat.extends(
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-type-checked",
-    "prettier",
-),
-jsdoc.configs['flat/recommended-typescript'],
-{
-    plugins: {
-        "@typescript-eslint": typescriptEslint,
-		jsdoc
-    },
+export default [
+	{
+		files: ["src/**/*.{js,mjs,cjs,ts,vue}"]
+	},
+	// pluginJs.configs.recommended,
+	...tseslint.configs.recommended,
+	...pluginVue.configs["flat/essential"],
 
-    languageOptions: {
-        parser: tsParser,
-        ecmaVersion: 5,
-        sourceType: "script",
+	// general
+	{
+		languageOptions: {
+			globals: globals.node
+		},
+		rules: {
+			"@typescript-eslint/naming-convention": [
+				"error",
+				{
+					selector: "default",
+					format: ["snake_case"]
+				},
+				{
+					selector: "typeLike",
+					format: ["PascalCase"],
+					leadingUnderscore: "forbid",
+					trailingUnderscore: "forbid"
+				},
+				{
+					selector: "enumMember",
+					format: ["PascalCase"],
+					leadingUnderscore: "forbid",
+					trailingUnderscore: "forbid"
+				},
+				{
+					selector: "import",
+					format: ["PascalCase", "snake_case", "camelCase"],
+					leadingUnderscore: "forbid",
+					trailingUnderscore: "forbid"
+				},
+				{
+					selector: "default",
+					modifiers: ["unused"],
+					format: ["PascalCase", "snake_case", "camelCase"],
+					leadingUnderscore: "allow",
+					trailingUnderscore: "allow"
+				}
+			],
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{
+					varsIgnorePattern: "^_",
+					argsIgnorePattern: "^_",
+					caughtErrorsIgnorePattern: "^_"
+				}
+			]
+		}
+	},
 
-        parserOptions: {
-            project: [
-                "src/server/tsconfig.json",
-                "src/client/tsconfig.app.json",
-                "src/client/tsconfig.node.json",
-                "src/templates/tsconfig.app.json",
-                "src/templates/tsconfig.node.json",
-                "build/tsconfig.json",
-            ],
-        },
-    },
+	// vue
+	{
+		files: ["src/**/*.vue"],
+		languageOptions: {
+			globals: globals.browser,
+			parserOptions: {
+				parser: tseslint.parser
+			}
+		}
+	},
+	{
+		rules: {
+			"vue/no-use-v-if-with-v-for": "off",
+			// "vue/script-indent": [
+			// 	"error",
+			// 	"tab",
+			// 	{
+			// 		"baseIndent": 1
+			// 	}
+			// ],
+		}
+	},
 
-    rules: {
-        "@typescript-eslint/naming-convention": ["error", {
-            selector: "default",
-            format: ["snake_case"],
-        }, {
-            selector: "typeLike",
-            format: ["PascalCase"],
-            leadingUnderscore: "forbid",
-            trailingUnderscore: "forbid",
-        }, {
-            selector: "enumMember",
-            format: ["PascalCase"],
-            leadingUnderscore: "forbid",
-            trailingUnderscore: "forbid",
-        }, {
-            selector: "import",
-            format: ["PascalCase", "snake_case", "camelCase"],
-            leadingUnderscore: "forbid",
-            trailingUnderscore: "forbid",
-        },  {
-			selector: "default",
-			modifiers: ["unused"],
-			format: ["PascalCase", "snake_case", "camelCase"],
-			leadingUnderscore: "allow",
-			trailingUnderscore: "allow"
-		}],
-		"@typescript-eslint/no-unused-vars": [ "error", {
-				varsIgnorePattern: "^_",
-				argsIgnorePattern: "^_",
-				caughtErrorsIgnorePattern: "^_"
-		}],
-		"jsdoc/require-description": "warn"
-    },
-}];
+	//jsdoc
+	{
+		plugins: {
+			jsdoc
+		},
+		rules: {
+			"jsdoc/require-jsdoc": [
+				"warn",
+				{
+					require: {
+						MethodDefinition: true,
+						ClassDeclaration: true,
+					},
+				},
+			],
+		}
+	},
+	{
+		ignores: [
+			"eslint.config.mjs",
+			"casparcg",
+			"src/version.ts",
+			"dist",
+			"out",
+			"pandoc",
+			"build/release.js"
+		]
+	},
+];

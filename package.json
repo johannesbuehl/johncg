@@ -15,8 +15,8 @@
 		"format-write": "prettier --write src/",
 		"release": "run-s lint format-check release-build",
 		"release-build": "node build/build-release.js && node build/release.js",
-		"server-build": "node build/server.js release",
-		"server-debug": "node build/server.js debug",
+		"server-build": "node build/server.mjs release",
+		"server-debug": "node build/server.mjs debug",
 		"templates-dev": "vite -c src/templates/vite.config.ts",
 		"templates-build": "run-p template-type-check \"templates-build-only {@}\" --",
 		"templates-preview": "vite -c src/templates/vite.config.ts preview",
@@ -28,7 +28,7 @@
 		"client-build-only": "vite -c src/client/vite.config.ts build",
 		"client-type-check": "vue-tsc --noEmit -p src/client/tsconfig.json",
 		"prepare": "husky",
-		"pandoc-build": "node build/pandoc-build.js"
+		"pandoc-build": "node build/pandoc-build.mjs"
 	},
 	"dependencies": {
 		"@babel/types": "^7.24.0",
@@ -50,6 +50,7 @@
 		"pdfjs-dist": "^4.0.379",
 		"sharp": "^0.33.3",
 		"tmp": "^0.2.1",
+		"typescript-eslint": "^8.5.0",
 		"vue": "^3.4.21",
 		"vue-draggable-next": "^2.2.1",
 		"vue3-ts-jsoneditor": "^2.11.2",

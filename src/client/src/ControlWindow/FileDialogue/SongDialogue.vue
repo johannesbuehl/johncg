@@ -39,7 +39,7 @@
 			placeholder: "Song ID",
 			value: "",
 			size: 5,
-			get: (ff) => (ff.is_dir ? "" : ff.data.metadata.ChurchSongID ?? "")
+			get: (ff) => (ff.is_dir ? "" : (ff.data.metadata.ChurchSongID ?? ""))
 		},
 		{
 			id: "title",
@@ -77,7 +77,7 @@
 		}
 	);
 
-	function create_props(file: SongFile): SongProps {
+	function props_creator(file: SongFile): SongProps {
 		if (props.create_props) {
 			return props.create_props(file);
 		} else {
@@ -111,7 +111,7 @@
 <template>
 	<FileDialogue
 		:files="Globals.get_song_files()"
-		:clone_callback="(ff) => create_props(ff as SongFile)"
+		:clone_callback="(ff) => props_creator(ff as SongFile)"
 		:new_button="new_button"
 		:select_dirs="select_dirs"
 		:new_directory="new_directory"

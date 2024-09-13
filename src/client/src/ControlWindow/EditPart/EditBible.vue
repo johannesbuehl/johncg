@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, onUnmounted, ref, watch } from "vue";
+	import { onUnmounted, ref, watch } from "vue";
 
 	import BibleSelector, {
 		chapter_verse_selection_to_props,

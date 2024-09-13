@@ -9,12 +9,14 @@
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { CasparFile, Directory, Node } from "@server/search_part";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		hide_header?: boolean;
 		create_props_callback?: (file: CasparFile) => MediaProps;
 	}>();
 
-	const emit = defineEmits<{
+	// const emit =
+	defineEmits<{
 		choose: [file: CasparFile];
 	}>();
 

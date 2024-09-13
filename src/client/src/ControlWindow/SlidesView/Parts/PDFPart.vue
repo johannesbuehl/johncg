@@ -27,10 +27,10 @@
 	}
 
 	function template_loaded(template_object: HTMLObjectElement, index: number) {
-		const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
+		const content_window: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
 
-		contentWindow.jump(index); // add slide_index
-		contentWindow.play();
+		content_window.jump(index); // add slide_index
+		content_window.play();
 	}
 </script>
 
@@ -51,7 +51,7 @@
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"
 				:scroll="scroll"
-				@onLoaded="template_loaded($event, index)"
+				@on_loaded="template_loaded($event, index)"
 				@click="emit('select_slide', index)"
 			/>
 		</div>

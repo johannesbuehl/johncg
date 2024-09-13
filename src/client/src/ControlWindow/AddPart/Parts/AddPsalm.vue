@@ -27,7 +27,7 @@
 			placeholder: "Psalm ID",
 			value: "",
 			size: 5,
-			get: (ff) => (!ff.is_dir ? ff.data.metadata.id ?? "" : "")
+			get: (ff) => (!ff.is_dir ? (ff.data.metadata.id ?? "") : "")
 		},
 		{
 			id: "caption",

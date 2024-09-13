@@ -14,8 +14,6 @@
 		fas.faStopwatch20
 	);
 
-	const emit = defineEmits<{}>();
-
 	const countdown_mode = defineModel<CountdownMode>("countdown_mode", { required: true });
 	const time = defineModel<string>("time", { required: true });
 	const show_seconds = defineModel<boolean>("show_seconds", { required: true });
@@ -52,7 +50,7 @@
 		<div class="editor_wrapper" id="mode_selector_wrapper">
 			<div class="header">Mode</div>
 			<div class="input_wrapper">
-				<template v-for="[id, { name, icon }] in Object.entries(modes)">
+				<template v-for="[id, { name, icon }] in Object.entries(modes)" :key="id">
 					<input
 						type="radio"
 						name="countdown_mode"

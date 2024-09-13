@@ -5,7 +5,8 @@
 
 	library.add(fas.faXmark);
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		title: string;
 		maximize?: boolean;
 	}>();

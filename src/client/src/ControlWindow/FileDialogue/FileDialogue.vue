@@ -156,7 +156,7 @@
 			if (props.files && directory_stack.value.length > 0) {
 				directory_stack.value = create_directory_stack<T>(
 					props.files,
-					directory_stack.value.slice(-1)[0].path.split(/[\/\\]/g)
+					directory_stack.value.slice(-1)[0].path.split(/[/\\]/g)
 				);
 			}
 		},
@@ -254,8 +254,9 @@
 					<div id="search_input_wrapper">
 						<div
 							v-if="search_strings !== undefined"
-							class="search_input_container"
 							v-for="({ placeholder, size }, index) in search_strings"
+							:key="index"
+							class="search_input_container"
 						>
 							<input
 								class="search_box"
@@ -303,7 +304,7 @@
 						>
 							<FontAwesomeIcon :icon="['fas', 'house']" />
 						</MenuButton>
-						<template v-for="(dir, dir_index) of directory_stack">
+						<template v-for="(dir, dir_index) of directory_stack" :key="dir_index">
 							<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
 							<MenuButton
 								@click="
@@ -338,7 +339,8 @@
 						<div id="file_list">
 							<div>
 								<div
-									v-for="element of sort_dirs(get_current_files())"
+									v-for="(element, element_index) of sort_dirs(get_current_files())"
+									:key="element_index"
 									class="file_item"
 									:class="{
 										selectable: !element.is_dir,
@@ -371,7 +373,8 @@
 									delay="250"
 								>
 									<PlaylistItemDummy
-										v-for="element of sort_files(get_current_files())"
+										v-for="(element, element_index) of sort_files(get_current_files())"
+										:key="element_index"
 										:active="element === selection"
 										:color="item_color ?? ''"
 										@keydown.enter.prevent="on_choose(element)"
@@ -414,7 +417,10 @@
 							delay-on-touch-only="true"
 							delay="250"
 						>
-							<template v-for="element of sort_files(get_current_files())">
+							<template
+								v-for="(element, element_index) of sort_files(get_current_files())"
+								:key="element_index"
+							>
 								<PlaylistItemDummy
 									v-show="thumbnails[element.path]"
 									:active="element === selection"

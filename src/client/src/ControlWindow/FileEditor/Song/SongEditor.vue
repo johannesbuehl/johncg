@@ -26,7 +26,7 @@
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 	import { create_directory_stack } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
-	import type { CasparFile, Directory, Node, SongFile } from "@server/search_part";
+	import type { CasparFile, Directory, SongFile } from "@server/search_part";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -40,10 +40,12 @@
 	const metadata = defineModel<SongFileMetadata>("metadata", {
 		default: () =>
 			reactive({
+				/* eslint-disable @typescript-eslint/naming-convention */
 				Title: ["", "", "", ""],
 				LangCount: 1,
 				ChurchSongID: "",
 				VerseOrder: []
+				/* eslint-enable @typescript-eslint/naming-convention */
 			})
 	});
 
@@ -227,6 +229,7 @@
 		const song_data_object: SongData = {
 			metadata: {
 				...metadata.value,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
 				BackgroundImage: background_media.value?.path
 			},
 			text: {}
@@ -344,7 +347,7 @@
 					ghost-class="draggable_ghost"
 					:clone="add_part_callback"
 				>
-					<div v-for="(part, index) of text_parts" class="text_part">
+					<div v-for="(part, index) of text_parts" class="text_part" :key="index">
 						<div class="verse_part" :style="{ color: get_song_part_color(part.part) }">
 							{{ text_parts[index].part }}
 						</div>
@@ -371,14 +374,18 @@
 								delay="250"
 								ghost-class="draggable_ghost"
 							>
-								<div v-for="(slide, slide_index) of part.text" class="song_text_language">
+								<div
+									v-for="(slide, slide_index) of part.text"
+									class="song_text_language"
+									:key="slide_index"
+								>
 									<div
 										class="draggable_handle text_slide_handle"
 										:class="{ enabled: index < text_parts.length - 1 }"
 									>
 										<FontAwesomeIcon :icon="['fas', 'bars']" />
 									</div>
-									<template v-for="(language, language_index) of slide">
+									<template v-for="(language, language_index) of slide" :key="language_index">
 										<textarea
 											v-show="clamp_lang_count() > language_index"
 											ref="textarea_refs"
@@ -468,6 +475,7 @@
 				>
 					<div
 						v-for="(part, index) of metadata.VerseOrder"
+						:key="index"
 						class="verse_part"
 						:class="{ selected: selected_verse_order_part === index }"
 						:style="{ color: get_song_part_color(part) }"

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 	import type { ClientCountdownSlides } from "@server/PlaylistItems/Countdown";
-	import ItemSlide from "./ItemSlide.vue";
 
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import CountdownTemplate from "@templates/Countdown/CountdownTemplate.vue";
 	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		slide?: ClientCountdownSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
@@ -16,19 +16,19 @@
 		select_slide: [slide: number];
 	}>();
 
-	interface CasparCGTemplate extends Window {
-		update: (data_string: string) => void;
-		play: () => void;
-		stop: () => void;
-		next: () => void;
-	}
+	// interface CasparCGTemplate extends Window {
+	// 	update: (data_string: string) => void;
+	// 	play: () => void;
+	// 	stop: () => void;
+	// 	next: () => void;
+	// }
 
-	function template_loaded(template_object: HTMLObjectElement) {
-		const contentWindow: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
+	// function template_loaded(template_object: HTMLObjectElement) {
+	// 	const contentWindow: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
 
-		contentWindow.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
-		contentWindow.play();
-	}
+	// 	contentWindow.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
+	// 	contentWindow.play();
+	// }
 </script>
 
 <template>

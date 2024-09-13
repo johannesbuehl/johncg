@@ -26,8 +26,6 @@
 
 	library.add(fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faIndent, fas.faCheck);
 
-	const emit = defineEmits<{}>();
-
 	const show_save_file_dialogue = ref<boolean>(false);
 	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
 	const psalm_search_strings = ref<SearchInputDefinitions<"name", "psalm">>([
@@ -117,14 +115,6 @@
 		},
 		{ deep: true }
 	);
-
-	function add_slide() {
-		const last_slide = psalm_text.value[psalm_text.value.length - 1];
-
-		psalm_text.value.push([
-			{ text: "", indent: last_slide[last_slide.length - 1].indent && metadata.value.indent }
-		]);
-	}
 
 	function save_psalm(overwrite: boolean = false): boolean {
 		show_save_file_dialogue.value = false;
@@ -272,7 +262,7 @@
 		<div class="container" id="text_container">
 			<div class="header">Text</div>
 			<div class="content" id="text_editor_container">
-				<div v-for="(slide, slide_index) of psalm_text" class="psalm_slide">
+				<div v-for="(slide, slide_index) of psalm_text" class="psalm_slide" :key="slide_index">
 					<Draggable
 						class="psalm_text_blocks"
 						v-model="psalm_text[slide_index]"
@@ -284,7 +274,7 @@
 						delay="250"
 						ghost-class="draggable_ghost"
 					>
-						<div class="psalm_text_block" v-for="(block, block_index) of slide">
+						<div class="psalm_text_block" v-for="(block, block_index) of slide" :key="block_index">
 							<div
 								class="draggable_handle text_part_handle"
 								:class="{ enabled: slide_index < psalm_text.length - 1 }"

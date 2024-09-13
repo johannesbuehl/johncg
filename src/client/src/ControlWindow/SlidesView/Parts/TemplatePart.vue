@@ -16,10 +16,10 @@
 	}>();
 
 	function template_loaded(template_object: HTMLObjectElement) {
-		const contentWindow: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
+		const content_window: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
 
-		contentWindow.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
-		contentWindow.play();
+		content_window.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
+		content_window.play();
 	}
 </script>
 
@@ -39,7 +39,7 @@
 				:aspect_ratio="aspect_ratio"
 				:active="0 === active_item_slide?.slide"
 				@click="emit('select_slide', 0)"
-				@onLoaded="template_loaded"
+				@on_loaded="template_loaded"
 			/>
 		</div>
 	</div>

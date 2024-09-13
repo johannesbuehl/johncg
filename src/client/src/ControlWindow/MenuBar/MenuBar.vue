@@ -49,9 +49,6 @@
 		});
 	}
 
-	// reference for the file-input
-	const load_playlist_input = ref<HTMLInputElement>();
-
 	const pdf_popup = ref<boolean>(false);
 	function create_playlist_pdf(type: "full" | "small") {
 		Globals.ws?.send<JCGPRecv.CreatePlaylistPDF>({

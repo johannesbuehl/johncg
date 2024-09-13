@@ -20,16 +20,16 @@
 		select_slide: [slide: number];
 	}>();
 
-	interface CasparCGTemplate extends Window {
-		update: (data_string: string) => void;
-		play: () => void;
-		stop: () => void;
-		next: () => void;
-	}
+	// interface CasparCGTemplate extends Window {
+	// 	update: (data_string: string) => void;
+	// 	play: () => void;
+	// 	stop: () => void;
+	// 	next: () => void;
+	// }
 
-	interface JohnCGSongTemplate extends CasparCGTemplate {
-		jump: (slide: number) => void;
-	}
+	// interface JohnCGSongTemplate extends CasparCGTemplate {
+	// 	jump: (slide: number) => void;
+	// }
 
 	watch(
 		props.slides.template.data,
@@ -42,6 +42,7 @@
 	// create a part-to-slide-map
 	let part_slide_map: number[][] = [];
 	create_part_slide_map();
+
 	function create_part_slide_map(data: SongTemplateData = props.slides.template.data) {
 		part_slide_map = [];
 		let slide_counter = 0;
@@ -90,7 +91,7 @@
 </script>
 
 <template>
-	<template v-for="(part, part_index) in slides.template?.data.parts">
+	<template v-for="(part, part_index) in slides.template?.data.parts" :key="part_index">
 		<div class="slides_wrapper" v-if="part.type === 'title'">
 			<div
 				class="header"
@@ -117,7 +118,7 @@
 				</ItemSlideWrapper>
 			</div>
 		</div>
-		<div class="slides_wrapper" v-if="part.type === 'lyric'">
+		<div class="slides_wrapper" v-else-if="part.type === 'lyric'">
 			<div
 				class="header"
 				:class="{
@@ -130,6 +131,7 @@
 			<div class="thumbnails">
 				<ItemSlideWrapper
 					v-for="(_, slide_index) in part?.slides"
+					:key="slide_index"
 					:media="slides.media"
 					:aspect_ratio="aspect_ratio"
 					:active="is_active(part_index, slide_index)"

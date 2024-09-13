@@ -15,7 +15,7 @@
 <template>
 	<div id="message_wrapper">
 		<div id="type_selector">
-			<template v-for="[key, val] of Object.entries(Globals.message.log_level)">
+			<template v-for="[key, val] of Object.entries(Globals.message.log_level)" :key="val">
 				<div :class="{ active: val }" @click="Globals.message.log_level[key as LogLevel] = !val">
 					<FontAwesomeIcon
 						:icon="['fas', icons[key as LogLevel]]"
@@ -26,7 +26,7 @@
 			</template>
 		</div>
 		<div id="message_container">
-			<template v-for="message of Globals.message.messages">
+			<template v-for="(message, message_index) of Globals.message.messages" :key="message_index">
 				<div class="message" v-if="Globals.message.log_level[message.type]">
 					<FontAwesomeIcon
 						:icon="['fas', icons[message.type]]"

@@ -1,17 +1,16 @@
 <script setup lang="ts">
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		text: string;
 		icon: string;
 		visible: boolean;
 	}>();
-
-	const emit = defineEmits<{}>();
 </script>
 
 <template>
-	<Transition name="slide-in" duration="10000">
+	<Transition name="slide-in" :duration="10000">
 		<div v-if="visible" id="main">
 			<div id="icon">
 				<FontAwesomeIcon :icon="['fas', icon]" />

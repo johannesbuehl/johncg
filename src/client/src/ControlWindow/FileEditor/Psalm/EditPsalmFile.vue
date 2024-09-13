@@ -11,8 +11,6 @@
 		psalm_file: PsalmFile;
 	}>();
 
-	const emit = defineEmits<{}>();
-
 	const metadata = ref<PsalmData["metadata"]>();
 	const psalm_text = ref<PsalmTextBlock[][]>([[]]);
 

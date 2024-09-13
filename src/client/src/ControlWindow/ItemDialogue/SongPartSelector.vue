@@ -5,6 +5,7 @@
 
 	export function get_song_part_color(part_name: string): string | undefined {
 		const color_map: Record<string, string> = {
+			/* eslint-disable @typescript-eslint/naming-convention */
 			title: "hsl(0, 100%, 50%)",
 			intro: "hsl(0, 100%, 50%)",
 			vers: "hsl(23, 100%, 50%)",
@@ -30,6 +31,7 @@
 			unbekannt: "hsl(345, 100%, 50%)",
 			unknown: "hsl(345, 100%, 50%)",
 			unbenannt: "hsl(345, 100%, 50%)"
+			/* eslint-enable @typescript-eslint/naming-convention */
 		};
 
 		return color_map[create_song_part_type(part_name)];
@@ -46,7 +48,6 @@
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import type { SongData, SongPart, TextLine } from "@server/PlaylistItems/SongFile/SongFile";
-	import { nextTick } from "process";
 
 	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
 
@@ -131,6 +132,7 @@
 				>
 					<div
 						v-for="([language_index, state], index) of selected_languages"
+						:key="language_index"
 						:class="{ active: state }"
 						:id="language_index.toString()"
 						@click="language_toggle(index)"
@@ -159,6 +161,7 @@
 					>
 						<div
 							v-for="([part_name, part], index) of Object.entries(song_data?.text ?? {})"
+							:key="part_name"
 							class="song_part_container"
 						>
 							<MenuButton :square="true" @click="selected_parts.push(part_name)">
@@ -173,9 +176,13 @@
 									{{ part_name }}
 								</div>
 								<div class="song_slides_wrapper">
-									<div v-for="slide in part">
-										<div v-for="line in slide">
-											<div class="song_language_line" v-for="lang in get_language_lines(line)">
+									<div v-for="(slide, slide_index) in part" :key="slide_index">
+										<div v-for="(line, line_index) in slide" :key="line_index">
+											<div
+												class="song_language_line"
+												v-for="(lang, lang_index) in get_language_lines(line)"
+												:key="lang_index"
+											>
 												{{ lang.text }}
 											</div>
 										</div>

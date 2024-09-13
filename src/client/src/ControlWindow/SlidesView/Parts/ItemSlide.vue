@@ -21,7 +21,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		onLoaded: [template_object: HTMLObjectElement];
+		on_loaded: [template_object: HTMLObjectElement];
 	}>();
 
 	const slide = ref<HTMLDivElement>();
@@ -65,7 +65,7 @@
 			ref="template_ref"
 			class="template"
 			:data="`Templates/${template?.template}.html`"
-			@load="emit('onLoaded', $event.target as HTMLObjectElement)"
+			@load="emit('on_loaded', $event.target as HTMLObjectElement)"
 		/>
 		<div class="slide" />
 	</div>

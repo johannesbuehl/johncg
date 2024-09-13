@@ -99,6 +99,7 @@
 		<div class="song_part_selector">
 			<PartRadio
 				v-for="type in part_types"
+				:key="type.value"
 				v-model="pick"
 				:value="type.value"
 				:icon="type.icon"

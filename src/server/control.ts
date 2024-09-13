@@ -40,8 +40,9 @@ export default class Control {
 	> = {};
 
 	// mapping of the websocket-messages to the functions
-	// eslint-disable-next-line @typescript-eslint/ban-types
-	private readonly client_ws_function_map: { [T in JCGPRecv.Message["command"]]: Function } = {
+	private readonly client_ws_function_map: {
+		[T in JCGPRecv.Message["command"]]: (msg: never, ws: WebSocket) => void;
+	} = {
 		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
 			this.load_playlist(msg?.playlist, msg.id, ws),
@@ -253,7 +254,7 @@ export default class Control {
 				this.playlist = new_playlist;
 
 				load_result = true;
-			} catch (e) {
+			} catch {
 				logger.warn(`can't load playlist: invalid playlist-file (${playlist_path})`);
 				ws_send_response(
 					`can't load playlist: invalid playlist-file (${playlist_path})`,
@@ -748,7 +749,7 @@ export default class Control {
 				},
 				index
 			);
-		} catch (e) {
+		} catch {
 			logger.warn(`can't add item to playlist ${JSON.stringify(props)}`);
 
 			ws_send_response("Can't add item to playlist", false, ws);
@@ -901,7 +902,7 @@ export default class Control {
 
 		try {
 			bible = JSON.parse(fs.readFileSync(Config.path.bible, "utf-8")) as BibleFile;
-		} catch (e) {
+		} catch {
 			logger.error("Can't get bible-file: error during file-reading");
 
 			ws_send_response("Can't get bible-file: error during file-reading", false, ws);

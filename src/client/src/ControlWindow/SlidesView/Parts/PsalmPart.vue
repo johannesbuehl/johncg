@@ -1,12 +1,11 @@
 <script setup lang="ts">
-	import ItemSlide from "./ItemSlide.vue";
-
 	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPsalmSlides } from "@server/PlaylistItems/Psalm";
 	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 	import PsalmTemplate from "@templates/Psalm/PsalmTemplate.vue";
 
-	const props = defineProps<{
+	// const props =
+	defineProps<{
 		slides: ClientPsalmSlides;
 		aspect_ratio: string;
 		active_item_slide?: ActiveItemSlide;
@@ -17,24 +16,24 @@
 		select_slide: [slide: number];
 	}>();
 
-	interface CasparCGTemplate extends Window {
-		update: (data_string: string) => void;
-		play: () => void;
-		stop: () => void;
-		next: () => void;
-	}
+	// interface CasparCGTemplate extends Window {
+	// 	update: (data_string: string) => void;
+	// 	play: () => void;
+	// 	stop: () => void;
+	// 	next: () => void;
+	// }
 
-	interface JohnCGSongTemplate extends CasparCGTemplate {
-		jump: (slide: number) => void;
-	}
+	// interface JohnCGSongTemplate extends CasparCGTemplate {
+	// 	jump: (slide: number) => void;
+	// }
 
-	function template_loaded(template_object: HTMLObjectElement, index: number) {
-		const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
+	// function template_loaded(template_object: HTMLObjectElement, index: number) {
+	// 	const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
 
-		contentWindow.update(JSON.stringify({ ...props.slides.template.data, mute_transition: true }));
-		contentWindow.jump(index);
-		contentWindow.play();
-	}
+	// 	contentWindow.update(JSON.stringify({ ...props.slides.template.data, mute_transition: true }));
+	// 	contentWindow.jump(index);
+	// 	contentWindow.play();
+	// }
 </script>
 
 <template>
@@ -49,6 +48,7 @@
 		<div class="slides_wrapper">
 			<ItemSlideWrapper
 				v-for="(_media, index) in slides.template.data.data?.text"
+				:key="index"
 				:media="slides.media"
 				:aspect_ratio="aspect_ratio"
 				:active="index === active_item_slide?.slide"

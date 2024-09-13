@@ -44,7 +44,7 @@
 		}, 5000);
 	}
 
-	const console_command_map: Record<LogLevel, Function> = {
+	const console_command_map: Record<LogLevel, (msg: string) => void> = {
 		error: console.error,
 		warn: console.warn,
 		log: console.log,
