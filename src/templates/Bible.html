@@ -11,6 +11,13 @@
 	</head>
 	<body>
 		<div id="app"></div>
-		<script type="module" src="src/LowerThirds/Bible.ts"></script>
+		<script type="module">
+			import { createApp } from "vue";
+			import App from "./src/LowerThirds/LowerThirdsBible.vue";
+
+			const app = createApp(App);
+
+			app.mount("#app");
+		</script>
 	</body>
 </html>

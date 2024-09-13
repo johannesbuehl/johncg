@@ -14,14 +14,14 @@
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
 		"release": "run-s lint format-check release-build",
-		"release-build": "node build/build-release.js && node build/release.js",
+		"release-build": "node build/build-release.mjs && node build/release.js",
 		"server-build": "node build/server.mjs release",
 		"server-debug": "node build/server.mjs debug",
 		"templates-dev": "vite -c src/templates/vite.config.ts",
-		"templates-build": "run-p template-type-check \"templates-build-only {@}\" --",
+		"templates-build": "run-p templates-type-check \"templates-build-only {@}\" --",
 		"templates-preview": "vite -c src/templates/vite.config.ts preview",
 		"templates-build-only": "vite -c src/templates/vite.config.ts build",
-		"template-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
+		"templates-type-check": "vue-tsc --noEmit -p src/templates/tsconfig.json",
 		"client-dev": "vite -c src/client/vite.config.ts",
 		"client-build": "run-p client-type-check \"client-build-only {@}\" --",
 		"client-preview": "vite -c src/client/vite.config.ts preview",
@@ -90,6 +90,6 @@
 		"prettier": "^3.0.3",
 		"typescript": "^5.3.3",
 		"vite": "^5.0.11",
-		"vue-tsc": "^1.8.27"
+		"vue-tsc": "^2.1.6"
 	}
 }
