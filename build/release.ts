@@ -172,7 +172,7 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 		case "linux":
 			extension = ".sh";
 
-			content = `${relative_path_prefix}	./${exec_name} ${pth_js}\nread -n1 -r -p "Press any key to continue..." key`;
+			content = `${relative_path_prefix}./${exec_name} ${pth_js}\nread -n1 -r -p "Press any key to continue..." key`;
 
 			break;
 	}

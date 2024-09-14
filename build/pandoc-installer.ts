@@ -1,5 +1,5 @@
 import tmp from "tmp";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import StreamZip from "node-stream-zip";
 import child_process from "child_process";
@@ -17,9 +17,10 @@ void (async () => {
 
 	const rl = readline.createInterface({ input: stdin, output: stdout });
 
-	const response = rl.question(license_message + " Proceed? (y/[n]) ");
+	const agree_user_input = await rl.question(license_message + " Proceed? (y/[n]) ");
+	rl.close();
 
-	if ((await response).toLowerCase() !== "y") {
+	if (agree_user_input.toLowerCase() !== "y") {
 		process.exit(0);
 	}
 
@@ -49,7 +50,7 @@ void (async () => {
 		
 		const zip_file = path.join(download_dir.name, path.basename(url));
 
-		fs.writeFileSync(zip_file, Buffer.from(data));
+		await fs.writeFile(zip_file, Buffer.from(data));
 
 		const zip = new StreamZip.async({ file: zip_file });
 
@@ -58,7 +59,7 @@ void (async () => {
 		const unpacked_files_dir = path.join(path_parse_zip_file.dir, path_parse_zip_file.name);
 
 		if (unpacked_files_dir !== undefined) {
-			fs.mkdirSync(unpacked_files_dir);
+			await fs.mkdir(unpacked_files_dir);
 
 			await zip.extract(null, unpacked_files_dir);
 		}
@@ -66,16 +67,16 @@ void (async () => {
 		await zip.close();
 	}));
 
-	fs.copyFileSync(path.join(download_dir.name, "Eisvogel", "eisvogel.latex"), "eisvogel.latex");
+	await fs.copyFile(path.join(download_dir.name, "Eisvogel", "eisvogel.latex"), "eisvogel.latex");
 
 	if (process.platform === "win32") {
-		fs.copyFileSync(path.join(download_dir.name, path.parse(urls.win32.pandoc).name, "pandoc-3.1.13", "pandoc.exe"), "pandoc.exe");
+		await fs.copyFile(path.join(download_dir.name, path.parse(urls.win32.pandoc).name, "pandoc-3.1.13", "pandoc.exe"), "pandoc.exe");
 		
 		// get the path with its changed filename
-		const dir = fs.readdirSync(path.join(download_dir.name, "install-tl")).filter((ele) => ele.match(/^install-tl-\d{8}$/))[0];
+		const dir = (await fs.readdir(path.join(download_dir.name, "install-tl"))).filter((ele) => ele.match(/^install-tl-\d{8}$/))[0];
 		
 		child_process.execSync(`${path.join(download_dir.name, "install-tl", dir, "install-tl-windows.bat")} -portable -no-gui --profile texlive.profile`, { stdio: "inherit" });
 	}
 
-	fs.rmSync(download_dir.name, { recursive: true, force: true });
+	await fs.rm(download_dir.name, { recursive: true, force: true });
 })();
