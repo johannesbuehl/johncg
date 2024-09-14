@@ -42,7 +42,7 @@ void (async () => {
 	const download_dir = tmp.dirSync();
 
 	// download the files
-	await Promise.all(Object.values(platform).map(async (url) => {
+	await Promise.all(Object.values(urls[platform]).map(async (url) => {
 		const response = await fetch(url);
 		
 		const data = await response.arrayBuffer();
