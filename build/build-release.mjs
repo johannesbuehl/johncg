@@ -2,6 +2,12 @@ import esbuild from "esbuild";
 import yaml from "yaml";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from 'url';
+
+/* eslint-disable @typescript-eslint/naming-convention */
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
+/* eslint-enable @typescript-eslint/naming-convention */
 
 const build_config = yaml.parse(fs.readFileSync(path.join(__dirname, "build_config.yaml"), "utf-8"));
 
