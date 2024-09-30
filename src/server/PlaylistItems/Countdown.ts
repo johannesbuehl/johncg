@@ -216,7 +216,7 @@ export default class Countdown extends PlaylistItemBase {
 		return {
 			template: "JohnCG/Countdown",
 			data: {
-				time: (this.time ?? new Date()).toUTCString(),
+				time: this.time.toString(),
 				mode: this.props.mode,
 				position: this.props.position,
 				font_size: this.props.font_size,
