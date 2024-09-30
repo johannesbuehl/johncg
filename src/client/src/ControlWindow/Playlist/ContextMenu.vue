@@ -50,6 +50,8 @@
 		gap: 0.25rem;
 
 		border-radius: 0.25rem;
+
+		z-index: 9999;
 	}
 
 	:slotted(*) {
