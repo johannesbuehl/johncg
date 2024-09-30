@@ -7,7 +7,7 @@
 	import Globals from "@/Globals";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { CasparFile, Directory, Node } from "@server/search_part";
+	import type { CasparFile, Directory, Node } from "@server/search_part_types";
 
 	// const props =
 	defineProps<{
@@ -42,14 +42,14 @@
 				files = Globals.get_media_files();
 			}
 
-			Globals.get_thumbnails(files.filter((ff) => !ff.is_dir) as CasparFile[]);
+			Globals.get_thumbnails(files.filter((ff) => !ff.type) as CasparFile[]);
 		},
 		{ immediate: true }
 	);
 
 	function get_media_thumbnails(files: Node<"media">[] | undefined) {
 		const request_files: CasparFile[] = (files ?? Globals.get_media_files()).filter(
-			(ff) => !ff.is_dir
+			(ff) => !ff.type
 		) as CasparFile[];
 
 		Globals.get_thumbnails(request_files);
@@ -73,7 +73,7 @@
 		@refresh_files="() => Globals.get_media_files(true)"
 		@choose="
 			(file) => {
-				if (file?.is_dir) {
+				if (file?.type) {
 					get_media_thumbnails(file.children);
 				}
 

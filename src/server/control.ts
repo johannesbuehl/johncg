@@ -12,7 +12,8 @@ import * as JCGPSend from "./JCGPSendMessages";
 import * as JCGPRecv from "./JCGPReceiveMessages";
 
 import Config, { CasparCGConnectionSettings } from "./config/config";
-import SearchPart, { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part";
+import SearchPart from "./search_part";
+import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part_types";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { BibleFile } from "./PlaylistItems/Bible";
 import { logger } from "./logger";

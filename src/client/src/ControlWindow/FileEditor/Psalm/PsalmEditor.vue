@@ -20,7 +20,7 @@
 	import PopUp from "@/ControlWindow/PopUp.vue";
 	import Globals from "@/Globals";
 
-	import type { Directory, PsalmFile } from "@server/search_part";
+	import type { Directory, PsalmFile } from "@server/search_part_types";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
@@ -42,7 +42,7 @@
 	watch(
 		() => file_selection.value,
 		() => {
-			if (file_selection.value !== undefined && !file_selection.value.is_dir) {
+			if (file_selection.value !== undefined && !file_selection.value.type) {
 				psalm_file_name.value = file_selection.value.name.replace(/\.psm$/, "");
 			}
 		},

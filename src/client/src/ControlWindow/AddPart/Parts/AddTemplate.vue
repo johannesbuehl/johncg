@@ -6,13 +6,14 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
+		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import JSONEditor from "@/ControlWindow/JSONEditor.vue";
 	import Globals from "@/Globals";
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
-	import type { CasparFile, Node } from "@server/search_part";
+	import { NodeType, type CasparFile, type Node } from "@server/search_part_types";
 
 	library.add(fas.faPlus);
 
@@ -27,8 +28,8 @@
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	function add_template(ff?: Node<"template">) {
-		if (ff !== undefined && !ff.is_dir) {
+	function add_template(ff?: ChooseNode<"template">) {
+		if (ff?.type === NodeType.File) {
 			emit("add", create_props(ff));
 		}
 	}

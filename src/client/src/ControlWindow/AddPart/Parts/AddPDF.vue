@@ -6,11 +6,12 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
+		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import type { Node, PDFFile } from "@server/search_part";
+	import { NodeType, type PDFFile } from "@server/search_part_types";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";
 
 	library.add(fas.faPlus, fas.faRepeat);
@@ -25,8 +26,8 @@
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 
-	function add_pdf(file?: Node<"pdf">) {
-		if (file !== undefined && !file.is_dir) {
+	function add_pdf(file?: ChooseNode<"pdf">) {
+		if (file?.type === NodeType.File) {
 			emit("add", create_props(file));
 		}
 	}

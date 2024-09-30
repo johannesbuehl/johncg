@@ -24,10 +24,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create new demo-song-file with songbeamer-editor
 - test changed pandoc-installer (win and linux)
 - reenable eslint vue-indent
-- client-search: home-button clears search
-- client-search: support entering of dir in results -> add "search: '[searchterm]' to directory structure"
-- client-search: preview for searched images
-- client: slide above context menu
 
 ## Planned
 - make keyboard-navigation better
@@ -39,3 +35,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - add-song to playlist after creation
 - add english bible-file
 - performer-view with website and custom HTML-template and iFrame for casparcg-templates
+- move backend to go

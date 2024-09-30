@@ -6,11 +6,12 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
+		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import type { Node, PsalmFile } from "@server/search_part";
+	import { NodeType, type PsalmFile } from "@server/search_part_types";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 
 	library.add(fas.faPlus);
@@ -27,18 +28,18 @@
 			placeholder: "Psalm ID",
 			value: "",
 			size: 5,
-			get: (ff) => (!ff.is_dir ? (ff.data.metadata.id ?? "") : "")
+			get: (ff) => (!ff.type ? (ff.data.metadata.id ?? "") : "")
 		},
 		{
 			id: "caption",
 			placeholder: "Title",
 			value: "",
-			get: (ff) => (!ff.is_dir ? ff.data.metadata.caption : "")
+			get: (ff) => (!ff.type ? ff.data.metadata.caption : "")
 		}
 	]);
 
-	function add_psalm(file?: Node<"psalm">) {
-		if (file !== undefined && !file.is_dir) {
+	function add_psalm(file?: ChooseNode<"psalm">) {
+		if (file?.type === NodeType.File) {
 			emit("add", create_props(file));
 		}
 	}

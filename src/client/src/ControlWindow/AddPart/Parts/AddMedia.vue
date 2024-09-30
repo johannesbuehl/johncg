@@ -8,7 +8,7 @@
 	import MediaDialogue from "@/ControlWindow/FileDialogue/MediaDialogue.vue";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { CasparFile, Node } from "@server/search_part";
+	import type { CasparFile, Node } from "@server/search_part_types";
 	import Globals from "@/Globals";
 
 	library.add(fas.faPlus, fas.faRepeat);
@@ -21,7 +21,7 @@
 	const loop = ref<boolean>(false);
 
 	function add_media(file: Node<"media"> | undefined) {
-		if (file !== undefined && !file.is_dir) {
+		if (file !== undefined && !file.type) {
 			emit("add", create_props(file));
 		}
 	}

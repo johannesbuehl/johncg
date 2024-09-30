@@ -9,7 +9,7 @@
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 	import Globals from "@/Globals";
 
-	import type { CasparFile, Node } from "@server/search_part";
+	import type { CasparFile, Node } from "@server/search_part_types";
 	import type { CountdownProps } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode, countdown_title_map } from "@server/lib";
 
@@ -29,7 +29,7 @@
 	const media_selection = defineModel<CasparFile>({});
 
 	function add_countdown(file_selection: Node<"media">) {
-		if (!file_selection.is_dir) {
+		if (!file_selection.type) {
 			const return_props = create_props();
 
 			if (return_props !== undefined) {

@@ -1,7 +1,7 @@
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { SongData } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
-import type { CasparFile, ItemFileMap } from "./search_part";
+import type { CasparFile, ItemFileMap } from "./search_part_types";
 import * as JCGPSend from "./JCGPSendMessages";
 
 /**

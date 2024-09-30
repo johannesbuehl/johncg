@@ -9,7 +9,7 @@
 	import Globals from "@/Globals";
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { Directory, Node, PlaylistFile } from "@server/search_part";
+	import type { Directory, Node, PlaylistFile } from "@server/search_part_types";
 
 	library.add(fas.faFolderOpen);
 
@@ -25,7 +25,7 @@
 
 	function save_playlist(playlist?: Node<"playlist">) {
 		// if the selection is a directory, exit
-		if (playlist?.is_dir) {
+		if (playlist?.type) {
 			return;
 		}
 

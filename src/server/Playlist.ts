@@ -312,24 +312,28 @@ export default class Playlist {
 			if (this.playlist_items[item].displayable) {
 				const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
-				if (!!client_object && client_object.media !== undefined) {
-					// check wether it is a color string
-					const test_rgb_string = client_object.media.match(
-						/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
-					);
+				if (!!client_object) {
+					if (client_object.media !== undefined) {
+						// check wether it is a color string
+						const test_rgb_string = client_object.media.match(
+							/^#(?<alpha>[\dA-Fa-f]{2})?(?<rgb>(?:[\dA-Fa-f]{2}){3})$/
+						);
 
-					if (!test_rgb_string) {
-						let thumbnails: string[] | undefined = await thumbnail_retrieve(client_object.media);
+						if (!test_rgb_string) {
+							let thumbnails: string[] | undefined = await thumbnail_retrieve(client_object.media);
 
-						if (thumbnails === undefined) {
-							await thumbnail_generate(client_object.media);
+							if (thumbnails === undefined) {
+								await thumbnail_generate(client_object.media);
 
-							thumbnails = await thumbnail_retrieve(client_object.media);
+								thumbnails = await thumbnail_retrieve(client_object.media);
+							}
+
+							client_object.media = thumbnails
+								? "data:image/png;base64," + thumbnails[0]
+								: undefined;
+						} else {
+							client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 						}
-
-						client_object.media = thumbnails ? "data:image/png;base64," + thumbnails[0] : undefined;
-					} else {
-						client_object.media = `#${test_rgb_string.groups?.alpha ?? ""}${test_rgb_string.groups?.rgb}`;
 					}
 
 					return client_object;

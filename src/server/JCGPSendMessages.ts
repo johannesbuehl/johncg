@@ -4,7 +4,7 @@ import { BibleFile } from "./PlaylistItems/Bible";
 import { GetItemData, GetItemFiles } from "./JCGPReceiveMessages";
 import { CasparCGResolution } from "./CasparCGConnection.js";
 import { RequireAtLeastOne } from "./lib";
-import { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "./search_part";
+import { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "./search_part_types";
 
 /**
  * Base interface for sent JCGP-messages

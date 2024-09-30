@@ -2,55 +2,22 @@ import path from "path";
 import fs from "fs/promises";
 
 import Config from "./config/config";
-import SngFile, { SongData, SongFileFast } from "./PlaylistItems/SongFile/SongFile";
+import SngFile, { SongFileFast } from "./PlaylistItems/SongFile/SongFile";
 import { PsalmFile as PsalmData } from "./PlaylistItems/Psalm";
 import { logger } from "./logger";
 import { casparcg, catch_casparcg_timeout } from "./CasparCGConnection";
-
-interface NodeBase {
-	name: string;
-	path: string;
-	is_dir: boolean;
-}
-
-export interface FileBase extends NodeBase {
-	is_dir: false;
-}
-
-export interface SongFile extends FileBase {
-	data: SongData;
-}
-
-export interface PsalmFile extends FileBase {
-	data: PsalmData;
-}
-
-export type CasparFile = FileBase;
-export type PDFFile = FileBase;
-export type PlaylistFile = FileBase;
-
-export type Node<K extends keyof ItemFileMap> = ItemFileMapped<K> | Directory<K>;
-export type Directory<K extends keyof ItemFileMap> = NodeBase &
-	{
-		[T in K]: {
-			children: Node<T>[];
-			is_dir: true;
-		};
-	}[K];
-export interface ItemFileMap {
-	song: SongFile;
-	psalm: PsalmFile;
-	media: CasparFile;
-	template: CasparFile;
-	pdf: PDFFile;
-	playlist: PlaylistFile;
-}
-export type ItemFileMapped<K extends keyof ItemFileMap> = ItemFileMap[K];
-export type ItemNodeMapped<K extends keyof ItemFileMap> = Node<K>;
+import {
+	Directory,
+	FileBase,
+	ItemFileMap,
+	ItemFileMapped,
+	Node,
+	NodeType,
+	PsalmFile,
+	SongFile
+} from "./search_part_types";
 
 export default class SearchPart {
-	constructor() {}
-
 	create_song_file(f: FileBase, fast: boolean): SongFile {
 		let song;
 
@@ -104,14 +71,14 @@ export default class SearchPart {
 
 			if (is_directory) {
 				return {
-					is_dir: true,
+					type: NodeType.Directory,
 					name: f,
 					path: path.relative(root, ff),
 					children: await this.find_files(ff, root, extension, file_converter)
 				} as Directory<K>;
 			} else if (extension_index >= 0) {
 				const file_result: FileBase = {
-					is_dir: false,
+					type: NodeType.File,
 					name: f.slice(0, extension_index),
 					path: path.relative(root, ff)
 				};
@@ -190,7 +157,7 @@ export default class SearchPart {
 		const item_file: FileBase = {
 			name: path.split(/[\\/]/g).slice(-1)[0],
 			path,
-			is_dir: false
+			type: NodeType.File
 		};
 
 		try {
@@ -210,7 +177,7 @@ export default class SearchPart {
 		const item_file: FileBase = {
 			name: path.split(/[\\/]/g).slice(-1)[0],
 			path,
-			is_dir: false
+			type: NodeType.File
 		};
 
 		try {
@@ -265,14 +232,14 @@ function build_files<K extends "media" | "template">(
 
 			if (is_dir) {
 				return {
-					is_dir: true,
+					type: NodeType.Directory,
 					name: key,
 					path: file_path,
 					children: build_files(files, file_path)
 				};
 			} else {
 				return {
-					is_dir: false,
+					type: NodeType.File,
 					name: key,
 					path: file_path
 				};

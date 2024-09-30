@@ -8,9 +8,10 @@
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 	import SongPartSelector from "@/ControlWindow/ItemDialogue/SongPartSelector.vue";
 
-	import type { Node, SongFile } from "@server/search_part";
 	import type { SongProps } from "@server/PlaylistItems/Song";
 	import Globals from "@/Globals";
+	import type { ChooseNode } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
+	import { NodeType, type SongFile } from "@server/search_part_types";
 
 	library.add(fas.faPlus);
 
@@ -38,8 +39,8 @@
 		}
 	);
 
-	function add_song(file?: Node<"song">) {
-		if (file !== undefined && !file.is_dir) {
+	function add_song(file?: ChooseNode<"song">) {
+		if (file?.type === NodeType.File) {
 			emit("add", create_props(file));
 		}
 	}

@@ -26,7 +26,7 @@
 	import SongDialogue from "@/ControlWindow/FileDialogue/SongDialogue.vue";
 	import { create_directory_stack } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 
-	import type { CasparFile, Directory, SongFile } from "@server/search_part";
+	import type { CasparFile, Directory, SongFile } from "@server/search_part_types";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
 
@@ -60,7 +60,7 @@
 	watch(
 		() => song_selection.value,
 		() => {
-			if (song_selection.value !== undefined && !song_selection.value?.is_dir) {
+			if (song_selection.value !== undefined && !song_selection.value?.type) {
 				song_file_name.value = song_selection.value.name.replace(/\.sng$/, "");
 			}
 		}
@@ -79,7 +79,7 @@
 					.slice(-1)[0]
 					?.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
 
-				if (potential_selection !== undefined && !potential_selection?.is_dir) {
+				if (potential_selection !== undefined && !potential_selection?.type) {
 					media_selection.value = potential_selection;
 					background_media.value = potential_selection;
 				}
@@ -176,7 +176,7 @@
 	}
 
 	function select_media(selection: CasparFile) {
-		if (selection && !selection.is_dir) {
+		if (selection && !selection.type) {
 			background_media.value = selection;
 			media_selection.value = selection;
 			show_media_selector.value = false;
@@ -226,6 +226,20 @@
 	}
 
 	function create_song_data(): SongData {
+		// create copy of text_parts with unused languages removed
+		let saved_text_parts = text_parts.value.map((part) => {
+			part.text = part.text.map((slide) => {
+				return slide.filter((line, ii) => ii < metadata.value.LangCount) as [
+					string,
+					string,
+					string,
+					string
+				];
+			});
+
+			return part;
+		});
+
 		const song_data_object: SongData = {
 			metadata: {
 				...metadata.value,
@@ -241,8 +255,8 @@
 		) as SongFileMetadata;
 
 		// filter out the last, empty element
-		const saved_text_parts = text_parts.value.filter(
-			(text_part, index) => index < text_parts.value.length - 1 || !is_empty_part(text_part)
+		saved_text_parts = saved_text_parts.filter(
+			(text_part, index) => index < saved_text_parts.length - 1 || !is_empty_part(text_part)
 		);
 
 		saved_text_parts.forEach((part) => {

@@ -2,11 +2,12 @@
 	import { reactive, ref, toRaw, watch } from "vue";
 
 	import FileDialogue, {
+		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import type { Directory, Node, SongFile } from "@server/search_part";
+	import type { Directory, SongFile } from "@server/search_part_types";
 	import type { SongProps } from "@server/PlaylistItems/Song";
 
 	const props = defineProps<{
@@ -18,7 +19,7 @@
 	}>();
 
 	const emit = defineEmits<{
-		choose: [Node<"song"> | undefined];
+		choose: [ChooseNode<"song"> | undefined];
 		new_song: [];
 		new_directory: [path: string];
 	}>();
@@ -39,20 +40,20 @@
 			placeholder: "Song ID",
 			value: "",
 			size: 5,
-			get: (ff) => (ff.is_dir ? "" : (ff.data.metadata.ChurchSongID ?? ""))
+			get: (ff) => (ff.type ? "" : (ff.data.metadata.ChurchSongID ?? ""))
 		},
 		{
 			id: "title",
 			placeholder: "Title",
 			value: "",
-			get: (ff) => (ff.is_dir ? "" : ff.data.metadata.Title.join("\n"))
+			get: (ff) => (ff.type ? "" : ff.data.metadata.Title.join("\n"))
 		},
 		{
 			id: "text",
 			placeholder: "Text",
 			value: "",
 			get: (ff) =>
-				ff.is_dir
+				ff.type
 					? ""
 					: Object.values(ff.data.text)
 							.flat(3)

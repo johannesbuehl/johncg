@@ -12,29 +12,18 @@
 		T
 	>[];
 
+	export type DirectoryStackElement<T extends keyof ItemFileMap> = Directory<T> | Search<T>;
+
+	export type ChooseNode<T extends keyof ItemFileMap> = Node<T> | Search<T>;
+
+	/**
+	 * Extract the directories out of a list of files
+	 * @param files files-list with files and directories
+	 * @returns directories of files sorted alphabetically
+	 */
 	export function sort_dirs<K extends keyof ItemFileMap>(files: Node<K>[]): Directory<K>[] {
-		const dirs = files.filter((ff) => ff.is_dir) as Directory<K>[];
-
-		return dirs.sort((a, b) => {
-			if (a.name === b.name) {
-				return 0;
-			} else {
-				const sort_array = [a.name, b.name].sort();
-
-				if (sort_array[0] === a.name) {
-					return -1;
-				} else {
-					return 1;
-				}
-			}
-		});
-	}
-
-	export function sort_files<K extends keyof ItemFileMap>(
-		files: ItemNodeMapped<K>[]
-	): ItemNodeMapped<K>[] {
 		return files
-			?.filter((fil) => !fil.is_dir)
+			.filter((ff) => ff.type === NodeType.Directory)
 			.sort((a, b) => {
 				if (a.name === b.name) {
 					return 0;
@@ -50,6 +39,37 @@
 			});
 	}
 
+	/**
+	 * Extract the files out of a list of files
+	 * @param files files-list with files and directories
+	 * @returns files of files sorted alphabetically
+	 */
+	export function sort_files<K extends keyof ItemFileMap>(
+		files: ItemNodeMapped<K>[]
+	): ItemNodeMapped<K>[] {
+		return files
+			?.filter((fil) => fil.type === NodeType.File)
+			.sort((a, b) => {
+				if (a.name === b.name) {
+					return 0;
+				} else {
+					const sort_array = [a.name, b.name].sort();
+
+					if (sort_array[0] === a.name) {
+						return -1;
+					} else {
+						return 1;
+					}
+				}
+			});
+	}
+
+	/**
+	 * create a directory strack from a path
+	 * @param item_files item-files to be used for creating the directory stack
+	 * @param path_stack path
+	 * @returns directory-stack represented by path_stack
+	 */
 	export function create_directory_stack<K extends keyof ItemFileMap>(
 		item_files: Node<K>[],
 		path_stack: string[]
@@ -59,11 +79,11 @@
 		while (path_stack.length > 0) {
 			const files = (directory_stack[directory_stack.length - 1]?.children ?? item_files).filter(
 				(ff) => {
-					return ff.is_dir && ff.name.toLowerCase() === path_stack[0].toLowerCase();
+					return ff.type && ff.name.toLowerCase() === path_stack[0].toLowerCase();
 				}
 			);
 
-			if (files.length === 1 && files[0].is_dir) {
+			if (files.length === 1 && files[0].type) {
 				directory_stack.push(files[0]);
 
 				path_stack.shift();
@@ -87,14 +107,16 @@
 	import PopUp from "../PopUp.vue";
 
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-	import type {
-		Directory,
-		ItemFileMap,
-		ItemFileMapped,
-		ItemNodeMapped,
-		Node
-	} from "@server/search_part";
 	import PlaylistItemDummy from "../Playlist/PlaylistItemDummy.vue";
+	import {
+		NodeType,
+		type Directory,
+		type ItemFileMap,
+		type ItemFileMapped,
+		type ItemNodeMapped,
+		type Node,
+		type Search
+	} from "@server/search_part_types";
 
 	library.add(
 		fas.faHouse,
@@ -121,7 +143,7 @@
 	const emit = defineEmits<{
 		new_file: [];
 		new_directory: [path: string];
-		choose: [file: Node<T> | undefined];
+		choose: [file: ChooseNode<T> | undefined];
 		refresh_files: [];
 	}>();
 
@@ -135,7 +157,7 @@
 	const directory_name = ref<string>("");
 	const directory_name_input = ref<HTMLInputElement>();
 	const rotate_button = ref<boolean>(false);
-	const directory_stack = defineModel<Directory<T>[]>("directory_stack", {
+	const directory_stack = defineModel<DirectoryStackElement<T>[]>("directory_stack", {
 		default: () => reactive([])
 	});
 
@@ -156,7 +178,7 @@
 			if (props.files && directory_stack.value.length > 0) {
 				directory_stack.value = create_directory_stack<T>(
 					props.files,
-					directory_stack.value.slice(-1)[0].path.split(/[/\\]/g)
+					get_dirstack_top_dir()!.path.split(/[/\\]/g)
 				);
 			}
 		},
@@ -171,6 +193,11 @@
 		{ deep: true }
 	);
 
+	/**
+	 * returns the files currently to be shown
+	 * @param renew wether files should be from the directory-stack or all
+	 * @returns current files
+	 */
 	function get_current_files(renew: boolean = false): Node<T>[] {
 		let files: Node<T>[] | undefined = undefined;
 
@@ -178,34 +205,52 @@
 			files = file_tree.value;
 		}
 
-		files ??=
-			directory_stack.value.length > 0 ? directory_stack.value.slice(-1)[0].children : props.files;
+		files ??= get_dirstack_top_dir()?.children ?? props.files;
 
 		return files ?? [];
 	}
 
+	/**
+	 * handles file- and dir-selections
+	 * @param file chosen file
+	 */
 	function on_choose(file: Node<T>) {
-		if (file.is_dir) {
+		if (file.type) {
+			// clear the search-fields
+			search_strings.value.forEach((search_string) => (search_string.value = ""));
+
 			directory_stack.value.push(file);
 		}
 
 		emit("choose", file);
 	}
 
+	/**
+	 * handlex directory creation
+	 */
 	function on_new_directory() {
 		let directory = "";
 
 		if (directory_stack.value.length > 0) {
-			directory = directory_stack.value[directory_stack.value.length - 1].path + "/";
+			directory = get_dirstack_top_dir()!.path + "/";
 		}
 
 		emit("new_directory", directory + directory_name.value);
 		show_new_directory.value = false;
 	}
 
+	/**
+	 * process the search-mask
+	 * @param files files to be searched trhough
+	 * @returns search-result
+	 */
 	function search_string(files: Node<T>[]): Node<T>[] | undefined {
-		// if there are no search-strings, return the default files
+		// if there are no search-strings, clear the (potential) active search-node from the directory-stack
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			if (directory_stack.value.slice(-1)[0]?.type === NodeType.Search) {
+				directory_stack.value.pop();
+			}
+
 			return undefined;
 		}
 		const return_files: Node<T>[] = [];
@@ -227,7 +272,7 @@
 			}
 
 			// search the children too
-			if (ff.is_dir) {
+			if (ff.type) {
 				const results = search_string(ff.children);
 
 				if (results && results.length > 0) {
@@ -236,7 +281,69 @@
 			}
 		});
 
+		const search_param_clone = search_strings.value.map((search_string) => search_string.value);
+
+		const search: Search<T> = {
+			children: return_files,
+			type: NodeType.Search,
+			name: "Search",
+			path: directory_stack.value.slice(-1)[0]?.path ?? "",
+			search_params: search_param_clone
+		};
+
+		emit("choose", search);
+
+		// append the search to the directory-stack
+		if (directory_stack.value.slice(-1)[0]?.type !== NodeType.Search) {
+			directory_stack.value.push(search);
+		} else {
+			directory_stack.value[directory_stack.value.length - 1] = search;
+		}
+
 		return return_files;
+	}
+
+	/**
+	 * resets the view to the root-directory
+	 */
+	function navigate_home() {
+		directory_stack.value = reactive([]);
+
+		// clear the search
+		search_strings.value.forEach((search_string) => {
+			search_string.value = "";
+		});
+	}
+
+	/**
+	 * Retrieve the top-most directory-element of the directory-stack
+	 * @returns top-most directory
+	 */
+	function get_dirstack_top_dir(): Directory<T> | undefined {
+		for (let ii = directory_stack.value.length - 1; ii >= 0; ii--) {
+			if (directory_stack.value[ii].type === NodeType.Directory) {
+				return directory_stack.value[ii] as Directory<T>;
+			}
+		}
+
+		return undefined;
+	}
+
+	/**
+	 * handles dirstack-navigation
+	 * @param dir_index element-index of the dirstack to navigate to
+	 */
+	function navigate_dirstack(dir_index: number) {
+		directory_stack.value.splice(dir_index + 1, directory_stack.value.length);
+
+		// if the clicked directory-stack-element is a search-query, populate the search-definitions
+		const clicked_dirstack_element = directory_stack.value.slice(-1)[0];
+
+		if (clicked_dirstack_element.type === NodeType.Search) {
+			search_strings.value.forEach(
+				(search_string, ii) => (search_string.value = clicked_dirstack_element.search_params[ii])
+			);
+		}
 	}
 </script>
 
@@ -290,33 +397,13 @@
 						</MenuButton>
 					</div>
 					<div id="directory_stack">
-						<MenuButton
-							:square="true"
-							@click="
-								directory_stack = reactive([]);
-								$emit(
-									'choose',
-									directory_stack.length > 0
-										? directory_stack[directory_stack.length - 1]
-										: undefined
-								);
-							"
-						>
+						<MenuButton :square="true" @click="navigate_home">
 							<FontAwesomeIcon :icon="['fas', 'house']" />
 						</MenuButton>
 						<template v-for="(dir, dir_index) of directory_stack" :key="dir_index">
 							<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
-							<MenuButton
-								@click="
-									directory_stack.splice(dir_index + 1, directory_stack.length);
-									$emit(
-										'choose',
-										directory_stack.length > 0
-											? directory_stack[directory_stack.length - 1]
-											: undefined
-									);
-								"
-							>
+							<MenuButton @click="navigate_dirstack(dir_index)">
+								<FontAwesomeIcon v-if="!dir.type" :icon="fas.faSearch" />
 								{{ dir.name }}
 							</MenuButton>
 						</template>
@@ -343,7 +430,7 @@
 									:key="element_index"
 									class="file_item"
 									:class="{
-										selectable: !element.is_dir,
+										selectable: !element.type,
 										active: element === selection
 									}"
 									@keydown.enter.prevent="on_choose(element as Directory<T>)"
@@ -438,10 +525,10 @@
 								</PlaylistItemDummy>
 							</template>
 						</Draggable>
-						<slot name="edit"></slot>>
+						<slot name="edit"></slot>
 					</div>
 					<div class="button_wrapper" v-if="!!slots.buttons">
-						<slot name="buttons" />
+						<slot name="buttons"></slot>
 					</div>
 				</div>
 			</div>
