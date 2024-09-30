@@ -223,12 +223,13 @@
 			throw new TypeError("'visibility' is not of type 'boolean'");
 		}
 
-		// if the client_id is ours or currently no item is selected, set the selected to the active
+		// if auto_follow is active, the client_id is ours or currently no item is selected, set the selected to the active
 		if (
-			data.active_item_slide !== undefined &&
-			(data.client_id === client_id || selected_item.value === -1)
+			Globals.follow_all_navigates.value ||
+			(data.active_item_slide !== undefined &&
+				(data.client_id === client_id || selected_item.value === -1))
 		) {
-			selected_item.value = data.active_item_slide?.item;
+			selected_item.value = data.active_item_slide?.item ?? null;
 		}
 
 		// merge the objects, to keep states, that aren't transmitted this time

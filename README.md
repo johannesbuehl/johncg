@@ -24,6 +24,10 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create new demo-song-file with songbeamer-editor
 - test changed pandoc-installer (win and linux)
 - reenable eslint vue-indent
+- client-search: home-button clears search
+- client-search: support entering of dir in results -> add "search: '[searchterm]' to directory structure"
+- client-search: preview for searched images
+- client: slide above context menu
 
 ## Planned
 - make keyboard-navigation better

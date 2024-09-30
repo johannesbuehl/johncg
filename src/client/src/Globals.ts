@@ -390,6 +390,8 @@ class Global {
 
 		return id;
 	}
+
+	follow_all_navigates = ref<boolean>(false);
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

@@ -1,27 +1,28 @@
 <script setup lang="ts">
-	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
-	library.add(
-		fas.faFile,
-		fas.faFolderOpen,
-		fas.faFloppyDisk,
-		fas.faFilePdf,
-		fas.faBackwardStep,
-		fas.faForwardStep,
-		fas.faAngleLeft,
-		fas.faAngleRight,
-		fas.faEyeSlash,
-		fas.faEye,
-		fas.faList,
-		fas.faPlus,
-		fas.faPen,
-		fas.faMessage,
-		fas.faXmark,
-		fas.faAlignJustify,
-		fas.faListOl
-	);
+	import { ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+	import {
+		faAlignJustify,
+		faAngleLeft,
+		faAngleRight,
+		faBackwardStep,
+		faCompress,
+		faExpand,
+		faEye,
+		faEyeSlash,
+		faFile,
+		faFilePdf,
+		faFloppyDisk,
+		faFolderOpen,
+		faForwardStep,
+		faLink,
+		faLinkSlash,
+		faList,
+		faListOl,
+		faMessage,
+		faPen,
+		faPlus
+	} from "@fortawesome/free-solid-svg-icons";
 
 	import { ControlWindowState } from "@/Enums";
 	import MenuButton from "./MenuButton.vue";
@@ -76,20 +77,29 @@
 			});
 		}
 	}
+
+	const fullscreen_request = ref<boolean>(!!document.fullscreenElement);
+	watch(fullscreen_request, () => {
+		if (fullscreen_request.value) {
+			document.documentElement.requestFullscreen();
+		} else {
+			document.exitFullscreen();
+		}
+	});
 </script>
 
 <template>
 	<div class="menubar">
 		<template v-if="Globals.server_connection.value === ServerConnection.Connected">
 			<MenuButton :square="true" @click="new_playlist()">
-				<FontAwesomeIcon :icon="['fas', 'file']" />
+				<FontAwesomeIcon :icon="faFile" />
 			</MenuButton>
 			<MenuButton
 				:square="true"
 				@click="Globals.ControlWindowState = ControlWindowState.OpenPlaylist"
 				:active="Globals.ControlWindowState === ControlWindowState.OpenPlaylist"
 			>
-				<FontAwesomeIcon :icon="['fas', 'folder-open']" />
+				<FontAwesomeIcon :icon="faFolderOpen" />
 			</MenuButton>
 			<MenuButton
 				:square="true"
@@ -105,10 +115,10 @@
 					}
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />
+				<FontAwesomeIcon :icon="faFloppyDisk" />
 			</MenuButton>
 			<MenuButton :square="true" @click="pdf_popup = true">
-				<FontAwesomeIcon :icon="['fas', 'file-pdf']" />
+				<FontAwesomeIcon :icon="faFilePdf" />
 			</MenuButton>
 			<MenuDivider />
 			<MenuButton
@@ -116,7 +126,7 @@
 				@click="Globals.ControlWindowState = ControlWindowState.Slides"
 				:active="Globals.ControlWindowState === ControlWindowState.Slides"
 			>
-				<FontAwesomeIcon :icon="['fas', 'list']" />
+				<FontAwesomeIcon :icon="faList" />
 			</MenuButton>
 			<MenuButton
 				:square="true"
@@ -127,7 +137,7 @@
 					Globals.ControlWindowState === ControlWindowState.NewPsalm
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'plus']" />
+				<FontAwesomeIcon :icon="faPlus" />
 			</MenuButton>
 			<MenuButton
 				:square="true"
@@ -138,25 +148,25 @@
 					Globals.ControlWindowState === ControlWindowState.EditPsalm
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'pen']" />
+				<FontAwesomeIcon :icon="faPen" />
 			</MenuButton>
 			<div v-if="Globals.ControlWindowState === ControlWindowState.Slides" class="button_container">
 				<MenuDivider />
 				<MenuButton :square="true" @click="emit('navigate', 'item', -1)">
-					<FontAwesomeIcon :icon="['fas', 'backward-step']" />
+					<FontAwesomeIcon :icon="faBackwardStep" />
 				</MenuButton>
 				<MenuButton :square="true" @click="emit('navigate', 'item', 1)">
-					<FontAwesomeIcon :icon="['fas', 'forward-step']" />
+					<FontAwesomeIcon :icon="faForwardStep" />
 				</MenuButton>
 				<MenuButton :square="true" @click="emit('navigate', 'slide', -1)">
-					<FontAwesomeIcon :icon="['fas', 'angle-left']" />
+					<FontAwesomeIcon :icon="faAngleLeft" />
 				</MenuButton>
 				<MenuButton :square="true" @click="emit('navigate', 'slide', 1)">
-					<FontAwesomeIcon :icon="['fas', 'angle-right']" />
+					<FontAwesomeIcon :icon="faAngleRight" />
 				</MenuButton>
 				<MenuDivider />
 				<MenuButton :square="true" v-model="visibility" @click="emit('set_visibility', visibility)">
-					<FontAwesomeIcon :icon="['fas', visibility ? 'eye' : 'eye-slash']" />
+					<FontAwesomeIcon :icon="visibility ? faEye : faEyeSlash" />
 				</MenuButton>
 			</div>
 			<template v-if="Globals.ControlWindowState === ControlWindowState.Edit">
@@ -169,23 +179,29 @@
 				/>
 			</template>
 		</template>
+		<div id="stick-right" />
+		<MenuButton :square="true" v-model="fullscreen_request">
+			<FontAwesomeIcon :icon="fullscreen_request ? faCompress : faExpand" />
+		</MenuButton>
+		<MenuButton :square="true" v-model="Globals.follow_all_navigates.value">
+			<FontAwesomeIcon :icon="Globals.follow_all_navigates.value ? faLink : faLinkSlash" />
+		</MenuButton>
 		<MenuButton
-			id="message_button"
 			:square="true"
 			@click="Globals.ControlWindowState = ControlWindowState.Message"
 			:active="Globals.ControlWindowState === ControlWindowState.Message"
 		>
-			<FontAwesomeIcon :icon="['fas', 'message']" />
+			<FontAwesomeIcon :icon="faMessage" />
 		</MenuButton>
 	</div>
 	<!-- PDF-save -->
 	<PopUp v-model:active="pdf_popup" title="Create Playlist-PDF">
 		<div id="playlist_pdf_buttons">
 			<MenuButton @click="create_playlist_pdf('full')">
-				<FontAwesomeIcon :icon="['fas', 'align-justify']" />Content
+				<FontAwesomeIcon :icon="faAlignJustify" />Content
 			</MenuButton>
 			<MenuButton @click="create_playlist_pdf('small')">
-				<FontAwesomeIcon :icon="['fas', 'list-ol']" />Itemlist
+				<FontAwesomeIcon :icon="faListOl" />Itemlist
 			</MenuButton>
 		</div>
 	</PopUp>
@@ -245,7 +261,7 @@
 		outline: none;
 	}
 
-	#message_button {
+	#stick-right {
 		margin-left: auto;
 	}
 
