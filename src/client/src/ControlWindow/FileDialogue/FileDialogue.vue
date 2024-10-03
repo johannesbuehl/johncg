@@ -475,7 +475,7 @@
 										>
 											{{
 												element.path.slice(
-													(directory_stack.slice(-1)?.[0]?.name.length ?? -1) + 1,
+													(get_dirstack_top_dir()?.name.length ?? -1) + 1,
 													element.path.lastIndexOf(element.name)
 												)
 											}}{{ element.name }}

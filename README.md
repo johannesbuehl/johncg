@@ -19,18 +19,16 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
-- rethink direct integration of song- / psalm- / etc. template integration
 - use http-status-codes in answer to client
-- create new demo-song-file with songbeamer-editor
+- create new demo-song-file with casparcg-editor
 - test changed pandoc-installer (win and linux)
-- reenable eslint vue-indent
 
 ## Planned
+- reenable eslint vue-indent
 - make keyboard-navigation better
   - tabindex for all elements
 - create library src-folder
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
-- song-file: chords itself as chords and transpose them
 - support other browser than Chrome and phone / tablet resolution
 - add-song to playlist after creation
 - add english bible-file
