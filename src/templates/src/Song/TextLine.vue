@@ -1,10 +1,12 @@
 <script lang="ts">
+	export interface ChordDescriptor {
+		text?: string;
+		super?: string;
+	}
+
 	export interface RenderChord {
 		note: string;
-		descriptor?: {
-			text?: string;
-			super?: string;
-		};
+		descriptors?: ChordDescriptor[];
 		bass_note?: string;
 	}
 </script>
@@ -157,36 +159,39 @@
 				return note;
 			}
 
-			function format_descriptor(descriptor: string): Required<RenderChord>["descriptor"] {
-				const descriptor_object: Required<RenderChord>["descriptor"] = {};
+			function format_descriptors(descriptor: string): Required<RenderChord>["descriptors"] {
+				const descriptors_array: Required<RenderChord>["descriptors"] = [];
 
 				const descriptor_replacer = {
 					M: "maj"
 				};
 
 				[...descriptor].forEach((c) => {
+					const descriptor_object: ChordDescriptor = {};
+
 					if (parseInt(c)) {
-						descriptor_object.super = (descriptor_object.super ?? "") + c;
+						descriptor_object.super = c;
 					} else {
-						descriptor_object.text = (descriptor_object.text ?? "") + c;
+						descriptor_object.text = c;
 					}
+
+					descriptors_array.push(descriptor_object);
 				});
 
-				if (descriptor_object.text !== undefined) {
-					Object.entries(descriptor_replacer).forEach(
-						([pattern, replacement]) =>
-							(descriptor_object.text = descriptor_object.text?.replace(pattern, replacement))
+				Object.entries(descriptor_replacer).forEach(([pattern, replacement]) => {
+					descriptors_array.forEach(
+						(descriptor) => (descriptor.text = descriptor.text?.replace(pattern, replacement))
 					);
-				}
+				});
 
-				return descriptor_object;
+				return descriptors_array;
 			}
 
 			return {
 				note: format_note(chord.note),
-				descriptor:
+				descriptors:
 					chord.chord_descriptors !== undefined
-						? format_descriptor(chord.chord_descriptors)
+						? format_descriptors(chord.chord_descriptors)
 						: undefined,
 				bass_note: chord.bass_note !== undefined ? "/" + format_note(chord.bass_note) : undefined
 			};
@@ -202,11 +207,13 @@
 			class="chord-letter"
 		>
 			<div class="chord">
-				{{ chord?.note }}{{ chord?.descriptor?.text
-				}}<sup v-if="chord?.descriptor?.super !== undefined">{{ chord?.descriptor?.super }}</sup
+				{{ chord?.note
+				}}<template v-for="descriptor in chord?.descriptors" :key="descriptor"
+					>{{ descriptor.text
+					}}<sup v-if="descriptor?.super !== undefined">{{ descriptor?.super }}</sup></template
 				>{{ chord?.bass_note }}
 			</div>
-			<pre>{{ text_packet }}</pre>
+			<pre>{{ text_packet === "" ? " " : text_packet }}</pre>
 		</div>
 	</div>
 </template>
