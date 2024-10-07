@@ -76,8 +76,8 @@
 
 				// select the media-file
 				const potential_selection = media_directory_stack.value
-					.slice(-1)[0]
-					?.children?.filter((ff) => ff.name === dir_stack.slice(-1)[0])[0];
+					.at(-1)
+					?.children?.filter((ff) => ff.name === dir_stack.at(-1))[0];
 
 				if (potential_selection !== undefined && !potential_selection?.type) {
 					media_selection.value = potential_selection;
@@ -124,7 +124,7 @@
 
 		// if the last isn't empty, add another one
 		if (text_parts.value.length > 0) {
-			if (!is_empty_part(text_parts.value.slice(-1)[0])) {
+			if (!is_empty_part(text_parts.value.at(-1))) {
 				text_parts.value.push({
 					part: "",
 					text: [["", "", "", ""]]
@@ -138,8 +138,13 @@
 		}
 	}
 
-	function is_empty_part(part: SongTextPart): boolean {
+	/**
+	 * Checks wether a part is empty
+	 * @param part
+	 */
+	function is_empty_part(part: SongTextPart | undefined): boolean {
 		return (
+			part !== undefined &&
 			part.part.length === 0 &&
 			part.text.every((part) =>
 				part.every((text, index) => index >= metadata.value.LangCount || text.length === 0)
@@ -201,7 +206,7 @@
 
 		// if the directory-stack is filled, use its top-most as the path
 		if (song_directory_stack.value.length > 0) {
-			save_path = song_directory_stack.value.slice(-1)[0].path + "/" + save_path;
+			save_path = song_directory_stack.value.at(-1)?.path + "/" + save_path;
 		}
 
 		const id = Globals.add_confirm((state: boolean) => {

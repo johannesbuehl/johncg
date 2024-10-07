@@ -414,7 +414,7 @@ export default class SongFile {
 				text_slide[line_counter].push({ lang: lang_counter, text: ll });
 
 				// store the chords
-				chord_slide[line_counter].push({ lang: lang_counter, chords: chords?.[line_number] ?? [] });
+				chord_slide[line_counter].push({ lang: lang_counter, chords: chords?.[line_number] ?? {} });
 				line_number++;
 
 				lang_counter++;

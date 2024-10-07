@@ -88,7 +88,7 @@
 
 		// if the last slide isn't empty, add another one
 		if (psalm_text.value.length > 0) {
-			if (!is_empty_slide(psalm_text.value.slice(-1)[0])) {
+			if (!is_empty_slide(psalm_text.value.at(-1))) {
 				psalm_text.value.push([
 					{
 						text: "",
@@ -104,8 +104,8 @@
 		}
 	}
 
-	function is_empty_slide(part: PsalmTextBlock[]): boolean {
-		return part.every((block) => block.text.length === 0);
+	function is_empty_slide(part: PsalmTextBlock[] | undefined): boolean {
+		return part !== undefined && part.every((block) => block.text.length === 0);
 	}
 
 	watch(
@@ -130,7 +130,7 @@
 
 		// if the directory-stack is filled, use its top-most as the path
 		if (directory_stack.value.length > 0) {
-			save_path = directory_stack.value.slice(-1)[0].path + "/" + save_path;
+			save_path = directory_stack.value.at(-1)?.path + "/" + save_path;
 		}
 
 		const id = Globals.add_confirm((state: boolean) => {

@@ -28,7 +28,7 @@
 
 	import * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "@server/search_part";
+	import type { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "@server/search_part_types";
 
 	library.add(fas.faCheck, fas.faXmark);
 
@@ -83,6 +83,10 @@
 		}
 	);
 
+	/**
+	 * requests the item-slides for a given item-dinex
+	 * @param index number of the item
+	 */
 	function request_item_slides(index: number) {
 		Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 			command: "request_item_slides",
@@ -91,6 +95,10 @@
 		});
 	}
 
+	/**
+	 * sets the selected item
+	 * @param item
+	 */
 	function select_item(item: number) {
 		if (
 			playlist_items.value?.playlist_items[item].displayable ||
@@ -104,6 +112,9 @@
 		}
 	}
 
+	/**
+	 * opens a websocket to the server
+	 */
 	function ws_connect() {
 		const url = new URL(document.URL);
 
@@ -166,9 +177,13 @@
 		Globals.ws?.ws.addEventListener("ping", () => {});
 
 		Globals.ws?.ws.addEventListener("error", (event: Event) => {
-			Globals.message.error(
-				`Server connection encountered error '${(event as ErrorEvent).message}'. Closing socket`
-			);
+			if (Globals.server_connection.value !== ServerConnection.Disconnected) {
+				const message: string | undefined = (event as ErrorEvent).message;
+
+				Globals.message.error(
+					`Server connection encountered error${!!message ? ` '${message}''` : ""}. Closing socket`
+				);
+			}
 
 			Globals.ws?.ws.close();
 		});

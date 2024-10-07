@@ -5,10 +5,10 @@ import { ControlWindowState } from "./Enums";
 import * as JCGPRecv from "@server/JCGPReceiveMessages";
 import type * as JCGPSend from "@server/JCGPSendMessages";
 import { LogLevel } from "@server/JCGPSendMessages";
-import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "@server/search_part";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
 import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 import { random_id } from "@server/lib";
+import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "@server/search_part_types";
 
 export interface LogMessage {
 	message: string;
@@ -124,9 +124,12 @@ class Global {
 
 	// ControlWindowState
 	private control_window_state = ref<ControlWindowState[]>([ControlWindowState.Slides]);
+	/**
+	 * Retrieves the current control-window-state
+	 */
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	get ControlWindowState(): ControlWindowState {
-		return this.control_window_state.value.slice(-1)[0];
+	get ControlWindowState(): ControlWindowState | undefined {
+		return this.control_window_state.value.at(-1);
 	}
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	set ControlWindowState(state: ControlWindowState) {

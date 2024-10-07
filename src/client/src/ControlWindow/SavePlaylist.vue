@@ -35,7 +35,7 @@
 			playlist_file.value ?? {
 				path:
 					(file_dialogue_directory_stack.value.length > 0
-						? file_dialogue_directory_stack.value.slice(-1)[0].path + "/"
+						? file_dialogue_directory_stack.value.at(-1)?.path + "/"
 						: "") +
 					playlist_file_name.value +
 					".jcg",
