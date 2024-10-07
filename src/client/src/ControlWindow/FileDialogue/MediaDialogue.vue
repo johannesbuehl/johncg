@@ -7,7 +7,7 @@
 	import Globals from "@/Globals";
 
 	import type { MediaProps } from "@server/PlaylistItems/Media";
-	import type { CasparFile, Directory, Node } from "@server/search_part_types";
+	import { type CasparFile, type Directory, type Node, NodeType } from "@server/search_part_types";
 
 	// const props =
 	defineProps<{
@@ -37,20 +37,28 @@
 			// if the directory-stack is populated, use it
 			let files: Node<"media">[];
 			if (directory_stack.value.length > 0) {
-				files = directory_stack.value.slice(-1)?.[0].children ?? [];
+				files = directory_stack.value.at(-1)?.children ?? [];
 			} else {
 				files = Globals.get_media_files();
 			}
 
-			Globals.get_thumbnails(files.filter((ff) => !ff.type) as CasparFile[]);
+			get_media_thumbnails(files);
 		},
 		{ immediate: true }
 	);
 
-	function get_media_thumbnails(files: Node<"media">[] | undefined) {
-		const request_files: CasparFile[] = (files ?? Globals.get_media_files()).filter(
-			(ff) => !ff.type
-		) as CasparFile[];
+	/**
+	 * requests all thumbnails for the given files and their (nested) children
+	 * @param files to retrieve the thumbnails for
+	 */
+	function get_media_thumbnails(files: Node<"media">[]) {
+		const request_files: CasparFile[] = (files ?? Globals.get_media_files()).filter((ff) => {
+			if (ff.type === NodeType.Directory) {
+				get_media_thumbnails(ff.children);
+			} else if (ff.type === NodeType.File) {
+				return true;
+			}
+		}) as CasparFile[];
 
 		Globals.get_thumbnails(request_files);
 	}
@@ -73,8 +81,8 @@
 		@refresh_files="() => Globals.get_media_files(true)"
 		@choose="
 			(file) => {
-				if (file?.type) {
-					get_media_thumbnails(file.children);
+				if (file?.type === NodeType.Directory) {
+					// get_media_thumbnails(file.children);
 				}
 
 				$emit('choose', file as CasparFile);

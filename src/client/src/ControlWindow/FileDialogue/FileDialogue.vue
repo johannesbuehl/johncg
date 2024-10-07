@@ -46,7 +46,7 @@
 	 */
 	export function sort_files<K extends keyof ItemFileMap>(
 		files: ItemNodeMapped<K>[]
-	): ItemNodeMapped<K>[] {
+	): ItemFileMapped<K>[] {
 		return files
 			?.filter((fil) => fil.type === NodeType.File)
 			.sort((a, b) => {
@@ -62,6 +62,31 @@
 					}
 				}
 			});
+	}
+
+	/**
+	 * Sort the directories before the files and in alphabetical order
+	 * @param files files-list with files and directories
+	 * @returns files and directories of files sorted
+	 */
+	export function sort<K extends keyof ItemFileMap>(
+		files: ItemNodeMapped<K>[]
+	): ItemNodeMapped<K>[] {
+		return files?.sort((a, b) => {
+			if (a.type !== b.type) {
+				return a.type === NodeType.Directory ? -1 : 0;
+			} else {
+				if (a.name === b.name) {
+					return 0;
+				} else {
+					if ([a.name, b.name].sort()[0] === a.name) {
+						return -1;
+					} else {
+						return 1;
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -211,6 +236,31 @@
 	}
 
 	/**
+	 * retrieves the nodes of the current directory and all it's children
+	 * @param files files to be scanned through
+	 * @returns all the nested nodes sorted by type and name
+	 */
+	function get_nodes_recursive(files?: Node<T>[]): ItemFileMapped<T>[] {
+		const current_nodes: ItemFileMapped<T>[] = [];
+
+		files ??= file_tree.value ?? get_dirstack_top_dir()?.children ?? props.files;
+
+		current_nodes.push(
+			...(sort(files)
+				.map((ff) => {
+					if (ff.type === NodeType.Directory) {
+						return get_nodes_recursive(ff.children);
+					} else {
+						return ff;
+					}
+				})
+				.flat() as ItemFileMapped<T>[])
+		);
+
+		return current_nodes;
+	}
+
+	/**
 	 * handles file- and dir-selections
 	 * @param file chosen file
 	 */
@@ -247,7 +297,7 @@
 	function search_string(files: Node<T>[]): Node<T>[] | undefined {
 		// if there are no search-strings, clear the (potential) active search-node from the directory-stack
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
-			if (directory_stack.value.slice(-1)[0]?.type === NodeType.Search) {
+			if (directory_stack.value.at(-1)?.type === NodeType.Search) {
 				directory_stack.value.pop();
 			}
 
@@ -287,14 +337,14 @@
 			children: return_files,
 			type: NodeType.Search,
 			name: "Search",
-			path: directory_stack.value.slice(-1)[0]?.path ?? "",
+			path: directory_stack.value.at(-1)?.path ?? "",
 			search_params: search_param_clone
 		};
 
 		emit("choose", search);
 
 		// append the search to the directory-stack
-		if (directory_stack.value.slice(-1)[0]?.type !== NodeType.Search) {
+		if (directory_stack.value.at(-1)?.type !== NodeType.Search) {
 			directory_stack.value.push(search);
 		} else {
 			directory_stack.value[directory_stack.value.length - 1] = search;
@@ -337,9 +387,9 @@
 		directory_stack.value.splice(dir_index + 1, directory_stack.value.length);
 
 		// if the clicked directory-stack-element is a search-query, populate the search-definitions
-		const clicked_dirstack_element = directory_stack.value.slice(-1)[0];
+		const clicked_dirstack_element = directory_stack.value.at(-1);
 
-		if (clicked_dirstack_element.type === NodeType.Search) {
+		if (clicked_dirstack_element?.type === NodeType.Search) {
 			search_strings.value.forEach(
 				(search_string, ii) => (search_string.value = clicked_dirstack_element.search_params[ii])
 			);
@@ -505,7 +555,7 @@
 							delay="250"
 						>
 							<template
-								v-for="(element, element_index) of sort_files(get_current_files())"
+								v-for="(element, element_index) of get_nodes_recursive()"
 								:key="element_index"
 							>
 								<PlaylistItemDummy
