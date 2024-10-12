@@ -17,7 +17,10 @@
 
 	const active_slide = ref<number>(0);
 
-	// CasparCG-function: transmits data
+	/**
+	 * CasparCG-function used for updating the template-data
+	 * @param s_data stringified json-data-object
+	 */
 	function update(s_data: string) {
 		let recieved_data: SongTemplateMessage & { mute_transition: boolean };
 		// parse the transferred data into json
@@ -44,28 +47,41 @@
 		}
 	}
 
+	/**
+	 * loads a song
+	 * @param recieved_data song-data
+	 */
 	function load_song(recieved_data: SongTemplateData & { mute_transition: boolean }) {
 		data.value = recieved_data;
 
 		active_slide.value = data.value.slide;
 	}
 
-	// CasparCG-function: displays the template
+	/**
+	 * CasparCG-function: displays the template
+	 */
 	function play() {
 		visible.value = true;
 	}
 
-	// CasparCG-function: advances to the next step
+	/**
+	 * CasparCG-function: advances to the next step
+	 */
 	function next() {
 		jump(active_slide.value + 1);
 	}
 
-	// custom-function (through invoke): jump to an arbitrary slide
+	/**
+	 * custom-function (through invoke): jump to an arbitrary slide
+	 * @param counter_raw number to jump to
+	 */
 	function jump(counter_raw: number) {
 		active_slide.value = counter_raw;
 	}
 
-	// CasparCG-function: hide the template
+	/**
+	 * CasparCG-function: hide the template
+	 */
 	function stop() {
 		visible.value = false;
 	}

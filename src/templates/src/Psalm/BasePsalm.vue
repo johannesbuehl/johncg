@@ -21,7 +21,10 @@
 
 	const active_slide = ref<number>(0);
 
-	// CasparCG-function: transmits data
+	/**
+	 * CasparCG-function: updates the template-data
+	 * @param s_data stringified json-data-object
+	 */
 	function update(s_data: string) {
 		let recieved_data: PsalmTemplateMessage & { mute_transition: boolean };
 		// parse the transferred data into json
@@ -48,28 +51,41 @@
 		}
 	}
 
+	/**
+	 * loads a psalm
+	 * @param recieved_data psalm-template-data-object
+	 */
 	function load_psalm(recieved_data: PsalmTemplateData & { mute_transition: boolean }) {
 		data.value = recieved_data;
 
 		active_slide.value = data.value.slide;
 	}
 
-	// CasparCG-function: displays the template
+	/**
+	 * CasparCG-function: displays the template
+	 */
 	function play() {
 		visible.value = true;
 	}
 
-	// CasparCG-function: advances to the next step
+	/**
+	 * CasparCG-function: advances to the next step
+	 */
 	function next() {
 		jump(active_slide.value + 1);
 	}
 
-	// custom-function (through invoke): jump to an arbitrary slide
+	/**
+	 * custom-function (through invoke): jump to an arbitrary slide
+	 * @param counter_raw slide-counter to jump to
+	 */
 	function jump(counter_raw: number) {
 		active_slide.value = counter_raw;
 	}
 
-	// CasparCG-function: hide the template
+	/**
+	 * CasparCG-function: hide the template
+	 */
 	function stop() {
 		visible.value = false;
 	}

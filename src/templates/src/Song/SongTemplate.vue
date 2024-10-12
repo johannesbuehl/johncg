@@ -17,7 +17,11 @@
 	const ready = ref<boolean>(false);
 
 	let slide_count = 0;
-	function get_slide_index(): number {
+	/**
+	 * gets the current slide-count and increases it
+	 * @returns current slide-count
+	 */
+	function get_inc_slide_index(): number {
 		return slide_count++;
 	}
 
@@ -65,7 +69,7 @@
 			<div
 				v-if="part.type === 'title'"
 				class="slide title"
-				v-show="ready && get_slide_index() === active_slide"
+				v-show="ready && get_inc_slide_index() === active_slide"
 			>
 				<div id="title_container">
 					<div
@@ -84,7 +88,7 @@
 				v-else-if="part.type === 'lyric'"
 				v-for="(slide, slide_index) of part.slides"
 				:key="slide_index"
-				v-show="!ready || get_slide_index() === active_slide"
+				v-show="!ready || get_inc_slide_index() === active_slide"
 				class="slide lyrics"
 				ref="lyric_slides"
 			>

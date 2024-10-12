@@ -13,11 +13,19 @@
 	}>();
 
 	let block_count = 0;
+	/**
+	 * retrieves the current indentations level and changes it
+	 * @returns current indentation level
+	 */
 	function get_indent(): boolean {
 		return props.data.data.metadata.indent && block_count++ % 2 === 1;
 	}
 	let slide_number = 0;
-	function get_slide_number(): number {
+	/**
+	 * gets and increases the current slide-number
+	 * @returns current slide-number
+	 */
+	function get_inc_slide_number(): number {
 		return slide_number++;
 	}
 
@@ -36,7 +44,7 @@
 		<div
 			v-for="(slide, slide_index) of data.data.text"
 			:key="slide_index"
-			v-show="active_slide === get_slide_number()"
+			v-show="active_slide === get_inc_slide_number()"
 			class="slide"
 		>
 			<div

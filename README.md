@@ -22,6 +22,8 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - use http-status-codes in answer to client
 - create new demo-song-file with casparcg-editor
 - test changed pandoc-installer (win and linux)
+- add-song to playlist after creation
+- navigating while searching: clear search
 
 ## Planned
 - reenable eslint vue-indent

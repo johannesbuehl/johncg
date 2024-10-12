@@ -789,6 +789,8 @@
 
 	.verse_part {
 		padding: 0.25rem;
+
+		cursor: pointer;
 	}
 
 	.verse_part.selected {

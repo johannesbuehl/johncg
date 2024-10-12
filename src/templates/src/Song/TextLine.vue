@@ -20,6 +20,12 @@
 		transpose_steps?: number;
 	}>();
 
+	/**
+	 * constructs an object-array for the text-line
+	 * @param lang text of the line
+	 * @param chords chords for the line
+	 * @returns text-packets with their chords
+	 */
 	function create_text_line(
 		lang: string,
 		chords?: Record<number, Chord>
@@ -137,56 +143,69 @@
 		return return_snippets;
 	}
 
+	const note_replacer = {
+		/* eslint-disable @typescript-eslint/naming-convention */
+		"<": "♭",
+		"=": "♮",
+		"#": "♯"
+		/* eslint-enablee @typescript-eslint/naming-convention */
+	};
+	/**
+	 * inserts correct sharp and flat symbols
+	 * @param note
+	 * @returns formatted note
+	 */
+	function format_note(note: string): string {
+		Object.entries(note_replacer).forEach(
+			([pattern, replacement]) => (note = note.replace(pattern, replacement))
+		);
+
+		return note;
+	}
+
+	const descriptor_replacer = {
+		M: "maj"
+	};
+	/**
+	 * formats the descriptors of the chord
+	 * @param descriptor string of all the descriptors of the chord
+	 * @returns array of the individual descriptors prepared for rendering
+	 */
+	function format_descriptors(descriptor: string): Required<RenderChord>["descriptors"] {
+		const descriptors_array: Required<RenderChord>["descriptors"] = [];
+
+		[...descriptor].forEach((c) => {
+			const descriptor_object: ChordDescriptor = {};
+
+			if (parseInt(c)) {
+				descriptor_object.super = c;
+			} else {
+				descriptor_object.text = c;
+			}
+
+			descriptors_array.push(descriptor_object);
+		});
+
+		Object.entries(descriptor_replacer).forEach(([pattern, replacement]) => {
+			descriptors_array.forEach(
+				(descriptor) => (descriptor.text = descriptor.text?.replace(pattern, replacement))
+			);
+		});
+
+		return descriptors_array;
+	}
+
 	function format_chord(chord: Chord): RenderChord;
 	function format_chord(chord: undefined): undefined;
+	/**
+	 * formats a chord for rendering
+	 * @param chord chord-object
+	 * @returns chord split into individual parts used for rendering
+	 */
 	function format_chord(chord: Chord | undefined): RenderChord | undefined {
 		if (chord === undefined) {
 			return undefined;
 		} else {
-			function format_note(note: string): string {
-				const note_replacer = {
-					/* eslint-disable @typescript-eslint/naming-convention */
-					"<": "♭",
-					"=": "♮",
-					"#": "♯"
-					/* eslint-enablee @typescript-eslint/naming-convention */
-				};
-
-				Object.entries(note_replacer).forEach(
-					([pattern, replacement]) => (note = note.replace(pattern, replacement))
-				);
-
-				return note;
-			}
-
-			function format_descriptors(descriptor: string): Required<RenderChord>["descriptors"] {
-				const descriptors_array: Required<RenderChord>["descriptors"] = [];
-
-				const descriptor_replacer = {
-					M: "maj"
-				};
-
-				[...descriptor].forEach((c) => {
-					const descriptor_object: ChordDescriptor = {};
-
-					if (parseInt(c)) {
-						descriptor_object.super = c;
-					} else {
-						descriptor_object.text = c;
-					}
-
-					descriptors_array.push(descriptor_object);
-				});
-
-				Object.entries(descriptor_replacer).forEach(([pattern, replacement]) => {
-					descriptors_array.forEach(
-						(descriptor) => (descriptor.text = descriptor.text?.replace(pattern, replacement))
-					);
-				});
-
-				return descriptors_array;
-			}
-
 			return {
 				note: format_note(chord.note),
 				descriptors:
