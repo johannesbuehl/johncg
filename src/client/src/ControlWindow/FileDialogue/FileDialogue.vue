@@ -393,6 +393,9 @@
 			search_strings.value.forEach(
 				(search_string, ii) => (search_string.value = clicked_dirstack_element.search_params[ii])
 			);
+		} else {
+			// if it isn't a search, clear the search
+			search_strings.value.forEach((search_string) => (search_string.value = ""));
 		}
 	}
 </script>

@@ -23,7 +23,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create new demo-song-file with casparcg-editor
 - test changed pandoc-installer (win and linux)
 - add-song to playlist after creation
-- navigating while searching: clear search
+- file-dialogu search: filter thumbnails
 
 ## Planned
 - reenable eslint vue-indent
