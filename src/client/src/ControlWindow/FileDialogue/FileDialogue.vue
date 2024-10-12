@@ -213,7 +213,7 @@
 	watch(
 		() => search_strings.value,
 		() => {
-			file_tree.value = search_string(get_current_files(true));
+			file_tree.value = process_search_mask(get_current_files(true));
 		},
 		{ deep: true }
 	);
@@ -240,7 +240,7 @@
 	 * @param files files to be scanned through
 	 * @returns all the nested nodes sorted by type and name
 	 */
-	function get_nodes_recursive(files?: Node<T>[]): ItemFileMapped<T>[] {
+	function get_nodes_recursive(files?: Node<T>[], search: boolean = true): ItemFileMapped<T>[] {
 		const current_nodes: ItemFileMapped<T>[] = [];
 
 		files ??= file_tree.value ?? get_dirstack_top_dir()?.children ?? props.files;
@@ -249,11 +249,16 @@
 			...(sort(files)
 				.map((ff) => {
 					if (ff.type === NodeType.Directory) {
-						return get_nodes_recursive(ff.children);
+						return get_nodes_recursive(ff.children, search || search_string(ff));
 					} else {
-						return ff;
+						if (search_string(ff)) {
+							return ff;
+						} else {
+							return undefined;
+						}
 					}
 				})
+				.filter((ff) => ff !== undefined)
 				.flat() as ItemFileMapped<T>[])
 		);
 
@@ -290,11 +295,32 @@
 	}
 
 	/**
+	 * check wether a file matches the current search
+	 * @param file file to check against the search
+	 * @returns wether the current-search matches the file
+	 */
+	function search_string(file: Node<T>): boolean {
+		// if there are no search-strings, the file matches
+		if (search_strings.value.every((search_string) => search_string.value === "")) {
+			return true;
+		}
+
+		// check if atleast one of the search-filters matches the file
+		return search_strings.value.some((search_string) => {
+			// only proceed if the search_box isn't empty
+			if (search_string.value !== "") {
+				return search_string.get(file).toLowerCase().includes(search_string.value.toLowerCase());
+			} else {
+				return false;
+			}
+		});
+	}
+	/**
 	 * process the search-mask
-	 * @param files files to be searched trhough
+	 * @param files files to be searched through
 	 * @returns search-result
 	 */
-	function search_string(files: Node<T>[]): Node<T>[] | undefined {
+	function process_search_mask(files: Node<T>[], recurse: boolean = true): Node<T>[] | undefined {
 		// if there are no search-strings, clear the (potential) active search-node from the directory-stack
 		if (search_strings.value.every((search_string) => search_string.value === "")) {
 			if (directory_stack.value.at(-1)?.type === NodeType.Search) {
@@ -308,22 +334,13 @@
 		// check all the given files
 		files.forEach((ff) => {
 			// if atleast one of the search-strings matches, use the file and all it's children
-			if (
-				search_strings.value.some((search_string) => {
-					// only proceed if the search_box isn't empty
-					if (search_string.value !== "") {
-						return search_string.get(ff).toLowerCase().includes(search_string.value.toLowerCase());
-					} else {
-						return false;
-					}
-				})
-			) {
+			if (search_string(ff)) {
 				return_files.push(ff);
 			}
 
 			// search the children too
-			if (ff.type) {
-				const results = search_string(ff.children);
+			if (recurse && ff.type) {
+				const results = process_search_mask(ff.children);
 
 				if (results && results.length > 0) {
 					return_files.push(...results);
