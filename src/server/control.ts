@@ -375,7 +375,7 @@ export default class Control {
 
 		switch (message.type) {
 			case "song":
-				test_result &&= !!validate_song_data(message.data);
+				test_result &&= validate_song_data(message.data);
 				break;
 			case "psalm":
 				test_result &&= validate_psalm_file(message.data);

@@ -96,6 +96,13 @@ export interface ClientSettings {
 }
 
 class Global {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	private _client_id = random_id();
+
+	get client_id() {
+		return this._client_id;
+	}
+
 	// Settings
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private _settings: ClientSettings = {
@@ -397,7 +404,8 @@ class Global {
 	follow_all_navigates = ref<boolean>(false);
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
+/* eslint-disable @typescript-eslint/naming-convention */
 const Globals = new Global();
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export default Globals;

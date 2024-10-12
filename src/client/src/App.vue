@@ -5,13 +5,6 @@
 	}
 
 	export type ItemData = { [key in JCGPRecv.GetItemData["type"]]?: ItemFileMapped<key> };
-
-	const random_4_hex = () =>
-		Math.floor((1 + Math.random()) * 0x10000)
-			.toString(16)
-			.substring(1);
-	export const random_id = () =>
-		`${random_4_hex()}-${random_4_hex()}-${random_4_hex()}-${random_4_hex()}`;
 </script>
 
 <script setup lang="ts">
@@ -91,7 +84,7 @@
 		Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 			command: "request_item_slides",
 			item: index,
-			client_id
+			client_id: Globals.client_id
 		});
 	}
 
@@ -242,7 +235,7 @@
 		if (
 			Globals.follow_all_navigates.value ||
 			(data.active_item_slide !== undefined &&
-				(data.client_id === client_id || selected_item.value === -1))
+				(data.client_id === Globals.client_id || selected_item.value === -1))
 		) {
 			selected_item.value = data.active_item_slide?.item ?? null;
 		}
@@ -263,7 +256,7 @@
 			command: "select_item_slide",
 			item: item,
 			slide,
-			client_id: client_id
+			client_id: Globals.client_id
 		});
 	}
 
@@ -378,13 +371,12 @@
 			}
 		}
 	}
-	const client_id = random_id();
 </script>
 
 <template>
 	<div id="main_window">
 		<ControlWindow
-			:client_id="client_id"
+			:client_id="Globals.client_id"
 			:server_state="server_state"
 			:playlist="playlist_items"
 			:slides="item_slides"
