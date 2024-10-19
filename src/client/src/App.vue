@@ -233,9 +233,10 @@
 
 		// if auto_follow is active, the client_id is ours or currently no item is selected, set the selected to the active
 		if (
-			Globals.follow_all_navigates.value ||
-			(data.active_item_slide !== undefined &&
-				(data.client_id === Globals.client_id || selected_item.value === -1))
+			data.active_item_slide !== undefined &&
+			(Globals.follow_all_navigates.value ||
+				data.client_id === Globals.client_id ||
+				selected_item.value === -1)
 		) {
 			selected_item.value = data.active_item_slide?.item ?? null;
 		}
