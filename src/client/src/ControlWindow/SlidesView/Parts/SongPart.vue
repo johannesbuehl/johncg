@@ -5,14 +5,13 @@
 
 	import SongTemplate from "@templates/Song/SongTemplate.vue";
 
-	import type { ActiveItemSlide } from "@server/Playlist";
+	import Globals from "@/Globals";
 	import type { SongTemplateData } from "@server/PlaylistItems/Song";
 	import type { ClientSongSlides } from "@server/PlaylistItems/Song";
 
 	const props = defineProps<{
 		slides: ClientSongSlides;
 		aspect_ratio: string;
-		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();
 
@@ -65,12 +64,12 @@
 	function is_active(part: number, part_slide?: number): boolean {
 		create_part_slide_map();
 
-		if (props.active_item_slide !== undefined && props.active_item_slide.slide !== null) {
+		if (Globals.active_item_slide !== undefined && Globals.active_item_slide.slide !== null) {
 			if (part_slide !== undefined) {
-				return props.active_item_slide?.slide === part_slide_map[part][part_slide];
+				return Globals.active_item_slide?.slide === part_slide_map[part][part_slide];
 			} else {
-				if (typeof props.active_item_slide?.slide === "number") {
-					return part_slide_map[part].includes(props.active_item_slide.slide);
+				if (typeof Globals.active_item_slide?.slide === "number") {
+					return part_slide_map[part].includes(Globals.active_item_slide.slide);
 				} else {
 					return false;
 				}

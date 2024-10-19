@@ -38,10 +38,7 @@
 		}
 	};
 
-	const server_state = ref<JCGPSend.State>({ command: "state", server_id: "" });
 	const playlist_items = ref<JCGPSend.Playlist>();
-	const item_slides = ref<JCGPSend.ItemSlides>();
-	const selected_item = ref<number | null>(null);
 
 	const playlist_caption = ref<string>("");
 
@@ -50,7 +47,7 @@
 	ws_connect();
 
 	// watch for changes in item-selection
-	watch(selected_item, (new_selection) => {
+	watch(Globals.selected_item, (new_selection) => {
 		// only request the slides, if they are actually shown
 		if (
 			Globals.ControlWindowState === ControlWindowState.Slides &&
@@ -59,7 +56,7 @@
 			request_item_slides(new_selection);
 		} else {
 			// else: delete the stored item-slides
-			item_slides.value = undefined;
+			Globals._item_slides.value = undefined;
 		}
 	});
 
@@ -67,11 +64,11 @@
 		() => Globals.ControlWindowState,
 		() => {
 			// if the new control-window-state is the playlist, request the slides
-			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
-				request_item_slides(selected_item.value);
+			if (Globals.ControlWindowState === ControlWindowState.Slides && Globals.selected_item.value) {
+				request_item_slides(Globals.selected_item.value);
 			} else {
 				// else delete the stored slides
-				item_slides.value = undefined;
+				Globals._item_slides.value = undefined;
 			}
 		}
 	);
@@ -97,11 +94,11 @@
 			playlist_items.value?.playlist_items[item].displayable ||
 			Globals.ControlWindowState === ControlWindowState.Edit
 		) {
-			if (selected_item.value === item) {
+			if (Globals.selected_item.value === item) {
 				request_item_slides(item);
 			}
 
-			selected_item.value = item;
+			Globals.selected_item.value = item;
 		}
 	}
 
@@ -141,11 +138,11 @@
 				throw new TypeError("server-id is invalid");
 			}
 			// if the connection is new / no server-id is stored, save it
-			if (server_state.value.server_id === "") {
-				server_state.value.server_id = data.server_id;
+			if (Globals.server_state.value?.server_id === "") {
+				Globals.server_state.value.server_id = data.server_id;
 			}
 			// if the server-id is new, reload the page
-			if (server_state.value.server_id !== data.server_id) {
+			if (Globals.server_state.value?.server_id !== data.server_id) {
 				window.location.reload();
 			}
 
@@ -198,18 +195,18 @@
 
 		// if it is a new-playlist, reset the selected-item to the first one
 		if (data.new) {
-			selected_item.value = data.playlist_items.length > 0 ? 0 : null;
+			Globals.selected_item.value = data.playlist_items.length > 0 ? 0 : null;
 		}
 
 		// if the playlist is empty, clear the slides-view
 		if (data.playlist_items.length === 0) {
-			item_slides.value = undefined;
+			Globals._item_slides.value = undefined;
 		} else {
 			// request new slides for the selected item
-			if (Globals.ControlWindowState === ControlWindowState.Slides && selected_item.value) {
+			if (Globals.ControlWindowState === ControlWindowState.Slides && Globals.selected_item.value) {
 				Globals.ws?.send<JCGPRecv.RequestItemSlides>({
 					command: "request_item_slides",
-					item: selected_item.value
+					item: Globals.selected_item.value
 				});
 			}
 		}
@@ -236,20 +233,20 @@
 			data.active_item_slide !== undefined &&
 			(Globals.follow_all_navigates.value ||
 				data.client_id === Globals.client_id ||
-				selected_item.value === -1)
+				Globals.selected_item.value === -1)
 		) {
-			selected_item.value = data.active_item_slide?.item ?? null;
+			Globals.selected_item.value = data.active_item_slide?.item ?? null;
 		}
 
 		// merge the objects, to keep states, that aren't transmitted this time
-		server_state.value = {
-			...server_state.value,
+		Globals.server_state.value = {
+			...Globals.server_state.value,
 			...data
 		};
 	}
 
 	function load_item_slides(data: JCGPSend.ItemSlides) {
-		item_slides.value = data;
+		Globals._item_slides.value = data;
 	}
 
 	function set_active_slide(item: number, slide: number) {
@@ -378,11 +375,7 @@
 	<div id="main_window">
 		<ControlWindow
 			:client_id="Globals.client_id"
-			:server_state="server_state"
 			:playlist="playlist_items"
-			:slides="item_slides"
-			:active_item_slide="server_state.active_item_slide"
-			:selected="selected_item"
 			:playlist_caption="playlist_caption"
 			:item_data="item_data"
 			@select_item="select_item"

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPDFSlides } from "@server/PlaylistItems/PDF";
+
+	import Globals from "@/Globals";
 
 	defineProps<{
 		slide?: ClientPDFSlides;
 		aspect_ratio: string;
-		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();
 
@@ -38,7 +38,7 @@
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: active_item_slide?.item !== undefined }"
+			:class="{ active: Globals.active_item_slide?.item !== undefined }"
 			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.title }}
@@ -49,7 +49,7 @@
 				:key="index"
 				:media="_media"
 				:aspect_ratio="aspect_ratio"
-				:active="index === active_item_slide?.slide"
+				:active="index === Globals.active_item_slide?.slide"
 				:scroll="scroll"
 				@on_loaded="template_loaded($event, index)"
 				@click="emit('select_slide', index)"

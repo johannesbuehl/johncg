@@ -3,12 +3,13 @@ import { ref } from "vue";
 import { ControlWindowState } from "./Enums";
 
 import * as JCGPRecv from "@server/JCGPReceiveMessages";
-import type * as JCGPSend from "@server/JCGPSendMessages";
+import * as JCGPSend from "@server/JCGPSendMessages";
 import { LogLevel } from "@server/JCGPSendMessages";
 import type { BibleFile } from "@server/PlaylistItems/Bible";
 import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
 import { random_id } from "@server/lib";
 import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "@server/search_part_types";
+import type { ActiveItemSlide } from "@server/Playlist";
 
 export interface LogMessage {
 	message: string;
@@ -101,6 +102,33 @@ class Global {
 
 	get client_id() {
 		return this._client_id;
+	}
+
+	server_state = ref<JCGPSend.State>({ command: "state", server_id: "" });
+
+	get active_item_slide(): ActiveItemSlide | undefined {
+		return this.server_state.value?.active_item_slide;
+	}
+
+	selected_item = ref<number | null>(null);
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	_item_slides = ref<JCGPSend.ItemSlides>();
+
+	get_item_slides(): JCGPSend.ItemSlides | undefined {
+		if (
+			this.selected_item.value !== null &&
+			(this._item_slides.value === undefined ||
+				this._item_slides.value.item !== this.selected_item.value)
+		) {
+			this.ws?.send({
+				command: "request_item_slides",
+				item: this.selected_item.value,
+				client_id: this.client_id
+			});
+		} else {
+			return this._item_slides.value;
+		}
 	}
 
 	// Settings

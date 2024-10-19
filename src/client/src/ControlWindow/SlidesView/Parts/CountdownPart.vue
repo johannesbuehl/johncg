@@ -1,15 +1,15 @@
 <script setup lang="ts">
 	import type { ClientCountdownSlides } from "@server/PlaylistItems/Countdown";
 
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import CountdownTemplate from "@templates/Countdown/CountdownTemplate.vue";
+
 	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
+	import Globals from "@/Globals";
 
 	// const props =
 	defineProps<{
 		slide?: ClientCountdownSlides;
 		aspect_ratio: string;
-		active_item_slide?: ActiveItemSlide;
 	}>();
 
 	const emit = defineEmits<{
@@ -35,7 +35,7 @@
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: 0 === active_item_slide?.slide }"
+			:class="{ active: 0 === Globals.active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.title }}
@@ -45,7 +45,7 @@
 				v-if="slide !== undefined"
 				:media="slide.media"
 				:aspect_ratio="aspect_ratio"
-				:active="0 === active_item_slide?.slide"
+				:active="0 === Globals.active_item_slide?.slide"
 				@click="emit('select_slide', 0)"
 			>
 				<CountdownTemplate :data="slide.template.data" :mute_transition="true" />

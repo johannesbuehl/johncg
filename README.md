@@ -20,10 +20,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - use http-status-codes in answer to client
-- create new demo-song-file with casparcg-editor
 - test changed pandoc-installer (win and linux)
 - check all directories on config validation
-- song-file-save (active file) empty output and nothing in client selected
+- song-file-save (active file) empty output
 
 ## Planned
 - reenable eslint vue-indent

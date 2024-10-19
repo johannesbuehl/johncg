@@ -1,8 +1,7 @@
-﻿#LangCount=1
-#Title=Greensleeves
+﻿#Title=Greensleeves
+#LangCount=1
 #VerseOrder=Strophe 1,Refrain,Strophe 2,Refrain,Strophe 3,Refrain,Strophe 4,Refrain,Strophe 5,Refrain,Strophe 6,Refrain,Strophe 7,Refrain,Strophe 8,Refrain,Outro
-#Editor=SongBeamer 6.09b x64
-#Version=3
+#Editor=JohnCG 0.9.0-rc.1
 ---
 Strophe 1
 Alas, my love, you do me wrong,

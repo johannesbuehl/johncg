@@ -18,15 +18,10 @@
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
 
 	const props = defineProps<{
 		client_id: string;
-		server_state: JCGPSend.State;
 		playlist?: JCGPSend.Playlist;
-		slides?: JCGPSend.ItemSlides;
-		active_item_slide?: ActiveItemSlide;
-		selected: number | null;
 		playlist_caption: string;
 		item_data: ItemData;
 	}>();
@@ -58,8 +53,8 @@
 					navigate("slide", 1);
 					break;
 				case "KeyB":
-					if (props.server_state.visibility !== undefined) {
-						visibility(!props.server_state.visibility);
+					if (Globals.server_state.value?.visibility !== undefined) {
+						visibility(!Globals.server_state.value.visibility);
 					}
 					break;
 				default:
@@ -108,7 +103,7 @@
 
 <template>
 	<MenuBar
-		:visibility="server_state?.visibility ?? false"
+		:visibility="Globals.server_state.value?.visibility ?? false"
 		:playlist_caption="playlist_caption"
 		:playlist_path="playlist?.path"
 		@navigate="navigate"
@@ -129,9 +124,7 @@
 						Globals.ControlWindowState === ControlWindowState.Edit)
 				"
 				:playlist="playlist"
-				:selected="selected"
-				:active_item_slide="active_item_slide"
-				:scroll="client_id === server_state.client_id"
+				:scroll="client_id === Globals.server_state.value?.client_id"
 				@selection="emit('select_item', $event)"
 				@dragged="dragged"
 				@set_active="emit('select_slide', $event, 0)"
@@ -139,21 +132,22 @@
 			/>
 			<SlidesView
 				v-if="
-					typeof slides?.item === 'number' &&
+					typeof Globals.get_item_slides()?.item === 'number' &&
 					Globals.ControlWindowState === ControlWindowState.Slides
 				"
-				:slides="slides"
-				:active_item_slide="active_item_slide"
-				:scroll="client_id === server_state.client_id"
-				@select_slide="
-					slides?.item !== undefined ? emit('select_slide', slides.item, $event) : undefined
-				"
+				:slides="Globals.get_item_slides()"
+				:scroll="client_id === Globals.server_state.value?.client_id"
+				@select_slide="emit('select_slide', Globals.get_item_slides()!.item, $event)"
 			/>
 			<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
 			<EditPart
 				v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
-				:item_props="typeof selected === 'number' ? playlist?.playlist_items[selected] : undefined"
-				:item_index="selected"
+				:item_props="
+					typeof Globals.selected_item.value === 'number'
+						? playlist?.playlist_items[Globals.selected_item.value]
+						: undefined
+				"
+				:item_index="Globals.selected_item.value"
 				:item_data="item_data"
 			/>
 			<SongEditor v-else-if="Globals.ControlWindowState === ControlWindowState.NewSong" />

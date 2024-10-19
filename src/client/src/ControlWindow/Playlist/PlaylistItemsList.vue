@@ -12,7 +12,6 @@
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import * as JCGPRecv from "@server/JCGPReceiveMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPlaylistItem, ItemProps } from "@server/PlaylistItems/PlaylistItem";
 
 	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen, fas.faArrowRotateRight);
@@ -26,8 +25,6 @@
 
 	// const props =
 	defineProps<{
-		selected: number | null;
-		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();
 
@@ -149,8 +146,8 @@
 				ref="items_list"
 				:index="index"
 				:item_props="element"
-				:selected="selected === index"
-				:active="active_item_slide?.item === index"
+				:selected="Globals.selected_item.value === index"
+				:active="Globals.active_item_slide?.item === index"
 				:scroll="scroll"
 				@click="emit('selection', index)"
 				@dblclick="emit('set_active', index)"

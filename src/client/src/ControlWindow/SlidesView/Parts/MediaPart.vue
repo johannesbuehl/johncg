@@ -2,12 +2,11 @@
 	import type { ClientMediaProps } from "@server/PlaylistItems/Media";
 	import ItemSlide from "./ItemSlide.vue";
 
-	import type { ActiveItemSlide } from "@server/Playlist";
+	import Globals from "@/Globals";
 
 	defineProps<{
 		slide?: ClientMediaProps;
 		aspect_ratio: string;
-		active_item_slide?: ActiveItemSlide;
 	}>();
 
 	const emit = defineEmits<{
@@ -19,7 +18,7 @@
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: 0 === active_item_slide?.slide }"
+			:class="{ active: 0 === Globals.active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
 			{{ slide?.title }}
@@ -28,7 +27,7 @@
 			<ItemSlide
 				:media="slide?.media"
 				:aspect_ratio="aspect_ratio"
-				:active="0 === active_item_slide?.slide"
+				:active="0 === Globals.active_item_slide?.slide"
 				@click="emit('select_slide', 0)"
 			/>
 		</div>

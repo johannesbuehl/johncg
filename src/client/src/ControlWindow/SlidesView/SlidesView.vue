@@ -1,6 +1,5 @@
 <script setup lang="ts">
 	import type * as JCGPSend from "@server/JCGPSendMessages";
-	import type { ActiveItemSlide } from "@server/Playlist";
 
 	import SongPart from "./Parts/SongPart.vue";
 	import CountdownPart from "./Parts/CountdownPart.vue";
@@ -11,7 +10,6 @@
 
 	const props = defineProps<{
 		slides?: JCGPSend.ItemSlides;
-		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();
 
@@ -30,7 +28,6 @@
 			v-if="slides?.type === 'song'"
 			:slides="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"
 		/>
@@ -38,7 +35,6 @@
 			v-if="slides.type === 'psalm'"
 			:slides="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"
 		/>
@@ -46,28 +42,24 @@
 			v-if="slides?.type === 'countdown'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<MediaPart
 			v-if="slides?.type === 'media'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<TemplatePart
 			v-if="slides?.type === 'template' || slides?.type === 'bible'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<PDFPart
 			v-if="slides?.type === 'pdf'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
-			:active_item_slide="slides.item === active_item_slide?.item ? active_item_slide : undefined"
 			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"
 		/>

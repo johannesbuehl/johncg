@@ -1,46 +1,27 @@
 <script setup lang="ts">
-	import type { ActiveItemSlide } from "@server/Playlist";
 	import type { ClientPsalmSlides } from "@server/PlaylistItems/Psalm";
 	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 	import PsalmTemplate from "@templates/Psalm/PsalmTemplate.vue";
+
+	import Globals from "@/Globals";
 
 	// const props =
 	defineProps<{
 		slides: ClientPsalmSlides;
 		aspect_ratio: string;
-		active_item_slide?: ActiveItemSlide;
 		scroll?: boolean;
 	}>();
 
 	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
-
-	// interface CasparCGTemplate extends Window {
-	// 	update: (data_string: string) => void;
-	// 	play: () => void;
-	// 	stop: () => void;
-	// 	next: () => void;
-	// }
-
-	// interface JohnCGSongTemplate extends CasparCGTemplate {
-	// 	jump: (slide: number) => void;
-	// }
-
-	// function template_loaded(template_object: HTMLObjectElement, index: number) {
-	// 	const contentWindow: JohnCGSongTemplate = template_object.contentWindow as JohnCGSongTemplate;
-
-	// 	contentWindow.update(JSON.stringify({ ...props.slides.template.data, mute_transition: true }));
-	// 	contentWindow.jump(index);
-	// 	contentWindow.play();
-	// }
 </script>
 
 <template>
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: active_item_slide?.item !== undefined }"
+			:class="{ active: Globals.active_item_slide?.item !== undefined }"
 			@click="emit('select_slide', 0)"
 		>
 			{{ slides?.title }}
@@ -51,7 +32,7 @@
 				:key="index"
 				:media="slides.media"
 				:aspect_ratio="aspect_ratio"
-				:active="index === active_item_slide?.slide"
+				:active="index === Globals.active_item_slide?.slide"
 				:scroll="scroll"
 				@click="emit('select_slide', index)"
 			>
