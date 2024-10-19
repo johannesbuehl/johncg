@@ -660,12 +660,24 @@ export default class Control {
 
 		logger.log(`navigating ${type}: '${steps}' steps`);
 
-		switch (type) {
-			case "item":
-				this.playlist?.navigate_item(steps);
-				break;
-			case "slide":
-				this.playlist?.navigate_slide(steps);
+		try {
+			switch (type) {
+				case "item":
+					this.playlist?.navigate_item(steps);
+					break;
+				case "slide":
+					this.playlist?.navigate_slide(steps);
+			}
+		} catch (e) {
+			if (e instanceof TypeError) {
+				ws_send_response(`invalid request: "${e.message}"`, false, ws);
+			} else if (e instanceof RangeError) {
+				ws_send_response(`invalid request: "${e.message}"`, false, ws);
+			} else {
+				throw e;
+			}
+
+			return;
 		}
 
 		this.send_all_clients({
