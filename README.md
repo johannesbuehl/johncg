@@ -22,7 +22,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - use http-status-codes in answer to client
 - test changed pandoc-installer (win and linux)
 - check all directories on config validation
-- song-file-save (active file) empty output
 
 ## Planned
 - reenable eslint vue-indent

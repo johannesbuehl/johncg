@@ -200,6 +200,9 @@ export default class Playlist {
 		) {
 			this.active_item_number--;
 
+			this.active_item_number =
+				(this.active_item_number - 1 + this.playlist_items.length) % this.playlist_items.length;
+
 			if (this.active_item === -1) {
 				this.active_item_number = null;
 			}
