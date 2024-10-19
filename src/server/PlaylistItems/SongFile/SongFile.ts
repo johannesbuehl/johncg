@@ -77,7 +77,7 @@ export interface ChordLine {
 export type ChordPart = ChordLine[][][];
 export type ChordParts = Record<string, ChordPart>;
 
-const psalm_file_schema: JSONSchemaType<SongData> = {
+const song_file_schema: JSONSchemaType<SongData> = {
 	/* eslint-disable @typescript-eslint/naming-convention */
 	$schema: "http://json-schema.org/draft-07/schema#",
 	type: "object",
@@ -230,7 +230,7 @@ const psalm_file_schema: JSONSchemaType<SongData> = {
 	definitions: {}
 	/* eslint-enable @typescript-eslint/naming-convention */
 };
-export const validate_song_data = ajv.compile(psalm_file_schema);
+export const validate_song_data = ajv.compile(song_file_schema);
 
 /**
  * processes and saves song-files (*.sng)
@@ -265,6 +265,7 @@ export default class SongFile {
 	/**
 	 * parses the metadata in a text header
 	 * @param header a string representing the header
+	 * @returns the chords in the metadata
 	 */
 	private parse_metadata(header: string): Record<number, Record<number, Chord>> | undefined {
 		// split the header into the individual lines
@@ -605,34 +606,35 @@ export default class SongFile {
 function parse_base64_chords(base64: string): Record<number, Record<number, Chord>> {
 	const return_object: Record<number, Record<number, Chord>> = {};
 
-	const chords = Buffer.from(base64, "base64").toString();
+	const chords_string = Buffer.from(base64, "base64").toString();
 
-	const chord_regex = /(?<position>.+?),(?<line>.+?),(?<chord>.*)\r/g;
+	const chord_regex = /(?<position>.+?),(?<line>.+?),(?<chord>.*?)(?:\r|$)/g;
 
-	let match = chord_regex.exec(chords);
-	while (match?.groups?.line !== undefined && match.groups.position !== undefined) {
-		const check_number = (val: string): number | false => {
-			const number = Number(val);
+	const chord_matches = Array.from(chords_string.matchAll(chord_regex));
 
-			if (Number.isNaN(number) || number < -1) {
-				return false;
-			} else {
-				return number;
+	chord_matches?.forEach((match) => {
+		if (match.groups != undefined) {
+			const check_number = (val: string): number | false => {
+				const number = Number(val);
+
+				if (Number.isNaN(number) || number < -1) {
+					return false;
+				} else {
+					return number;
+				}
+			};
+
+			const line = check_number(match.groups.line);
+			const position = check_number(match.groups.position);
+			const chord = match.groups?.chord;
+
+			if (line !== false && position !== false && typeof chord === "string") {
+				return_object[line] ??= {};
+
+				return_object[line][position] = create_chord(chord);
 			}
-		};
-
-		const line = check_number(match.groups.line);
-		const position = check_number(match.groups.position);
-		const chord = match.groups?.chord;
-
-		if (line !== false && position !== false && typeof chord === "string") {
-			return_object[line] ??= {};
-
-			return_object[line][position] = create_chord(chord);
 		}
-
-		match = chord_regex.exec(chords);
-	}
+	});
 
 	return return_object;
 }

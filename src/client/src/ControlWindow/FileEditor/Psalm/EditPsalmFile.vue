@@ -4,7 +4,7 @@
 	import type { PsalmTextBlock } from "./PsalmEditor.vue";
 	import PsalmEditor from "./PsalmEditor.vue";
 
-	import type { PsalmFile } from "@server/search_part";
+	import type { PsalmFile } from "@server/search_part_types";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
 
 	const props = defineProps<{

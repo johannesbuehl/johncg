@@ -3,7 +3,7 @@
 
 	import SongEditor, { is_slide_empty, type SongTextPart } from "./SongEditor.vue";
 
-	import type { SongFile } from "@server/search_part";
+	import type { SongFile } from "@server/search_part_types";
 	import type { SongFileMetadata } from "@server/PlaylistItems/SongFile/SongFile";
 
 	const props = defineProps<{
