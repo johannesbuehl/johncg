@@ -21,7 +21,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - use http-status-codes in answer to client
 - test changed pandoc-installer (win and linux)
-- check all directories on config validation
 
 ## Planned
 - reenable eslint vue-indent

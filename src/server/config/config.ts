@@ -2,7 +2,7 @@ import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
 import yaml from "yaml";
-import { ErrorObject, JSONSchemaType } from "ajv";
+import { JSONSchemaType } from "ajv";
 
 import config_schema from "../../../config.schema.json";
 
@@ -66,25 +66,51 @@ class ConfigClass {
 		const open_result = this.open(pth);
 
 		if (open_result !== null) {
-			const errors = open_result
-				.map((error) => `${error.instancePath}: ${error.message}`)
-				.join(", ");
+			const errors = open_result.join(", ");
 
 			throw new SyntaxError(`invalid config file: ${errors}`);
 		}
 	}
 
-	open(pth: string = config_path): null | ErrorObject[] {
+	open(pth: string = config_path): null | string[] {
 		const new_config = yaml.parse(fs.readFileSync(pth, "utf-8")) as ConfigYAML;
 
 		if (validate_config_file(new_config)) {
+			// check wether all the paths exist
+			const path_check_result = Object.entries(new_config.path)
+				.map(([key, pth]) => {
+					if (!fs.existsSync(pth)) {
+						return `path for "${key}" doesn't exist ("${pth}")`;
+					} else {
+						switch (key) {
+							case "bible":
+								if (!fs.statSync(pth).isFile()) {
+									return `path for "${key}" is no file ("${pth}")`;
+								}
+								break;
+							default:
+								if (!fs.statSync(pth).isDirectory()) {
+									return `path for "${key}" is no directory ("${pth}")`;
+								}
+								break;
+						}
+					}
+				})
+				.filter((r) => r !== undefined);
+
+			if (path_check_result.length > 0) {
+				return path_check_result;
+			}
+
 			this.config_path = pth;
 
 			this.config = new_config;
 
 			return null;
 		} else {
-			return validate_config_file.errors ?? null;
+			return (
+				validate_config_file.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? []
+			);
 		}
 	}
 
