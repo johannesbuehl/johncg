@@ -29,3 +29,5 @@ search_enabled: true
 
 aux_links:
   GitHub Repository: https://github.com/johannesbuehl/JohnCG
+
+footer_content: "<a href=\"/impressum\">Impressum</a> | <a href=\"/datenschutz\">Datenschutz</a>"
