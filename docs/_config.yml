@@ -1,8 +1,12 @@
 title: JohnCG
-description: A starter template for a Jeykll site using the Just the Docs theme!
+description: Documentation for JohnCG
 theme: just-the-docs
 
-url: https://just-the-docs.github.io
+baseurl: "/johncg"
+
+timezone: Europe/Berlin
+
+url: https://johannesbuehl.github.io/johncg
 
 # Define Jekyll collections
 collections:
@@ -30,4 +34,4 @@ search_enabled: true
 aux_links:
   GitHub Repository: https://github.com/johannesbuehl/JohnCG
 
-footer_content: "<a href=\"impressum\">Impressum</a> | <a href=\"datenschutz\">Datenschutz</a>"
+footer_content: "<a href=\"/johncg/impressum\">Impressum</a> | <a href=\"/johncg/datenschutz\">Datenschutz</a>"
