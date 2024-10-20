@@ -20,6 +20,11 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
+- text-element ignores forced linebreaks
+- countdown: utc / local-time mismatch -> change data-string to "19:00:00" (or change documentation)
+- countdown: "Add Countdown" button is not working
+- countdown: some modes don't work as they should
+- add english bible-file
 
 ## Planned
 - reenable eslint vue-indent
@@ -29,7 +34,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - modify client to avoid props-down-chaining (instead ts-file like `config.ts` or `logger.ts`)
 - support other browser than Chrome and phone / tablet resolution
 - add-song to playlist after creation
-- add english bible-file
 - performer-view with website and custom HTML-template and iFrame for casparcg-templates
 - move backend to go
 - use http-status-codes in answer to client
+- seperate manual and documentation
