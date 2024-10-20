@@ -19,7 +19,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
-- use http-status-codes in answer to client
 - test changed pandoc-installer (win and linux)
 
 ## Planned
@@ -33,3 +32,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - add english bible-file
 - performer-view with website and custom HTML-template and iFrame for casparcg-templates
 - move backend to go
+- use http-status-codes in answer to client
