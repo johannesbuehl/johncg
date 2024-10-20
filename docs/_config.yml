@@ -1,0 +1,11 @@
+title: JohnCG
+description: A starter template for a Jeykll site using the Just the Docs theme!
+theme: just-the-docs
+
+url: https://just-the-docs.github.io
+
+favicon_ico: favicon.ico
+search_enabled: true
+
+aux_links:
+  GitHub Repository: https://github.com/johannesbuehl/JohnCG

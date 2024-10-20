@@ -110,7 +110,8 @@ export default [
 			"dist",
 			"out",
 			"pandoc",
-			"build/release.js"
+			"build/release.js",
+			"docs"
 		]
 	},
 ];
