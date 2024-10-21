@@ -20,7 +20,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
-- countdown: "Add Countdown" button is not working
 - add english bible-file
 
 ## Planned

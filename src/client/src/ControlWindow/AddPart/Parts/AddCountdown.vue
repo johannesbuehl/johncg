@@ -9,7 +9,7 @@
 	import CountdownEditor from "@/ControlWindow/ItemDialogue/CountdownEditor.vue";
 	import Globals from "@/Globals";
 
-	import type { CasparFile, Node } from "@server/search_part_types";
+	import { NodeType, type CasparFile, type Node } from "@server/search_part_types";
 	import type { CountdownProps } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode, countdown_title_map } from "@server/lib";
 
@@ -28,8 +28,8 @@
 
 	const media_selection = defineModel<CasparFile>({});
 
-	function add_countdown(file_selection: Node<"media">) {
-		if (!file_selection.type) {
+	function add_countdown(file_selection: Node<"media"> | undefined) {
+		if (file_selection?.type === NodeType.File) {
 			const return_props = create_props();
 
 			if (return_props !== undefined) {
@@ -68,7 +68,7 @@
 <template>
 	<MediaDialogue v-model:selection="media_selection" @choose="add_countdown">
 		<template v-slot:buttons>
-			<MenuButton @click="add_countdown">
+			<MenuButton @click="add_countdown(media_selection)">
 				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown
 			</MenuButton>
 		</template>
