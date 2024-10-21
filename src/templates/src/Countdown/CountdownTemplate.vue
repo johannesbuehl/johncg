@@ -70,6 +70,8 @@
 			if (props.data.mode === CountdownMode.Duration || props.data.mode === CountdownMode.EndTime) {
 				const date = props.data.time.match(/(?<hours>\d+):(?<minutes>\d+):(?<seconds>\d+)/);
 
+				console.debug(props.data.time);
+
 				if (date?.groups) {
 					end_time = new Date();
 

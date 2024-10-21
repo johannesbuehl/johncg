@@ -20,7 +20,7 @@
 	}>();
 
 	const countdown_mode = ref<CountdownMode>(CountdownMode.EndTime);
-	const time = ref<string>(new Date(Date.now()).toLocaleTimeString());
+	const time = ref<string>(new Date().toLocaleTimeString("de-DE"));
 	const show_seconds = ref<boolean>(true);
 	const position = ref<{ x: number; y: number }>({ x: 50, y: 50 });
 	const font_size = ref<number>(20);

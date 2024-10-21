@@ -52,6 +52,7 @@
 	(globalThis as unknown as CasparCGGlobalFunctions).play = play;
 	(globalThis as unknown as CasparCGGlobalFunctions).stop = stop;
 	(globalThis as unknown as CasparCGGlobalFunctions).next = next;
+	play();
 </script>
 
 <template>

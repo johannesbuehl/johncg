@@ -20,9 +20,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
-- countdown: utc / local-time mismatch -> change data-string to "19:00:00" (or change documentation)
 - countdown: "Add Countdown" button is not working
-- countdown: some modes don't work as they should
 - add english bible-file
 
 ## Planned

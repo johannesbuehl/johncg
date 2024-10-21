@@ -16,7 +16,8 @@ casparcg:
       layers:
         media: 20 # used for media-playback - Can be removed to don't show media
         template: 21 # used for templates and song-/psalm-/countdown-text
-      path: D:/Streaming/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
+      # path: D:/Streaming/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
+      path: D:\Lighthouse\JohnCG_0.9.0-rc.1_win32_v2\casparcg_v2.4.0
       # stageview: true # optional - show song-chords and hide song-backgrounds
     - host: 127.0.0.1
       port: 5250
