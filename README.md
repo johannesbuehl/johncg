@@ -33,3 +33,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - performer-view with website and custom HTML-template and iFrame for casparcg-templates
 - move backend to go
 - use http-status-codes in answer to client
+- bible-citation: english style (Ex. 6:14-15, 44). Embed in bible-file? (ID. 1:2-3, 4)
