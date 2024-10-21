@@ -3,6 +3,11 @@ title: Home
 layout: home
 ---
 
+# JohnCG - character generator for song-lyrics and other church-service elements
+
+Generate grahpics with song-lyrics or other church-service-elements and play them out through CasparCG.
+
+
 This is a *bare-minimum* template to create a Jekyll site that uses the [Just the Docs] theme. You can easily set the created site to be published on [GitHub Pages] – the [README] file explains how to do that, along with other details.
 
 If [Jekyll] is installed on your computer, you can also build and preview the created site *locally*. This lets you test changes before committing them, and avoids waiting for GitHub Pages.[^1] And you will be able to deploy your local build to a different platform than GitHub Pages.

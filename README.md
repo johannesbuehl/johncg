@@ -38,3 +38,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move backend to go
 - use http-status-codes in answer to client
 - seperate manual and documentation
+- test windows 11 and update docs

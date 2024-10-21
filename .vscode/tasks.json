@@ -52,6 +52,15 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "client-dev"
+		},
+		{
+			"label": "docs-dev",
+			"type": "shell",
+			"command": "bundle exec jekyll serve --livereload",
+			"options": {
+				"cwd": "${workspaceFolder}/docs"
+			},
+			"problemMatcher": []
 		}
 	]
 }
