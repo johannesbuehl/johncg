@@ -1,6 +1,7 @@
 ---
 title: Datenschutz
 layout: about
+nav_exclude: true
 ---
 # Datenschutz
 

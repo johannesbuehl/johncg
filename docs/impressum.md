@@ -1,6 +1,7 @@
 ---
 title: Impressum
 layout: about
+nav_exclude: true
 ---
 # Inhaltsverantwortlich
 Simon Ziegler  
