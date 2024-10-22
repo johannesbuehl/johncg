@@ -60,6 +60,62 @@ export interface BibleCitationSeperatorsMap {
 }
 
 const validate_config_file = ajv.compile(config_schema);
+const validate_bible_file = ajv.compile({
+	/* eslint-disable @typescript-eslint/naming-convention */
+	$schema: "http://json-schema.org/draft-07/schema#",
+	type: "object",
+	properties: {
+		name: {
+			type: "string"
+		},
+		version: {
+			type: "string",
+			pattern: "^v1\\.\\d+\\.\\d+$"
+		},
+		parts: {
+			type: "object",
+			additionalProperties: {
+				type: "array",
+				items: {
+					type: "object",
+					properties: {
+						name: {
+							type: "string"
+						},
+						books: {
+							type: "array",
+							items: {
+								type: "object",
+								properties: {
+									name: {
+										type: "string"
+									},
+									id: {
+										type: "string"
+									},
+									chapters: {
+										type: "array",
+										items: {
+											type: "number"
+										}
+									}
+								},
+								required: ["name", "id", "chapters"],
+								additionalProperties: false
+							}
+						}
+					},
+					required: ["name", "books"],
+					additionalProperties: false
+				}
+			}
+		}
+	},
+	required: ["name", "version", "parts"],
+	additionalProperties: false,
+	definitions: {}
+	/* eslint-enable @typescript-eslint/naming-convention */
+});
 const config_path = "config.yaml";
 class ConfigClass {
 	private config_path: string;
@@ -76,9 +132,15 @@ class ConfigClass {
 		const open_result = this.open(pth);
 
 		if (open_result !== null) {
-			const errors = open_result.join(", ");
+			throw new SyntaxError(`invalid config file: ${open_result.join(", ")}`);
+		}
 
-			throw new SyntaxError(`invalid config file: ${errors}`);
+		// validate the bible-file
+		if (!validate_bible_file(JSON.parse(fs.readFileSync(this.get_path("bible"), "utf-8")))) {
+			const errors =
+				validate_bible_file.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
+
+			throw new SyntaxError(`invalid bible file: ${errors.join(", ")}`);
 		}
 	}
 

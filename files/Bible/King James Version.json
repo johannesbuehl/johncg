@@ -1,5 +1,6 @@
 {
     "name": "King James Version",
+	"version": "v1.0.0",
     "parts": {
         "Old Testament": [
             {

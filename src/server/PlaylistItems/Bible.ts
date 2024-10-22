@@ -11,7 +11,7 @@ import Config from "../config/config";
 
 export interface BibleFile {
 	name: string;
-	citation_style: string;
+	version: string;
 	parts: Record<string, { name: string; books: Book[] }[]>;
 }
 
