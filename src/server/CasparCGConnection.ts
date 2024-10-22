@@ -64,7 +64,7 @@ const xml_parser = new XMLParser();
 
 // initiate all casparcg-connections
 export const casparcg: { visibility: boolean; casparcg_connections: CasparCGConnection[] } = {
-	visibility: Config.behaviour.show_on_load,
+	visibility: true,
 	casparcg_connections: []
 };
 

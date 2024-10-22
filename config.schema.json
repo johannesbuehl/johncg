@@ -20,8 +20,8 @@
         "behaviour": {
             "type": "object",
             "properties": {
-                "show_on_load": {
-					"description": "Show the first item when loading a playlist / set newly added elements active",
+                "activate_item_on_add": {
+					"description": "set the newly added element active",
                     "type": "boolean",
 					"default": true
                 },
@@ -33,7 +33,7 @@
                 }
             },
             "required": [
-                "show_on_load",
+                "activate_item_on_add",
 				"bible_citation_style"
             ],
             "additionalProperties": false

@@ -27,7 +27,7 @@ export interface CasparCGConnectionSettings {
 export interface ConfigYAML {
 	log_level: keyof Levels;
 	behaviour: {
-		show_on_load: boolean;
+		activate_item_on_add: boolean;
 		bible_citation_style: string;
 	};
 	path: {

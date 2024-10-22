@@ -147,7 +147,7 @@ export default class Playlist {
 			this.active_item_number++;
 		}
 
-		if (set_active && Config.behaviour.show_on_load) {
+		if (set_active && Config.behaviour.activate_item_on_add) {
 			this.set_active_item(index, 0);
 		}
 
