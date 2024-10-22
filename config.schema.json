@@ -24,10 +24,17 @@
 					"description": "Show the first item when loading a playlist / set newly added elements active",
                     "type": "boolean",
 					"default": true
+                },
+                "bible_citation_style": {
+					"description": "Citation-stype for bible passages. Syntax: Citation for \"1. Moses\" with chapter 1, verses 2-4 and 6 and chapter 7",
+                    "type": "string",
+					"default": "1. Moses 1,2-4.6; 7",
+					"pattern": "^(?:1\\. Moses)(?<sep_book_chapter>.*?)(?:1)(?<sep_chapter_verse>.*?)(?:2)(?<range_verse>.*?)(?:4)(?<sep_verse>.*?)(?:6)(?<sep_chapter>.*?)(?:7)$"
                 }
             },
             "required": [
-                "show_on_load"
+                "show_on_load",
+				"bible_citation_style"
             ],
             "additionalProperties": false
         },
@@ -58,7 +65,7 @@
                 "bible": {
 					"description": "bible-file",
                     "type": "string",
-					"default": "Bible/Luther-Bibel.json"
+					"default": "Bible/Lutherbibel.json"
                 }
             },
             "required": [

@@ -10,6 +10,7 @@ import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import { CasparCGResolution } from "../CasparCGConnection";
 import { ajv } from "../lib";
+import { BibleProps } from "../PlaylistItems/Bible";
 
 export interface CasparCGConnectionSettings {
 	host: string;
@@ -27,6 +28,7 @@ export interface ConfigYAML {
 	log_level: keyof Levels;
 	behaviour: {
 		show_on_load: boolean;
+		bible_citation_style: string;
 	};
 	path: {
 		playlist: string;
@@ -47,6 +49,14 @@ export interface ConfigYAML {
 			port: number;
 		};
 	};
+}
+
+export interface BibleCitationSeperatorsMap {
+	sep_book_chapter: string;
+	sep_chapter: string;
+	sep_chapter_verse: string;
+	sep_verse: string;
+	range_verse: string;
 }
 
 const validate_config_file = ajv.compile(config_schema);
@@ -101,6 +111,24 @@ class ConfigClass {
 			if (path_check_result.length > 0) {
 				return path_check_result;
 			}
+
+			// parse the bible-citation-style
+			const bible_citation_style =
+				/^(?:1\. Moses)(?<sep_book_chapter>.*?)(?:1)(?<sep_chapter_verse>.*?)(?:2)(?<range_verse>.*?)(?:4)(?<sep_verse>.*?)(?:6)(?<sep_chapter>.*?)(?:7)$/.exec(
+					new_config.behaviour.bible_citation_style
+				);
+
+			if (!bible_citation_style?.groups) {
+				return ["bible-citation-template is invalid"];
+			}
+
+			this.bible_citation_seperators = {
+				sep_book_chapter: bible_citation_style.groups["sep_book_chapter"],
+				sep_chapter: bible_citation_style.groups["sep_chapter"],
+				sep_chapter_verse: bible_citation_style.groups["sep_chapter_verse"],
+				sep_verse: bible_citation_style.groups["sep_verse"],
+				range_verse: bible_citation_style.groups["range_verse"]
+			};
 
 			this.config_path = pth;
 
@@ -203,6 +231,51 @@ class ConfigClass {
 
 	get behaviour(): ConfigYAML["behaviour"] {
 		return structuredClone(this.config.behaviour);
+	}
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	private bible_citation_seperators: BibleCitationSeperatorsMap;
+
+	create_bible_citation_string(book_id: string, chapters: BibleProps["chapters"]) {
+		const seperators = this.bible_citation_seperators;
+
+		// add the individual chapters
+		const chapter_strings = Object.entries(chapters).map(([chapter, verses]): string => {
+			// stop the loop-iteration, if there are no verses defined
+			if (verses.length === 0) {
+				return `${chapter}`;
+			}
+
+			const verse_range: { start: number; last: number } = {
+				start: verses[0],
+				last: verses[0]
+			};
+
+			// add the individual verses
+			const verse_strings: string[] = [];
+
+			for (let index = 1; index <= verses.length; index++) {
+				const verse = verses[index];
+
+				// if the current verse is not a direct successor of the last one, return the previous verse_range
+				if (verse !== verse_range.last + 1) {
+					// if in the verse-range start and last are the same, return them as a single one
+					if (verse_range.start === verse_range.last) {
+						verse_strings.push(verse_range.last.toString());
+					} else {
+						verse_strings.push(`${verse_range.start}${seperators.range_verse}${verse_range.last}`);
+					}
+
+					verse_range.start = verse;
+				}
+
+				verse_range.last = verse;
+			}
+
+			return `${chapter}${seperators.sep_chapter_verse}${verse_strings.filter(Boolean).join(seperators.sep_verse)}`;
+		});
+
+		return `${book_id}${seperators.sep_book_chapter}${chapter_strings.join(seperators.sep_chapter)}`;
 	}
 }
 

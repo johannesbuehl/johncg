@@ -6,7 +6,7 @@ path: # path to the different files
   song: Song/ # pdf-files
   psalm: Psalm/ # psalm-files
   pdf: PDF/ # playlist-files
-  bible: Bible/Luther-Bibel.json # used bible
+  bible: Bible/Lutherbibel.json # used bible
 casparcg:
   transition_length: 12.5 # transition-length in frames
   connections: # individual CasparCG-connections

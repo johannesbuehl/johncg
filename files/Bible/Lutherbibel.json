@@ -1,13 +1,13 @@
 {
-    "name": "King James Version",
+    "name": "Lutherbibel",
     "parts": {
-        "Old Testament": [
+        "Altes Testament": [
             {
-                "name": "Law",
+                "name": "Geschichtsbücher",
                 "books": [
                     {
-                        "name": "Genesis",
-                        "id": "Gen.",
+                        "name": "1. Mose",
+                        "id": "1. Mose",
                         "chapters": [
                             31,
                             25,
@@ -62,8 +62,8 @@
                         ]
                     },
                     {
-                        "name": "Exodus",
-                        "id": "Ex.",
+                        "name": "2. Mose",
+                        "id": "2. Mose",
                         "chapters": [
                             22,
                             25,
@@ -108,8 +108,8 @@
                         ]
                     },
                     {
-                        "name": "Leviticus",
-                        "id": "Lev.",
+                        "name": "3. Mose",
+                        "id": "3. Mose",
                         "chapters": [
                             17,
                             16,
@@ -141,8 +141,8 @@
                         ]
                     },
                     {
-                        "name": "Numbers",
-                        "id": "Num.",
+                        "name": "4. Mose",
+                        "id": "4. Mose",
                         "chapters": [
                             54,
                             34,
@@ -183,8 +183,8 @@
                         ]
                     },
                     {
-                        "name": "Deuteronomy",
-                        "id": "Deut.",
+                        "name": "5. Mose",
+                        "id": "5. Mose",
                         "chapters": [
                             46,
                             37,
@@ -221,15 +221,10 @@
                             29,
                             12
                         ]
-                    }
-                ]
-            },
-            {
-                "name": "History",
-                "books": [
+                    },
                     {
-                        "name": "Joshua",
-                        "id": "Josh.",
+                        "name": "Josua",
+                        "id": "Jos",
                         "chapters": [
                             18,
                             24,
@@ -258,8 +253,8 @@
                         ]
                     },
                     {
-                        "name": "Judges",
-                        "id": "Judg.",
+                        "name": "Richter",
+                        "id": "Ri",
                         "chapters": [
                             36,
                             23,
@@ -285,8 +280,8 @@
                         ]
                     },
                     {
-                        "name": "Ruth",
-                        "id": "Ruth",
+                        "name": "Rut",
+                        "id": "Rut",
                         "chapters": [
                             22,
                             23,
@@ -295,8 +290,8 @@
                         ]
                     },
                     {
-                        "name": "1 Samuel",
-                        "id": "1 Sam.",
+                        "name": "1. Samuel",
+                        "id": "1. Sam",
                         "chapters": [
                             28,
                             36,
@@ -332,8 +327,8 @@
                         ]
                     },
                     {
-                        "name": "2 Samuel",
-                        "id": "2 Sam.",
+                        "name": "2. Samuel",
+                        "id": "2. Sam",
                         "chapters": [
                             27,
                             32,
@@ -362,8 +357,8 @@
                         ]
                     },
                     {
-                        "name": "1 Kings",
-                        "id": "1 Kings",
+                        "name": "1. Könige",
+                        "id": "1. Kön",
                         "chapters": [
                             53,
                             46,
@@ -390,8 +385,8 @@
                         ]
                     },
                     {
-                        "name": "2 Kings",
-                        "id": "2 Kings",
+                        "name": "2. Könige",
+                        "id": "2. Kön",
                         "chapters": [
                             18,
                             25,
@@ -421,8 +416,8 @@
                         ]
                     },
                     {
-                        "name": "1 Chronicles",
-                        "id": "1 Chron.",
+                        "name": "1. Chronik",
+                        "id": "1. Chr",
                         "chapters": [
                             54,
                             55,
@@ -456,8 +451,8 @@
                         ]
                     },
                     {
-                        "name": "2 Chronicles",
-                        "id": "2 Chron.",
+                        "name": "2. Chronik",
+                        "id": "2. Chr",
                         "chapters": [
                             17,
                             18,
@@ -498,8 +493,8 @@
                         ]
                     },
                     {
-                        "name": "Ezra",
-                        "id": "Ezra",
+                        "name": "Esra",
+                        "id": "Esra",
                         "chapters": [
                             11,
                             70,
@@ -514,8 +509,8 @@
                         ]
                     },
                     {
-                        "name": "Nehemiah",
-                        "id": "Neh.",
+                        "name": "Nehemia",
+                        "id": "Neh",
                         "chapters": [
                             11,
                             20,
@@ -533,8 +528,8 @@
                         ]
                     },
                     {
-                        "name": "Esther",
-                        "id": "Est.",
+                        "name": "Ester",
+                        "id": "Est",
                         "chapters": [
                             22,
                             23,
@@ -551,11 +546,11 @@
                 ]
             },
             {
-                "name": "Poetry",
+                "name": "Poetische Bücher",
                 "books": [
                     {
-                        "name": "Job",
-                        "id": "Job",
+                        "name": "Hiob",
+                        "id": "Hiob",
                         "chapters": [
                             22,
                             13,
@@ -602,8 +597,8 @@
                         ]
                     },
                     {
-                        "name": "Psalms",
-                        "id": "Ps.",
+                        "name": "Psalm",
+                        "id": "Ps",
                         "chapters": [
                             6,
                             12,
@@ -758,8 +753,8 @@
                         ]
                     },
                     {
-                        "name": "Proverbs",
-                        "id": "Prov.",
+                        "name": "Sprüche",
+                        "id": "Spr",
                         "chapters": [
                             33,
                             22,
@@ -795,8 +790,8 @@
                         ]
                     },
                     {
-                        "name": "Ecclesiastes",
-                        "id": "Eccles.",
+                        "name": "Prediger",
+                        "id": "Pred",
                         "chapters": [
                             18,
                             26,
@@ -813,8 +808,8 @@
                         ]
                     },
                     {
-                        "name": "Song of Solomon",
-                        "id": "Song",
+                        "name": "Hoheslied",
+                        "id": "Hld",
                         "chapters": [
                             17,
                             17,
@@ -829,11 +824,11 @@
                 ]
             },
             {
-                "name": "Prophecy",
+                "name": "Prophetische Bücher",
                 "books": [
                     {
-                        "name": "Isaiah",
-                        "id": "Isa.",
+                        "name": "Jesaja",
+                        "id": "Jes",
                         "chapters": [
                             31,
                             22,
@@ -904,8 +899,8 @@
                         ]
                     },
                     {
-                        "name": "Jeremiah",
-                        "id": "Jer.",
+                        "name": "Jeremia",
+                        "id": "Jer",
                         "chapters": [
                             19,
                             37,
@@ -962,8 +957,8 @@
                         ]
                     },
                     {
-                        "name": "Lamentations",
-                        "id": "Lam.",
+                        "name": "Klagelieder",
+                        "id": "Klgl",
                         "chapters": [
                             22,
                             22,
@@ -973,8 +968,8 @@
                         ]
                     },
                     {
-                        "name": "Ezekiel",
-                        "id": "Ezek.",
+                        "name": "Hesekiel",
+                        "id": "Hes",
                         "chapters": [
                             28,
                             10,
@@ -1028,7 +1023,7 @@
                     },
                     {
                         "name": "Daniel",
-                        "id": "Dan.",
+                        "id": "Dan",
                         "chapters": [
                             21,
                             49,
@@ -1046,7 +1041,7 @@
                     },
                     {
                         "name": "Hosea",
-                        "id": "Hos.",
+                        "id": "Hos",
                         "chapters": [
                             11,
                             23,
@@ -1075,7 +1070,7 @@
                     },
                     {
                         "name": "Amos",
-                        "id": "Amos",
+                        "id": "Am",
                         "chapters": [
                             15,
                             16,
@@ -1089,15 +1084,15 @@
                         ]
                     },
                     {
-                        "name": "Obadiah",
-                        "id": "Obad.",
+                        "name": "Obadja",
+                        "id": "Obd",
                         "chapters": [
                             21
                         ]
                     },
                     {
-                        "name": "Jonah",
-                        "id": "Jonah",
+                        "name": "Jona",
+                        "id": "Jona",
                         "chapters": [
                             17,
                             10,
@@ -1106,8 +1101,8 @@
                         ]
                     },
                     {
-                        "name": "Micah",
-                        "id": "Mic.",
+                        "name": "Micha",
+                        "id": "Mi",
                         "chapters": [
                             16,
                             13,
@@ -1120,7 +1115,7 @@
                     },
                     {
                         "name": "Nahum",
-                        "id": "Nah.",
+                        "id": "Nah",
                         "chapters": [
                             15,
                             13,
@@ -1128,8 +1123,8 @@
                         ]
                     },
                     {
-                        "name": "Habakkuk",
-                        "id": "Hab.",
+                        "name": "Habakuk",
+                        "id": "Hab",
                         "chapters": [
                             17,
                             20,
@@ -1137,8 +1132,8 @@
                         ]
                     },
                     {
-                        "name": "Zephaniah",
-                        "id": "Zeph.",
+                        "name": "Zefanja",
+                        "id": "Zef",
                         "chapters": [
                             18,
                             15,
@@ -1147,15 +1142,15 @@
                     },
                     {
                         "name": "Haggai",
-                        "id": "Hag.",
+                        "id": "Hag",
                         "chapters": [
                             15,
                             23
                         ]
                     },
                     {
-                        "name": "Zechariah",
-                        "id": "Zech.",
+                        "name": "Sacharja",
+                        "id": "Sach",
                         "chapters": [
                             21,
                             13,
@@ -1174,8 +1169,8 @@
                         ]
                     },
                     {
-                        "name": "Malachi",
-                        "id": "Mal.",
+                        "name": "Maleachi",
+                        "id": "Mal",
                         "chapters": [
                             14,
                             17,
@@ -1186,13 +1181,13 @@
                 ]
             }
         ],
-        "New Testament": [
+        "Neues Testament": [
             {
-                "name": "Gospels",
+                "name": "Evangelien",
                 "books": [
                     {
-                        "name": "Matthew",
-                        "id": "Matt.",
+                        "name": "Matthäus",
+                        "id": "Mt",
                         "chapters": [
                             25,
                             23,
@@ -1225,8 +1220,8 @@
                         ]
                     },
                     {
-                        "name": "Mark",
-                        "id": "Mark",
+                        "name": "Markus",
+                        "id": "Mk",
                         "chapters": [
                             45,
                             28,
@@ -1247,8 +1242,8 @@
                         ]
                     },
                     {
-                        "name": "Luke",
-                        "id": "Luke",
+                        "name": "Lukas",
+                        "id": "Lk",
                         "chapters": [
                             80,
                             52,
@@ -1277,8 +1272,8 @@
                         ]
                     },
                     {
-                        "name": "John",
-                        "id": "John",
+                        "name": "Johannes",
+                        "id": "Joh",
                         "chapters": [
                             51,
                             25,
@@ -1306,11 +1301,11 @@
                 ]
             },
             {
-                "name": "History",
+                "name": "Apostelgeschichten",
                 "books": [
                     {
-                        "name": "Acts",
-                        "id": "Acts",
+                        "name": "Apostelgeschichte",
+                        "id": "Apg",
                         "chapters": [
                             26,
                             47,
@@ -1345,11 +1340,11 @@
                 ]
             },
             {
-                "name": "Letters",
+                "name": "Briefe",
                 "books": [
                     {
-                        "name": "Romans",
-                        "id": "Rom.",
+                        "name": "Römer",
+                        "id": "Röm",
                         "chapters": [
                             32,
                             29,
@@ -1370,8 +1365,8 @@
                         ]
                     },
                     {
-                        "name": "1 Corinthians",
-                        "id": "1 Cor.",
+                        "name": "1. Korinther",
+                        "id": "1. Kor",
                         "chapters": [
                             31,
                             16,
@@ -1392,8 +1387,8 @@
                         ]
                     },
                     {
-                        "name": "2 Corinthians",
-                        "id": "2 Cor.",
+                        "name": "2. Korinther",
+                        "id": "2. Kor",
                         "chapters": [
                             24,
                             17,
@@ -1411,8 +1406,8 @@
                         ]
                     },
                     {
-                        "name": "Galatians",
-                        "id": "Gal.",
+                        "name": "Galater",
+                        "id": "Gal",
                         "chapters": [
                             24,
                             21,
@@ -1423,8 +1418,8 @@
                         ]
                     },
                     {
-                        "name": "Ephesians",
-                        "id": "Eph.",
+                        "name": "Epheser",
+                        "id": "Eph",
                         "chapters": [
                             23,
                             22,
@@ -1435,8 +1430,8 @@
                         ]
                     },
                     {
-                        "name": "Philippians",
-                        "id": "Phil.",
+                        "name": "Philipper",
+                        "id": "Phil",
                         "chapters": [
                             30,
                             30,
@@ -1445,8 +1440,8 @@
                         ]
                     },
                     {
-                        "name": "Colossians",
-                        "id": "Col.",
+                        "name": "Kolosser",
+                        "id": "Kol",
                         "chapters": [
                             29,
                             23,
@@ -1455,8 +1450,8 @@
                         ]
                     },
                     {
-                        "name": "1 Thessalonians",
-                        "id": "1 Thess.",
+                        "name": "1. Thessalonicher",
+                        "id": "1. Thess",
                         "chapters": [
                             10,
                             20,
@@ -1466,8 +1461,8 @@
                         ]
                     },
                     {
-                        "name": "2 Thessalonians",
-                        "id": "2 Thess.",
+                        "name": "2. Thessalonicher",
+                        "id": "2. Thess",
                         "chapters": [
                             12,
                             17,
@@ -1475,8 +1470,8 @@
                         ]
                     },
                     {
-                        "name": "1 Timothy",
-                        "id": "1 Tim.",
+                        "name": "1. Timotheus",
+                        "id": "1. Tim",
                         "chapters": [
                             20,
                             15,
@@ -1487,8 +1482,8 @@
                         ]
                     },
                     {
-                        "name": "2 Timothy",
-                        "id": "2 Tim.",
+                        "name": "2. Timotheus",
+                        "id": "2. Tim",
                         "chapters": [
                             18,
                             26,
@@ -1498,7 +1493,7 @@
                     },
                     {
                         "name": "Titus",
-                        "id": "Titus",
+                        "id": "Tit",
                         "chapters": [
                             16,
                             15,
@@ -1507,14 +1502,59 @@
                     },
                     {
                         "name": "Philemon",
-                        "id": "Philem.",
+                        "id": "Phlm",
                         "chapters": [
                             25
                         ]
                     },
                     {
-                        "name": "Hebrews",
-                        "id": "Heb.",
+                        "name": "1. Petrus",
+                        "id": "1. Petr",
+                        "chapters": [
+                            25,
+                            25,
+                            22,
+                            19,
+                            14
+                        ]
+                    },
+                    {
+                        "name": "2. Petrus",
+                        "id": "2. Petr",
+                        "chapters": [
+                            21,
+                            22,
+                            18
+                        ]
+                    },
+                    {
+                        "name": "1. Johannes",
+                        "id": "1. Joh",
+                        "chapters": [
+                            10,
+                            29,
+                            24,
+                            21,
+                            21
+                        ]
+                    },
+                    {
+                        "name": "2. Johannes",
+                        "id": "2. Joh",
+                        "chapters": [
+                            13
+                        ]
+                    },
+                    {
+                        "name": "3. Johannes",
+                        "id": "3. Joh",
+                        "chapters": [
+                            14
+                        ]
+                    },
+                    {
+                        "name": "Hebräer",
+                        "id": "Hebr",
                         "chapters": [
                             14,
                             18,
@@ -1532,8 +1572,8 @@
                         ]
                     },
                     {
-                        "name": "James",
-                        "id": "James",
+                        "name": "Jakobus",
+                        "id": "Jak",
                         "chapters": [
                             27,
                             26,
@@ -1543,53 +1583,8 @@
                         ]
                     },
                     {
-                        "name": "1 Peter",
-                        "id": "1 Pet.",
-                        "chapters": [
-                            25,
-                            25,
-                            22,
-                            19,
-                            14
-                        ]
-                    },
-                    {
-                        "name": "2 Peter",
-                        "id": "2 Pet.",
-                        "chapters": [
-                            21,
-                            22,
-                            18
-                        ]
-                    },
-                    {
-                        "name": "1 John",
-                        "id": "1 John",
-                        "chapters": [
-                            10,
-                            29,
-                            24,
-                            21,
-                            21
-                        ]
-                    },
-                    {
-                        "name": "2 John",
-                        "id": "2 John",
-                        "chapters": [
-                            13
-                        ]
-                    },
-                    {
-                        "name": "3 John",
-                        "id": "3 John",
-                        "chapters": [
-                            14
-                        ]
-                    },
-                    {
-                        "name": "Jude",
-                        "id": "Jude",
+                        "name": "Judas",
+                        "id": "Jud",
                         "chapters": [
                             25
                         ]
@@ -1597,11 +1592,11 @@
                 ]
             },
             {
-                "name": "Prophecy",
+                "name": "Offenbarung",
                 "books": [
                     {
-                        "name": "Revelation",
-                        "id": "Rev.",
+                        "name": "Offenbarung",
+                        "id": "Offb",
                         "chapters": [
                             20,
                             29,

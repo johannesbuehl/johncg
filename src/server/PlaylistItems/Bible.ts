@@ -1,14 +1,19 @@
 import { JSONSchemaType } from "ajv";
 
-import { ajv, create_bible_citation_string } from "../lib";
+import { ajv } from "../lib";
 import {
 	type ClientItemSlidesBase,
 	type ItemPropsBase,
 	PlaylistItemBase,
 	ClientItemBase
 } from "./PlaylistItem";
+import Config from "../config/config";
 
-export type BibleFile = Record<string, { name: string; books: Book[] }[]>;
+export interface BibleFile {
+	name: string;
+	citation_style: string;
+	parts: Record<string, { name: string; books: Book[] }[]>;
+}
 
 export interface Book {
 	name: string;
@@ -89,7 +94,7 @@ export default class Bible extends PlaylistItemBase {
 	create_client_object_item_slides(): Promise<ClientBibleSlides> {
 		return Promise.resolve({
 			type: "bible",
-			title: create_bible_citation_string(this.props.book_id, this.props.chapters),
+			title: Config.create_bible_citation_string(this.props.book_id, this.props.chapters),
 			caption: this.props.caption,
 			media: undefined,
 			template: this.get_template()
@@ -130,13 +135,13 @@ export default class Bible extends PlaylistItemBase {
 		return {
 			template: "JohnCG/Bible",
 			data: {
-				text: create_bible_citation_string(this.props.book_id, this.props.chapters)
+				text: Config.create_bible_citation_string(this.props.book_id, this.props.chapters)
 			}
 		};
 	}
 
 	get_markdown_export_string(): string {
-		return `# Bible: "${this.props.caption}" (${create_bible_citation_string(this.props.book_id, this.props.chapters)})
+		return `# Bible: "${this.props.caption}" (${Config.create_bible_citation_string(this.props.book_id, this.props.chapters)})
 
 `;
 	}

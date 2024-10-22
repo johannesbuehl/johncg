@@ -2,7 +2,7 @@
 	export function get_book_from_id(bible: BibleFile, id: string): Book {
 		let book_result: Book = { name: "", id: "", chapters: [] };
 
-		Object.values(bible).forEach((div) => {
+		Object.values(bible.parts).forEach((div) => {
 			div.forEach(({ books }) => {
 				books.forEach((book) => {
 					if (book.id === id) {
@@ -142,7 +142,7 @@
 		<div id="bible_viewer">
 			<div class="divisions">
 				<template
-					v-for="[division, book_groups] in Object.entries(Globals.get_bible_file() ?? {})"
+					v-for="[division, book_groups] in Object.entries(Globals.get_bible_file()?.parts ?? {})"
 					:key="division"
 				>
 					<div class="header">

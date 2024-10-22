@@ -1,12 +1,14 @@
 log_level: INFO # log-level - valid-values: ALL MARK TRACE DEBUG INFO WARN ERROR FATAL OFF
 behaviour:
   show_on_load: true # show the first slide when loading - valid-values: true false
+  # bible_citation_style: 1. Moses 1,2-4.6; 7
+  bible_citation_style: 1. Moses 1:2-4, 6;7
 path: # path to the different files
   playlist: D:/JohnCG-Johannes/12_Abläufe/ # song-files
   song: D:/JohnCG-Johannes/80_Songs/Lieder # pdf-files
   psalm: D:/JohnCG-Johannes/80_Songs/Psalme # psalm-files
   pdf: D:/JohnCG-Johannes/60_PDF/ # playlist-files
-  bible: files/Bible/Luther-Bibel.json # used bible
+  bible: files/Bible/Lutherbibel.json # used bible
 casparcg:
   transition_length: 12 # transition-length in frames
   connections: # individual CasparCG-connections
