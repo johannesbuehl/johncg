@@ -173,7 +173,11 @@
 				"type": "object",
 				"properties": {
 					"schema": {
-						"description": "json-schema-file for building the default-config",
+						"description": "json-schema-file for validating the config-file",
+						"type": "string"
+					},
+					"orig": {
+						"description": "path of the config-file",
 						"type": "string"
 					},
 					"dest": {

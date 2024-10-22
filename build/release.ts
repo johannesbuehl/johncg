@@ -5,7 +5,6 @@ import fs from "fs";
 import path from "path";
 import tmp from "tmp";
 import yaml from "yaml";
-import jsf, { Schema } from "json-schema-faker";
 import Ajv, { JSONSchemaType } from "ajv";
 import formatsPlugin from "ajv-formats";
 
@@ -22,7 +21,7 @@ interface Config {
 	copy?: { orig: string; dest?: string }[];
 	external_packages?: string[];
 	package_json?: string;
-	configs?: Record<string, { schema: string; dest: string; }>;
+	configs?: Record<string, { schema: string; orig: string; dest?: string; }>;
 	keep?: boolean;
 }
 
@@ -51,7 +50,7 @@ const release_dir_latest = path.join(config.release_dir, "latest");
  * @param pth path of the file
  */
 function create_parent_dirs(pth: string) {
-	const parent_dir = path.parse(pth).dir;
+	const parent_dir = path.parse(path.resolve(pth)).dir;
 	if (!fs.existsSync(parent_dir)) {
 		fs.mkdirSync(parent_dir, { recursive: true });
 	}
@@ -233,13 +232,16 @@ console.log();
 
 // generate config-files from schemas
 if (config.configs !== undefined) {
-	console.log("Generating config-files from schemas");
+	console.log("Copying config-files");
 
 	Object.entries(config.configs).forEach(([name, conf]) => {
+		console.log(`\t${name}: from '${conf.orig}' to '${conf.dest}' validated by '${conf.schema}'`);
+
 		let file_format_library;
 	
 		switch (path.extname(conf.dest)) {
 			case ".yaml":
+			case ".yml":
 				file_format_library = yaml;
 				break;
 			case ".json":
@@ -248,19 +250,21 @@ if (config.configs !== undefined) {
 		}
 	
 		if (file_format_library !== undefined) {
-			console.log(`\t${name}: '${conf.dest}' from '${conf.schema}'`);
-			
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			jsf.option({ useDefaultValue: true, requiredOnly: true });
-			
-			const sample_config = jsf.generate(JSON.parse(fs.readFileSync(conf.schema, "utf-8")) as Schema) as object;
-			
-			const dest = path.join(release_dir_latest, conf.dest);
+			const validator = ajv.compile(JSON.parse(fs.readFileSync(conf.schema, "utf-8")))
 
-			create_parent_dirs(dest);
+			if (!validator(file_format_library.parse(fs.readFileSync(conf.orig, "utf-8")))) {
+				const errors = validator.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
 
-			fs.writeFileSync(dest, file_format_library.stringify(sample_config));
-	
+				throw new SyntaxError(`invalid config file: ${errors.join(", ")}`);
+			}
+
+			if (conf.dest !== undefined) {
+				create_parent_dirs(conf.dest);
+			}
+			
+			copy_release_file(conf.orig, conf.dest);
+		} else {
+			throw new SyntaxError(`config-file extension '${path.extname(conf.dest)}' is not supported`);
 		}
 	});
 	console.log();

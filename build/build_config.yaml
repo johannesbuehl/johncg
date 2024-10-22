@@ -21,6 +21,7 @@ builds:
 configs:
   server:
     schema: config.schema.json
+    orig: config_default.yaml
     dest: config.yaml
 external_packages:
   - "@img"
