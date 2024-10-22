@@ -30,15 +30,15 @@ external_packages:
 copy:
   - orig: casparcg
   - orig: files/Bible
-    dest: Bible
+    dest: Bibles
   - orig: files/Psalm
-    dest: Psalm
+    dest: Psalms
   - orig: files/Song
-    dest: Song
+    dest: Songs
   - orig: pandoc/texlive.profile
 mkdir:
-  - Playlist
-  - PDF
+  - Playlists
+  - PDFs
 release_dir: dist
 license_report:
   config:
