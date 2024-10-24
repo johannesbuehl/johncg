@@ -189,7 +189,7 @@ export default class Psalm extends PlaylistItemBase {
 		let psalm_content_string: string;
 
 		try {
-			psalm_content_string = fs.readFileSync(Config.get_path("psalm", this.props.file), "utf-8");
+			psalm_content_string = fs.readFileSync(Config.get_path("psalms", this.props.file), "utf-8");
 		} catch (e) {
 			this.is_displayable = false;
 

@@ -69,7 +69,7 @@ export default class Playlist {
 
 	readonly casparcg_transition: TransitionParameters = {
 		/* eslint-disable @typescript-eslint/naming-convention */
-		duration: Config.casparcg.transition_length,
+		duration: Config.behaviour.transition_length,
 		transitionType: TransitionType.Mix
 		/* eslint-enable @typescript-eslint/naming-convention */
 	};
@@ -234,12 +234,12 @@ export default class Playlist {
 	}
 
 	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
-		this.path = path.relative(Config.path.playlist, playlist_path);
+		this.path = path.relative(Config.path.playlists, playlist_path);
 
 		let playlist_string: string;
 
 		try {
-			playlist_string = fs.readFileSync(Config.get_path("playlist", this.path), "utf-8");
+			playlist_string = fs.readFileSync(Config.get_path("playlists", this.path), "utf-8");
 		} catch (e) {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't load playlist: playlist does not exist (${this.path})`);
@@ -277,7 +277,7 @@ export default class Playlist {
 		}
 
 		// if overwrite isn't give, check wether the file exists
-		if (fs.existsSync(Config.get_path("playlist", this.path)) && overwrite !== true) {
+		if (fs.existsSync(Config.get_path("playlists", this.path)) && overwrite !== true) {
 			return false;
 		} else {
 			const save_object: PlaylistObject = {
@@ -291,7 +291,7 @@ export default class Playlist {
 			};
 
 			fs.writeFileSync(
-				Config.get_path("playlist", this.path),
+				Config.get_path("playlists", this.path),
 				JSON.stringify(save_object, null, "\t"),
 				"utf-8"
 			);

@@ -4,7 +4,6 @@ import path from "path";
 import mime from "mime-types";
 import { unescape } from "querystring";
 
-import Config from "../config/config";
 import { logger } from "../logger";
 
 class HTTPServer {
@@ -17,8 +16,6 @@ class HTTPServer {
 
 		this.server = http
 			.createServer((request, response) => {
-				let resource_dir = "client";
-
 				// unescape the percent signs in the url
 				request.url = unescape(request.url ?? "");
 
@@ -30,15 +27,10 @@ class HTTPServer {
 					case request.url === "/":
 						request.url = "main.html";
 						break;
-					// serve the CasparCG-templates
-					case request.url.slice(0, 11) === "/Templates/":
-						resource_dir = Config.get_path("template");
-						request.url = request.url.slice(11);
-						break;
 				}
 
 				// try to serve the requested url
-				fs.readFile(path.join(resource_dir ?? "", request.url), (err, data) => {
+				fs.readFile(path.join("client", request.url), (err, data) => {
 					// if there was an error while opening the file, serve a 404-error
 					if (err) {
 						logger.error(`can't serve HTTP-request: 404 - resource not found (${request.url})`);

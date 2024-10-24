@@ -67,7 +67,7 @@ export default class PDF extends PlaylistItemBase {
 			void (async () => {
 				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
+				const pth = Config.get_path("pdfs", this.props.file).replaceAll("/", "\\");
 
 				logger.debug(`loading PDF-file (${pth})`);
 

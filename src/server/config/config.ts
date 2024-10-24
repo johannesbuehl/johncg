@@ -29,18 +29,16 @@ export interface ConfigYAML {
 	behaviour: {
 		activate_item_on_add: boolean;
 		bible_citation_style: string;
+		transition_length: number;
 	};
 	path: {
-		playlist: string;
-		song: string;
-		psalm: string;
-		pdf: string;
+		playlists: string;
+		songs: string;
+		psalms: string;
+		pdfs: string;
 		bible: string;
 	};
-	casparcg: {
-		transition_length: number;
-		connections: CasparCGConnectionSettings[];
-	};
+	casparcg_connections: CasparCGConnectionSettings[];
 	client_server: {
 		http: {
 			port: number;
@@ -122,7 +120,6 @@ class ConfigClass {
 
 	private config: ConfigYAML;
 	private config_internal: {
-		casparcg_template_path?: string;
 		casparcg_resolution: CasparCGResolution;
 	} = {
 		casparcg_resolution: { height: 1080, width: 1920 }
@@ -208,14 +205,8 @@ class ConfigClass {
 		fs.writeFileSync(pth, JSON.stringify(this.config, undefined, "\t"));
 	}
 
-	get_path(type: keyof ConfigYAML["path"] | "template", pth?: string): string {
-		let base_path: string = "";
-
-		if (type === "template") {
-			base_path = this.config_internal.casparcg_template_path ?? "Templates";
-		} else if (Object.keys(this.config.path).includes(type)) {
-			base_path = this.config.path[type];
-		}
+	get_path(type: keyof ConfigYAML["path"], pth?: string): string {
+		const base_path: string = this.config.path[type] ?? "";
 
 		if (pth !== undefined) {
 			const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
@@ -223,12 +214,6 @@ class ConfigClass {
 			return return_path.replaceAll("\\", "/");
 		} else {
 			return base_path;
-		}
-	}
-
-	set casparcg_template_path(pth: string) {
-		if (typeof pth === "string" && pth.length > 0) {
-			this.config_internal.casparcg_template_path = structuredClone(pth);
 		}
 	}
 
@@ -266,9 +251,9 @@ class ConfigClass {
 	}
 
 	get casparcg_transition(): TransitionParameters | undefined {
-		if (Config.casparcg.transition_length) {
+		if (Config.behaviour.transition_length) {
 			return {
-				duration: Config.casparcg.transition_length,
+				duration: Config.behaviour.transition_length,
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				transitionType: TransitionType.Mix
 			};
@@ -279,8 +264,8 @@ class ConfigClass {
 		return structuredClone(this.config.path);
 	}
 
-	get casparcg(): ConfigYAML["casparcg"] {
-		return structuredClone(this.config.casparcg);
+	get casparcg_connections(): ConfigYAML["casparcg_connections"] {
+		return structuredClone(this.config.casparcg_connections);
 	}
 
 	get log_level(): ConfigYAML["log_level"] {

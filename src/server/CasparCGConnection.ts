@@ -1,19 +1,8 @@
 import { CasparCG } from "casparcg-connection";
 import Config, { CasparCGConnectionSettings } from "./config/config";
 import { logger } from "./logger";
-import { XMLParser } from "fast-xml-parser";
 import CasparCGServer from "./CasparCGServer";
 import { sleep } from "./lib";
-
-interface CasparCGPathsSettings {
-	/* eslint-disable @typescript-eslint/naming-convention */
-	"data-path": string;
-	"initial-path": string;
-	"log-path": string;
-	"media-path": string;
-	"template-path": string;
-	/* eslint-enable @typescript-eslint/naming-convention */
-}
 
 export interface CasparCGResolution {
 	width: number;
@@ -60,8 +49,6 @@ export function stringify_json_for_tempalte<T>(data: T) {
 	);
 }
 
-const xml_parser = new XMLParser();
-
 // initiate all casparcg-connections
 export const casparcg: { visibility: boolean; casparcg_connections: CasparCGConnection[] } = {
 	visibility: true,
@@ -69,7 +56,7 @@ export const casparcg: { visibility: boolean; casparcg_connections: CasparCGConn
 };
 
 void (async () => {
-	casparcg.casparcg_connections = Config.casparcg.connections.map((connection_setting) => {
+	casparcg.casparcg_connections = Config.casparcg_connections.map((connection_setting) => {
 		logger.log(`Adding CasparCG-connection ${JSON.stringify(connection_setting)}`);
 
 		let server: CasparCGServer | undefined = undefined;
@@ -170,21 +157,6 @@ void (async () => {
 		logger.log(
 			`using resolution: '${Config.casparcg_resolution.width}x${Config.casparcg_resolution.height}p${framerate}'`
 		);
-	}
-
-	const casparcg_infopaths_string = await catch_casparcg_timeout(
-		async () => (await (await connection.connection.infoPaths()).request)?.data as string,
-		"INFO PATHS"
-	);
-
-	if (casparcg_infopaths_string !== undefined) {
-		const paths = (
-			xml_parser.parse(casparcg_infopaths_string) as {
-				paths: object;
-			}
-		)?.paths as CasparCGPathsSettings;
-
-		Config.casparcg_template_path = paths["template-path"];
 	}
 })();
 

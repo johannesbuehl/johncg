@@ -37,12 +37,12 @@ export type Directory<K extends keyof ItemFileMap> = NodeBase &
 		};
 	}[K];
 export interface ItemFileMap {
-	song: SongFile;
-	psalm: PsalmFile;
+	songs: SongFile;
+	psalms: PsalmFile;
 	media: CasparFile;
 	template: CasparFile;
-	pdf: PDFFile;
-	playlist: PlaylistFile;
+	pdfs: PDFFile;
+	playlists: PlaylistFile;
 }
 export type ItemFileMapped<K extends keyof ItemFileMap> = ItemFileMap[K];
 export type ItemNodeMapped<K extends keyof ItemFileMap> = Node<K>;

@@ -15,154 +15,147 @@
                 "FATAL",
                 "OFF"
             ],
-			"default": "INFO"
+            "default": "INFO"
         },
         "behaviour": {
             "type": "object",
             "properties": {
                 "activate_item_on_add": {
-					"description": "set the newly added element active",
+                    "description": "set the newly added element active",
                     "type": "boolean",
-					"default": true
+                    "default": true
                 },
                 "bible_citation_style": {
-					"description": "Citation-stype for bible passages. Syntax: Citation for \"1. Moses\" with chapter 1, verses 2-4 and 6 and chapter 7",
+                    "description": "Citation-stype for bible passages. Syntax: Citation for \"1. Moses\" with chapter 1, verses 2-4 and 6 and chapter 7",
                     "type": "string",
-					"default": "1. Moses 1,2-4.6; 7",
-					"pattern": "^(?:1\\. Moses)(?<sep_book_chapter>.*?)(?:1)(?<sep_chapter_verse>.*?)(?:2)(?<range_verse>.*?)(?:4)(?<sep_verse>.*?)(?:6)(?<sep_chapter>.*?)(?:7)$"
+                    "default": "1. Moses 1,2-4.6; 7",
+                    "pattern": "^(?:1\\. Moses)(?<sep_book_chapter>.*?)(?:1)(?<sep_chapter_verse>.*?)(?:2)(?<range_verse>.*?)(?:4)(?<sep_verse>.*?)(?:6)(?<sep_chapter>.*?)(?:7)$"
+                },
+                "transition_length": {
+                    "description": "crossfade-length between different items in frames. Omit for cuts",
+                    "type": "integer",
+                    "default": 12,
+                    "minimum": 0
                 }
             },
             "required": [
                 "activate_item_on_add",
-				"bible_citation_style"
+                "bible_citation_style"
             ],
             "additionalProperties": false
         },
         "path": {
-			"description": "paths to different files",
+            "description": "paths to different files",
             "type": "object",
             "properties": {
-                "playlist": {
-					"description": "directory with playlist-files",
+                "playlists": {
+                    "description": "directory with playlist-files",
                     "type": "string",
-					"default": "Playlist"
+                    "default": "Playlists"
                 },
-                "song": {
-					"description": "directory with song-files",
+                "songs": {
+                    "description": "directory with song-files",
                     "type": "string",
-					"default": "Song"
+                    "default": "Songs"
                 },
-                "psalm": {
-					"description": "directory with psalm-files",
+                "psalms": {
+                    "description": "directory with psalm-files",
                     "type": "string",
-					"default": "Psalm"
+                    "default": "Psalms"
                 },
-                "pdf": {
-					"description": "directory with pdf-files",
+                "pdfs": {
+                    "description": "directory with pdf-files",
                     "type": "string",
-					"default": "PDF"
+                    "default": "PDFs"
                 },
                 "bible": {
-					"description": "bible-file",
+                    "description": "bible-file",
                     "type": "string",
-					"default": "Bible/Lutherbibel.json"
+                    "default": "Bible/Lutherbibel.json"
                 }
             },
             "required": [
-                "playlist",
-                "song",
-                "psalm",
-                "pdf",
+                "playlists",
+                "songs",
+                "psalms",
+                "pdfs",
                 "bible"
             ],
             "additionalProperties": false
         },
-        "casparcg": {
-            "type": "object",
-            "properties": {
-                "transition_length": {
-					"description": "crossfade-length between different items in frames. Omit for cuts",
-                    "type": "integer",
-					"default": 12,
-					"minimum": 0
-                },
-                "connections": {
-					"description": "individual casparCG instances",
-                    "type": "array",
-                    "items": {
+        "casparcg_connections": {
+            "description": "individual casparCG instances",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "host": {
+                        "type": "string",
+                        "format": "hostname",
+                        "default": "localhost"
+                    },
+                    "port": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535,
+                        "default": "5250"
+                    },
+                    "channel": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 1
+                    },
+                    "layers": {
                         "type": "object",
                         "properties": {
-                            "host": {
-								"type": "string",
-								"format": "hostname",
-								"default": "localhost"
-                            },
-                            "port": {
+                            "media": {
+                                "description": "used for media-playback - leave empty to don't show media",
                                 "type": "integer",
-								"minimum": 0,
-								"maximum": 65535,
-								"default": "5250"
+                                "default": 20,
+                                "minimum": 0
                             },
-                            "channel": {
+                            "template": {
+                                "description": "used for templates and song-/psalm-/countdown-text",
                                 "type": "integer",
-								"minimum": 1,
-								"default": 1
-                            },
-                            "layers": {
-                                "type": "object",
-                                "properties": {
-                                    "media": {
-										"description": "used for media-playback - leave empty to don't show media",
-                                        "type": "integer",
-										"default": 20,
-										"minimum": 0
-                                    },
-                                    "template": {
-										"description": "used for templates and song-/psalm-/countdown-text",
-                                        "type": "integer",
-										"default": 21,
-										"minimum": 0
-                                    }
-                                },
-                                "required": [
-                                    "template"
-                                ],
-                                "additionalProperties": false
-                            },
-                            "path": {
-								"description": "path to the casparCG-directory to autostart at launch",
-                                "type": "string",
-								"default": "casparcg_2.4.0"
-                            },
-                            "stageview": {
-								"description": "show song-chords and hide song-backgrounds",
-                                "type": "boolean",
-								"default": false
+                                "default": 21,
+                                "minimum": 0
                             }
                         },
                         "required": [
-                            "host",
-                            "port",
-                            "channel",
-                            "layers"
+                            "template"
                         ],
                         "additionalProperties": false
                     },
-					"default": [{
-						"host": "127.0.0.1",
-						"port": 5250,
-						"channel": 1,
-						"layers": {
-							"media": 20,
-							"template": 21
-						}
-					}]
-                }
+                    "path": {
+                        "description": "path to the casparCG-directory to autostart at launch",
+                        "type": "string",
+                        "default": "casparcg_2.4.0"
+                    },
+                    "stageview": {
+                        "description": "show song-chords and hide song-backgrounds",
+                        "type": "boolean",
+                        "default": false
+                    }
+                },
+                "required": [
+                    "host",
+                    "port",
+                    "channel",
+                    "layers"
+                ],
+                "additionalProperties": false
             },
-            "required": [
-                "connections"
-            ],
-            "additionalProperties": false
+            "default": [
+                {
+                    "host": "127.0.0.1",
+                    "port": 5250,
+                    "channel": 1,
+                    "layers": {
+                        "media": 20,
+                        "template": 21
+                    }
+                }
+            ]
         },
         "client_server": {
             "type": "object",
@@ -172,9 +165,9 @@
                     "properties": {
                         "port": {
                             "type": "integer",
-							"minimum": 0,
-							"maximum": 65535,
-							"default": 8888
+                            "minimum": 0,
+                            "maximum": 65535,
+                            "default": 8888
                         }
                     },
                     "required": [
@@ -187,9 +180,9 @@
                     "properties": {
                         "port": {
                             "type": "integer",
-							"minimum": 0,
-							"maximum": 65535,
-							"default": 8765
+                            "minimum": 0,
+                            "maximum": 65535,
+                            "default": 8765
                         }
                     },
                     "required": [
@@ -209,7 +202,7 @@
         "log_level",
         "behaviour",
         "path",
-        "casparcg",
+        "casparcg_connections",
         "client_server"
     ],
     "additionalProperties": false

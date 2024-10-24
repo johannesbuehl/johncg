@@ -248,7 +248,7 @@ export default class Control {
 			logger.log(`loading playlist (${playlist_path})`);
 
 			try {
-				new_playlist = new Playlist(Config.get_path("playlist", playlist_path), () => {
+				new_playlist = new Playlist(Config.get_path("playlists", playlist_path), () => {
 					this.send_playlist();
 				});
 
@@ -388,11 +388,11 @@ export default class Control {
 			let save_path: string;
 			switch (message.type) {
 				case "song":
-					save_path = Config.get_path("song", file);
+					save_path = Config.get_path("songs", file);
 					file_string = new SongFile(message.data).sng_file;
 					break;
 				case "psalm":
-					save_path = Config.get_path("psalm", file);
+					save_path = Config.get_path("psalms", file);
 					file_string = JSON.stringify(message.data, undefined, "\t");
 					break;
 			}
@@ -888,10 +888,10 @@ export default class Control {
 		const search_map: { [T in keyof ItemFileMap]: () => Promise<ItemNodeMapped<T>[]> } = {
 			media: async () => await this.search_part.get_casparcg_media(),
 			template: async () => await this.search_part.get_casparcg_template(),
-			song: () => Promise.resolve(this.search_part.find_sng_files()),
-			playlist: () => Promise.resolve(this.search_part.find_jcg_files()),
-			pdf: () => Promise.resolve(this.search_part.find_pdf_files()),
-			psalm: () => Promise.resolve(this.search_part.find_psalm_files())
+			songs: () => Promise.resolve(this.search_part.find_sng_files()),
+			playlists: () => Promise.resolve(this.search_part.find_jcg_files()),
+			pdfs: () => Promise.resolve(this.search_part.find_pdf_files()),
+			psalms: () => Promise.resolve(this.search_part.find_psalm_files())
 		};
 
 		const files = await search_map[type]();
@@ -961,10 +961,10 @@ export default class Control {
 		let data: JCGPSend.ItemData<JCGPRecv.GetItemData["type"]>["data"] | undefined;
 
 		switch (type) {
-			case "song":
+			case "songs":
 				data = this.search_part.get_song_file(path);
 				break;
-			case "psalm":
+			case "psalms":
 				data = await this.search_part.get_psalm_file(path);
 				break;
 			default:
@@ -1076,9 +1076,9 @@ export default class Control {
 				const search_map: {
 					[K in JCGPRecv.NewDirectory["type"]]: () => Promise<ItemNodeMapped<K>[]>;
 				} = {
-					song: () => this.search_part.find_sng_files(),
-					playlist: () => this.search_part.find_jcg_files(),
-					psalm: () => this.search_part.find_psalm_files()
+					songs: () => this.search_part.find_sng_files(),
+					playlists: () => this.search_part.find_jcg_files(),
+					psalms: () => this.search_part.find_psalm_files()
 				};
 
 				this.send_all_clients<JCGPSend.ItemFiles<T>>({

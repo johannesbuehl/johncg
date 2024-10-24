@@ -22,9 +22,9 @@ export default class SearchPart {
 		let song;
 
 		if (fast) {
-			song = new SongFileFast(Config.get_path("song", f.path));
+			song = new SongFileFast(Config.get_path("songs", f.path));
 		} else {
-			song = new SngFile(Config.get_path("song", f.path));
+			song = new SngFile(Config.get_path("songs", f.path));
 		}
 
 		const song_value: SongFile = {
@@ -40,7 +40,7 @@ export default class SearchPart {
 
 	async create_psalm_file(f: FileBase): Promise<PsalmFile> {
 		const psalm = JSON.parse(
-			await fs.readFile(Config.get_path("psalm", f.path), "utf-8")
+			await fs.readFile(Config.get_path("psalms", f.path), "utf-8")
 		) as PsalmData;
 
 		return {
@@ -90,10 +90,10 @@ export default class SearchPart {
 		return (await Promise.all(promises)).filter((el) => el !== undefined) as Node<K>[];
 	}
 
-	async find_sng_files(pth: string = Config.path.song): Promise<Node<"song">[]> {
+	async find_sng_files(pth: string = Config.path.songs): Promise<Node<"songs">[]> {
 		logger.log("searching song-files");
 
-		return this.find_files<"song">(
+		return this.find_files<"songs">(
 			pth,
 			pth,
 			".sng",
@@ -101,22 +101,22 @@ export default class SearchPart {
 		);
 	}
 
-	async find_jcg_files(pth: string = Config.path.playlist): Promise<Node<"playlist">[]> {
+	async find_jcg_files(pth: string = Config.path.playlists): Promise<Node<"playlists">[]> {
 		logger.log("searching jcg-files");
 
-		return this.find_files<"playlist">(pth, pth, ".jcg", (f) => Promise.resolve(f));
+		return this.find_files<"playlists">(pth, pth, ".jcg", (f) => Promise.resolve(f));
 	}
 
-	async find_pdf_files(pth: string = Config.path.pdf): Promise<Node<"pdf">[]> {
+	async find_pdf_files(pth: string = Config.path.pdfs): Promise<Node<"pdfs">[]> {
 		logger.log("searching PDF-files");
 
-		return this.find_files<"pdf">(pth, pth, ".pdf", (f) => Promise.resolve(f));
+		return this.find_files<"pdfs">(pth, pth, ".pdf", (f) => Promise.resolve(f));
 	}
 
-	async find_psalm_files(pth: string = Config.path.psalm): Promise<Node<"psalm">[]> {
+	async find_psalm_files(pth: string = Config.path.psalms): Promise<Node<"psalms">[]> {
 		logger.log("searching psalm-files");
 
-		return this.find_files<"psalm">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
+		return this.find_files<"psalms">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
 	}
 
 	async get_casparcg_media(): Promise<Node<"media">[]> {

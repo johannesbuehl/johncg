@@ -222,8 +222,8 @@ export default class Song extends PlaylistItemBase {
 			type: "song",
 			caption: this.item_props.caption,
 			title,
-			media: Config.casparcg.connections[0].stageview ? undefined : this.media,
-			template: this.get_template(!!Config.casparcg.connections[0].stageview)
+			media: Config.casparcg_connections[0].stageview ? undefined : this.media,
+			template: this.get_template(!!Config.casparcg_connections[0].stageview)
 		});
 	}
 
@@ -277,7 +277,7 @@ export default class Song extends PlaylistItemBase {
 
 	cache_song_file() {
 		try {
-			this.song_file = new SongFile(Config.get_path("song", this.props.file));
+			this.song_file = new SongFile(Config.get_path("songs", this.props.file));
 		} catch (e) {
 			// if the error is because the file doesn't exist, skip the rest of the loop iteration
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
