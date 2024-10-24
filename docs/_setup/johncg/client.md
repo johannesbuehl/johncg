@@ -2,6 +2,7 @@
 title: Client
 layout: page
 parent: JohnCG-Setup
+nav_order: 2
 ---
 # Client
 You can access the client interface from any modern web browser within the same network by navigating to the server's IP address on port `:8888` (can be changed in config).

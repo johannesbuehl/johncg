@@ -16,12 +16,14 @@ Book of the bible
 ### Chapter
 Chapter of the selected book.
 
-**Tip**: Doubleclick on the chapter to clear the selected verses.
+{: .tip }
+Doubleclick on the chapter to clear the selected verses.
 
 ### Verse
 Select one ore more verses of the selected chapter.
 
-**Tip**: Hold down the shift-key while clicking on a verse to (de)-select the range from the previous clicked verse.
+{: .tip }
+Hold down the shift-key while clicking on a verse to (de)-select the range from the previous clicked verse.
 
 ## CasparCG layers
 

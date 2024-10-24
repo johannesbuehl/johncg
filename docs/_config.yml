@@ -18,6 +18,23 @@ collections:
   files_and_protocol:
     output: true
 
+callouts:
+  warning:
+    title: Warning
+    color: red
+  attention:
+    title: Attention
+    color: yellow
+  important:
+    title: Important
+    color: purple
+  info:
+    title: Info
+    color: blue
+  tip:
+    title: Tip
+    color: green
+
 just_the_docs:
   collections:
     setup:

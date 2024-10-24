@@ -25,6 +25,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - countdown: "Add Countdown" button is not working
 - countdown: some modes don't work as they should
 - add english bible-file
+- stageview: ignore visibility and update docs
+- change build-name to not include the build-number
+- add documentation for jcg and psm files
 
 ## Planned
 - reenable eslint vue-indent
@@ -39,3 +42,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - use http-status-codes in answer to client
 - seperate manual and documentation
 - test windows 11 and update docs
+- make template layer optional too and adjust docs accordingly
