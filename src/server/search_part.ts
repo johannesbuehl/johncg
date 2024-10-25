@@ -136,7 +136,7 @@ export default class SearchPart {
 		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
-	async get_casparcg_template(): Promise<Node<"template">[]> {
+	async get_casparcg_template(): Promise<Node<"templates">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-template-list: no connection added");
 			return [];
@@ -194,7 +194,7 @@ export default class SearchPart {
 	}
 }
 
-function build_files<K extends "media" | "template">(
+function build_files<K extends "media" | "templates">(
 	input_array: string[][],
 	root?: string
 ): Node<K>[] {

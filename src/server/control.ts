@@ -887,7 +887,7 @@ export default class Control {
 
 		const search_map: { [T in keyof ItemFileMap]: () => Promise<ItemNodeMapped<T>[]> } = {
 			media: async () => await this.search_part.get_casparcg_media(),
-			template: async () => await this.search_part.get_casparcg_template(),
+			templates: async () => await this.search_part.get_casparcg_template(),
 			songs: () => Promise.resolve(this.search_part.find_sng_files()),
 			playlists: () => Promise.resolve(this.search_part.find_jcg_files()),
 			pdfs: () => Promise.resolve(this.search_part.find_pdf_files()),

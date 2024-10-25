@@ -22,7 +22,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - test changed pandoc-installer (win and linux)
 - first item is comment -> errors
 - client: placeholder for custom-templates and remove template-part of ItemSlide.vue
-- bible-file: own file-extension? or leave at json?
 - jcg and psm files: add version similar to bible-files
 
 ## Planned
@@ -39,3 +38,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move backend to go
 - use http-status-codes in answer to client
 - sng-files: "#H" comments-out a line -> implement but show #H-lines in stageview to use as comments
+- message-json-creation: use string templates instead of marshalling

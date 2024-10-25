@@ -71,7 +71,7 @@
                 "bible": {
                     "description": "bible-file",
                     "type": "string",
-                    "default": "Bible/Lutherbibel.json"
+                    "default": "Bible/Lutherbibel.bbl"
                 }
             },
             "required": [

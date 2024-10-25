@@ -208,41 +208,41 @@ class Global {
 
 	// Item-Files
 	item_files = ref<{ [key in keyof ItemFileMap]: ItemNodeMapped<key>[] }>({
-		song: [],
+		songs: [],
 		media: [],
-		pdf: [],
-		playlist: [],
-		template: [],
-		psalm: []
+		pdfs: [],
+		playlists: [],
+		templates: [],
+		psalms: []
 	});
 	private item_files_last_requests: { [key in keyof ItemFileMap]: number } = {
-		song: 0,
+		songs: 0,
 		media: 0,
-		pdf: 0,
-		playlist: 0,
-		template: 0,
-		psalm: 0
+		pdfs: 0,
+		playlists: 0,
+		templates: 0,
+		psalms: 0
 	};
-	get_song_files(force: boolean = false): Node<"song">[] {
+	get_song_files(force: boolean = false): Node<"songs">[] {
 		const now = new Date().valueOf();
 
 		if (
-			(this.item_files.value.song.length === 0 &&
-				now - this.item_files_last_requests.song >
+			(this.item_files.value.songs.length === 0 &&
+				now - this.item_files_last_requests.songs >
 					this.settings.timeouts.item_file_getters * 1000) ||
-			now - this.item_files_last_requests.song >
+			now - this.item_files_last_requests.songs >
 				this.settings.timeouts.item_file_invalidation * 1000 ||
 			force
 		) {
-			this.item_files_last_requests.song = new Date().valueOf();
+			this.item_files_last_requests.songs = new Date().valueOf();
 
 			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
-				type: "song"
+				type: "songs"
 			});
 		}
 
-		return this.item_files.value.song;
+		return this.item_files.value.songs;
 	}
 	get_media_files(force: boolean = false): Node<"media">[] {
 		const now = new Date().valueOf();
@@ -268,89 +268,89 @@ class Global {
 
 		return this.item_files.value.media;
 	}
-	get_pdf_files(force: boolean = false): Node<"pdf">[] {
+	get_pdf_files(force: boolean = false): Node<"pdfs">[] {
 		const now = new Date().valueOf();
 
 		if (
-			(this.item_files.value.pdf.length === 0 &&
-				now - this.item_files_last_requests.pdf >
+			(this.item_files.value.pdfs.length === 0 &&
+				now - this.item_files_last_requests.pdfs >
 					this.settings.timeouts.item_file_getters * 1000) ||
-			now - this.item_files_last_requests.pdf >
+			now - this.item_files_last_requests.pdfs >
 				this.settings.timeouts.item_file_invalidation * 1000 ||
 			force
 		) {
-			this.item_files_last_requests.pdf = new Date().valueOf();
+			this.item_files_last_requests.pdfs = new Date().valueOf();
 
 			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
-				type: "pdf"
+				type: "pdfs"
 			});
 		}
 
-		return this.item_files.value.pdf;
+		return this.item_files.value.pdfs;
 	}
-	get_playlist_files(force: boolean = false): Node<"playlist">[] {
+	get_playlist_files(force: boolean = false): Node<"playlists">[] {
 		const now = new Date().valueOf();
 
 		if (
-			(this.item_files.value.playlist.length === 0 &&
-				now - this.item_files_last_requests.playlist >
+			(this.item_files.value.playlists.length === 0 &&
+				now - this.item_files_last_requests.playlists >
 					this.settings.timeouts.item_file_getters * 1000) ||
-			now - this.item_files_last_requests.playlist >
+			now - this.item_files_last_requests.playlists >
 				this.settings.timeouts.item_file_invalidation * 1000 ||
 			force
 		) {
-			this.item_files_last_requests.playlist = new Date().valueOf();
+			this.item_files_last_requests.playlists = new Date().valueOf();
 
 			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
-				type: "playlist"
+				type: "playlists"
 			});
 		}
 
-		return this.item_files.value.playlist;
+		return this.item_files.value.playlists;
 	}
-	get_template_files(force: boolean = false): Node<"template">[] {
+	get_template_files(force: boolean = false): Node<"templates">[] {
 		const now = new Date().valueOf();
 
 		if (
-			(this.item_files.value.template.length === 0 &&
-				now - this.item_files_last_requests.template >
+			(this.item_files.value.templates.length === 0 &&
+				now - this.item_files_last_requests.templates >
 					this.settings.timeouts.item_file_getters * 1000) ||
-			now - this.item_files_last_requests.template >
+			now - this.item_files_last_requests.templates >
 				this.settings.timeouts.item_file_invalidation * 1000 ||
 			force
 		) {
-			this.item_files_last_requests.template = new Date().valueOf();
+			this.item_files_last_requests.templates = new Date().valueOf();
 
 			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
-				type: "template"
+				type: "templates"
 			});
 		}
 
-		return this.item_files.value.template;
+		return this.item_files.value.templates;
 	}
-	get_psalm_files(force: boolean = false): Node<"psalm">[] {
+	get_psalm_files(force: boolean = false): Node<"psalms">[] {
 		const now = new Date().valueOf();
 
 		if (
-			(this.item_files.value.psalm.length === 0 &&
-				now - this.item_files_last_requests.psalm >
+			(this.item_files.value.psalms.length === 0 &&
+				now - this.item_files_last_requests.psalms >
 					this.settings.timeouts.item_file_getters * 1000) ||
-			now - this.item_files_last_requests.psalm >
+			now - this.item_files_last_requests.psalms >
 				this.settings.timeouts.item_file_invalidation * 1000 ||
 			force
 		) {
-			this.item_files_last_requests.psalm = new Date().valueOf();
+			this.item_files_last_requests.psalms = new Date().valueOf();
 
 			this.ws?.send<JCGPRecv.GetItemFiles>({
 				command: "get_item_files",
-				type: "psalm"
+				type: "psalms"
 			});
 		}
 
-		return this.item_files.value.psalm;
+		return this.item_files.value.psalms;
 	}
 
 	bible_file = ref<BibleFile>();

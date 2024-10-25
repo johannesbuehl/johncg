@@ -9,7 +9,7 @@ path: # path to the different files
   songs: D:/JohnCG-Johannes/80_Songs/Lieder # pdf-files
   psalms: D:/JohnCG-Johannes/80_Songs/Psalme # psalm-files
   pdfs: D:/JohnCG-Johannes/60_PDF/ # playlist-files
-  bible: files/Bible/Lutherbibel.json # used bible
+  bible: files/Bible/Lutherbibel.bbl # used bible
 casparcg_connections: # individual CasparCG-connections
   - host: 127.0.0.1
     port: 5250

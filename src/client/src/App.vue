@@ -265,20 +265,20 @@
 				case "media":
 					Globals.item_files.value.media = data.files as ItemNodeMapped<T>[];
 					break;
-				case "pdf":
-					Globals.item_files.value.pdf = data.files as ItemNodeMapped<T>[];
+				case "pdfs":
+					Globals.item_files.value.pdfs = data.files as ItemNodeMapped<T>[];
 					break;
-				case "playlist":
-					Globals.item_files.value.playlist = data.files as ItemNodeMapped<T>[];
+				case "playlists":
+					Globals.item_files.value.playlists = data.files as ItemNodeMapped<T>[];
 					break;
-				case "template":
-					Globals.item_files.value.template = data.files as ItemNodeMapped<T>[];
+				case "templates":
+					Globals.item_files.value.templates = data.files as ItemNodeMapped<T>[];
 					break;
-				case "psalm":
-					Globals.item_files.value.psalm = data.files as ItemNodeMapped<"psalm">[];
+				case "psalms":
+					Globals.item_files.value.psalms = data.files as ItemNodeMapped<"psalms">[];
 					break;
-				case "song":
-					Globals.item_files.value.song = data.files as ItemNodeMapped<"song">[];
+				case "songs":
+					Globals.item_files.value.songs = data.files as ItemNodeMapped<"songs">[];
 					break;
 			}
 		}

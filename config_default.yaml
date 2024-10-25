@@ -8,7 +8,7 @@ path: # path to the different files
   songs: Songs # pdf-files
   psalms: Psalms # psalm-files
   pdfs: PDFs # playlist-files
-  bible: Bibles/Lutherbibel.json # used bible
+  bible: Bibles/Lutherbibel.bbl # used bible
 casparcg_connections: # individual CasparCG-connections
   - host: 127.0.0.1
     port: 5250

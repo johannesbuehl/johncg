@@ -40,7 +40,7 @@ export interface ItemFileMap {
 	songs: SongFile;
 	psalms: PsalmFile;
 	media: CasparFile;
-	template: CasparFile;
+	templates: CasparFile;
 	pdfs: PDFFile;
 	playlists: PlaylistFile;
 }
