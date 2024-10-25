@@ -13,9 +13,10 @@ export interface PsalmFile {
 		caption: string;
 		id?: string;
 		book?: string;
-		indent: boolean;
+		indent?: boolean;
 	};
 	text: string[][][];
+	version: string;
 }
 
 export type PsalmTemplateMessage = PsalmTemplateData | TemplateSlideJump;
@@ -300,10 +301,11 @@ const psalm_file_schema: JSONSchemaType<PsalmFile> = {
 					nullable: true
 				},
 				indent: {
-					type: "boolean"
+					type: "boolean",
+					nullable: true
 				}
 			},
-			required: ["caption", "indent"],
+			required: ["caption"],
 			additionalProperties: false
 		},
 		text: {
@@ -317,9 +319,13 @@ const psalm_file_schema: JSONSchemaType<PsalmFile> = {
 					}
 				}
 			}
+		},
+		version: {
+			type: "string",
+			pattern: "^v1\\.\\d+\\.\\d+$"
 		}
 	},
-	required: ["metadata", "text"],
+	required: ["metadata", "text", "version"],
 	additionalProperties: false
 	/* eslint-enable @typescript-eslint/naming-convention */
 };

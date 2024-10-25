@@ -88,7 +88,7 @@
 		{ immediate: true }
 	);
 
-	const song_directory_stack = ref<Directory<"song">[]>([]);
+	const song_directory_stack = ref<Directory<"songs">[]>([]);
 	watch(
 		() => Globals.get_song_files(),
 		() => {
@@ -214,7 +214,7 @@
 				Globals.control_window_state_confirm = undefined;
 
 				// reset the item-files
-				Globals.item_files.value.song = [];
+				Globals.item_files.value.songs = [];
 			}
 		});
 
@@ -543,7 +543,7 @@
 					Globals.ws?.send<JCGPRecv.NewDirectory>({
 						command: 'new_directory',
 						path,
-						type: 'song'
+						type: 'songs'
 					})
 			"
 		>

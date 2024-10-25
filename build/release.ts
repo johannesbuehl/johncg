@@ -239,20 +239,20 @@ if (config.configs !== undefined) {
 
 		let file_format_library;
 	
-		switch (path.extname(conf.dest)) {
+		switch (path.extname(conf.dest ?? conf.orig)) {
 			case ".yaml":
 			case ".yml":
-				file_format_library = yaml;
+				file_format_library = (s: string) => yaml.parse(s);
 				break;
 			case ".json":
-				file_format_library = JSON;
+				file_format_library = (s: string) => JSON.parse(s);
 				break;
 		}
-	
+
 		if (file_format_library !== undefined) {
 			const validator = ajv.compile(JSON.parse(fs.readFileSync(conf.schema, "utf-8")))
 
-			if (!validator(file_format_library.parse(fs.readFileSync(conf.orig, "utf-8")))) {
+			if (!validator(file_format_library(fs.readFileSync(conf.orig, "utf-8")))) {
 				const errors = validator.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
 
 				throw new SyntaxError(`invalid config file: ${errors.join(", ")}`);
@@ -264,7 +264,7 @@ if (config.configs !== undefined) {
 			
 			copy_release_file(conf.orig, conf.dest);
 		} else {
-			throw new SyntaxError(`config-file extension '${path.extname(conf.dest)}' is not supported`);
+			throw new SyntaxError(`config-file extension '${path.extname(conf.dest ?? conf.orig)}' is not supported`);
 		}
 	});
 	console.log();

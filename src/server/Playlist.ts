@@ -35,6 +35,8 @@ import {
 import path from "path";
 import Text from "./PlaylistItems/Text";
 import { server_id } from "./servers/websocket-server";
+import { JSONSchemaType } from "ajv";
+import { ajv, CountdownMode } from "./lib.js";
 
 export interface ClientPlaylistItems {
 	playlist_items: ClientPlaylistItem[];
@@ -55,6 +57,323 @@ enum TransitionType {
 	Sting = "STING"
 }
 /* eslint-enable @typescript-eslint/naming-convention */
+
+const playlist_file_schema: JSONSchemaType<PlaylistObject> = {
+	/* eslint-disable @typescript-eslint/naming-convention */
+	$schema: "http://json-schema.org/draft-07/schema#",
+	additionalProperties: false,
+	properties: {
+		caption: {
+			type: "string"
+		},
+		items: {
+			items: {
+				anyOf: [
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							file: {
+								type: "string"
+							},
+							languages: {
+								items: {
+									type: "number"
+								},
+								nullable: true,
+								type: "array"
+							},
+							type: {
+								const: "song",
+								type: "string"
+							},
+							verse_order: {
+								items: {
+									type: "string"
+								},
+								nullable: true,
+								type: "array"
+							}
+						},
+						required: ["caption", "color", "file", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							font_color: {
+								type: "string"
+							},
+							font_size: {
+								type: "number"
+							},
+							media: {
+								type: "string"
+							},
+							mode: {
+								type: "string",
+								enum: [
+									CountdownMode.Duration,
+									CountdownMode.EndTime,
+									CountdownMode.Stopwatch,
+									CountdownMode.Clock
+								]
+							},
+							position: {
+								additionalProperties: false,
+								properties: {
+									x: {
+										type: "number"
+									},
+									y: {
+										type: "number"
+									}
+								},
+								required: ["x", "y"],
+								type: "object"
+							},
+							show_seconds: {
+								type: "boolean"
+							},
+							time: {
+								type: "string"
+							},
+							type: {
+								const: "countdown",
+								type: "string"
+							}
+						},
+						required: [
+							"caption",
+							"color",
+							"font_color",
+							"font_size",
+							"media",
+							"mode",
+							"position",
+							"show_seconds",
+							"time",
+							"type"
+						],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							type: {
+								const: "comment",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							text: {
+								type: "string"
+							},
+							type: {
+								const: "text",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "text", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							loop: {
+								type: "boolean"
+							},
+							media: {
+								type: "string"
+							},
+							type: {
+								const: "media",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "loop", "media", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							template: {
+								additionalProperties: false,
+								properties: {
+									data: {
+										type: "object",
+										nullable: true
+									},
+									template: {
+										type: "string"
+									}
+								},
+								required: ["template"],
+								type: "object"
+							},
+							type: {
+								const: "template",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "template", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							file: {
+								type: "string"
+							},
+							type: {
+								const: "pdf",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "file", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							type: {
+								type: "string",
+								const: "bible"
+							},
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							book_id: {
+								type: "string"
+							},
+							chapters: {
+								type: "object",
+								required: [],
+								additionalProperties: {
+									type: "array",
+									items: {
+										type: "number"
+									}
+								}
+							}
+						},
+						required: ["book_id", "caption", "chapters", "color", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							file: {
+								type: "string"
+							},
+							type: {
+								const: "psalm",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "file", "type"],
+						type: "object"
+					},
+					{
+						additionalProperties: false,
+						properties: {
+							caption: {
+								type: "string"
+							},
+							color: {
+								type: "string"
+							},
+							commands: {
+								additionalProperties: false,
+								properties: {
+									set_active: {
+										type: "string",
+										nullable: true
+									},
+									set_inactive: {
+										type: "string",
+										nullable: true
+									}
+								},
+								type: "object"
+							},
+							type: {
+								const: "amcp",
+								type: "string"
+							}
+						},
+						required: ["caption", "color", "commands", "type"],
+						type: "object"
+					}
+				]
+			},
+			type: "array"
+		},
+		version: {
+			type: "string"
+		}
+	},
+	required: ["caption", "items", "version"],
+	type: "object"
+	/* eslint-enable @typescript-eslint/naming-convention */
+};
+
+export const validate_playlist_file = ajv.compile(playlist_file_schema);
 
 export default class Playlist {
 	caption: string;
@@ -233,7 +552,7 @@ export default class Playlist {
 		return new_state;
 	}
 
-	protected load_playlist_file(playlist_path: string, callback?: () => void): void {
+	protected load_playlist_file(playlist_path: string, callback?: () => void): boolean {
 		this.path = path.relative(Config.path.playlists, playlist_path);
 
 		let playlist_string: string;
@@ -244,13 +563,28 @@ export default class Playlist {
 			if (e instanceof Error && "code" in e && e.code === "ENOENT") {
 				logger.error(`can't load playlist: playlist does not exist (${this.path})`);
 
-				return;
+				return false;
 			} else {
 				throw e;
 			}
 		}
 
-		const playlist: PlaylistObject = JSON.parse(playlist_string) as PlaylistObject;
+		let playlist: PlaylistObject;
+
+		try {
+			playlist = JSON.parse(playlist_string) as PlaylistObject;
+		} catch (e) {
+			if (e instanceof SyntaxError) {
+				return false;
+			} else {
+				throw e;
+			}
+		}
+
+		// validate config-file
+		if (!validate_playlist_file(playlist)) {
+			return false;
+		}
 
 		this.caption = playlist.caption;
 
@@ -264,6 +598,8 @@ export default class Playlist {
 
 		// reset the changes
 		this.changes = false;
+
+		return true;
 	}
 
 	save(playlist?: string, overwrite?: boolean): boolean {
@@ -287,7 +623,8 @@ export default class Playlist {
 						Object.fromEntries(
 							Object.entries(item.props).filter(([key]) => key !== "displayable")
 						) as ItemProps
-				)
+				),
+				version: "v1.0.0"
 			};
 
 			fs.writeFileSync(
