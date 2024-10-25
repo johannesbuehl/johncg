@@ -2,14 +2,14 @@ import fs from "fs";
 import { Levels } from "log4js";
 import path from "path";
 import yaml from "yaml";
-import { JSONSchemaType } from "ajv";
+import { ErrorObject, JSONSchemaType } from "ajv";
 
 import config_schema from "../../../config.schema.json";
 
 import { TransitionParameters } from "casparcg-connection";
 import { TransitionType } from "casparcg-connection/dist/enums";
 import { CasparCGResolution } from "../CasparCGConnection";
-import { ajv } from "../lib";
+import { ajv, create_ajv_error_string } from "../lib";
 import { BibleProps } from "../PlaylistItems/Bible";
 
 export interface CasparCGConnectionSettings {
@@ -129,19 +129,18 @@ class ConfigClass {
 		const open_result = this.open(pth);
 
 		if (open_result !== null) {
-			throw new SyntaxError(`invalid config file: ${open_result.join(", ")}`);
+			throw new SyntaxError(`invalid config file: ${create_ajv_error_string(open_result)}`);
 		}
 
 		// validate the bible-file
 		if (!validate_bible_file(JSON.parse(fs.readFileSync(this.get_path("bible"), "utf-8")))) {
-			const errors =
-				validate_bible_file.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
-
-			throw new SyntaxError(`invalid bible file: ${errors.join(", ")}`);
+			throw new SyntaxError(
+				`invalid bible file: ${create_ajv_error_string(validate_bible_file.errors)}`
+			);
 		}
 	}
 
-	open(pth: string = config_path): null | string[] {
+	open(pth: string = config_path): null | (string | ErrorObject)[] {
 		const new_config = yaml.parse(fs.readFileSync(pth, "utf-8")) as ConfigYAML;
 
 		if (validate_config_file(new_config)) {
@@ -195,9 +194,7 @@ class ConfigClass {
 
 			return null;
 		} else {
-			return (
-				validate_config_file.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? []
-			);
+			return structuredClone(validate_config_file.errors) ?? [];
 		}
 	}
 

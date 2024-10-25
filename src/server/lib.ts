@@ -1,4 +1,4 @@
-import Ajv from "ajv";
+import Ajv, { ErrorObject } from "ajv";
 import formatsPlugin from "ajv-formats";
 
 export const ajv = new Ajv();
@@ -44,3 +44,22 @@ export const random_id = () =>
 export type RequireAtLeastOne<T> = {
 	[K in keyof T]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<keyof T, K>>>;
 }[keyof T];
+
+export function create_ajv_error_string(
+	error_array: (ErrorObject | string)[] | null | undefined
+): string {
+	if (!error_array) {
+		return "unknown error";
+	}
+
+	const errors =
+		error_array?.map((error) => {
+			if (typeof error === "string") {
+				return error;
+			} else {
+				return `${error.instancePath}: ${error.message}`;
+			}
+		}) ?? [];
+
+	return errors.join(", ");
+}

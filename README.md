@@ -22,6 +22,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - test changed pandoc-installer (win and linux)
 - first item is comment -> errors
 - client: placeholder for custom-templates and remove template-part of ItemSlide.vue
+- update docs with new config-file
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api

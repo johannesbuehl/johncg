@@ -18,6 +18,7 @@ import {
 	SongFile
 } from "./search_part_types";
 import { validate_playlist_file } from "./Playlist";
+import { create_ajv_error_string } from "./lib";
 
 export default class SearchPart {
 	create_song_file(f: FileBase, fast: boolean): SongFile {
@@ -52,6 +53,10 @@ export default class SearchPart {
 				data: psalm
 			};
 		} else {
+			logger.info(
+				`Invalid psalm-file "${f.path}": ${create_ajv_error_string(validate_psalm_file.errors)}`
+			);
+
 			return undefined;
 		}
 	}
@@ -64,6 +69,10 @@ export default class SearchPart {
 		) {
 			return f;
 		} else {
+			logger.info(
+				`Invalid playlist-file "${f.path}": ${create_ajv_error_string(validate_playlist_file.errors)}`
+			);
+
 			return undefined;
 		}
 	}
