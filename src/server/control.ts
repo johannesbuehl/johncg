@@ -525,27 +525,34 @@ export default class Control {
 		if (typeof item === "number") {
 			if (this.check_playlist_loaded(ws)) {
 				if (casparcg.casparcg_connections.length > 0) {
-					const client_item_slides = await this.playlist?.create_client_object_item_slides(item);
+					// if the requested item is displayable, send the slides
+					if (this.playlist.playlist_items[item]?.displayable) {
+						const client_item_slides = await this.playlist?.create_client_object_item_slides(item);
 
-					if (client_item_slides !== undefined) {
-						const message: JCGPSend.ItemSlides = {
-							command: "item_slides",
-							item,
-							client_id,
-							resolution: Config.casparcg_resolution,
-							...client_item_slides,
-							server_id
-						};
+						if (client_item_slides !== undefined) {
+							const message: JCGPSend.ItemSlides = {
+								command: "item_slides",
+								item,
+								client_id,
+								resolution: Config.casparcg_resolution,
+								...client_item_slides,
+								server_id
+							};
 
-						logger.debug(`sending item-slides for item '${item}' to client`);
+							logger.debug(`sending item-slides for item '${item}' to client`);
 
-						ws?.send(JSON.stringify(message));
+							ws?.send(JSON.stringify(message));
 
-						ws_send_response("slides have been sent", true, ws);
+							ws_send_response("slides have been sent", true, ws);
+						} else {
+							logger.warn(`can't get item-slides for item '${item}': no item with this number`);
+
+							ws_send_response(`can't get item-slides: no item with this number`, false, ws);
+						}
 					} else {
-						logger.warn(`can't get item-slides for item '${item}': no item with this number`);
+						logger.debug(`can't get item-slides for item '${item}': item isn't displayable`);
 
-						ws_send_response(`can't get item-slides: no item with this number`, false, ws);
+						ws_send_response("can't get item-slides: item isn't displayable", true, ws);
 					}
 				} else {
 					logger.log("Can't send item-slides to client: no active CasparCG-connections");
