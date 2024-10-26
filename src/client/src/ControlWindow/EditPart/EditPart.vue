@@ -16,7 +16,7 @@
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
-	import type { ItemFileMap, ItemNodeMapped, SongFile } from "@server/search_part";
+	import type { ItemFileMap, ItemNodeMapped, SongFile } from "@server/search_part_types";
 
 	library.add(fas.faPen);
 

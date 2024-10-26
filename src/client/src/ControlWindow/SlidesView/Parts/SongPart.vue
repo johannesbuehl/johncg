@@ -6,8 +6,7 @@
 	import SongTemplate from "@templates/Song/SongTemplate.vue";
 
 	import Globals from "@/Globals";
-	import type { SongTemplateData } from "@server/PlaylistItems/Song";
-	import type { ClientSongSlides } from "@server/PlaylistItems/Song";
+	import type { ClientSongSlides, SongTemplateData } from "@server/PlaylistItems/Song";
 
 	const props = defineProps<{
 		slides: ClientSongSlides;

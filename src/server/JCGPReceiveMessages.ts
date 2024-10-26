@@ -94,7 +94,7 @@ export interface GetBible extends Base {
 
 export interface GetItemData extends Base {
 	command: "get_item_data";
-	type: "songs" | "psalms";
+	type: "song" | "psalm";
 	file: string;
 }
 
@@ -141,7 +141,7 @@ export interface GetMediaThumbnails extends Base {
 export interface NewDirectory extends Base {
 	command: "new_directory";
 	path: string;
-	type: "playlists" | "songs" | "psalms";
+	type: "playlist" | "song" | "psalm";
 }
 
 export interface ClientConfirmation extends Base {

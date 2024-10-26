@@ -25,9 +25,9 @@ export default class SearchPart {
 		let song;
 
 		if (fast) {
-			song = new SongFileFast(Config.get_path("songs", f.path));
+			song = new SongFileFast(Config.get_path("song", f.path));
 		} else {
-			song = new SngFile(Config.get_path("songs", f.path));
+			song = new SngFile(Config.get_path("song", f.path));
 		}
 
 		const song_value: SongFile = {
@@ -43,7 +43,7 @@ export default class SearchPart {
 
 	async create_psalm_file(f: FileBase): Promise<PsalmFile | undefined> {
 		const psalm = JSON.parse(
-			await fs.readFile(Config.get_path("psalms", f.path), "utf-8")
+			await fs.readFile(Config.get_path("psalm", f.path), "utf-8")
 		) as PsalmData;
 
 		// validate against the json-schema
@@ -64,7 +64,7 @@ export default class SearchPart {
 	async create_playlist_file(f: FileBase): Promise<PlaylistFile | undefined> {
 		if (
 			validate_playlist_file(
-				JSON.parse(await fs.readFile(Config.get_path("playlists", f.path), "utf-8"))
+				JSON.parse(await fs.readFile(Config.get_path("playlist", f.path), "utf-8"))
 			)
 		) {
 			return f;
@@ -118,10 +118,10 @@ export default class SearchPart {
 		return (await Promise.all(promises)).filter((el) => el !== undefined) as Node<K>[];
 	}
 
-	async find_sng_files(pth: string = Config.path.songs): Promise<Node<"songs">[]> {
+	async find_sng_files(pth: string = Config.path.songs): Promise<Node<"song">[]> {
 		logger.log("searching song-files");
 
-		return this.find_files<"songs">(
+		return this.find_files<"song">(
 			pth,
 			pth,
 			".sng",
@@ -129,22 +129,22 @@ export default class SearchPart {
 		);
 	}
 
-	async find_jcg_files(pth: string = Config.path.playlists): Promise<Node<"playlists">[]> {
+	async find_jcg_files(pth: string = Config.path.playlists): Promise<Node<"playlist">[]> {
 		logger.log("searching jcg-files");
 
-		return this.find_files<"playlists">(pth, pth, ".jcg", (f) => this.create_playlist_file(f));
+		return this.find_files<"playlist">(pth, pth, ".jcg", (f) => this.create_playlist_file(f));
 	}
 
-	async find_pdf_files(pth: string = Config.path.pdfs): Promise<Node<"pdfs">[]> {
+	async find_pdf_files(pth: string = Config.path.pdfs): Promise<Node<"pdf">[]> {
 		logger.log("searching PDF-files");
 
-		return this.find_files<"pdfs">(pth, pth, ".pdf", (f) => Promise.resolve(f));
+		return this.find_files<"pdf">(pth, pth, ".pdf", (f) => Promise.resolve(f));
 	}
 
-	async find_psalm_files(pth: string = Config.path.psalms): Promise<Node<"psalms">[]> {
+	async find_psalm_files(pth: string = Config.path.psalms): Promise<Node<"psalm">[]> {
 		logger.log("searching psalm-files");
 
-		return this.find_files<"psalms">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
+		return this.find_files<"psalm">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
 	}
 
 	async get_casparcg_media(): Promise<Node<"media">[]> {
@@ -164,7 +164,7 @@ export default class SearchPart {
 		return build_files(media.map((m) => m.clip.split("/")));
 	}
 
-	async get_casparcg_template(): Promise<Node<"templates">[]> {
+	async get_casparcg_template(): Promise<Node<"template">[]> {
 		if (casparcg.casparcg_connections.length === 0) {
 			logger.log("can't request CasparCG-template-list: no connection added");
 			return [];
@@ -222,7 +222,7 @@ export default class SearchPart {
 	}
 }
 
-function build_files<K extends "media" | "templates">(
+function build_files<K extends "media" | "template">(
 	input_array: string[][],
 	root?: string
 ): Node<K>[] {

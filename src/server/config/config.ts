@@ -57,6 +57,21 @@ export interface BibleCitationSeperatorsMap {
 	range_verse: string;
 }
 
+interface ConfigPathKeysMap {
+	playlist: "playlists";
+	song: "songs";
+	psalm: "psalms";
+	pdf: "pdfs";
+	bible: "bible";
+}
+const config_path_keys_map: ConfigPathKeysMap = {
+	playlist: "playlists",
+	song: "songs",
+	psalm: "psalms",
+	pdf: "pdfs",
+	bible: "bible"
+};
+
 const validate_config_file = ajv.compile(config_schema);
 const validate_bible_file = ajv.compile({
 	/* eslint-disable @typescript-eslint/naming-convention */
@@ -202,9 +217,8 @@ class ConfigClass {
 		fs.writeFileSync(pth, JSON.stringify(this.config, undefined, "\t"));
 	}
 
-	get_path(type: keyof ConfigYAML["path"], pth?: string): string {
-		const base_path: string = this.config.path[type] ?? "";
-
+	get_path(type: keyof ConfigPathKeysMap, pth?: string): string {
+		const base_path: string = this.config.path[config_path_keys_map[type]] ?? "";
 		if (pth !== undefined) {
 			const return_path = path.isAbsolute(pth) ? pth : path.resolve(base_path, pth);
 

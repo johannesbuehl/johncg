@@ -28,7 +28,7 @@
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
-	const psalm_search_strings = ref<SearchInputDefinitions<"name", "psalms">>([
+	const psalm_search_strings = ref<SearchInputDefinitions<"name", "psalm">>([
 		{ id: "name", placeholder: "Name", value: "", get: (ff) => ff.name }
 	]);
 	const psalm_file_name = ref<string>("");
@@ -49,7 +49,7 @@
 		{ immediate: true }
 	);
 
-	const directory_stack = ref<Directory<"psalms">[]>([]);
+	const directory_stack = ref<Directory<"psalm">[]>([]);
 	watch(
 		() => [file_selection.value, Globals.get_psalm_files()],
 		() => {
@@ -138,7 +138,7 @@
 				Globals.control_window_state_confirm = undefined;
 
 				// reset the item-files
-				Globals.item_files.value.psalms = [];
+				Globals.item_files.value.psalm = [];
 			}
 		});
 
@@ -320,7 +320,7 @@
 					Globals.ws?.send<JCGPRecv.NewDirectory>({
 						command: 'new_directory',
 						path,
-						type: 'psalms'
+						type: 'psalm'
 					})
 			"
 		>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 	import type { ClientPsalmSlides } from "@server/PlaylistItems/Psalm";
-	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 	import PsalmTemplate from "@templates/Psalm/PsalmTemplate.vue";
+
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 
 	import Globals from "@/Globals";
 
