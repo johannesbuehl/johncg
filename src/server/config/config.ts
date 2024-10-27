@@ -18,7 +18,7 @@ export interface CasparCGConnectionSettings {
 	channel: number;
 	layers: {
 		media?: number;
-		template: number;
+		template?: number;
 	};
 	path?: string;
 	stageview?: boolean;

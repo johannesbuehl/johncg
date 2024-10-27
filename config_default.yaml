@@ -15,7 +15,7 @@ casparcg_connections: # individual CasparCG-connections
     channel: 1
     layers:
       media: 20 # used for media-playback - Can be removed to don't show media
-      template: 21 # used for templates and song-/psalm-/countdown-text
+      template: 21 # used for templates and song-/psalm-/countdown-text - Can be removed to don't show templates
     path: casparcg # - optional path to CasparCG-directory to auto-start at launch
     # stageview: true # optional - show song-chords and hide song-backgrounds
 client_server:

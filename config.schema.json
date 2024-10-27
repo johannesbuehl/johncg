@@ -115,15 +115,12 @@
                                 "minimum": 0
                             },
                             "template": {
-                                "description": "used for templates and song-/psalm-/countdown-text",
+                                "description": "used for templates and song-/psalm-/countdown-text - leave empty to don't show templates",
                                 "type": "integer",
                                 "default": 21,
                                 "minimum": 0
                             }
                         },
-                        "required": [
-                            "template"
-                        ],
                         "additionalProperties": false
                     },
                     "path": {

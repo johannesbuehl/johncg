@@ -165,38 +165,40 @@ export function casparcg_clear(casparcg_connection?: CasparCGConnection) {
 		casparcg_connection !== undefined ? [casparcg_connection] : casparcg.casparcg_connections;
 
 	return connections.map((casparcg_connection) => {
-		return Promise.allSettled([
-			casparcg_connection.settings.layers.media !== undefined
-				? catch_casparcg_timeout(
-						async () =>
-							(
-								await casparcg_connection.connection.play({
-									/* eslint-disable @typescript-eslint/naming-convention */
-									channel: casparcg_connection.settings.channel,
-									layer: casparcg_connection.settings.layers.media ?? 20,
-									clip: "EMPTY",
-									transition: Config.casparcg_transition
-									/* eslint-enable @typescript-eslint/naming-convention */
-								})
-							).request,
-						"PLAY EMPTY on media-layer"
-					)
-				: undefined,
-			catch_casparcg_timeout(
-				async () =>
-					(
-						await casparcg_connection.connection.play({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.template,
-							clip: "EMPTY",
-							transition: Config.casparcg_transition
-							/* eslint-enable @typescript-eslint/naming-convention */
-						})
-					).request,
-				"PLAY EMPTY on template-layer"
-			)
-		]);
+		if (casparcg_connection.settings.layers.template !== undefined) {
+			return Promise.allSettled([
+				casparcg_connection.settings.layers.media !== undefined
+					? catch_casparcg_timeout(
+							async () =>
+								(
+									await casparcg_connection.connection.play({
+										/* eslint-disable @typescript-eslint/naming-convention */
+										channel: casparcg_connection.settings.channel,
+										layer: casparcg_connection.settings.layers.media!,
+										clip: "EMPTY",
+										transition: Config.casparcg_transition
+										/* eslint-enable @typescript-eslint/naming-convention */
+									})
+								).request,
+							"PLAY EMPTY on media-layer"
+						)
+					: undefined,
+				catch_casparcg_timeout(
+					async () =>
+						(
+							await casparcg_connection.connection.play({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.template!,
+								clip: "EMPTY",
+								transition: Config.casparcg_transition
+								/* eslint-enable @typescript-eslint/naming-convention */
+							})
+						).request,
+					"PLAY EMPTY on template-layer"
+				)
+			]);
+		}
 	});
 }
 

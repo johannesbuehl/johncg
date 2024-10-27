@@ -208,7 +208,7 @@ export abstract class PlaylistItemBase {
 						(
 							await casparcg_connection.connection.play({
 								channel: casparcg_connection.settings.channel,
-								layer: casparcg_connection.settings.layers.media ?? 20,
+								layer: casparcg_connection.settings.layers.media!,
 								clip,
 								loop: this.loop,
 								transition: Config.casparcg_transition
@@ -224,7 +224,7 @@ export abstract class PlaylistItemBase {
 					async () =>
 						casparcg_connection.connection.loadbg({
 							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.media ?? 20,
+							layer: casparcg_connection.settings.layers.media!,
 							clip,
 							loop: this.loop,
 							transition: Config.casparcg_transition
@@ -243,7 +243,7 @@ export abstract class PlaylistItemBase {
 					await casparcg_connection.connection.play({
 						/* eslint-disable @typescript-eslint/naming-convention */
 						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.media ?? 20,
+						layer: casparcg_connection.settings.layers.media!,
 						clip: "EMPTY",
 						transition: Config.casparcg_transition
 						/* eslint-enable @typescript-eslint/naming-convention */
@@ -254,160 +254,176 @@ export abstract class PlaylistItemBase {
 	}
 
 	private play_template(casparcg_connection: CasparCGConnection) {
-		const template = this.get_template(!!casparcg_connection.settings.stageview);
+		if (casparcg_connection.settings.layers.template !== undefined) {
+			const template = this.get_template(!!casparcg_connection.settings.stageview);
 
-		// if a template was specified, load it
-		if (template !== undefined) {
-			logger.log(`loading CasparCG-template: '${template.template}'`);
-			logger.debug(`with data: ${JSON.stringify(template.data)}`);
+			// if a template was specified, load it
+			if (template !== undefined) {
+				logger.log(`loading CasparCG-template: '${template.template}'`);
+				logger.debug(`with data: ${JSON.stringify(template.data)}`);
 
-			return catch_casparcg_timeout(
-				async () =>
-					(
-						await casparcg_connection.connection.cgAdd({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.template,
-							cgLayer: 0,
-							playOnLoad: casparcg.visibility,
-							template: template.template,
-							// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
-							data: JSON.stringify(
-								JSON.stringify(template.data, (_key, val: unknown) => {
-									if (typeof val === "string") {
-										return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
-									} else {
-										return val;
-									}
-								})
-							)
-							/* eslint-enable @typescript-eslint/naming-convention */
-						})
-					).request,
-				"PLAY TEMPLATE"
-			);
-		} else {
-			logger.log("clearing CasparCG-template");
+				return catch_casparcg_timeout(
+					async () =>
+						(
+							await casparcg_connection.connection.cgAdd({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.template!,
+								cgLayer: 0,
+								playOnLoad: casparcg.visibility,
+								template: template.template,
+								// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
+								data: JSON.stringify(
+									JSON.stringify(template.data, (_key, val: unknown) => {
+										if (typeof val === "string") {
+											return val.replaceAll('"', "\\u0022").replaceAll("\n", "\\n");
+										} else {
+											return val;
+										}
+									})
+								)
+								/* eslint-enable @typescript-eslint/naming-convention */
+							})
+						).request,
+					"PLAY TEMPLATE"
+				);
+			} else {
+				logger.log("clearing CasparCG-template");
 
-			// if not, clear the previous template
-			return catch_casparcg_timeout(
-				async () =>
-					(
-						await casparcg_connection.connection.play({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.template,
-							clip: "EMPTY",
-							transition: Config.casparcg_transition
-							/* eslint-enable @typescript-eslint/naming-convention */
-						})
-					).request,
-				"CLEAR TEMPLATE"
-			);
+				// if not, clear the previous template
+				return catch_casparcg_timeout(
+					async () =>
+						(
+							await casparcg_connection.connection.play({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.template!,
+								clip: "EMPTY",
+								transition: Config.casparcg_transition
+								/* eslint-enable @typescript-eslint/naming-convention */
+							})
+						).request,
+					"CLEAR TEMPLATE"
+				);
+			}
 		}
 	}
 
 	update_template(casparcg_connection: CasparCGConnection) {
-		const template = this.get_template(!!casparcg_connection.settings.stageview);
+		if (casparcg_connection.settings.layers.template !== undefined) {
+			const template = this.get_template(!!casparcg_connection.settings.stageview);
 
-		if (template !== undefined) {
-			logger.log(
-				`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
-			);
+			if (template !== undefined) {
+				logger.log(
+					`updating CasparCG-template: '${template.template}': ${JSON.stringify(template.data)}`
+				);
 
-			void catch_casparcg_timeout(
-				async () =>
-					casparcg_connection.connection.cgUpdate({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						cgLayer: 0,
-						// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
-						data: stringify_json_for_tempalte(template.data)
-						// /* eslint-enable @typescript-eslint/naming-convention */
-					}),
-				"UPDATE TEMPLATE"
-			);
+				void catch_casparcg_timeout(
+					async () =>
+						casparcg_connection.connection.cgUpdate({
+							/* eslint-disable @typescript-eslint/naming-convention */
+							channel: casparcg_connection.settings.channel,
+							layer: casparcg_connection.settings.layers.template!,
+							cgLayer: 0,
+							// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
+							data: stringify_json_for_tempalte(template.data)
+							// /* eslint-enable @typescript-eslint/naming-convention */
+						}),
+					"UPDATE TEMPLATE"
+				);
+			}
 		}
 	}
 
 	set_visibility(visibility: boolean, casparcg_connection?: CasparCGConnection): Promise<unknown> {
-		casparcg.visibility = visibility;
+		if (casparcg_connection?.settings.layers.media !== undefined) {
+			casparcg.visibility = visibility;
 
-		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
+			const connections = casparcg_connection
+				? [casparcg_connection]
+				: casparcg.casparcg_connections;
 
-		return Promise.allSettled(
-			connections.map((connection) => {
-				if (visibility) {
-					return Promise.allSettled([
-						this.play_media(connection),
+			return Promise.allSettled(
+				connections
+					.filter((connection) => !connection.settings.stageview)
+					.map((connection) => {
+						if (visibility) {
+							return Promise.allSettled([
+								this.play_media(connection),
 
-						catch_casparcg_timeout(
-							async () =>
-								connection.connection.cgPlay({
-									/* eslint-disable @typescript-eslint/naming-convention */
-									channel: connection.settings.channel,
-									layer: connection.settings.layers.template,
-									cgLayer: 0
-									/* eslint-enable @typescript-eslint/naming-convention */
-								}),
-							"CG PLAY - show template"
-						)
-					]);
-				} else {
-					const promises: Promise<unknown>[] = [
-						// stop the template-layer
-						catch_casparcg_timeout(
-							async () =>
-								connection.connection.cgStop({
-									/* eslint-disable @typescript-eslint/naming-convention */
-									channel: connection.settings.channel,
-									layer: connection.settings.layers.template,
-									cgLayer: 0
-									/* eslint-enable @typescript-eslint/naming-convention */
-								}),
-							"CG STOP - hide template"
-						)
-					];
+								catch_casparcg_timeout(
+									async () =>
+										connection.connection.cgPlay({
+											/* eslint-disable @typescript-eslint/naming-convention */
+											channel: connection.settings.channel,
+											layer: connection.settings.layers.template!,
+											cgLayer: 0
+											/* eslint-enable @typescript-eslint/naming-convention */
+										}),
+									"CG PLAY - show template"
+								)
+							]);
+						} else {
+							const promises: Promise<unknown>[] = [
+								// stop the template-layer
+								catch_casparcg_timeout(
+									async () =>
+										connection.connection.cgStop({
+											/* eslint-disable @typescript-eslint/naming-convention */
+											channel: connection.settings.channel,
+											layer: connection.settings.layers.template!,
+											cgLayer: 0
+											/* eslint-enable @typescript-eslint/naming-convention */
+										}),
+									"CG STOP - hide template"
+								)
+							];
 
-					if (connection.settings.layers.media !== undefined) {
-						promises.push(this.hide_media(connection));
-					}
+							if (connection.settings.layers.media !== undefined) {
+								promises.push(this.hide_media(connection));
+							}
 
-					return Promise.allSettled(promises);
-				}
-			})
-		);
+							return Promise.allSettled(promises);
+						}
+					})
+			);
+		} else {
+			return new Promise<void>((resolve) => resolve());
+		}
 	}
 
 	protected casparcg_navigate(): Promise<unknown>[] {
 		logger.debug(`jumping CasparCG-template: slide '${this.active_slide}'`);
 
-		return casparcg.casparcg_connections.map((casparcg_connection) => {
-			const promises = [];
+		return casparcg.casparcg_connections
+			.map((casparcg_connection) => {
+				if (casparcg_connection.settings.layers.template !== undefined) {
+					const promises = [];
 
-			// if the item has multiple media-files, load the new one
-			if (this.multi_media) {
-				promises.push(this.play_media(casparcg_connection));
-			}
+					// if the item has multiple media-files, load the new one
+					if (this.multi_media) {
+						promises.push(this.play_media(casparcg_connection));
+					}
 
-			// jump to the slide-number in casparcg
-			return catch_casparcg_timeout(
-				async () =>
-					casparcg_connection.connection.cgUpdate({
-						/* eslint-disable @typescript-eslint/naming-convention */
-						channel: casparcg_connection.settings.channel,
-						layer: casparcg_connection.settings.layers.template,
-						cgLayer: 0,
-						data: stringify_json_for_tempalte<TemplateSlideJump>({
-							command: "jump",
-							slide: this.active_slide
-						})
-						/* eslint-enable @typescript-eslint/naming-convention */
-					}),
-				"CG JUMP - jumping to template-slide"
-			);
-		});
+					// jump to the slide-number in casparcg
+					return catch_casparcg_timeout(
+						async () =>
+							casparcg_connection.connection.cgUpdate({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.template!,
+								cgLayer: 0,
+								data: stringify_json_for_tempalte<TemplateSlideJump>({
+									command: "jump",
+									slide: this.active_slide
+								})
+								/* eslint-enable @typescript-eslint/naming-convention */
+							}),
+						"CG JUMP - jumping to template-slide"
+					);
+				}
+			})
+			.filter((e) => e !== undefined);
 	}
 
 	protected abstract validate_props: (props: ItemProps) => boolean;
