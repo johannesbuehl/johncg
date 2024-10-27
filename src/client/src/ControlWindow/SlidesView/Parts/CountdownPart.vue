@@ -45,7 +45,7 @@
 				v-if="slide !== undefined"
 				:media="slide.media"
 				:aspect_ratio="aspect_ratio"
-				:active="0 === Globals.active_item_slide?.slide"
+				:active="Globals.is_active_slide(0)"
 				@click="emit('select_slide', 0)"
 			>
 				<CountdownTemplate :data="slide.template.data" :mute_transition="true" />

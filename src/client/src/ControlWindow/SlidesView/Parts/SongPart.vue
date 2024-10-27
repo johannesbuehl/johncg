@@ -18,17 +18,6 @@
 		select_slide: [slide: number];
 	}>();
 
-	// interface CasparCGTemplate extends Window {
-	// 	update: (data_string: string) => void;
-	// 	play: () => void;
-	// 	stop: () => void;
-	// 	next: () => void;
-	// }
-
-	// interface JohnCGSongTemplate extends CasparCGTemplate {
-	// 	jump: (slide: number) => void;
-	// }
-
 	watch(
 		props.slides.template.data,
 		(data) => {
@@ -61,14 +50,15 @@
 	}
 
 	function is_active(part: number, part_slide?: number): boolean {
-		create_part_slide_map();
-
 		if (Globals.active_item_slide !== undefined && Globals.active_item_slide.slide !== null) {
 			if (part_slide !== undefined) {
-				return Globals.active_item_slide?.slide === part_slide_map[part][part_slide];
+				return Globals.is_active_slide(part_slide_map[part][part_slide]);
 			} else {
 				if (typeof Globals.active_item_slide?.slide === "number") {
-					return part_slide_map[part].includes(Globals.active_item_slide.slide);
+					return (
+						Globals.is_selected_item_active &&
+						part_slide_map[part].includes(Globals.active_item_slide.slide)
+					);
 				} else {
 					return false;
 				}

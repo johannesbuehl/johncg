@@ -33,7 +33,7 @@
 				:key="index"
 				:media="slides.media"
 				:aspect_ratio="aspect_ratio"
-				:active="index === Globals.active_item_slide?.slide"
+				:active="Globals.is_active_slide(index)"
 				:scroll="scroll"
 				@click="emit('select_slide', index)"
 			>

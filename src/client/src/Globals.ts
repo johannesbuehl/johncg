@@ -112,6 +112,17 @@ class Global {
 
 	selected_item = ref<number | null>(null);
 
+	get is_selected_item_active(): boolean {
+		return this.active_item_slide?.item === this.selected_item.value;
+	}
+
+	is_active_slide(slide: number): boolean {
+		return (
+			this.active_item_slide?.item === this.selected_item.value &&
+			this.active_item_slide.slide === slide
+		);
+	}
+
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	_item_slides = ref<JCGPSend.ItemSlides>();
 
