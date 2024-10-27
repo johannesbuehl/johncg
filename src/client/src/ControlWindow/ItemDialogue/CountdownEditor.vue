@@ -1,18 +1,16 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import type { CountdownMode } from "@server/lib";
-
-	library.add(
-		fas.faCalendarXmark,
-		fas.faHourglassEnd,
-		fas.faStopwatch,
-		fas.faClock,
-		fas.faStopwatch20
-	);
+	import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+	import {
+		faCalendarXmark,
+		faClock,
+		faHourglassEnd,
+		faStopwatch,
+		faStopwatch20
+	} from "@fortawesome/free-solid-svg-icons";
 
 	const countdown_mode = defineModel<CountdownMode>("countdown_mode", { required: true });
 	const time = defineModel<string>("time", { required: true });
@@ -21,11 +19,14 @@
 	const font_size = defineModel<number>("font_size", { required: true });
 	const font_color = defineModel<string>("font_color", { required: true });
 
-	const modes: Record<CountdownMode, { name: string; icon: string; time_selector?: string }> = {
-		end_time: { name: "End Time", time_selector: "Countdown Ending Time", icon: "calendar-xmark" },
-		duration: { name: "Duration", time_selector: "Countdown Duration", icon: "hourglass-end" },
-		stopwatch: { name: "Stopwatch", icon: "stopwatch" },
-		clock: { name: "Clock", icon: "clock" }
+	const modes: Record<
+		CountdownMode,
+		{ name: string; icon: IconDefinition; time_selector?: string }
+	> = {
+		end_time: { name: "End Time", time_selector: "Countdown Ending Time", icon: faCalendarXmark },
+		duration: { name: "Duration", time_selector: "Countdown Duration", icon: faHourglassEnd },
+		stopwatch: { name: "Stopwatch", icon: faStopwatch },
+		clock: { name: "Clock", icon: faClock }
 	};
 
 	function input_change(event: Event) {
@@ -64,7 +65,7 @@
 						:class="{ active: countdown_mode === id }"
 						:for="`countdown_mode_${id}`"
 					>
-						<FontAwesomeIcon :icon="['fas', icon]" />
+						<FontAwesomeIcon :icon="icon" />
 						{{ name }}
 					</label>
 				</template>
@@ -78,7 +79,7 @@
 		</div>
 		<div class="editor_wrapper">
 			<MenuButton v-model="show_seconds">
-				<FontAwesomeIcon :icon="['fas', 'stopwatch-20']" />Show Seconds
+				<FontAwesomeIcon :icon="faStopwatch20" />Show Seconds
 			</MenuButton>
 		</div>
 		<div class="editor_wrapper">

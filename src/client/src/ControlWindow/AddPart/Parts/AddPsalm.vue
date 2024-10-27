@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -13,8 +11,7 @@
 
 	import { NodeType, type PsalmFile } from "@server/search_part_types";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: PsalmProps];
@@ -69,7 +66,7 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_psalm(selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Psalm
+				<FontAwesomeIcon :icon="faPlus" />Add Psalm
 			</MenuButton>
 		</template>
 	</FileDialogue>

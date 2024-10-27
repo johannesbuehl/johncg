@@ -8,8 +8,6 @@
 <script setup lang="ts">
 	import { reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import type { SearchInputDefinitions } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
@@ -23,8 +21,13 @@
 	import type { Directory, PsalmFile } from "@server/search_part_types";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { PsalmFile as PsalmData } from "@server/PlaylistItems/Psalm";
-
-	library.add(fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faIndent, fas.faCheck);
+	import {
+		faBars,
+		faFloppyDisk,
+		faIndent,
+		faTrash,
+		faXmark
+	} from "@fortawesome/free-solid-svg-icons";
 
 	const show_save_file_dialogue = ref<boolean>(false);
 	const file_selection = defineModel<PsalmFile | undefined>("psalm_file", { default: undefined });
@@ -242,7 +245,7 @@
 				<div class="header">Indentation</div>
 				<div class="content">
 					<MenuButton v-model="metadata.indent">
-						<FontAwesomeIcon :icon="['fas', 'indent']" />Indent
+						<FontAwesomeIcon :icon="faIndent" />Indent
 					</MenuButton>
 				</div>
 			</div>
@@ -251,10 +254,10 @@
 				<div class="content">
 					<div class="row_container">
 						<MenuButton :disabled="psalm_file_name === ''" @click="save_psalm()">
-							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+							<FontAwesomeIcon :icon="faFloppyDisk" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">
-							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save As
+							<FontAwesomeIcon :icon="faFloppyDisk" />Save As
 						</MenuButton>
 					</div>
 				</div>
@@ -280,7 +283,7 @@
 								class="draggable_handle text_part_handle"
 								:class="{ enabled: slide_index < psalm_text.length - 1 }"
 							>
-								<FontAwesomeIcon :icon="['fas', 'bars']" />
+								<FontAwesomeIcon :icon="faBars" />
 							</div>
 							<textarea
 								:class="{ indent: block.indent && metadata.indent }"
@@ -299,7 +302,7 @@
 						"
 						:square="true"
 					>
-						<FontAwesomeIcon :icon="['fas', 'trash']" />
+						<FontAwesomeIcon :icon="faTrash" />
 					</MenuButton>
 				</div>
 			</div>
@@ -336,7 +339,7 @@
 					:disabled="psalm_file_name === ''"
 					@click="save_psalm()"
 				>
-					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Psalm
+					<FontAwesomeIcon :icon="faFloppyDisk" />Save Psalm
 				</MenuButton>
 			</template>
 		</FileDialogue>
@@ -349,7 +352,7 @@
 					save_callback(save_psalm());
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+				<FontAwesomeIcon :icon="faFloppyDisk" />Save
 			</MenuButton>
 			<MenuButton
 				@click="
@@ -357,7 +360,7 @@
 					save_callback(true);
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+				<FontAwesomeIcon :icon="faTrash" />Discard
 			</MenuButton>
 			<MenuButton
 				@click="
@@ -365,7 +368,7 @@
 					save_callback(false);
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+				<FontAwesomeIcon :icon="faXmark" />Cancel
 			</MenuButton>
 		</div>
 	</PopUp>

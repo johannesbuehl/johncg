@@ -1,8 +1,6 @@
 <script setup lang="ts">
 	import { ref } from "vue";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import ContextMenu from "./ContextMenu.vue";
@@ -13,8 +11,7 @@
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 	import * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem, ItemProps } from "@server/PlaylistItems/PlaylistItem";
-
-	library.add(fas.faBrush, fas.faTrash, fas.faClone, fas.faFont, fas.faPen, fas.faArrowRotateRight);
+	import { faArrowRotateRight, faClone, faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 	export interface DragEndEvent {
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -170,13 +167,13 @@
 		<div
 			@click="context_menu_picker_item ? emit('edit', context_menu_picker_item.index) : undefined"
 		>
-			<FontAwesomeIcon :icon="['fas', 'pen']" />
+			<FontAwesomeIcon :icon="faPen" />
 			Edit
 		</div>
 		<div
 			@click="context_menu_picker_item ? reload_item(context_menu_picker_item.index) : undefined"
 		>
-			<FontAwesomeIcon :icon="['fas', 'arrow-rotate-right']" />
+			<FontAwesomeIcon :icon="faArrowRotateRight" />
 			Reload
 		</div>
 		<div
@@ -186,13 +183,13 @@
 					: undefined
 			"
 		>
-			<FontAwesomeIcon :icon="['fas', 'clone']" />
+			<FontAwesomeIcon :icon="faClone" />
 			Duplicate
 		</div>
 		<div
 			@click="context_menu_picker_item ? delete_item(context_menu_picker_item.index) : undefined"
 		>
-			<FontAwesomeIcon :icon="['fas', 'trash']" />
+			<FontAwesomeIcon :icon="faTrash" />
 			Delete
 		</div>
 	</ContextMenu>

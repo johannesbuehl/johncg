@@ -123,8 +123,6 @@
 
 <script setup lang="ts" generic="T extends keyof ItemFileMap">
 	import { onMounted, reactive, ref, useSlots, watch } from "vue";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
-	import { library } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
@@ -142,16 +140,16 @@
 		type Node,
 		type Search
 	} from "@server/search_part_types";
-
-	library.add(
-		fas.faHouse,
-		fas.faChevronRight,
-		fas.faArrowsRotate,
-		fas.faFileCirclePlus,
-		fas.faXmark,
-		fas.faFolderPlus,
-		fas.faPlus
-	);
+	import {
+		faArrowsRotate,
+		faChevronRight,
+		faFileCirclePlus,
+		faFolderPlus,
+		faHouse,
+		faPlus,
+		faSearch,
+		faXmark
+	} from "@fortawesome/free-solid-svg-icons";
 
 	const props = defineProps<{
 		name?: string;
@@ -426,7 +424,7 @@
 			<div class="content">
 				<div id="search_wrapper" v-if="!search_disabled">
 					<MenuButton v-if="new_button" :square="true" @click="emit('new_file')">
-						<FontAwesomeIcon :icon="['fas', 'file-circle-plus']" />
+						<FontAwesomeIcon :icon="faFileCirclePlus" />
 					</MenuButton>
 					<div id="search_input_wrapper">
 						<div
@@ -446,7 +444,7 @@
 								class="button_clear_search"
 								@click="search_strings ? (search_strings[index].value = '') : search_strings"
 							>
-								<FontAwesomeIcon :icon="['fas', 'xmark']" />
+								<FontAwesomeIcon :icon="faXmark" />
 							</span>
 						</div>
 					</div>
@@ -463,17 +461,17 @@
 								});
 							"
 						>
-							<FontAwesomeIcon :icon="['fas', 'folder-plus']" />
+							<FontAwesomeIcon :icon="faFolderPlus" />
 						</MenuButton>
 					</div>
 					<div id="directory_stack">
 						<MenuButton :square="true" @click="navigate_home">
-							<FontAwesomeIcon :icon="['fas', 'house']" />
+							<FontAwesomeIcon :icon="faHouse" />
 						</MenuButton>
 						<template v-for="(dir, dir_index) of directory_stack" :key="dir_index">
-							<FontAwesomeIcon :icon="['fas', 'chevron-right']" />
+							<FontAwesomeIcon :icon="faChevronRight" />
 							<MenuButton @click="navigate_dirstack(dir_index)">
-								<FontAwesomeIcon v-if="!dir.type" :icon="fas.faSearch" />
+								<FontAwesomeIcon v-if="!dir.type" :icon="faSearch" />
 								{{ dir.name }}
 							</MenuButton>
 						</template>
@@ -487,7 +485,7 @@
 							"
 							@animationend="rotate_button = false"
 						>
-							<FontAwesomeIcon :icon="['fas', 'arrows-rotate']" />
+							<FontAwesomeIcon :icon="faArrowsRotate" />
 						</MenuButton>
 					</div>
 				</div>
@@ -613,7 +611,7 @@
 					@keydown.enter="on_new_directory"
 				/>
 				<MenuButton :square="true" @click="on_new_directory">
-					<FontAwesomeIcon :icon="['fas', 'plus']" />
+					<FontAwesomeIcon :icon="faPlus" />
 				</MenuButton>
 			</div>
 		</PopUp>

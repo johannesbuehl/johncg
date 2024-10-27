@@ -10,8 +10,6 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import ControlWindow from "@/ControlWindow/ControlWindow.vue";
 	import { ControlWindowState } from "./Enums";
@@ -22,8 +20,6 @@
 	import * as JCGPSend from "@server/JCGPSendMessages";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemFileMap, ItemFileMapped, ItemNodeMapped } from "@server/search_part_types";
-
-	library.add(fas.faCheck, fas.faXmark);
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const Config = {
@@ -398,7 +394,7 @@
 					>
 						<FontAwesomeIcon
 							v-if="option.icon !== undefined"
-							:icon="['fas', option.icon]"
+							:icon="option.icon"
 							:squre="option.text === undefined"
 						/>{{ option.text ?? "" }}
 					</MenuButton>

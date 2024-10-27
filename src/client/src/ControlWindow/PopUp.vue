@@ -1,9 +1,6 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { faXmark } from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-
-	library.add(fas.faXmark);
 
 	// const props =
 	defineProps<{
@@ -38,7 +35,7 @@
 				<div id="header">
 					{{ title
 					}}<FontAwesomeIcon
-						:icon="['fas', 'xmark']"
+						:icon="faXmark"
 						@click="
 							active = false;
 							emit('close');

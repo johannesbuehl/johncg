@@ -1,6 +1,4 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { onMounted, ref } from "vue";
 
@@ -9,8 +7,7 @@
 	import Globals from "@/Globals";
 
 	import type { TextProps } from "@server/PlaylistItems/Text";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const input = ref<HTMLInputElement>();
 	const text_input = ref<string>("");
@@ -38,7 +35,7 @@
 
 <template>
 	<TextEditor v-model:text="text_input">
-		<MenuButton @click="add_text"> <FontAwesomeIcon :icon="['fas', 'plus']" />Add Text </MenuButton>
+		<MenuButton @click="add_text"> <FontAwesomeIcon :icon="faPlus" />Add Text </MenuButton>
 	</TextEditor>
 </template>
 

@@ -1,3 +1,5 @@
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+
 import * as PlaylistClass from "../server/Playlist";
 import { ClientItemSlides } from "./PlaylistItems/PlaylistItem";
 import { BibleFile } from "./PlaylistItems/Bible";
@@ -102,7 +104,7 @@ export interface ClientConfirmation extends Base {
 	};
 	options: (RequireAtLeastOne<{
 		text: string;
-		icon: string;
+		icon: IconDefinition;
 	}> & { value: string | number | boolean })[];
 }
 

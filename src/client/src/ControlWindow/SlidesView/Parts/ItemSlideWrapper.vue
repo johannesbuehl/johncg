@@ -91,10 +91,6 @@
 		display: block;
 	}
 
-	:slotted(*) {
-		position: absolute;
-	}
-
 	.template {
 		position: absolute;
 		top: 0;
@@ -102,6 +98,8 @@
 
 		width: 100%;
 		height: 100%;
+
+		cursor: pointer;
 	}
 
 	.slide {
@@ -110,7 +108,6 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		cursor: pointer;
 	}
 
 	.slide_wrapper:hover {

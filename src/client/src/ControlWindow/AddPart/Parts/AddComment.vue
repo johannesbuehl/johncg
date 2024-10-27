@@ -1,14 +1,11 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { onMounted, ref } from "vue";
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import type { CommentProps } from "@server/PlaylistItems/Comment";
 	import Globals from "@/Globals";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const input = ref<HTMLInputElement>();
 	const text_input = ref<string>();
@@ -42,9 +39,7 @@
 			placeholder="Name"
 			@keydown.enter="add_comment"
 		/>
-		<MenuButton @click="add_comment">
-			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Comment
-		</MenuButton>
+		<MenuButton @click="add_comment"> <FontAwesomeIcon :icon="faPlus" />Add Comment </MenuButton>
 	</div>
 </template>
 

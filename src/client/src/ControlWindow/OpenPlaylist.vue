@@ -1,8 +1,7 @@
 <script setup lang="ts">
 	import { ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
+	import { faFolderOpen } from "@fortawesome/free-solid-svg-icons";
 
 	import FileDialogue, {
 		type ChooseNode,
@@ -14,8 +13,6 @@
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import { NodeType, type PlaylistFile } from "@server/search_part_types";
-
-	library.add(fas.faFolderOpen);
 
 	const selection = ref<PlaylistFile>();
 
@@ -53,7 +50,7 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="load_playlist(selection)">
-				<FontAwesomeIcon :icon="['fas', 'folder-open']" />Load Playlist
+				<FontAwesomeIcon :icon="faFolderOpen" />Load Playlist
 			</MenuButton>
 		</template>
 	</FileDialogue>

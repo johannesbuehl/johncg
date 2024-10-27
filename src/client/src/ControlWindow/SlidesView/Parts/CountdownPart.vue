@@ -8,7 +8,7 @@
 
 	// const props =
 	defineProps<{
-		slide?: ClientCountdownSlides;
+		slides?: ClientCountdownSlides;
 		aspect_ratio: string;
 	}>();
 
@@ -38,17 +38,17 @@
 			:class="{ active: 0 === Globals.active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slides?.title }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlideWrapper
-				v-if="slide !== undefined"
-				:media="slide.media"
+				v-if="slides !== undefined"
+				:media="slides.media"
 				:aspect_ratio="aspect_ratio"
 				:active="Globals.is_active_slide(0)"
 				@click="emit('select_slide', 0)"
 			>
-				<CountdownTemplate :data="slide.template.data" :mute_transition="true" />
+				<CountdownTemplate :data="slides.template.data" :mute_transition="true" />
 			</ItemSlideWrapper>
 		</div>
 	</div>

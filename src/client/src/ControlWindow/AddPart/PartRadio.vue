@@ -1,10 +1,11 @@
 <script setup lang="ts">
+	import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	defineProps<{
 		text: string;
 		value: string;
-		icon: string;
+		icon: IconDefinition;
 	}>();
 
 	const pick = defineModel<string>({ required: true });
@@ -19,7 +20,7 @@
 		:for="value"
 		@keydown.enter.prevent="pick = value"
 	>
-		<FontAwesomeIcon :icon="['fas', icon]" />
+		<FontAwesomeIcon :icon="icon" />
 		{{ text }}
 	</label>
 </template>

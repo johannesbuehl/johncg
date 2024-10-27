@@ -1,25 +1,18 @@
 <script setup lang="ts">
-	import ItemSlide, { type CasparCGTemplate } from "./ItemSlide.vue";
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 
 	import type * as JCGPSend from "@server/JCGPSendMessages";
 
 	import Globals from "@/Globals";
 
-	const props = defineProps<{
-		slide: JCGPSend.ItemSlides & { type: "template" | "bible" | "text" };
+	defineProps<{
+		slides: JCGPSend.ItemSlides & { type: "template" | "bible" | "text" };
 		aspect_ratio: string;
 	}>();
 
 	const emit = defineEmits<{
 		select_slide: [slide: number];
 	}>();
-
-	function template_loaded(template_object: HTMLObjectElement) {
-		const content_window: CasparCGTemplate = template_object.contentWindow as CasparCGTemplate;
-
-		content_window.update(JSON.stringify({ ...props.slide?.template.data, mute_transition: true }));
-		content_window.play();
-	}
 </script>
 
 <template>
@@ -29,17 +22,23 @@
 			:class="{ active: 0 === Globals.active_item_slide?.slide }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slides?.title }}
 		</div>
 		<div class="slides_wrapper">
-			<ItemSlide
-				:media="slide?.media"
-				:template="slide?.template"
+			<ItemSlideWrapper
 				:aspect_ratio="aspect_ratio"
 				:active="Globals.is_active_slide(0)"
 				@click="emit('select_slide', 0)"
-				@on_loaded="template_loaded"
-			/>
+			>
+				<div id="placeholder-text">
+					<div id="template-name">
+						{{ slides.template.template.toUpperCase() }}
+					</div>
+					<div id="template-data">
+						{{ slides.template.data }}
+					</div>
+				</div>
+			</ItemSlideWrapper>
 		</div>
 	</div>
 </template>
@@ -83,5 +82,29 @@
 
 		padding: 0.5rem;
 		gap: 0.25rem;
+	}
+
+	#placeholder-text {
+		font-family: monospace;
+
+		font-size: 8em;
+		text-align: center;
+
+		height: 100%;
+		display: flex;
+		gap: 0.25em;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#template-name {
+		font-weight: bold;
+
+		overflow: visible;
+	}
+
+	#template-data {
+		font-size: 0.75em;
 	}
 </style>

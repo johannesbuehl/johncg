@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -13,8 +11,7 @@
 
 	import { NodeType, type PDFFile } from "@server/search_part_types";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";
-
-	library.add(fas.faPlus, fas.faRepeat);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: PDFProps];
@@ -54,7 +51,7 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_pdf(selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add PDF
+				<FontAwesomeIcon :icon="faPlus" />Add PDF
 			</MenuButton>
 		</template>
 	</FileDialogue>

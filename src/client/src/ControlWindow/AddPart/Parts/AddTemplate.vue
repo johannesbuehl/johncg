@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -14,8 +12,7 @@
 
 	import type { TemplateProps } from "@server/PlaylistItems/Template";
 	import { NodeType, type CasparFile, type Node } from "@server/search_part_types";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: TemplateProps];
@@ -60,7 +57,7 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_template(selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Template
+				<FontAwesomeIcon :icon="faPlus" />Add Template
 			</MenuButton>
 		</template>
 		<template v-slot:edit>

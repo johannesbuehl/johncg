@@ -7,6 +7,8 @@
 	import PDFPart from "./Parts/PDFPart.vue";
 	import TemplatePart from "./Parts/TemplatePart.vue";
 	import PsalmPart from "./Parts/PsalmPart.vue";
+	import BiblePart from "./Parts/BiblePart.vue";
+	import TextPart from "./Parts/TextPart.vue";
 
 	const props = defineProps<{
 		slides?: JCGPSend.ItemSlides;
@@ -40,25 +42,37 @@
 		/>
 		<CountdownPart
 			v-if="slides?.type === 'countdown'"
-			:slide="slides"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<MediaPart
 			v-if="slides?.type === 'media'"
-			:slide="slides"
+			:slides="slides"
+			:aspect_ratio="aspect_ratio"
+			@select_slide="emit('select_slide', $event)"
+		/>
+		<BiblePart
+			v-else-if="slides?.type === 'bible'"
+			:slides="slides"
+			:aspect_ratio="aspect_ratio"
+			@select_slide="emit('select_slide', $event)"
+		/>
+		<TextPart
+			v-else-if="slides?.type === 'text'"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<TemplatePart
-			v-if="slides?.type === 'template' || slides?.type === 'bible' || slides?.type === 'text'"
-			:slide="slides"
+			v-if="slides?.type === 'template'"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<PDFPart
 			v-if="slides?.type === 'pdf'"
-			:slide="slides"
+			:slides="slides"
 			:aspect_ratio="aspect_ratio"
 			:scroll="scroll"
 			@select_slide="emit('select_slide', $event)"

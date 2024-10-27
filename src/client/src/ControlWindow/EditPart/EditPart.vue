@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { onMounted, onUnmounted, ref } from "vue";
 
 	import EditSong from "./EditSong.vue";
@@ -18,8 +16,7 @@
 	import * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientPlaylistItem } from "@server/PlaylistItems/PlaylistItem";
 	import type { ItemFileMap, ItemNodeMapped, SongFile } from "@server/search_part_types";
-
-	library.add(fas.faPen);
+	import { faPen } from "@fortawesome/free-solid-svg-icons";
 
 	// const props =
 	const props = defineProps<{
@@ -101,7 +98,7 @@
 				v-if="edit_item_props.type === 'song' || edit_item_props.type === 'psalm'"
 				@click="edit_file"
 			>
-				<FontAwesomeIcon :icon="['fas', 'pen']" />Edit
+				<FontAwesomeIcon :icon="faPen" />Edit
 				{{ edit_item_props.type === "song" ? "Song" : "Psalm" }}-File
 			</MenuButton>
 		</div>

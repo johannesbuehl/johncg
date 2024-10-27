@@ -1,8 +1,6 @@
 <script setup lang="ts">
 	import { onMounted, ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import FileDialogue from "./FileDialogue/FileDialogue.vue";
 	import MenuButton from "./MenuBar/MenuButton.vue";
@@ -10,8 +8,7 @@
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { Directory, Node, PlaylistFile } from "@server/search_part_types";
-
-	library.add(fas.faFolderOpen);
+	import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 
 	const file_dialogue_selection = ref<PlaylistFile>();
 	const file_dialogue_directory_stack = ref<Directory<"playlist">[]>([]);
@@ -78,7 +75,7 @@
 		<template v-slot:buttons>
 			<input class="file_name_box" v-model="playlist_file_name" placeholder="Filename" />
 			<MenuButton @click="save_playlist()">
-				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Playlist
+				<FontAwesomeIcon :icon="faFloppyDisk" />Save Playlist
 			</MenuButton>
 		</template>
 	</FileDialogue>

@@ -40,16 +40,13 @@
 
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 
 	import type { SongData, SongPart, TextLine } from "@server/PlaylistItems/SongFile/SongFile";
-
-	library.add(fas.faAdd, fas.faTrash, fas.faPlus, fas.faXmark, fas.faCheck);
+	import { faCheck, faPlus, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 	defineProps<{
 		song_data: SongData | undefined;
@@ -137,10 +134,7 @@
 						:id="language_index.toString()"
 						@click="language_toggle(index)"
 					>
-						<FontAwesomeIcon
-							class="language_selected_icon"
-							:icon="['fas', state ? 'check' : 'xmark']"
-						/>
+						<FontAwesomeIcon class="language_selected_icon" :icon="state ? faCheck : faXmark" />
 						{{ song_data.metadata.Title[language_index] }}
 					</div>
 				</Draggable>
@@ -165,7 +159,7 @@
 							class="song_part_container"
 						>
 							<MenuButton :square="true" @click="selected_parts.push(part_name)">
-								<FontAwesomeIcon :icon="['fas', 'plus']" />
+								<FontAwesomeIcon :icon="faPlus" />
 							</MenuButton>
 							<div
 								class="song_part text_part_handle"
@@ -198,7 +192,7 @@
 								: undefined
 						"
 					>
-						<FontAwesomeIcon :icon="['fas', 'plus']" />Add Part
+						<FontAwesomeIcon :icon="faPlus" />Add Part
 					</MenuButton>
 				</div>
 				<div id="song_parts_wrapper">
@@ -236,7 +230,7 @@
 						</div>
 					</Draggable>
 					<MenuButton @click="delete_song_part(selected_song_part)">
-						<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
+						<FontAwesomeIcon :icon="faTrash" />Delete Part
 					</MenuButton>
 				</div>
 			</div>

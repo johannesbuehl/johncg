@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { onMounted, onUnmounted, ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import { ControlWindowState } from "@/Enums";
 	import PartRadio from "./PartRadio.vue";
@@ -20,19 +18,19 @@
 
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ItemProps } from "@server/PlaylistItems/PlaylistItem";
-
-	library.add(
-		fas.faMusic,
-		fas.faBookBible,
-		fas.faQuoteLeft,
-		fas.faFont,
-		fas.faImage,
-		fas.faPenRuler,
-		fas.faFilePdf,
-		fas.faClock,
-		fas.faTerminal,
-		fas.faMessage
-	);
+	import {
+		faBookBible,
+		faClock,
+		faFilePdf,
+		faFont,
+		faImage,
+		faMessage,
+		faMusic,
+		faPenRuler,
+		faQuoteLeft,
+		faTerminal,
+		type IconDefinition
+	} from "@fortawesome/free-solid-svg-icons";
 
 	const pick = ref<ItemProps["type"]>("song");
 
@@ -72,17 +70,17 @@
 		}
 	}
 
-	const part_types: { text: string; value: ItemProps["type"]; icon: string }[] = [
-		{ text: "Song", value: "song", icon: "music" },
-		{ text: "Psalm", value: "psalm", icon: "book-bible" },
-		{ text: "Bible", value: "bible", icon: "quote-left" },
-		{ text: "Text", value: "text", icon: "font" },
-		{ text: "Media", value: "media", icon: "image" },
-		{ text: "Template", value: "template", icon: "pen-ruler" },
-		{ text: "PDF", value: "pdf", icon: "file-pdf" },
-		{ text: "Countdown", value: "countdown", icon: "clock" },
-		{ text: "AMCP", value: "amcp", icon: "terminal" },
-		{ text: "Comment", value: "comment", icon: "message" }
+	const part_types: { text: string; value: ItemProps["type"]; icon: IconDefinition }[] = [
+		{ text: "Song", value: "song", icon: faMusic },
+		{ text: "Psalm", value: "psalm", icon: faBookBible },
+		{ text: "Bible", value: "bible", icon: faQuoteLeft },
+		{ text: "Text", value: "text", icon: faFont },
+		{ text: "Media", value: "media", icon: faImage },
+		{ text: "Template", value: "template", icon: faPenRuler },
+		{ text: "PDF", value: "pdf", icon: faFilePdf },
+		{ text: "Countdown", value: "countdown", icon: faClock },
+		{ text: "AMCP", value: "amcp", icon: faTerminal },
+		{ text: "Comment", value: "comment", icon: faMessage }
 	];
 
 	function add_item(item_props: ItemProps) {

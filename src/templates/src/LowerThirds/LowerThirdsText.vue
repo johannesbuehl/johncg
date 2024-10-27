@@ -1,15 +1,12 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import LowerThirds from "./LowerThirds.vue";
 
 	import type CasparCGGlobalFunctions from "@/CasparCGGlobals";
 
 	import type { TextJSON } from "@server/PlaylistItems/Text";
-
-	library.add(fas.faInfo);
+	import { faInfo } from "@fortawesome/free-solid-svg-icons";
 
 	const data = ref<TextJSON & { mute_transition: boolean }>({
 		mute_transition: false,
@@ -49,7 +46,7 @@
 </script>
 
 <template>
-	<LowerThirds :text="data.text" icon="info" :visible="visible" />
+	<LowerThirds :text="data.text" :icon="faInfo" :visible="visible" />
 </template>
 
 <style scoped></style>

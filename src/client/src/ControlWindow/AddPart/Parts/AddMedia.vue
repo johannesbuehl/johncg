@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -10,8 +8,7 @@
 	import type { MediaProps } from "@server/PlaylistItems/Media";
 	import type { CasparFile, Node } from "@server/search_part_types";
 	import Globals from "@/Globals";
-
-	library.add(fas.faPlus, fas.faRepeat);
+	import { faPlus, faRepeat } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: MediaProps];
@@ -45,10 +42,10 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="loop = !loop" :active="loop">
-				<FontAwesomeIcon :icon="['fas', 'repeat']" />Loop
+				<FontAwesomeIcon :icon="faRepeat" />Loop
 			</MenuButton>
 			<MenuButton @click="add_media(selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Media
+				<FontAwesomeIcon :icon="faPlus" />Add Media
 			</MenuButton>
 		</template>
 	</MediaDialogue>

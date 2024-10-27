@@ -1,12 +1,16 @@
 <script setup lang="ts">
-	import type { ClientMediaProps } from "@server/PlaylistItems/Media";
-	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
+	import { faInfo } from "@fortawesome/free-solid-svg-icons";
 
+	import type { ClientTextSlides } from "@server/PlaylistItems/Text";
+	import LowerThirds from "@templates/LowerThirds/LowerThirds.vue";
+
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 	import Globals from "@/Globals";
 
 	defineProps<{
-		slides?: ClientMediaProps;
+		slides: ClientTextSlides;
 		aspect_ratio: string;
+		scroll?: boolean;
 	}>();
 
 	const emit = defineEmits<{
@@ -18,18 +22,21 @@
 	<div class="slide_part">
 		<div
 			class="header"
-			:class="{ active: 0 === Globals.active_item_slide?.slide }"
+			:class="{ active: Globals.active_item_slide?.item !== undefined }"
 			@click="emit('select_slide', 0)"
 		>
 			{{ slides?.title }}
 		</div>
 		<div class="slides_wrapper">
 			<ItemSlideWrapper
-				:media="slides?.media"
+				:media="slides.media"
 				:aspect_ratio="aspect_ratio"
 				:active="Globals.is_active_slide(0)"
+				:scroll="scroll"
 				@click="emit('select_slide', 0)"
-			/>
+			>
+				<LowerThirds :text="slides.template.data.text" :icon="faInfo" :visible="true" />
+			</ItemSlideWrapper>
 		</div>
 	</div>
 </template>

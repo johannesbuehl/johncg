@@ -1,9 +1,9 @@
 <script lang="ts">
-	export const icons: Record<LogLevel, string> = {
-		error: "exclamation",
-		warn: "xmark",
-		log: "info",
-		debug: "bug"
+	export const icons: Record<LogLevel, IconDefinition> = {
+		error: faExclamation,
+		warn: faXmark,
+		log: faInfo,
+		debug: faBug
 	};
 
 	export const colors: Record<LogLevel, string> = {
@@ -17,8 +17,6 @@
 <script setup lang="ts">
 	import { ref, watch } from "vue";
 
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import type { LogMessage } from "@/Globals";
@@ -26,8 +24,8 @@
 	import type { LogLevel } from "@server/JCGPSendMessages";
 	import { get_time_string } from "@server/lib";
 	import Globals from "@/Globals";
-
-	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
+	import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+	import { faBug, faExclamation, faInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 	const messages = ref<LogMessage[]>([]);
 
@@ -70,10 +68,7 @@
 			:key="message.message"
 			@click="messages.splice(message_index, 1)"
 		>
-			<FontAwesomeIcon
-				:icon="['fas', icons[message.type]]"
-				:style="{ color: colors[message.type] }"
-			/>
+			<FontAwesomeIcon :icon="icons[message.type]" :style="{ color: colors[message.type] }" />
 			<div class="popup_text">
 				<span class="message">{{ message.message }}</span>
 				<span class="date">{{ get_time_string(message.timestamp) }}</span>

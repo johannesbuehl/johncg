@@ -1,6 +1,4 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { ref } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -9,8 +7,7 @@
 	import type { AMCPProps } from "@server/PlaylistItems/AMCP";
 	import AMCPInput from "@/ControlWindow/ItemDialogue/AMCPInput.vue";
 	import Globals from "@/Globals";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const set_active_command = ref<string>("");
 	const set_inactive_command = ref<string>("");
@@ -38,7 +35,7 @@
 		v-model:command_inactive="set_inactive_command"
 	>
 		<MenuButton @click="add_comment">
-			<FontAwesomeIcon :icon="['fas', 'plus']" />Add AMCP-Command
+			<FontAwesomeIcon :icon="faPlus" />Add AMCP-Command
 		</MenuButton>
 	</AMCPInput>
 </template>

@@ -14,8 +14,6 @@
 <script setup lang="ts">
 	import { reactive, ref, watch } from "vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 
 	import { get_song_part_color } from "../../ItemDialogue/SongPartSelector.vue";
@@ -29,8 +27,14 @@
 	import type { CasparFile, Directory, SongFile } from "@server/search_part_types";
 	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { SongFileMetadata, SongData } from "@server/PlaylistItems/SongFile/SongFile";
-
-	library.add(fas.faUpDownLeftRight, fas.faBars, fas.faTrash, fas.faFloppyDisk, fas.faXmark);
+	import {
+		faBars,
+		faFloppyDisk,
+		faPlus,
+		faTrash,
+		faUpDownLeftRight,
+		faXmark
+	} from "@fortawesome/free-solid-svg-icons";
 
 	const text_parts = defineModel<SongTextPart[]>("text_parts", {
 		default: () => reactive([{ part: "", text: [["", "", "", ""]] }])
@@ -374,7 +378,7 @@
 							class="draggable_handle text_part_handle"
 							:class="{ enabled: index < text_parts.length - 1 }"
 						>
-							<FontAwesomeIcon :icon="['fas', 'up-down-left-right']" />
+							<FontAwesomeIcon :icon="faUpDownLeftRight" />
 						</div>
 						<div class="text_part_data">
 							<input
@@ -402,7 +406,7 @@
 										class="draggable_handle text_slide_handle"
 										:class="{ enabled: index < text_parts.length - 1 }"
 									>
-										<FontAwesomeIcon :icon="['fas', 'bars']" />
+										<FontAwesomeIcon :icon="faBars" />
 									</div>
 									<template v-for="(language, language_index) of slide" :key="language_index">
 										<textarea
@@ -428,14 +432,14 @@
 									: undefined
 							"
 						>
-							<FontAwesomeIcon :icon="['fas', 'trash']" />
+							<FontAwesomeIcon :icon="faTrash" />
 						</MenuButton>
 						<MenuButton
 							:square="true"
 							:disabled="text_parts.length <= 1 || index === text_parts.length - 1"
 							@click="metadata.VerseOrder?.push(part.part)"
 						>
-							<FontAwesomeIcon :icon="['fas', 'plus']" />
+							<FontAwesomeIcon :icon="faPlus" />
 						</MenuButton>
 					</div>
 				</Draggable>
@@ -450,10 +454,10 @@
 							:disabled="song_file_name === ''"
 							@click="song_file_name !== '' ? save_song(true) : undefined"
 						>
-							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+							<FontAwesomeIcon :icon="faFloppyDisk" />Save
 						</MenuButton>
 						<MenuButton @click="show_save_dialogue()">
-							<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save As
+							<FontAwesomeIcon :icon="faFloppyDisk" />Save As
 						</MenuButton>
 					</div>
 				</div>
@@ -507,7 +511,7 @@
 					</div>
 				</Draggable>
 				<MenuButton @click="remove_verse_order_part()">
-					<FontAwesomeIcon :icon="['fas', 'trash']" />Delete Part
+					<FontAwesomeIcon :icon="faTrash" />Delete Part
 				</MenuButton>
 			</div>
 		</div>
@@ -525,7 +529,7 @@
 					class="file_dialogue_button"
 					@click="media_selection ? select_media(media_selection) : undefined"
 				>
-					<FontAwesomeIcon :icon="['fas', 'plus']" />Select Media
+					<FontAwesomeIcon :icon="faPlus" />Select Media
 				</MenuButton>
 			</template>
 		</MediaDialogue>
@@ -555,7 +559,7 @@
 					@input="song_selection = undefined"
 				/>
 				<MenuButton id="select_song_button" :disabled="song_file_name === ''" @click="save_song()">
-					<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save Song
+					<FontAwesomeIcon :icon="faFloppyDisk" />Save Song
 				</MenuButton>
 			</template>
 		</SongDialogue>
@@ -568,7 +572,7 @@
 					save_callback(save_song(true));
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'floppy-disk']" />Save
+				<FontAwesomeIcon :icon="faFloppyDisk" />Save
 			</MenuButton>
 			<MenuButton
 				@click="
@@ -576,7 +580,7 @@
 					save_callback(true);
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'trash']" />Discard
+				<FontAwesomeIcon :icon="faTrash" />Discard
 			</MenuButton>
 			<MenuButton
 				@click="
@@ -584,7 +588,7 @@
 					save_callback(false);
 				"
 			>
-				<FontAwesomeIcon :icon="['fas', 'xmark']" />Cancel
+				<FontAwesomeIcon :icon="faXmark" />Cancel
 			</MenuButton>
 		</div>
 	</PopUp>

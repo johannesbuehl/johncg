@@ -1,15 +1,12 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 
 	import LowerThirds from "./LowerThirds.vue";
 
 	import type CasparCGGlobalFunctions from "@/CasparCGGlobals";
 
 	import type { BibleJSON } from "@server/PlaylistItems/Bible";
-
-	library.add(fas.faBible);
+	import { faBible } from "@fortawesome/free-solid-svg-icons";
 
 	const data = ref<BibleJSON & { mute_transition: boolean }>({
 		mute_transition: false,
@@ -49,7 +46,7 @@
 </script>
 
 <template>
-	<LowerThirds :text="data.text" icon="bible" :visible="visible" />
+	<LowerThirds :text="data.text" :icon="faBible" :visible="visible" />
 </template>
 
 <style scoped></style>

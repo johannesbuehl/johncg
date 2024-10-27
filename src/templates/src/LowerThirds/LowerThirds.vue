@@ -1,10 +1,10 @@
 <script setup lang="ts">
+	import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-	// const props =
 	defineProps<{
 		text: string;
-		icon: string;
+		icon: IconDefinition;
 		visible: boolean;
 	}>();
 </script>
@@ -13,7 +13,7 @@
 	<Transition name="slide-in" :duration="10000">
 		<div v-if="visible" id="main">
 			<div id="icon">
-				<FontAwesomeIcon :icon="['fas', icon]" />
+				<FontAwesomeIcon :icon="icon" />
 			</div>
 			<div id="text_wrapper">
 				<div id="text">
@@ -45,6 +45,8 @@
 		align-items: center;
 
 		font-family: Bahnschrift;
+
+		color: black;
 	}
 
 	/* sliding */
@@ -83,8 +85,6 @@
 
 	#icon {
 		font-size: 1.5em;
-
-		width: 1em;
 
 		background-color: white;
 

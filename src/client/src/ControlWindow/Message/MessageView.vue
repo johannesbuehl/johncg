@@ -1,6 +1,4 @@
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import { icons, colors } from "./MessagePopup.vue";
@@ -8,8 +6,6 @@
 
 	import { get_time_string } from "@server/lib";
 	import type { LogLevel } from "@server/JCGPSendMessages";
-
-	library.add(fas.faExclamation, fas.faXmark, fas.faBug, fas.faInfo);
 </script>
 
 <template>
@@ -18,7 +14,7 @@
 			<template v-for="[key, val] of Object.entries(Globals.message.log_level)" :key="val">
 				<div :class="{ active: val }" @click="Globals.message.log_level[key as LogLevel] = !val">
 					<FontAwesomeIcon
-						:icon="['fas', icons[key as LogLevel]]"
+						:icon="icons[key as LogLevel]"
 						:style="{ color: colors[key as LogLevel] }"
 					/>
 					{{ key }}
@@ -28,10 +24,7 @@
 		<div id="message_container">
 			<template v-for="(message, message_index) of Globals.message.messages" :key="message_index">
 				<div class="message" v-if="Globals.message.log_level[message.type]">
-					<FontAwesomeIcon
-						:icon="['fas', icons[message.type]]"
-						:style="{ color: colors[message.type] }"
-					/>
+					<FontAwesomeIcon :icon="icons[message.type]" :style="{ color: colors[message.type] }" />
 					<div class="message_text">
 						<span class="message">{{ message.message }}</span>
 						<span class="date">{{ get_time_string(message.timestamp) }}</span>

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref, toRaw, watch } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -12,8 +10,7 @@
 	import Globals from "@/Globals";
 	import type { ChooseNode } from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import { NodeType, type SongFile } from "@server/search_part_types";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: SongProps];
@@ -83,7 +80,7 @@
 	>
 		<template v-slot:buttons>
 			<MenuButton @click="add_song(selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Song
+				<FontAwesomeIcon :icon="faPlus" />Add Song
 			</MenuButton>
 		</template>
 		<template v-slot:edit>

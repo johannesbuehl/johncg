@@ -1,12 +1,12 @@
 <script setup lang="ts">
-	import ItemSlide from "./ItemSlide.vue";
+	import ItemSlideWrapper from "./ItemSlideWrapper.vue";
 
 	import type { ClientPDFSlides } from "@server/PlaylistItems/PDF";
 
 	import Globals from "@/Globals";
 
 	defineProps<{
-		slide?: ClientPDFSlides;
+		slides?: ClientPDFSlides;
 		aspect_ratio: string;
 		scroll?: boolean;
 	}>();
@@ -41,11 +41,11 @@
 			:class="{ active: Globals.active_item_slide?.item !== undefined }"
 			@click="emit('select_slide', 0)"
 		>
-			{{ slide?.title }}
+			{{ slides?.title }}
 		</div>
 		<div class="slides_wrapper">
-			<ItemSlide
-				v-for="(_media, index) in slide?.slides"
+			<ItemSlideWrapper
+				v-for="(_media, index) in slides?.slides"
 				:key="index"
 				:media="_media"
 				:aspect_ratio="aspect_ratio"

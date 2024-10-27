@@ -1,7 +1,5 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
@@ -12,8 +10,7 @@
 	import { NodeType, type CasparFile, type Node } from "@server/search_part_types";
 	import type { CountdownProps } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode, countdown_title_map } from "@server/lib";
-
-	library.add(fas.faPlus, fas.faRepeat);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [item_props: CountdownProps];
@@ -69,7 +66,7 @@
 	<MediaDialogue v-model:selection="media_selection" @choose="add_countdown">
 		<template v-slot:buttons>
 			<MenuButton @click="add_countdown(media_selection)">
-				<FontAwesomeIcon :icon="['fas', 'plus']" />Add Countdown
+				<FontAwesomeIcon :icon="faPlus" />Add Countdown
 			</MenuButton>
 		</template>
 		<template v-slot:edit>

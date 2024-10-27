@@ -49,8 +49,6 @@
 </script>
 
 <script setup lang="ts">
-	import { library } from "@fortawesome/fontawesome-svg-core";
-	import * as fas from "@fortawesome/free-solid-svg-icons";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { ref } from "vue";
 
@@ -63,8 +61,7 @@
 
 	import type { BibleProps, Book } from "@server/PlaylistItems/Bible";
 	import type { BibleCitationSeperatorsMap } from "@server/config/config";
-
-	library.add(fas.faPlus);
+	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 	const emit = defineEmits<{
 		add: [bible_props: BibleProps];
@@ -105,8 +102,6 @@
 		v-model:chapter_verse_selection="chapter_verse_selection"
 		:bible="Globals.get_bible_file()"
 	>
-		<MenuButton @click="add_item()">
-			<FontAwesomeIcon :icon="['fas', 'plus']" />Add Bible
-		</MenuButton>
+		<MenuButton @click="add_item()"> <FontAwesomeIcon :icon="faPlus" />Add Bible </MenuButton>
 	</BibleSelector>
 </template>
