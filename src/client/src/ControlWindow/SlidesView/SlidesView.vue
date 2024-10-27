@@ -51,7 +51,7 @@
 			@select_slide="emit('select_slide', $event)"
 		/>
 		<TemplatePart
-			v-if="slides?.type === 'template' || slides?.type === 'bible'"
+			v-if="slides?.type === 'template' || slides?.type === 'bible' || slides?.type === 'text'"
 			:slide="slides"
 			:aspect_ratio="aspect_ratio"
 			@select_slide="emit('select_slide', $event)"

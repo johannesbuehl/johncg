@@ -6,7 +6,7 @@
 	import Globals from "@/Globals";
 
 	const props = defineProps<{
-		slide: JCGPSend.ItemSlides & { type: "template" | "bible" };
+		slide: JCGPSend.ItemSlides & { type: "template" | "bible" | "text" };
 		aspect_ratio: string;
 	}>();
 
