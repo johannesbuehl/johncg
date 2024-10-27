@@ -23,7 +23,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - client: placeholder for custom-templates and remove template-part of ItemSlide.vue
 - update docs with new config-file
 - client context-menu reload not working reliable / reloading but switching to next one
-- comment-rename not working
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api

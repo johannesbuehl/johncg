@@ -52,6 +52,8 @@
 	function is_active(part: number, part_slide?: number): boolean {
 		if (Globals.active_item_slide !== undefined && Globals.active_item_slide.slide !== null) {
 			if (part_slide !== undefined) {
+				create_part_slide_map();
+
 				return Globals.is_active_slide(part_slide_map[part][part_slide]);
 			} else {
 				if (typeof Globals.active_item_slide?.slide === "number") {

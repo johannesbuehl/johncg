@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onUnmounted, ref, watch } from "vue";
+	import { onMounted, ref, watch } from "vue";
 
 	import BibleSelector, {
 		chapter_verse_selection_to_props,
@@ -7,10 +7,9 @@
 	} from "../ItemDialogue/BibleSelector.vue";
 
 	import type { Book, ClientBibleItem } from "@server/PlaylistItems/Bible";
-	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import Globals from "@/Globals";
 
-	const props = defineProps<{
+	defineProps<{
 		item_index: number;
 	}>();
 
@@ -19,13 +18,26 @@
 
 	const bible_props = defineModel<ClientBibleItem>("item_props");
 
+	watch(book_selection, (book_selection) => {
+		if (bible_props.value !== undefined && book_selection !== undefined) {
+			bible_props.value.book_id = book_selection.id;
+			bible_props.value.chapters = {};
+		}
+	});
+
 	watch(
-		bible_props,
-		() => {
-			load_props();
+		chapter_verse_selection,
+		(chapter_verse_selection) => {
+			if (bible_props.value !== undefined) {
+				bible_props.value.chapters = chapter_verse_selection_to_props(chapter_verse_selection);
+			}
 		},
-		{ immediate: true }
+		{ deep: true }
 	);
+
+	onMounted(() => {
+		load_props();
+	});
 
 	watch(
 		() => Globals.get_bible_file(),
@@ -36,10 +48,6 @@
 		},
 		{ immediate: true }
 	);
-
-	onUnmounted(() => {
-		update();
-	});
 
 	function load_props() {
 		const bible_file = Globals.get_bible_file();
@@ -55,20 +63,6 @@
 						.map((state, index) => verses.includes(index + 1))
 				])
 			);
-		}
-	}
-
-	function update() {
-		if (book_selection.value !== undefined && bible_props.value !== undefined) {
-			Globals.ws?.send<JCGPRecv.UpdateItem>({
-				command: "update_item",
-				index: props.item_index,
-				props: {
-					...bible_props.value,
-					book_id: book_selection.value.id,
-					chapters: chapter_verse_selection_to_props(chapter_verse_selection.value)
-				}
-			});
 		}
 	}
 </script>

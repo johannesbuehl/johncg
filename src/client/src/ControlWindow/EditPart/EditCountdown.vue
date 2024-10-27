@@ -1,14 +1,12 @@
 <script setup lang="ts">
-	import { onUnmounted, ref, watchEffect } from "vue";
+	import { onMounted, ref, watch } from "vue";
 
 	import CountdownEditor from "../ItemDialogue/CountdownEditor.vue";
 
-	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientCountdownItem } from "@server/PlaylistItems/Countdown";
 	import { CountdownMode } from "@server/lib";
-	import Globals from "@/Globals";
 
-	const props = defineProps<{
+	defineProps<{
 		item_index: number;
 	}>();
 
@@ -21,7 +19,7 @@
 
 	const item_props = defineModel<ClientCountdownItem>("item_props", { required: true });
 
-	watchEffect(() => {
+	onMounted(() => {
 		countdown_mode.value = item_props.value.mode;
 		time.value = item_props.value.time;
 		show_seconds.value = item_props.value.show_seconds;
@@ -30,20 +28,28 @@
 		font_color.value = item_props.value.font_color;
 	});
 
-	onUnmounted(() => {
-		Globals.ws?.send<JCGPRecv.UpdateItem>({
-			command: "update_item",
-			index: props.item_index,
-			props: {
-				...item_props.value,
-				font_size: font_size.value,
-				font_color: font_color.value,
-				mode: countdown_mode.value,
-				position: position.value,
-				show_seconds: show_seconds.value,
-				time: time.value
-			}
-		});
+	watch(countdown_mode, (countdown_mode) => {
+		item_props.value.mode = countdown_mode;
+	});
+
+	watch(time, (time) => {
+		item_props.value.time = time;
+	});
+
+	watch(show_seconds, (show_seconds) => {
+		item_props.value.show_seconds = show_seconds;
+	});
+
+	watch(position, (position) => {
+		item_props.value.position = position;
+	});
+
+	watch(font_size, (font_size) => {
+		item_props.value.font_size = font_size;
+	});
+
+	watch(font_color, (font_color) => {
+		item_props.value.font_color = font_color;
 	});
 </script>
 

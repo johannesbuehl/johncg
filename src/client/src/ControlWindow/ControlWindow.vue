@@ -142,8 +142,10 @@
 			<AddPart v-else-if="Globals.ControlWindowState === ControlWindowState.Add" />
 			<EditPart
 				v-else-if="Globals.ControlWindowState === ControlWindowState.Edit"
+				:key="Globals.selected_item.value ?? undefined"
 				:item_props="
-					typeof Globals.selected_item.value === 'number'
+					typeof Globals.selected_item.value === 'number' &&
+					playlist?.playlist_items[Globals.selected_item.value] !== undefined
 						? playlist?.playlist_items[Globals.selected_item.value]
 						: undefined
 				"

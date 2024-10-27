@@ -1,12 +1,10 @@
 <script setup lang="ts">
-	import { onUnmounted, ref, watch } from "vue";
+	import { onMounted, ref, watch } from "vue";
 
-	import type * as JCGPRecv from "@server/JCGPReceiveMessages";
 	import type { ClientTextItem } from "@server/PlaylistItems/Text";
 	import TextEditor from "../ItemDialogue/TextEditor.vue";
-	import Globals from "@/Globals";
 
-	const props = defineProps<{
+	defineProps<{
 		item_index: number;
 	}>();
 
@@ -14,22 +12,12 @@
 
 	const item_props = defineModel<ClientTextItem>("item_props", { required: true });
 
-	watch(
-		() => item_props.value.text,
-		(data) => {
-			text.value = data ?? "";
-		},
-		{ deep: true, immediate: true }
-	);
+	onMounted(() => {
+		text.value = item_props.value.text ?? "";
+	});
 
-	onUnmounted(() => {
-		item_props.value.text = text.value.length > 0 ? text.value : "";
-
-		Globals.ws?.send<JCGPRecv.UpdateItem>({
-			command: "update_item",
-			index: props.item_index,
-			props: item_props.value
-		});
+	watch(text, (text) => {
+		item_props.value.text = text;
 	});
 </script>
 

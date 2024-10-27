@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { onMounted, onUnmounted, ref, toRaw, watch } from "vue";
+	import { onMounted, ref, toRaw, watch } from "vue";
 
 	import SongPartSelector from "../ItemDialogue/SongPartSelector.vue";
 
@@ -17,6 +17,37 @@
 	const languages = ref<[number, boolean][]>([]);
 
 	const song_props = defineModel<ClientSongItem>("item_props", { required: true });
+
+	// write changes in the language-selection to the props
+	watch(languages, (languages) => {
+		if (
+			languages.some((val, index) => {
+				return val[0] !== index || val[1] === false;
+			})
+		) {
+			song_props.value.languages = languages
+				.filter(([_number, active]) => active)
+				.map(([number, _active]) => number);
+		} else {
+			song_props.value.languages = undefined;
+		}
+	});
+
+	// write changes of the verse-order to the props
+	watch(verse_order, (verse_order) => {
+		// only return the verse-order if it is different than the default
+		const default_parts = props.song_data?.metadata.VerseOrder ?? [];
+		if (
+			default_parts.length !== verse_order.length ||
+			verse_order.some((verse, index) => {
+				return verse !== default_parts[index];
+			})
+		) {
+			song_props.value.verse_order = verse_order;
+		} else {
+			song_props.value.verse_order = undefined;
+		}
+	});
 
 	watch(
 		() => props.song_data,
@@ -46,10 +77,6 @@
 		}
 	);
 
-	onUnmounted(() => {
-		update();
-	});
-
 	// whenever the song changes, request the SongResults
 	watch(() => song_props.value.file, request_song_data);
 
@@ -61,49 +88,6 @@
 			type: "song",
 			file: file
 		});
-	}
-
-	function update() {
-		const return_props = create_props();
-
-		if (return_props !== undefined) {
-			Globals.ws?.send<JCGPRecv.UpdateItem>({
-				command: "update_item",
-				index: props.item_index,
-				props: return_props
-			});
-		}
-	}
-
-	function create_props(): ClientSongItem | undefined {
-		const return_props = structuredClone(toRaw(song_props.value));
-
-		// only return the verse-order if it is different than the default
-		const default_parts = props.song_data?.metadata.VerseOrder ?? [];
-		if (
-			default_parts.length !== verse_order.value.length ||
-			verse_order.value.some((verse, index) => {
-				return verse !== default_parts[index];
-			})
-		) {
-			return_props.verse_order = verse_order.value;
-		} else {
-			return_props.verse_order = undefined;
-		}
-
-		if (
-			languages.value.some((val, index) => {
-				return val[0] !== index || val[1] === false;
-			})
-		) {
-			return_props.languages = languages.value
-				.filter(([_number, active]) => active)
-				.map(([number, _active]) => number);
-		} else {
-			return_props.languages = undefined;
-		}
-
-		return return_props;
 	}
 </script>
 
