@@ -29,11 +29,11 @@ external_packages:
   - pdfjs-dist
 copy:
   - orig: casparcg
-  - orig: files/Bible
+  - orig: files/Bibles
     dest: Bibles
-  - orig: files/Psalm
+  - orig: files/Psalms
     dest: Psalms
-  - orig: files/Song
+  - orig: files/Songs
     dest: Songs
   - orig: pandoc/texlive.profile
 mkdir:
