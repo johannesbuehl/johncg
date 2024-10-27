@@ -20,9 +20,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
-- client: placeholder for custom-templates and remove template-part of ItemSlide.vue
 - update docs with new config-file
-- slide-hover: border grows in 2 steps
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api

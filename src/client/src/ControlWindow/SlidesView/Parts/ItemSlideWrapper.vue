@@ -81,8 +81,6 @@
 		overflow: visible;
 
 		z-index: 10;
-
-		transition: outline 0.25s ease;
 	}
 
 	.media {
