@@ -13,18 +13,11 @@ JohnCG comes by default with two bible-files:
 The books are divided into groups (e. g. "Law" or "Gospels") and those groups into parts (e. g. "Old Testament" or "New Testament").  
 The group- and part-names aren't predefined and can be changed - for example for localization.
 
-# Structure
+# File-Structure
 A bible-file is a JSON-file with the file-ending changed to `*.bbl`.
 
 ## `name`
 Name of the bible-version
-
-## `version`
-The version of the bible-file - it's based on semantic versioning:[^1]
-
-The first number indicates the layout-version of the file and is incremented whenever there are changes that are not backwards compatible.  
-The second number is incremented when the content gets (planned) changes.  
-The third number is incremented when bugs get fixed.
 
 ## `parts`
 This object defines different parts of the bible like *Old Testament* or *New Testament*.
@@ -38,11 +31,17 @@ A section groups multiple books together, for example the Gospels.
 A book is defined by its name, abbreviation (called `id`) and an array of the chapters.  
 The chapters-array has an entry for every chapter with the amount of verses it has.
 
-## Example
+## `version`
+The version of the bible-file - it's based on semantic versioning[^1]:
+
+The first number indicates the layout-version of the file and is incremented whenever there are changes that are not backwards compatible.  
+The second number is incremented when the content gets (planned) changes.  
+The third number is incremented when bugs get fixed.
+
+# Example
 ```json
 {
     "name": "King James Version",
-    "version": "1.0.0",
     "parts": {
         "Old Testament": [
             {
@@ -61,7 +60,8 @@ The chapters-array has an entry for every chapter with the amount of verses it h
                 ]
             }
         ]
-    }
+    },
+    "version": "1.0.0"
 }
 ```
 
