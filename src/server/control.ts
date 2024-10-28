@@ -11,14 +11,14 @@ import type { WebsocketServerArguments, WebsocketMessageHandler } from "./server
 import * as JCGPSend from "./JCGPSendMessages";
 import * as JCGPRecv from "./JCGPReceiveMessages";
 
-import Config, { CasparCGConnectionSettings } from "./config/config";
+import Config, { CasparCGConnectionSettings, validate_bible_file } from "./config/config";
 import SearchPart from "./search_part";
 import type { CasparFile, ItemFileMap, ItemNodeMapped, Node } from "./search_part_types";
 import { ClientPlaylistItem, ItemProps } from "./PlaylistItems/PlaylistItem";
 import { BibleFile } from "./PlaylistItems/Bible";
 import { logger } from "./logger";
 import { casparcg, thumbnail_generate, thumbnail_retrieve } from "./CasparCGConnection.js";
-import { random_id } from "./lib";
+import { create_ajv_error_string, random_id } from "./lib";
 import SongFile, { validate_song_data } from "./PlaylistItems/SongFile/SongFile";
 import Psalm, { validate_psalm_file } from "./PlaylistItems/Psalm";
 import Song from "./PlaylistItems/Song";
@@ -921,7 +921,18 @@ export default class Control {
 		let bible: BibleFile;
 
 		try {
-			bible = JSON.parse(fs.readFileSync(Config.path.bible, "utf-8")) as BibleFile;
+			bible = JSON.parse(fs.readFileSync(Config.get_path("bible"), "utf-8")) as BibleFile;
+
+			// validate the bible-file
+			if (!validate_bible_file(bible)) {
+				const error_message = `Can't get bible-file: ${create_ajv_error_string(validate_bible_file.errors)}`
+
+				logger.error(error_message);
+
+				ws_send_response(error_message, false, ws);
+
+				return;
+			}
 		} catch {
 			logger.error("Can't get bible-file: error during file-reading");
 
