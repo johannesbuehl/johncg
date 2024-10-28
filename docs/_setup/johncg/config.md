@@ -43,7 +43,7 @@ playlists: Playlists
 songs: Songs
 psalms: Psalms
 pdfs: PDFs
-bible: Bibles/Lutherbibel.json
+bible: Bibles/Lutherbibel.bbl
 ```
 
 ### `playlists`
@@ -78,7 +78,7 @@ casparcg_connections:
     channel: 1
     layers:
       media: 20 # optional
-      template: 21
+      template: 21 # optional
     path: casparcg
     # stageview: true
 ```
@@ -96,7 +96,7 @@ The channel that should be used.
 
 ## `layers`
 JohnCG uses two layers: one exclusively for media and one for templates.  
-The media-layer can be omitted to only display the templates.
+Omit one a layer-definition to not display it.
 
 The media-layer is used for:
 - song- psalm- and countdown-backgrounds
@@ -128,5 +128,6 @@ If you specifiy multiple CasparCG-connections to the same instance, only specify
 ## Stageview (optional)
 Renders a view optimized for performers.
 It displays the same as a normal output with the following changes:
+- always visible / not affected by visibility
 - no background-image for songs
 - (if available) song-chords

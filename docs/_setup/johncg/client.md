@@ -9,6 +9,9 @@ You can access the client interface from any modern web browser within the same 
 
 **Example**: `192.168.1.10:8888`
 
-## Tips
-- If you're accessing the client interface from the same machine as the server, use either [`localhost:8888`](http://localhost:8888) or [`127.0.0.1:8888`](http://127.0.0.1:8888).
-- In Chrome: open the interface, than click the three dots, "Cast, save and share", "Install page as app" to "install" the client as a standalone Chrome-window.
+{: .tip}
+If accessing the client interface from the same machine as the server, use [`localhost:8888`](http://localhost:8888) or [`127.0.0.1:8888`](http://127.0.0.1:8888).  
+When accessing the client interface over the network, use the server's hostname or set a static IP address to ensure consistent reachability.
+
+{: .tip}
+In Chrome: open the interface, than click the three dots, "Cast, save and share", "Install page as app" to "install" the client as a standalone Chrome-window.

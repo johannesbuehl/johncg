@@ -20,10 +20,9 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
-- stageview: ignore visibility and update docs
-- change build-name to not include the build-number
-- add documentation for jcg and psm files
-- own file-format for bible? -> adjust docs
+- add documentation for jcg, psm, sng and bbl-files
+- seperate manual and documentation
+- test windows 11 and update docs
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api
@@ -39,6 +38,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - move backend to go
 - use http-status-codes in answer to client
 - sng-files: "#H" comments-out a line -> implement but show #H-lines in stageview to use as comments
+- json-creation: use string templates instead of marshalling
+- store some client-config in cookies (log-level, link-follow)
 - seperate manual and documentation
-- test windows 11 and update docs
-- make template layer optional too and adjust docs accordingly
