@@ -161,7 +161,7 @@
 		const psalm_data: PsalmData = {
 			metadata: metadata.value,
 			text: [[[]]],
-			version: "v1.0.0"
+			version: "1.0.0"
 		};
 
 		// filter out the last, empty element

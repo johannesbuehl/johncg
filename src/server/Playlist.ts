@@ -365,7 +365,9 @@ const playlist_file_schema: JSONSchemaType<PlaylistObject> = {
 			type: "array"
 		},
 		version: {
-			type: "string"
+			type: "string",
+			pattern:
+				"^(?<major>1)\\.(?<minor>0|[1-9]\\d*)\\.(?<patch>0|[1-9]\\d*)(?:-(?<prerelease>(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
 		}
 	},
 	required: ["caption", "items", "version"],
@@ -624,7 +626,7 @@ export default class Playlist {
 							Object.entries(item.props).filter(([key]) => key !== "displayable")
 						) as ItemProps
 				),
-				version: "v1.0.0"
+				version: "1.0.0"
 			};
 
 			fs.writeFileSync(

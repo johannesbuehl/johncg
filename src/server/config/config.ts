@@ -83,7 +83,8 @@ const validate_bible_file = ajv.compile({
 		},
 		version: {
 			type: "string",
-			pattern: "^v1\\.\\d+\\.\\d+$"
+			pattern:
+				"^(?<major>0|[1-9]\\d*)\\.(?<minor>0|[1-9]\\d*)\\.(?<patch>0|[1-9]\\d*)(?:-(?<prerelease>(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
 		},
 		parts: {
 			type: "object",
@@ -148,10 +149,21 @@ class ConfigClass {
 		}
 
 		// validate the bible-file
-		if (!validate_bible_file(JSON.parse(fs.readFileSync(this.get_path("bible"), "utf-8")))) {
+		const bible_file = JSON.parse(fs.readFileSync(this.get_path("bible"), "utf-8"));
+		if (!validate_bible_file(bible_file)) {
 			throw new SyntaxError(
 				`invalid bible file: ${create_ajv_error_string(validate_bible_file.errors)}`
 			);
+		} else {
+			// check the major-version of the bible-file
+			const version_check_result =
+				/^(?<major>0|[1-9]\d*)\.(?<minor>0|[1-9]\d*)\.(?<patch>0|[1-9]\d*)(?:-(?<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/gm.exec(
+					bible_file.version
+				);
+
+			if (version_check_result?.groups?.["major"] !== "1") {
+				throw new SyntaxError(`incompatible bible-file: layout-version is '1.x.x'`);
+			}
 		}
 	}
 

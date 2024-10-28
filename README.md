@@ -20,6 +20,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
+- validate bible-file on open with schema
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api
