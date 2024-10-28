@@ -555,7 +555,7 @@ export default class Playlist {
 	}
 
 	protected load_playlist_file(playlist_path: string, callback?: () => void): boolean {
-		this.path = path.relative(Config.path.playlists, playlist_path);
+		this.path = path.relative(Config.get_path("playlist"), playlist_path);
 
 		let playlist_string: string;
 

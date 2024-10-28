@@ -73,7 +73,7 @@ const config_path_keys_map: ConfigPathKeysMap = {
 };
 
 const validate_config_file = ajv.compile(config_schema);
-const validate_bible_file = ajv.compile({
+export const validate_bible_file = ajv.compile({
 	/* eslint-disable @typescript-eslint/naming-convention */
 	$schema: "http://json-schema.org/draft-07/schema#",
 	type: "object",
@@ -281,10 +281,6 @@ class ConfigClass {
 				transitionType: TransitionType.Mix
 			};
 		}
-	}
-
-	get path(): ConfigYAML["path"] {
-		return structuredClone(this.config.path);
 	}
 
 	get casparcg_connections(): ConfigYAML["casparcg_connections"] {

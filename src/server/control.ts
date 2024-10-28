@@ -925,7 +925,7 @@ export default class Control {
 
 			// validate the bible-file
 			if (!validate_bible_file(bible)) {
-				const error_message = `Can't get bible-file: ${create_ajv_error_string(validate_bible_file.errors)}`
+				const error_message = `Can't get bible-file: ${create_ajv_error_string(validate_bible_file.errors)}`;
 
 				logger.error(error_message);
 

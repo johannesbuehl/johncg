@@ -118,7 +118,7 @@ export default class SearchPart {
 		return (await Promise.all(promises)).filter((el) => el !== undefined) as Node<K>[];
 	}
 
-	async find_sng_files(pth: string = Config.path.songs): Promise<Node<"song">[]> {
+	async find_sng_files(pth: string = Config.get_path("song")): Promise<Node<"song">[]> {
 		logger.log("searching song-files");
 
 		return this.find_files<"song">(
@@ -129,19 +129,19 @@ export default class SearchPart {
 		);
 	}
 
-	async find_jcg_files(pth: string = Config.path.playlists): Promise<Node<"playlist">[]> {
+	async find_jcg_files(pth: string = Config.get_path("playlist")): Promise<Node<"playlist">[]> {
 		logger.log("searching jcg-files");
 
 		return this.find_files<"playlist">(pth, pth, ".jcg", (f) => this.create_playlist_file(f));
 	}
 
-	async find_pdf_files(pth: string = Config.path.pdfs): Promise<Node<"pdf">[]> {
+	async find_pdf_files(pth: string = Config.get_path("pdf")): Promise<Node<"pdf">[]> {
 		logger.log("searching PDF-files");
 
 		return this.find_files<"pdf">(pth, pth, ".pdf", (f) => Promise.resolve(f));
 	}
 
-	async find_psalm_files(pth: string = Config.path.psalms): Promise<Node<"psalm">[]> {
+	async find_psalm_files(pth: string = Config.get_path("psalm")): Promise<Node<"psalm">[]> {
 		logger.log("searching psalm-files");
 
 		return this.find_files<"psalm">(pth, pth, ".psm", (f) => this.create_psalm_file(f));
