@@ -30,7 +30,7 @@ Sets wether every second verse should be indented or not.
 A three-dimensional array with the text split into slides, verses, lines.
 
 ## `version`
-The version of the bible-file - it's based on semantic versioning[^1]:
+The version of the psalm-file - it's based on semantic versioning[^1]:
 
 The first number indicates the layout-version of the file and is incremented whenever there are changes that are not backwards compatible.  
 The second number is incremented when the content gets (planned) changes.  
