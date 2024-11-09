@@ -34,20 +34,24 @@
 	});
 
 	// write changes of the verse-order to the props
-	watch(verse_order, (verse_order) => {
-		// only return the verse-order if it is different than the default
-		const default_parts = props.song_data?.metadata.VerseOrder ?? [];
-		if (
-			default_parts.length !== verse_order.length ||
-			verse_order.some((verse, index) => {
-				return verse !== default_parts[index];
-			})
-		) {
-			song_props.value.verse_order = verse_order;
-		} else {
-			song_props.value.verse_order = undefined;
-		}
-	});
+	watch(
+		verse_order,
+		(verse_order) => {
+			// only return the verse-order if it is different than the default
+			const default_parts = props.song_data?.metadata.VerseOrder ?? [];
+			if (
+				default_parts.length !== verse_order.length ||
+				verse_order.some((verse, index) => {
+					return verse !== default_parts[index];
+				})
+			) {
+				song_props.value.verse_order = verse_order;
+			} else {
+				song_props.value.verse_order = undefined;
+			}
+		},
+		{ deep: true }
+	);
 
 	watch(
 		() => props.song_data,
