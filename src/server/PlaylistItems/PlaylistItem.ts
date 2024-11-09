@@ -196,7 +196,7 @@ export abstract class PlaylistItemBase {
 	// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 	stop(_casparcg_connection?: CasparCGConnection) {}
 
-	protected play_media(casparcg_connection: CasparCGConnection) {
+	protected play_media(casparcg_connection: CasparCGConnection): Promise<unknown> {
 		if (casparcg_connection.settings.layers.media !== undefined) {
 			const clip = this.media ?? "#00000000";
 
@@ -232,6 +232,8 @@ export abstract class PlaylistItemBase {
 					"LOADBG MEDIA"
 				);
 			}
+		} else {
+			return new Promise<void>((resolve) => resolve());
 		}
 	}
 
@@ -336,21 +338,20 @@ export abstract class PlaylistItemBase {
 	}
 
 	set_visibility(visibility: boolean, casparcg_connection?: CasparCGConnection): Promise<unknown> {
-		if (casparcg_connection?.settings.layers.media !== undefined) {
-			casparcg.visibility = visibility;
+		casparcg.visibility = visibility;
 
-			const connections = casparcg_connection
-				? [casparcg_connection]
-				: casparcg.casparcg_connections;
+		const connections = casparcg_connection ? [casparcg_connection] : casparcg.casparcg_connections;
 
-			return Promise.allSettled(
-				connections
-					.filter((connection) => !connection.settings.stageview)
-					.map((connection) => {
-						if (visibility) {
-							return Promise.allSettled([
-								this.play_media(connection),
+		return Promise.allSettled(
+			connections
+				// don't hide stageview connections
+				.filter((connection) => !connection.settings.stageview)
+				.map((connection) => {
+					if (visibility) {
+						const promises: Promise<unknown>[] = [];
 
+						if (connection.settings.layers.template !== undefined) {
+							promises.push(
 								catch_casparcg_timeout(
 									async () =>
 										connection.connection.cgPlay({
@@ -362,9 +363,17 @@ export abstract class PlaylistItemBase {
 										}),
 									"CG PLAY - show template"
 								)
-							]);
-						} else {
-							const promises: Promise<unknown>[] = [
+							);
+						}
+
+						if (connection.settings.layers.media !== undefined) {
+							promises.push(this.play_media(connection));
+						}
+					} else {
+						const promises: Promise<unknown>[] = [];
+
+						if (connection.settings.layers.template !== undefined) {
+							promises.push(
 								// stop the template-layer
 								catch_casparcg_timeout(
 									async () =>
@@ -377,19 +386,18 @@ export abstract class PlaylistItemBase {
 										}),
 									"CG STOP - hide template"
 								)
-							];
-
-							if (connection.settings.layers.media !== undefined) {
-								promises.push(this.hide_media(connection));
-							}
-
-							return Promise.allSettled(promises);
+							);
 						}
-					})
-			);
-		} else {
-			return new Promise<void>((resolve) => resolve());
-		}
+
+						// if a media-layer is defnied, toggle it
+						if (connection.settings.layers.media !== undefined) {
+							promises.push(this.hide_media(connection));
+						}
+
+						return Promise.allSettled(promises);
+					}
+				})
+		);
 	}
 
 	protected casparcg_navigate(): Promise<unknown>[] {

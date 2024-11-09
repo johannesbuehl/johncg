@@ -37,3 +37,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - sng-files: "#H" comments-out a line -> implement but show #H-lines in stageview to use as comments
 - message-json-creation: use string templates instead of marshalling
 - store some client-config in cookies (log-level, link-follow)
+- docker-image
+- add test-media or templates with patterns
+- create CasparCG-template boilerplate
+- playlist template
