@@ -40,9 +40,6 @@
 			edit_item_props.value !== undefined &&
 			props.item_index !== null
 		) {
-			console.debug("orig", JSON.stringify(props.item_props));
-			console.debug("edit", JSON.stringify(edit_item_props.value));
-
 			// if the props are changed, send an update
 			if (JSON.stringify(props.item_props) !== JSON.stringify(edit_item_props.value)) {
 				Globals.ws?.send<JCGPRecv.UpdateItem>({

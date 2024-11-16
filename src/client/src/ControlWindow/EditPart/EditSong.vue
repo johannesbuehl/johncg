@@ -19,19 +19,23 @@
 	const song_props = defineModel<ClientSongItem>("item_props", { required: true });
 
 	// write changes in the language-selection to the props
-	watch(languages, (languages) => {
-		if (
-			languages.some((val, index) => {
-				return val[0] !== index || val[1] === false;
-			})
-		) {
-			song_props.value.languages = languages
-				.filter(([_number, active]) => active)
-				.map(([number, _active]) => number);
-		} else {
-			song_props.value.languages = undefined;
-		}
-	});
+	watch(
+		languages,
+		(languages) => {
+			if (
+				languages.some((val, index) => {
+					return val[0] !== index || val[1] === false;
+				})
+			) {
+				song_props.value.languages = languages
+					.filter(([_number, active]) => active)
+					.map(([number, _active]) => number);
+			} else {
+				song_props.value.languages = undefined;
+			}
+		},
+		{ deep: true }
+	);
 
 	// write changes of the verse-order to the props
 	watch(
