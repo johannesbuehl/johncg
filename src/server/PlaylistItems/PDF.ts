@@ -1,13 +1,17 @@
 import sharp from "sharp";
 import Canvas from "canvas";
-import tmp from "tmp";
 import { JSONSchemaType } from "ajv";
 
 import { PlaylistItemBase } from "./PlaylistItem";
 import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
 import { logger } from "../logger";
 import Config from "../config/config";
-import { CasparCGResolution } from "../CasparCGConnection.js";
+import {
+	casparcg,
+	CasparCGConnection,
+	CasparCGResolution,
+	catch_casparcg_timeout
+} from "../CasparCGConnection.js";
 import { ajv } from "../lib";
 
 export interface PDFProps extends ItemPropsBase {
@@ -104,14 +108,13 @@ export default class PDF extends PlaylistItemBase {
 								background: "#000000"
 							}).promise;
 
-							const image_buffer = canvas.toBuffer();
+							const img_buffer = canvas.toBuffer();
 
-							// save the image into a temporary file
-							const tmp_file = tmp.fileSync();
+							// eslint-disable-next-line @typescript-eslint/naming-convention
+							const shrp = sharp(img_buffer).webp({ nearLossless: true });
 
-							void sharp(image_buffer).png().toFile(tmp_file.name);
-
-							this.slides[index] = tmp_file.name.replaceAll("\\", "/").replace(/^(\w:\/)/, "$1/");
+							this.slides[index] =
+								`data:image/webp;base64,/${(await shrp.toBuffer()).toString("base64")}`;
 
 							this.slide_count++;
 						})
@@ -183,10 +186,45 @@ export default class PDF extends PlaylistItemBase {
 	}
 
 	async create_thumbnail(media: string): Promise<string> {
-		const img = sharp(media);
-		img.resize(240);
+		const buffer = Buffer.from(media.split(";base64,").pop() ?? "", "base64");
+		const img = sharp(buffer);
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		img.resize(240).webp({ nearLossless: true });
 
-		return "data:image/png;base64," + (await img.toBuffer()).toString("base64");
+		return "data:image/webp;base64," + (await img.toBuffer()).toString("base64");
+	}
+
+	protected async play_media(casparcg_connection: CasparCGConnection): Promise<unknown> {
+		if (casparcg_connection.settings.layers.media !== undefined) {
+			const clip = this.media ?? "#00000000";
+
+			if (casparcg.visibility) {
+				logger.log(`loading CasparCG-media: '${clip}'`);
+
+				return catch_casparcg_timeout(
+					async () =>
+						(
+							await casparcg_connection.connection.sendCustom({
+								command: `PLAY ${casparcg_connection.settings.channel}-${casparcg_connection.settings.layers.media} [html] "${clip}" ${Config.casparcg_transition?.transitionType} ${Config.casparcg_transition?.duration}`
+							})
+						).request,
+					"PLAY MEDIA"
+				);
+			} else {
+				logger.log(`loading CasparCG-media in the background: '${this.media}'`);
+
+				//  if the current stat is invisible, only load it in the background
+				return catch_casparcg_timeout(
+					async () =>
+						await casparcg_connection.connection.sendCustom({
+							command: `LOADBG ${casparcg_connection.settings.channel}-${casparcg_connection.settings.layers.media} [html] "${clip}" ${Config.casparcg_transition?.transitionType} ${Config.casparcg_transition?.duration}`
+						}),
+					"LOADBG MEDIA"
+				);
+			}
+		} else {
+			return new Promise<void>((resolve) => resolve());
+		}
 	}
 
 	protected validate_props = validate_pdf_props;
