@@ -1,5 +1,5 @@
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { ref, toRaw } from "vue";
 	import { VueDraggableNext as Draggable } from "vue-draggable-next";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
@@ -20,7 +20,6 @@
 		/* eslint-enable @typescript-eslint/naming-convention */
 	}
 
-	// const props =
 	defineProps<{
 		scroll?: boolean;
 	}>();
@@ -106,6 +105,10 @@
 		}
 
 		if (props !== undefined) {
+			// remove key "displayable"
+			const send_props_copy = toRaw(props);
+			delete (send_props_copy as ItemProps & { displayable?: boolean }).displayable;
+
 			Globals.ws?.send<JCGPRecv.AddItem>({
 				command: "add_item",
 				props,
