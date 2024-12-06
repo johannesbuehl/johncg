@@ -54,6 +54,7 @@ export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
 	private slides: string[] = [];
+	private thumbnails: string[] = [];
 
 	protected slide_count: number = 0;
 
@@ -111,11 +112,10 @@ export default class PDF extends PlaylistItemBase {
 							const img_buffer = canvas.toBuffer();
 
 							// eslint-disable-next-line @typescript-eslint/naming-convention
-							const shrp = sharp(img_buffer).webp({ nearLossless: true });
+							const shrp = sharp(img_buffer);
 
-							this.slides[index] =
-								`data:image/webp;base64,/${(await shrp.toBuffer()).toString("base64")}`;
-
+							this.slides[index] = await create_base64(shrp);
+							this.thumbnails[index] = await create_base64(shrp, (img) => img.resize(240));
 							this.slide_count++;
 						})
 					);
@@ -150,7 +150,7 @@ export default class PDF extends PlaylistItemBase {
 			caption: this.props.caption,
 			title: this.props.file,
 			type: "pdf",
-			slides: await Promise.all(this.slides.map(async (m) => await this.create_thumbnail(m))),
+			slides: this.thumbnails,
 			media: undefined
 		});
 	}
@@ -183,15 +183,6 @@ export default class PDF extends PlaylistItemBase {
 		}
 
 		return slide_steps;
-	}
-
-	async create_thumbnail(media: string): Promise<string> {
-		const buffer = Buffer.from(media.split(";base64,").pop() ?? "", "base64");
-		const img = sharp(buffer);
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		img.resize(240).webp({ nearLossless: true });
-
-		return "data:image/webp;base64," + (await img.toBuffer()).toString("base64");
 	}
 
 	protected async play_media(casparcg_connection: CasparCGConnection): Promise<unknown> {
@@ -260,4 +251,20 @@ export default class PDF extends PlaylistItemBase {
 	get_markdown_export_string(): string {
 		return `# PDF: "${this.props.caption}"\n\n`;
 	}
+}
+
+async function create_base64(
+	img: sharp.Sharp,
+	modify_callback?: (img: sharp.Sharp) => sharp.Sharp
+): Promise<string> {
+	const img_copy = img.clone();
+
+	modify_callback?.(img);
+
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	img_copy.webp({ nearLossless: true });
+
+	const thumbnail_buffer = await img_copy.toBuffer();
+
+	return "data:image/webp;base64," + thumbnail_buffer.toString("base64");
 }

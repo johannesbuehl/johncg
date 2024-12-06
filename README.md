@@ -20,6 +20,7 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 ## Roadmap for Release
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
+- confirm build for correct directory paths
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api
@@ -41,3 +42,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - add test-media or templates with patterns
 - create CasparCG-template boilerplate
 - playlist template
+- PDF-item: host-slides with local webserver and send casparcg-command to load URL (CG 1 ADD 0 "URL" 1)
