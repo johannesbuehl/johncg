@@ -207,9 +207,11 @@ export default class PDF extends PlaylistItemBase {
 				//  if the current stat is invisible, only load it in the background
 				return catch_casparcg_timeout(
 					async () =>
-						await casparcg_connection.connection.sendCustom({
-							command: `LOADBG ${casparcg_connection.settings.channel}-${casparcg_connection.settings.layers.media} [html] "${clip}" ${Config.casparcg_transition?.transitionType} ${Config.casparcg_transition?.duration}`
-						}),
+						(
+							await casparcg_connection.connection.sendCustom({
+								command: `LOADBG ${casparcg_connection.settings.channel}-${casparcg_connection.settings.layers.media} [html] "${clip}" ${Config.casparcg_transition?.transitionType} ${Config.casparcg_transition?.duration}`
+							})
+						).request,
 					"LOADBG MEDIA"
 				);
 			}

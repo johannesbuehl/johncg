@@ -222,13 +222,15 @@ export abstract class PlaylistItemBase {
 				//  if the current stat is invisible, only load it in the background
 				return catch_casparcg_timeout(
 					async () =>
-						casparcg_connection.connection.loadbg({
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.media!,
-							clip,
-							loop: this.loop,
-							transition: Config.casparcg_transition
-						}),
+						(
+							await casparcg_connection.connection.loadbg({
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.media!,
+								clip,
+								loop: this.loop,
+								transition: Config.casparcg_transition
+							})
+						).request,
 					"LOADBG MEDIA"
 				);
 			}
@@ -322,15 +324,17 @@ export abstract class PlaylistItemBase {
 
 				void catch_casparcg_timeout(
 					async () =>
-						casparcg_connection.connection.cgUpdate({
-							/* eslint-disable @typescript-eslint/naming-convention */
-							channel: casparcg_connection.settings.channel,
-							layer: casparcg_connection.settings.layers.template!,
-							cgLayer: 0,
-							// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
-							data: stringify_json_for_tempalte(template.data)
-							// /* eslint-enable @typescript-eslint/naming-convention */
-						}),
+						(
+							await casparcg_connection.connection.cgUpdate({
+								/* eslint-disable @typescript-eslint/naming-convention */
+								channel: casparcg_connection.settings.channel,
+								layer: casparcg_connection.settings.layers.template!,
+								cgLayer: 0,
+								// escape quotation-marks by hand, since the old chrome-version of CasparCG appears to have a bug
+								data: stringify_json_for_tempalte(template.data)
+								// /* eslint-enable @typescript-eslint/naming-convention */
+							})
+						).request,
 					"UPDATE TEMPLATE"
 				);
 			}
@@ -354,13 +358,15 @@ export abstract class PlaylistItemBase {
 							promises.push(
 								catch_casparcg_timeout(
 									async () =>
-										connection.connection.cgPlay({
-											/* eslint-disable @typescript-eslint/naming-convention */
-											channel: connection.settings.channel,
-											layer: connection.settings.layers.template!,
-											cgLayer: 0
-											/* eslint-enable @typescript-eslint/naming-convention */
-										}),
+										(
+											await connection.connection.cgPlay({
+												/* eslint-disable @typescript-eslint/naming-convention */
+												channel: connection.settings.channel,
+												layer: connection.settings.layers.template!,
+												cgLayer: 0
+												/* eslint-enable @typescript-eslint/naming-convention */
+											})
+										).request,
 									"CG PLAY - show template"
 								)
 							);
@@ -377,13 +383,15 @@ export abstract class PlaylistItemBase {
 								// stop the template-layer
 								catch_casparcg_timeout(
 									async () =>
-										connection.connection.cgStop({
-											/* eslint-disable @typescript-eslint/naming-convention */
-											channel: connection.settings.channel,
-											layer: connection.settings.layers.template!,
-											cgLayer: 0
-											/* eslint-enable @typescript-eslint/naming-convention */
-										}),
+										(
+											await connection.connection.cgStop({
+												/* eslint-disable @typescript-eslint/naming-convention */
+												channel: connection.settings.channel,
+												layer: connection.settings.layers.template!,
+												cgLayer: 0
+												/* eslint-enable @typescript-eslint/naming-convention */
+											})
+										).request,
 									"CG STOP - hide template"
 								)
 							);
@@ -416,17 +424,19 @@ export abstract class PlaylistItemBase {
 					// jump to the slide-number in casparcg
 					return catch_casparcg_timeout(
 						async () =>
-							casparcg_connection.connection.cgUpdate({
-								/* eslint-disable @typescript-eslint/naming-convention */
-								channel: casparcg_connection.settings.channel,
-								layer: casparcg_connection.settings.layers.template!,
-								cgLayer: 0,
-								data: stringify_json_for_tempalte<TemplateSlideJump>({
-									command: "jump",
-									slide: this.active_slide
+							(
+								await casparcg_connection.connection.cgUpdate({
+									/* eslint-disable @typescript-eslint/naming-convention */
+									channel: casparcg_connection.settings.channel,
+									layer: casparcg_connection.settings.layers.template!,
+									cgLayer: 0,
+									data: stringify_json_for_tempalte<TemplateSlideJump>({
+										command: "jump",
+										slide: this.active_slide
+									})
+									/* eslint-enable @typescript-eslint/naming-convention */
 								})
-								/* eslint-enable @typescript-eslint/naming-convention */
-							}),
+							).request,
 						"CG JUMP - jumping to template-slide"
 					);
 				}
