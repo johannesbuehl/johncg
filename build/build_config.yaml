@@ -27,6 +27,7 @@ external_packages:
   - "@img"
   - canvas
   - pdfjs-dist
+  - path2d
 copy:
   - orig: casparcg
   - orig: files/Bibles
