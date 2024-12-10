@@ -48,7 +48,7 @@ export function get_chord_string(chord: Chord, transpose_steps: number = 0): str
 
 const notes_major = ["F#", "G", "A<", "A", "B<", "B", "C", "D<", "D", "E<", "E", "F", "G<"];
 const notes_minor = ["E<", "E", "F", "F#", "G", "G#", "A", "B<", "B", "C", "C#", "D", "D#"];
-function transpose(note: string, steps: number, minor: boolean): string {
+function transpose_scale(note: string, steps: number, minor: boolean): string {
 	// if there are no transposing steps, return the note
 	if (steps === 0) {
 		return note;
@@ -85,13 +85,69 @@ function transpose(note: string, steps: number, minor: boolean): string {
 	return scale[note_number];
 }
 
+const circle_of_fifths_major_flat = ["G<", "D<", "A<", "E<", "B<", "F"];
+const circle_of_fifths_minor_flat = ["E<m", "B<m", "Fm", "Cm", "Gm", "Dm"];
+
+function get_note_accidental(chord: Chord, note: string): "sharp" | "flat" {
+	note = standardize_note(note ?? chord.note);
+
+	const minor = is_minor(chord);
+
+	let circle_of_fifths_flat: string[];
+
+	if (minor) {
+		circle_of_fifths_flat = circle_of_fifths_minor_flat;
+	} else {
+		circle_of_fifths_flat = circle_of_fifths_major_flat;
+	}
+
+	return circle_of_fifths_flat.includes(note) ? "flat" : "sharp";
+}
+
+const scale_sharp = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const scale_flat = ["C", "D<", "D", "E<", "E", "F", "G<", "G", "A<", "A", "B<", "B"];
+function transpose_bass_note(
+	chord: Chord,
+	steps: number,
+	accidental: "flat" | "sharp"
+): string | undefined {
+	if (chord.bass_note === undefined) {
+		return undefined;
+	}
+
+	const note = standardize_note(chord.bass_note);
+
+	let index: number = scale_sharp.indexOf(note);
+	if (accidental === "sharp") {
+		index = scale_sharp.indexOf(note);
+	} else {
+		index = scale_flat.indexOf(note);
+	}
+
+	if (index === -1) {
+		return note;
+	}
+
+	index += steps + 12;
+	index %= 12;
+
+	if (accidental === "sharp") {
+		return scale_sharp[index] ?? note;
+	} else {
+		return scale_flat[index] ?? note;
+	}
+}
+
 export function transpose_chord(chord: Chord, steps: number): Chord {
 	const minor = is_minor(chord);
 
 	return {
-		note: transpose(chord.note, steps, minor),
+		note: transpose_scale(chord.note, steps, minor),
 		chord_descriptors: chord.chord_descriptors,
-		bass_note: chord.bass_note !== undefined ? transpose(chord.bass_note, steps, minor) : undefined
+		bass_note:
+			chord.bass_note !== undefined
+				? transpose_bass_note(chord, steps, get_note_accidental(chord, chord.bass_note))
+				: undefined
 	};
 }
 

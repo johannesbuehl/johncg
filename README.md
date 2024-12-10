@@ -21,8 +21,6 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
 - confirm build for correct directory paths
-- bass notes don't get transposed
-- song-slides without text don't show chords
 
 ## Planned
 - client: add_bible: get bible-citation-string from server through rest-api

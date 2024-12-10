@@ -4,7 +4,7 @@ import { JSONSchemaType } from "ajv";
 
 import { type SongElement, is_song_element } from "./SongElements";
 import { Version } from "../../../version";
-import { Chord, create_chord, get_chord_string } from "./Chord";
+import { Chord, create_chord, get_chord_string, transpose_chord } from "./Chord";
 import { ajv } from "../../lib";
 
 // metadata of the songfile
@@ -324,6 +324,12 @@ export default class SongFile {
 					break;
 			}
 		});
+
+		if (chords !== undefined) {
+			Object.values(chords).forEach((l) => {
+				Object.values(l!).forEach((c) => transpose_chord(c, this.metadata.Transpose ?? 0));
+			});
+		}
 
 		return chords;
 	}
