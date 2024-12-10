@@ -96,7 +96,8 @@ export default class Song extends PlaylistItemBase {
 
 		if (this.is_displayable) {
 			this.cache_song_file();
-
+		}
+		if (this.is_displayable) {
 			this.recalculate_slide_count();
 		}
 	}
@@ -275,7 +276,7 @@ export default class Song extends PlaylistItemBase {
 		return template;
 	}
 
-	cache_song_file() {
+	cache_song_file(): boolean {
 		try {
 			this.song_file = new SongFile(Config.get_path("song", this.props.file));
 		} catch (e) {
@@ -285,11 +286,13 @@ export default class Song extends PlaylistItemBase {
 
 				this.is_displayable = false;
 
-				return;
+				return false;
 			} else {
 				throw e;
 			}
 		}
+
+		return true;
 	}
 
 	private path_to_casparcg_media(media?: string): string {
