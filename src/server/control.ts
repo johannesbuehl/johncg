@@ -2,7 +2,7 @@ import WebSocket, { RawData } from "ws";
 import fs from "fs";
 import { CasparCG } from "casparcg-connection";
 import child_process from "child_process";
-import tmp from "tmp";
+// import tmp from "tmp";
 
 import Playlist from "./Playlist";
 import type { ActiveItemSlide } from "./Playlist";
@@ -1001,59 +1001,65 @@ export default class Control {
 		}
 	}
 
-	private create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
-		const markdown = this.playlist.get_playlist_markdown(type === "full");
+	private async create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
+		const typst_object = await this.playlist.get_playlist_typst(type === "full");
 
-		const markdown_file = tmp.fileSync({ postfix: ".md" });
-		const pdf_file = tmp.fileSync({ postfix: ".pdf" });
+		// const temp_dir = tmp.dirSync({ keep: true });
+		const temp_dir = { name: "typst" };
+		const typst_object_file = path.join(temp_dir.name, "data.json");
+		const pdf_file = path.join(temp_dir.name, "playlist.pdf");
 
-		fs.writeFile(markdown_file.name, markdown, { encoding: "utf-8" }, () => {
-			// use different commands based on the operating system
-			let command: string = "";
+		fs.writeFile(
+			typst_object_file,
+			JSON.stringify(typst_object, undefined, "\t"),
+			{ encoding: "utf-8" },
+			() => {
+				// use different commands based on the operating system
+				let command: string = "";
 
-			switch (process.platform) {
-				case "win32":
-					command = `.\\pandoc\\pandoc.exe --pdf-engine pandoc/texlive/bin/windows/pdflatex.exe`;
-					break;
-				case "linux":
-					command = "pandoc";
-					break;
-			}
-
-			command += ` ${markdown_file.name} -o ${pdf_file.name} --template=pandoc/eisvogel.latex --listings --number-sections -V geometry:margin=25mm -V lang=de`;
-
-			let message: JCGPSend.PlaylistPDF;
-
-			try {
-				child_process.execSync(command);
-
-				logger.log(`Creating ${type}-PDF`);
-
-				message = {
-					command: "playlist_pdf",
-					playlist_pdf: fs.readFileSync(pdf_file.name).toString("base64"),
-					server_id
-				};
-			} catch (e) {
-				let error_text: string;
-
-				if (e instanceof Error) {
-					error_text = `${e.name}: ${e.message}`;
-				} else {
-					error_text = `${e}`;
+				switch (process.platform) {
+					case "win32":
+						command = `.\\typst\\typst.exe`;
+						break;
+					case "linux":
+						command = "typst";
+						break;
 				}
 
-				logger.error(`Can't create PDF: ${error_text}`);
-				ws_send_response(`Can't create PDF: ${error_text}`, false, ws);
+				command += ` compile typst/johncg-export.typ ${pdf_file}`;
 
-				return;
-			} finally {
-				fs.rm(markdown_file.name, () => {});
-				fs.rm(pdf_file.name, () => {});
+				let message: JCGPSend.PlaylistPDF;
+
+				try {
+					child_process.execSync(command);
+
+					logger.log(`Creating ${type}-PDF`);
+
+					message = {
+						command: "playlist_pdf",
+						playlist_pdf: fs.readFileSync(pdf_file).toString("base64"),
+						server_id
+					};
+				} catch (e) {
+					let error_text: string;
+
+					if (e instanceof Error) {
+						error_text = `${e.name}: ${e.message}`;
+					} else {
+						error_text = `${e}`;
+					}
+
+					logger.error(`Can't create PDF: ${error_text}`);
+					ws_send_response(`Can't create PDF: ${error_text}`, false, ws);
+
+					return;
+				} finally {
+					// fs.rmSync(temp_dir.name, { recursive: true, force: true });
+				}
+
+				ws?.send(JSON.stringify(message));
 			}
-
-			ws?.send(JSON.stringify(message));
-		});
+		);
 	}
 
 	private async toggle_visibility() {

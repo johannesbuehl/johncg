@@ -1,7 +1,12 @@
 import fs from "fs";
 
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import Config from "../config/config";
 import { logger } from "../logger";
 import { TemplateSlideJump } from "../CasparCGConnection";
@@ -67,6 +72,11 @@ const psalm_props_schema: JSONSchemaType<PsalmProps> = {
 	additionalProperties: false
 };
 const validate_psalm_props = ajv.compile(psalm_props_schema);
+
+export interface PsalmTypstExport extends TypstExportBase, Partial<Omit<PsalmFile, "version">> {
+	type: "psalm";
+}
+
 export default class Psalm extends PlaylistItemBase {
 	protected item_props: PsalmProps;
 
@@ -250,34 +260,21 @@ export default class Psalm extends PlaylistItemBase {
 		}
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = `# Psalm: "${this.props.caption}"`;
+	async get_typst_export(full: boolean): Promise<PsalmTypstExport> {
+		const export_object: PsalmTypstExport = {
+			...(await super.get_typst_export()),
+			type: "psalm"
+		};
 
-		if (this.psalm_file) {
-			return_string += " (";
-
-			if (this.psalm_file.metadata.id !== undefined) {
-				return_string += `${this.psalm_file.metadata.id}: `;
-			}
-
-			return_string += `${this.psalm_file.metadata.caption})\n`;
-
-			if (full) {
-				this.psalm_file.text.forEach((slide) => {
-					slide.forEach((block) => {
-						block.forEach((line) => {
-							return_string += `${line}  \n`;
-						});
-
-						return_string += "\n";
-					});
-				});
+		if (full) {
+			const psalm = this.psalm_file;
+			if (psalm !== false) {
+				export_object.metadata = psalm.metadata;
+				export_object.text = psalm.text;
 			}
 		}
 
-		return_string += "\n";
-
-		return return_string;
+		return export_object;
 	}
 }
 

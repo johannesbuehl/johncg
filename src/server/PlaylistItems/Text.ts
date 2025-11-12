@@ -4,7 +4,8 @@ import {
 	type ClientItemSlidesBase,
 	type ItemPropsBase,
 	PlaylistItemBase,
-	ClientItemBase
+	ClientItemBase,
+	TypstExportBase
 } from "./PlaylistItem";
 import { ajv } from "../lib";
 
@@ -52,6 +53,12 @@ const text_props_schema: JSONSchemaType<TextProps> = {
 };
 
 const validate_text_props = ajv.compile(text_props_schema);
+
+export interface TextTypstExport extends TypstExportBase {
+	type: "text";
+	text?: string;
+}
+
 export default class Text extends PlaylistItemBase {
 	protected item_props: TextProps;
 
@@ -114,7 +121,11 @@ export default class Text extends PlaylistItemBase {
 		};
 	}
 
-	get_markdown_export_string(): string {
-		return `# Text: "${this.props.caption}"\n${this.props.text.replaceAll("\n", "  \n")}\n\n`;
+	async get_typst_export(full: boolean): Promise<TextTypstExport> {
+		return {
+			...(await super.get_typst_export()),
+			type: "text",
+			text: full ? this.props.text : undefined
+		};
 	}
 }

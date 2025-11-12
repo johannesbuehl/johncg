@@ -5,7 +5,8 @@ import type {
 	ClientItemSlides,
 	ClientPlaylistItem,
 	ItemProps,
-	PlaylistItem
+	PlaylistItem,
+	TypstItemExport
 } from "./PlaylistItems/PlaylistItem.ts";
 import Song from "./PlaylistItems/Song";
 
@@ -375,6 +376,13 @@ const playlist_file_schema: JSONSchemaType<PlaylistObject> = {
 };
 
 export const validate_playlist_file = ajv.compile(playlist_file_schema);
+
+export interface TypstExport {
+	export_date: string;
+	caption: string;
+	file: string;
+	items: TypstItemExport[];
+}
 
 export default class Playlist {
 	caption: string;
@@ -901,19 +909,26 @@ export default class Playlist {
 		return this.changes;
 	}
 
-	get_playlist_markdown(full: boolean): string {
-		const date = new Date();
+	async get_playlist_typst(full: boolean): Promise<TypstExport> {
+		const tzoffset = new Date().getTimezoneOffset(); //offset in milliseconds
+		let local_iso_time = new Date(Date.now() - tzoffset * 60000).toISOString().slice(0, -1);
 
-		let playlist_markdown = `---
-title: Playlist "${this.caption}"
-date: Created on ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}
----\n`;
+		if (tzoffset !== 0) {
+			local_iso_time +=
+				(-tzoffset < 0 ? "-" : "+") +
+				Math.abs(tzoffset / -60)
+					.toString()
+					.padStart(2, "0");
+		} else {
+			local_iso_time += "Z";
+		}
 
-		this.playlist_items.forEach((playlist_item) => {
-			playlist_markdown += playlist_item.get_markdown_export_string(full);
-		});
-
-		return playlist_markdown;
+		return {
+			export_date: local_iso_time,
+			caption: this.caption,
+			file: this.path,
+			items: await Promise.all(this.playlist_items.map((item) => item.get_typst_export(full)))
+		};
 	}
 }
 

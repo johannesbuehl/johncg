@@ -5,7 +5,8 @@ import {
 	type ClientItemSlidesBase,
 	type ItemPropsBase,
 	PlaylistItemBase,
-	ClientItemBase
+	ClientItemBase,
+	TypstExportBase
 } from "./PlaylistItem";
 import Config from "../config/config";
 
@@ -78,6 +79,12 @@ const bible_props_schema: JSONSchemaType<BibleProps> = {
 	additionalProperties: false
 };
 const validate_bible_props = ajv.compile(bible_props_schema);
+
+export interface BibleTypstExport extends TypstExportBase {
+	type: "bible";
+	text?: string;
+}
+
 export default class Bible extends PlaylistItemBase {
 	protected item_props: BibleProps;
 
@@ -140,9 +147,19 @@ export default class Bible extends PlaylistItemBase {
 		};
 	}
 
-	get_markdown_export_string(): string {
-		return `# Bible: "${this.props.caption}" (${Config.create_bible_citation_string(this.props.book_id, this.props.chapters)})
+	async get_typst_export(full: boolean): Promise<BibleTypstExport> {
+		const return_object: BibleTypstExport = {
+			...(await super.get_typst_export(full)),
+			type: "bible"
+		};
 
-`;
+		if (full) {
+			return_object.text = Config.create_bible_citation_string(
+				this.props.book_id,
+				this.props.chapters
+			);
+		}
+
+		return return_object;
 	}
 }

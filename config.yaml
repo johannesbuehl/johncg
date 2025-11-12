@@ -5,10 +5,10 @@ behaviour:
   bible_citation_style: 1. Moses 1:2-4, 6;7
   transition_length: 12 # transition-length in frames
 path: # path to the different files
-  playlists: D:/JohnCG-Johannes/12_Abläufe/ # song-files
-  songs: D:/JohnCG-Johannes/80_Songs/Lieder # pdf-files
-  psalms: D:/JohnCG-Johannes/80_Songs/Psalme # psalm-files
-  pdfs: D:/JohnCG-Johannes/60_PDF/ # playlist-files
+  playlists: /data/JohnCG-Johannes/11_Playlists # song-files
+  songs: /data/JohnCG-Johannes/52_Songs/Lieder # pdf-files
+  psalms: /data/JohnCG-Johannes/52_Songs/Psalme # psalm-files
+  pdfs: /data/JohnCG-Johannes/54_PDF/ # playlist-files
   bible: files/Bibles/Lutherbibel.bbl # used bible
 casparcg_connections: # individual CasparCG-connections
   - host: 127.0.0.1
@@ -17,17 +17,17 @@ casparcg_connections: # individual CasparCG-connections
     layers:
       media: 20 # used for media-playback - Can be removed to don't show media
       template: 21 # used for templates and song-/psalm-/countdown-text
-    path: D:/Streaming/casparcg_v2.4.1 # - optional path to CasparCG-directory to auto-start at launch
+    # path: D:/Streaming/casparcg_v2.4.1 # - optional path to CasparCG-directory to auto-start at launch
     # path: D:\Lighthouse\JohnCG_0.9.0-rc.1_win32_v2\casparcg_v2.4.0
     # stageview: true # optional - show song-chords and hide song-backgrounds
-  - host: 127.0.0.1
-    port: 5250
-    channel: 2
-    layers:
-      media: 20 # used for media-playback - Can be removed to don't show media
-      template: 21 # used for templates and song-/psalm-/countdown-text
-    # path: D:/Streaming/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
-    stageview: true # optional - show song-chords and hide song-backgrounds
+  # - host: 127.0.0.1
+  #   port: 5250
+  #   channel: 2
+  #   layers:
+  #     media: 20 # used for media-playback - Can be removed to don't show media
+  #     template: 21 # used for templates and song-/psalm-/countdown-text
+  #   # path: D:/Streaming/casparcg_v2.4.0 # - optional path to CasparCG-directory to auto-start at launch
+  #   stageview: true # optional - show song-chords and hide song-backgrounds
 client_server:
   http:
     port: 8888 # port for the client-interface web-server

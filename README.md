@@ -1,13 +1,16 @@
 # JohnCG - character-generator for song-lyrics and other church-service-elements
+
 Generate graphics with song-lyrics or for other church-service-elements and play them out through CasparCG.
 
 ## Requirements
+
 - CasparCG
 - CasparCG-capable hardware
 - SongBeamer for creation of song-files
 - Linux: `pandoc` and `LaTeX`-packages (basic, langgerman, latex, latexrecommended, latexextra, fontsextra, fontsrecommended)
 
 ## Getting started
+
 1. Download CasparCG and set it up according to its [GitHub-site](https://github.com/CasparCG/server).
 2. Download the latest JohnCG-version from [releases](https://github.com/johannesbuehl/johncg/releases) and unzip it.
 3. Move the content of `casparcg/Templates` and `casparcg/Media` inside of CasparCGs Template and Media directories.
@@ -18,11 +21,13 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
 
 ## Roadmap for Release
+
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
 - test changed pandoc-installer (win and linux)
 - confirm build for correct directory paths
 
 ## Planned
+
 - client: add_bible: get bible-citation-string from server through rest-api
 - rest-api for remote-control
 - reenable eslint vue-indent
@@ -43,3 +48,4 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 - create CasparCG-template boilerplate
 - playlist template
 - PDF-item: host-slides with local webserver and send casparcg-command to load URL (CG 1 ADD 0 "URL" 1)
+- move PDF-export to typst

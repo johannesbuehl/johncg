@@ -1,29 +1,48 @@
 import type Song from "./Song";
-import type { ClientSongItem, ClientSongSlides, SongProps, SongTemplate } from "./Song";
+import type {
+	ClientSongItem,
+	ClientSongSlides,
+	SongProps,
+	SongTemplate,
+	SongTypstExport
+} from "./Song";
 import type Countdown from "./Countdown";
 import type {
 	ClientCountdownItem,
 	ClientCountdownSlides,
 	CountdownProps,
-	CountdownTemplate
+	CountdownTemplate,
+	CountdownTypstExport
 } from "./Countdown.ts";
-import type { ClientCommentItem, ClientCommentSlides, CommentProps } from "./Comment";
+import type {
+	ClientCommentItem,
+	ClientCommentSlides,
+	CommentProps,
+	CommentTypstExport
+} from "./Comment";
 import type Media from "./Media";
-import type { ClientMediaItem, ClientMediaProps, MediaProps } from "./Media";
+import type { ClientMediaItem, ClientMediaProps, MediaProps, MediaTypstExport } from "./Media";
 import type TemplateItem from "./Template";
 import type {
 	ClientTemplateItem,
 	ClientTemplateSlides,
 	TemplateProps,
-	TemplateTemplate
+	TemplateTemplate,
+	TemplateTypstExport
 } from "./Template.ts";
 import type PDF from "./PDF";
-import type { ClientPDFItem, ClientPDFSlides, PDFProps } from "./PDF";
+import type { ClientPDFItem, ClientPDFSlides, PDFProps, PDFTypstExport } from "./PDF";
 import type Comment from "./Comment";
 import type Bible from "./Bible";
-import type { BibleProps, BibleTemplate, ClientBibleItem, ClientBibleSlides } from "./Bible";
-import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps } from "./Psalm";
-import AMCP, { AMCPProps, ClientAMCPItem, ClientAMCPSlides } from "./AMCP";
+import type {
+	BibleProps,
+	BibleTemplate,
+	BibleTypstExport,
+	ClientBibleItem,
+	ClientBibleSlides
+} from "./Bible";
+import Psalm, { ClientPsalmItem, ClientPsalmSlides, PsalmProps, PsalmTypstExport } from "./Psalm";
+import AMCP, { AMCPProps, AMCPTypstExport, ClientAMCPItem, ClientAMCPSlides } from "./AMCP";
 import { logger } from "../logger";
 import {
 	CasparCGConnection,
@@ -32,7 +51,7 @@ import {
 	catch_casparcg_timeout,
 	stringify_json_for_tempalte
 } from "../CasparCGConnection.js";
-import TextItem, { ClientTextItem, ClientTextSlides, TextProps } from "./Text";
+import TextItem, { ClientTextItem, ClientTextSlides, TextProps, TextTypstExport } from "./Text";
 import Config from "../config/config";
 
 export type PlaylistItem =
@@ -122,6 +141,23 @@ export interface FontFormat {
 	color: string;
 	/* eslint-enable @typescript-eslint/naming-convention */
 }
+
+export interface TypstExportBase {
+	caption: string;
+	color: string;
+}
+
+export type TypstItemExport =
+	| SongTypstExport
+	| PsalmTypstExport
+	| MediaTypstExport
+	| TemplateTypstExport
+	| BibleTypstExport
+	| TextTypstExport
+	| CountdownTypstExport
+	| CommentTypstExport
+	| PDFTypstExport
+	| AMCPTypstExport;
 
 export abstract class PlaylistItemBase {
 	protected abstract item_props: ItemProps;
@@ -464,5 +500,12 @@ export abstract class PlaylistItemBase {
 		return this.is_displayable;
 	}
 
-	abstract get_markdown_export_string(full: boolean): string;
+	get_typst_export(_full?: boolean): Promise<TypstExportBase> {
+		return new Promise((resolve) =>
+			resolve({
+				caption: this.props.caption,
+				color: this.props.color
+			})
+		);
+	}
 }

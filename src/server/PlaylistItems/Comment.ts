@@ -1,6 +1,11 @@
 import { JSONSchemaType } from "ajv";
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import { ajv } from "../lib";
 
 export interface CommentProps extends ItemPropsBase {
@@ -33,6 +38,10 @@ const comment_props_schema: JSONSchemaType<CommentProps> = {
 	additionalProperties: false
 };
 const validate_comment_props = ajv.compile(comment_props_schema);
+
+export interface CommentTypstExport extends TypstExportBase {
+	type: "comment";
+}
 
 export default class Comment extends PlaylistItemBase {
 	protected item_props: CommentProps;
@@ -95,7 +104,13 @@ export default class Comment extends PlaylistItemBase {
 		return false;
 	}
 
-	get_markdown_export_string(): string {
-		return `# Comment: "${this.props.caption}"\n\n`;
+	get_typst_export(): Promise<CommentTypstExport> {
+		return new Promise((resolve) =>
+			resolve({
+				type: "comment",
+				caption: this.props.caption,
+				color: this.props.color
+			})
+		);
 	}
 }

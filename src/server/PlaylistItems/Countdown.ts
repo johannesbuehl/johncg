@@ -2,7 +2,13 @@ import { JSONSchemaType } from "ajv";
 
 import { CountdownMode, ajv, countdown_title_map } from "../lib";
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
+import { thumbnail_generate, thumbnail_retrieve } from "../CasparCGConnection";
 
 interface CountdownPosition {
 	x: number;
@@ -105,6 +111,13 @@ const countdown_props_schema: JSONSchemaType<CountdownProps> = {
 };
 
 const validate_countdown_props = ajv.compile(countdown_props_schema);
+
+export interface CountdownTypstExport extends TypstExportBase {
+	type: "countdown";
+	media?: string;
+	thumbnail?: string;
+	data?: CountdownTemplateData;
+}
 export default class Countdown extends PlaylistItemBase {
 	protected item_props: CountdownProps;
 
@@ -226,22 +239,26 @@ export default class Countdown extends PlaylistItemBase {
 		};
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = `# ${countdown_title_map[this.props.mode]}: "${this.props.caption}"`;
+	async get_typst_export(full: boolean): Promise<CountdownTypstExport> {
+		const return_object: CountdownTypstExport = {
+			...(await super.get_typst_export(full)),
+			type: "countdown"
+		};
 
 		if (full) {
-			switch (this.props.mode) {
-				case CountdownMode.Duration:
-					return_string += `\nDuration: ${this.props.time}`;
-					break;
-				case CountdownMode.EndTime:
-					return_string += `\nEnd time: ${this.props.time}`;
-					break;
+			let thumbnail: string[] | undefined = await thumbnail_retrieve(this.props.media);
+
+			if (thumbnail === undefined) {
+				await thumbnail_generate(this.props.media);
+
+				thumbnail = await thumbnail_retrieve(this.props.media);
 			}
+
+			return_object.media = this.props.media;
+			return_object.thumbnail = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+			return_object.data = this.get_template().data;
 		}
 
-		return_string += "\n\n";
-
-		return return_string;
+		return return_object;
 	}
 }

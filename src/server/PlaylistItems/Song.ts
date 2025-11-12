@@ -1,10 +1,20 @@
-import { CasparCGConnection, TemplateSlideJump } from "../CasparCGConnection";
+import {
+	CasparCGConnection,
+	TemplateSlideJump,
+	thumbnail_generate,
+	thumbnail_retrieve
+} from "../CasparCGConnection";
 import Config from "../config/config";
 import { logger } from "../logger";
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import SongFile from "./SongFile/SongFile";
-import type { ChordParts, SongPart, LyricPart } from "./SongFile/SongFile";
+import type { ChordParts, SongPart, LyricPart, SongFileMetadata } from "./SongFile/SongFile";
 import { ajv } from "../lib";
 import { JSONSchemaType } from "ajv";
 
@@ -75,6 +85,16 @@ const song_props_schema: JSONSchemaType<SongProps> = {
 };
 
 const validate_song_props = ajv.compile(song_props_schema);
+
+export interface SongTypstExport extends TypstExportBase {
+	type: "song";
+	metadata?: Omit<SongFileMetadata, "LangCount" | "Chords">;
+	text?: {
+		part: string;
+		text: string[][][];
+	}[];
+}
+
 export default class Song extends PlaylistItemBase {
 	protected item_props: SongProps;
 
@@ -322,55 +342,57 @@ export default class Song extends PlaylistItemBase {
 		return "#00000000";
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = `# Song: "${this.props.caption}" (`;
-
-		if (this.song_file.metadata.ChurchSongID !== undefined) {
-			return_string += `${this.song_file.metadata.ChurchSongID}: `;
-		}
-
-		// const language_index = this.props.languages ? this.props.languages[0] : 0;
-		const languages = this.props.languages ?? this.song_file.languages;
-
-		return_string += `${this.song_file.metadata.Title[languages[0]]})\n\n`;
+	async get_typst_export(full?: boolean): Promise<SongTypstExport> {
+		const return_object: SongTypstExport = {
+			...(await super.get_typst_export()),
+			type: "song"
+		};
 
 		if (full) {
-			const parts = this.props.verse_order ?? this.song_file.metadata.VerseOrder;
+			const metadata: PartiallyOptional<SongFileMetadata, "Chords" | "LangCount"> = structuredClone(
+				this.song_file.metadata
+			);
 
-			parts.forEach((part_name) => {
-				return_string += `**${part_name}**  `;
+			// remove chords
+			delete metadata.Chords;
+			delete metadata.LangCount;
+			metadata.VerseOrder = this.get_verse_order();
 
-				let part_text: LyricPart;
+			// retrieve the thumbnail
+			let thumbnail: string[] | undefined = await thumbnail_retrieve(this.media);
 
-				try {
-					part_text = this.song_file.get_part(part_name);
-				} catch (e) {
-					if (!(e instanceof ReferenceError)) {
-						throw e;
-					} else {
-						return;
-					}
-				}
-				part_text.slides?.forEach((slide) => {
-					slide.forEach((line) => {
-						languages.forEach((language_index) => {
-							line.filter((lang) => {
-								if (lang.lang === language_index && lang.text.length > 0) {
-									if (language_index === languages[0]) {
-										return_string += `\n${line[language_index].text}  `;
-									} else {
-										return_string += `\n*${line[language_index].text}*  `;
-									}
-								}
-							});
-						});
-					});
-				});
+			if (thumbnail === undefined) {
+				await thumbnail_generate(this.media);
 
-				return_string += "\n\n";
+				thumbnail = await thumbnail_retrieve(this.media);
+			}
+
+			metadata.BackgroundImage = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+
+			// write the metadata to the return object
+			return_object.metadata = metadata;
+
+			// get the used languages
+			const languages = this.props.languages ?? this.song_file.languages;
+
+			// get the text with only the used languages
+			return_object.text = this.song_file.avaliable_parts.map((part_string) => {
+				const part = this.song_file.get_part(part_string);
+
+				return {
+					part: part.part,
+					text: part.slides.map((slide) =>
+						slide.map((line) => languages.map((lang) => line[lang]?.text))
+					)
+				};
 			});
+
+			// sort the titles
+			return_object.metadata.Title = languages.map((lang) => return_object.metadata!.Title[lang]);
 		}
 
-		return return_string;
+		return return_object;
 	}
 }
+
+type PartiallyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

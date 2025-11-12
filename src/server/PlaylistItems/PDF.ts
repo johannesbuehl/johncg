@@ -3,7 +3,12 @@ import Canvas from "canvas";
 import { JSONSchemaType } from "ajv";
 
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import { logger } from "../logger";
 import Config from "../config/config";
 import {
@@ -50,6 +55,13 @@ const pdf_props_schema: JSONSchemaType<PDFProps> = {
 };
 
 const validate_pdf_props = ajv.compile(pdf_props_schema);
+
+export interface PDFTypstExport extends TypstExportBase {
+	type: "pdf";
+	file?: string;
+	thumbnails?: string[];
+}
+
 export default class PDF extends PlaylistItemBase {
 	protected item_props: PDFProps;
 
@@ -250,8 +262,18 @@ export default class PDF extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get_markdown_export_string(): string {
-		return `# PDF: "${this.props.caption}"\n\n`;
+	async get_typst_export(full: boolean): Promise<PDFTypstExport> {
+		const return_object: PDFTypstExport = {
+			...(await super.get_typst_export()),
+			type: "pdf"
+		};
+
+		if (full) {
+			return_object.file = this.props.file;
+			return_object.thumbnails = this.thumbnails;
+		}
+
+		return return_object;
 	}
 }
 

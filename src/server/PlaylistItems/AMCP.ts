@@ -6,7 +6,8 @@ import {
 	ClientItemSlidesBase,
 	ItemProps,
 	ItemPropsBase,
-	PlaylistItemBase
+	PlaylistItemBase,
+	TypstExportBase
 } from "./PlaylistItem";
 import { ajv } from "../lib";
 
@@ -62,6 +63,15 @@ const amcpprops_schema: JSONSchemaType<AMCPProps> = {
 };
 
 const validate_amcp_props = ajv.compile(amcpprops_schema);
+
+export interface AMCPTypstExport extends TypstExportBase {
+	type: "amcp";
+	commands?: {
+		set_active?: string;
+		set_inactive?: string;
+	};
+}
+
 export default class AMCP extends PlaylistItemBase {
 	protected is_displayable: boolean = true;
 
@@ -173,21 +183,14 @@ export default class AMCP extends PlaylistItemBase {
 		};
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = '# AMCP: "${this.props.caption}"';
-
-		if (full) {
-			if (this.props.commands.set_active !== undefined) {
-				return_string += `\n\n## Set-Active\n\`${this.props.commands.set_active}\`\n`;
-			}
-
-			if (this.props.commands.set_inactive !== undefined) {
-				return_string += `\n\n## Set-Inactive\n\`${this.props.commands.set_inactive}\`\n`;
-			}
-		}
-
-		return_string += "\n\n";
-
-		return return_string;
+	get_typst_export(full: boolean): Promise<AMCPTypstExport> {
+		return new Promise((resolve) =>
+			resolve({
+				type: "amcp",
+				caption: this.props.caption,
+				color: this.props.color,
+				commands: full ? this.props.commands : undefined
+			})
+		);
 	}
 }

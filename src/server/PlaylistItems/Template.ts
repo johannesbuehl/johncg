@@ -1,7 +1,12 @@
 import { JSONSchemaType } from "ajv";
 
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import { ajv } from "../lib";
 
 export interface TemplateTemplate {
@@ -57,6 +62,12 @@ const template_props_schema: JSONSchemaType<TemplateProps> = {
 	definitions: {}
 };
 const validate_template_props = ajv.compile(template_props_schema);
+
+export interface TemplateTypstExport extends TypstExportBase {
+	type: "template";
+	template?: TemplateTemplate;
+}
+
 export default class TemplateItem extends PlaylistItemBase {
 	protected item_props: TemplateProps;
 
@@ -117,16 +128,11 @@ export default class TemplateItem extends PlaylistItemBase {
 		return this.props.template;
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = `# Template: "${this.props.caption}" (${this.props.template.template})`;
-
-		if (this.props.template.data !== undefined && full) {
-			return_string +=
-				"\n```json\n" + JSON.stringify(this.props.template.data, undefined, "\t") + "\n```";
-		}
-
-		return_string += "\n\n";
-
-		return return_string;
+	async get_typst_export(full: boolean): Promise<TemplateTypstExport> {
+		return {
+			...(await super.get_typst_export()),
+			type: "template",
+			template: full ? this.get_template() : undefined
+		};
 	}
 }

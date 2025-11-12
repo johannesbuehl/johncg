@@ -1,8 +1,14 @@
 import { JSONSchemaType } from "ajv";
 
 import { PlaylistItemBase } from "./PlaylistItem";
-import type { ClientItemBase, ClientItemSlidesBase, ItemPropsBase } from "./PlaylistItem";
+import type {
+	ClientItemBase,
+	ClientItemSlidesBase,
+	ItemPropsBase,
+	TypstExportBase
+} from "./PlaylistItem";
 import { ajv } from "../lib";
+import { thumbnail_generate, thumbnail_retrieve } from "../CasparCGConnection";
 
 export interface MediaProps extends ItemPropsBase {
 	type: "media";
@@ -44,6 +50,14 @@ const media_props_schema: JSONSchemaType<MediaProps> = {
 };
 
 const validate_media_props = ajv.compile(media_props_schema);
+
+export interface MediaTypstExport extends TypstExportBase {
+	type: "media";
+	media?: string;
+	thumbnail?: string;
+	loop?: boolean;
+}
+
 export default class Media extends PlaylistItemBase {
 	protected item_props: MediaProps;
 
@@ -112,15 +126,26 @@ export default class Media extends PlaylistItemBase {
 		return undefined;
 	}
 
-	get_markdown_export_string(full: boolean): string {
-		let return_string = `# Media: "${this.props.caption}" (${this.props.media})`;
+	async get_typst_export(full: boolean): Promise<MediaTypstExport> {
+		const return_object: MediaTypstExport = {
+			...(await super.get_typst_export(full)),
+			type: "media"
+		};
 
 		if (full) {
-			return_string += `\nLoop: \`${this.props.loop === true}\``;
+			let thumbnail: string[] | undefined = await thumbnail_retrieve(this.props.media);
+
+			if (thumbnail === undefined) {
+				await thumbnail_generate(this.props.media);
+
+				thumbnail = await thumbnail_retrieve(this.props.media);
+			}
+
+			return_object.media = this.props.media;
+			return_object.thumbnail = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+			return_object.loop = this.props.loop;
 		}
 
-		return_string += "\n\n";
-
-		return return_string;
+		return return_object;
 	}
 }
