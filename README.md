@@ -6,8 +6,8 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 
 - CasparCG
 - CasparCG-capable hardware
-- SongBeamer for creation of song-files
-- Linux: `pandoc` and `LaTeX`-packages (basic, langgerman, latex, latexrecommended, latexextra, fontsextra, fontsrecommended)
+- Linux: `typst`
+- optional: SongBeamer for creating songs with chords (showing chords is currently in testing and can have major bugs and problems)
 
 ## Getting started
 
@@ -19,12 +19,19 @@ Generate graphics with song-lyrics or for other church-service-elements and play
 6. Start JohnCG through `JohnCG_[VERSION]_linux.bat` or `JohnCG_[VERSION]_linux.sh`
 7. Open [`127.0.0.1:8888`](127.0.0.1:8888) (or the port you specified in `settings.json`)
 8. Optionally: create a shortcut to `chrome --app=http://127.0.0.1:8888` to open the client like a standalone app
+9. Optionally: modify the typst-template for PDF-export located at typst/johncg-export.typ
+
+## Building
+
+Eventhough the project switched to `pnpm`, building with its module-structure doesn't work yet.
+You need to delete the node_modules and run `npm install` and then build.
 
 ## Roadmap for Release
 
 - create documentation (including: Template-update-objects, psalm-file-definitions, config-file, companion-setup)
-- test changed pandoc-installer (win and linux)
 - confirm build for correct directory paths
+- bundle typst with build
+- add optional config-option to specify individual template and media-dirs for each output
 
 ## Planned
 

@@ -2,7 +2,7 @@ import WebSocket, { RawData } from "ws";
 import fs from "fs";
 import { CasparCG } from "casparcg-connection";
 import child_process from "child_process";
-// import tmp from "tmp";
+import tmp from "tmp";
 
 import Playlist from "./Playlist";
 import type { ActiveItemSlide } from "./Playlist";
@@ -1004,29 +1004,21 @@ export default class Control {
 	private async create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
 		const typst_object = await this.playlist.get_playlist_typst(type === "full");
 
-		// const temp_dir = tmp.dirSync({ keep: true });
-		const temp_dir = { name: "typst" };
-		const typst_object_file = path.join(temp_dir.name, "data.json");
+		const temp_dir = tmp.dirSync({ keep: true });
+		const data_object_file = path.join(temp_dir.name, "data.json");
+		const typst_template = path.join(temp_dir.name, "johncg-export.typ");
 		const pdf_file = path.join(temp_dir.name, "playlist.pdf");
 
 		fs.writeFile(
-			typst_object_file,
+			data_object_file,
 			JSON.stringify(typst_object, undefined, "\t"),
 			{ encoding: "utf-8" },
 			() => {
+				// copy the typst template
+				fs.copyFileSync("typst/johncg-export.typ", typst_template);
+
 				// use different commands based on the operating system
-				let command: string = "";
-
-				switch (process.platform) {
-					case "win32":
-						command = `.\\typst\\typst.exe`;
-						break;
-					case "linux":
-						command = "typst";
-						break;
-				}
-
-				command += ` compile typst/johncg-export.typ ${pdf_file}`;
+				const command: string = `${Config.typst_executable} compile "${typst_template}" "${pdf_file}"`;
 
 				let message: JCGPSend.PlaylistPDF;
 
@@ -1054,7 +1046,7 @@ export default class Control {
 
 					return;
 				} finally {
-					// fs.rmSync(temp_dir.name, { recursive: true, force: true });
+					fs.rmSync(temp_dir.name, { recursive: true, force: true });
 				}
 
 				ws?.send(JSON.stringify(message));

@@ -1,6 +1,6 @@
 import sharp from "sharp";
-import Canvas from "canvas";
 import { JSONSchemaType } from "ajv";
+import { PDFParse } from "pdf-parse";
 
 import { PlaylistItemBase } from "./PlaylistItem";
 import type {
@@ -11,12 +11,7 @@ import type {
 } from "./PlaylistItem";
 import { logger } from "../logger";
 import Config from "../config/config";
-import {
-	casparcg,
-	CasparCGConnection,
-	CasparCGResolution,
-	catch_casparcg_timeout
-} from "../CasparCGConnection.js";
+import { casparcg, CasparCGConnection, catch_casparcg_timeout } from "../CasparCGConnection.js";
 import { ajv } from "../lib";
 
 export interface PDFProps extends ItemPropsBase {
@@ -35,19 +30,10 @@ const pdf_props_schema: JSONSchemaType<PDFProps> = {
 	$schema: "http://json-schema.org/draft-07/schema#",
 	type: "object",
 	properties: {
-		type: {
-			type: "string",
-			const: "pdf"
-		},
-		caption: {
-			type: "string"
-		},
-		color: {
-			type: "string"
-		},
-		file: {
-			type: "string"
-		}
+		type: { type: "string", const: "pdf" },
+		caption: { type: "string" },
+		color: { type: "string" },
+		file: { type: "string" }
 	},
 	required: ["caption", "color", "file", "type"],
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -82,63 +68,49 @@ export default class PDF extends PlaylistItemBase {
 
 		if (displayable) {
 			void (async () => {
-				const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
 				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
 
 				logger.debug(`loading PDF-file (${pth})`);
 
 				try {
-					const pdf = await pdfjs.getDocument(pth).promise;
+					// maybe use pdf-parse to get size and maybe also create png through screenshot
+					const parser = new PDFParse({ url: pth });
 
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					await Promise.all(
-						[...Array(pdf.numPages).keys()].map(async (index) => {
-							// increase the counter by one, because the pages start at 1
-							const page = await pdf.getPage(index + 1);
+					const result = await parser.getInfo({
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						parsePageInfo: true
+					});
 
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							const viewport = page.getViewport({ scale: 1 });
+					// iterate through the pages
+					const images = await Promise.all(
+						result.pages.map(async (page) => {
+							const renderer_resolution = Config.casparcg_resolution;
 
-							const casparcg_resolution = Config.casparcg_resolution;
+							const scale_x = renderer_resolution.width / page.width;
+							const scale_y = renderer_resolution.height / page.height;
 
-							const scales: Partial<Record<keyof CasparCGResolution, number>> = {};
-							Object.entries(casparcg_resolution).forEach(
-								([key, res]: [keyof CasparCGResolution, number]) => {
-									scales[key] = res / viewport[key];
-								}
+							return sharp(
+								(
+									await parser.getScreenshot({
+										partial: [page.pageNumber],
+										scale: Math.min(scale_x, scale_y),
+										// eslint-disable-next-line @typescript-eslint/naming-convention
+										imageDataUrl: false
+									})
+								).pages[0].data
 							);
-							const scale = Math.min(...Object.values(scales));
-
-							const canvas = Canvas.createCanvas(viewport.width * scale, viewport.height * scale);
-
-							await page.render({
-								// eslint-disable-next-line @typescript-eslint/naming-convention
-								canvasContext: canvas.getContext("2d") as unknown as CanvasRenderingContext2D,
-								/* eslint-disable @typescript-eslint/naming-convention */
-								viewport: page.getViewport({ scale }),
-								/* eslint-enable @typescript-eslint/naming-convention */
-								background: "#000000"
-							}).promise;
-
-							const img_buffer = canvas.toBuffer();
-
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							const shrp = sharp(img_buffer);
-
-							this.slides[index] = await create_base64(shrp);
-							this.thumbnails[index] = await create_base64(shrp, (img) => img.resize(240));
-							this.slide_count++;
 						})
 					);
-				} catch (e) {
-					if (e instanceof pdfjs.MissingPDFException) {
-						this.is_displayable = false;
 
-						return;
-					} else {
-						throw e;
-					}
+					this.slides = await Promise.all(images.map(async (im) => await create_base64(im)));
+					this.thumbnails = await Promise.all(
+						images.map(async (im) => await create_base64(im, (img) => img.resize(240)))
+					);
+
+					this.slide_count = this.slides.length;
+				} catch (e) {
+					this.is_displayable = false;
+					throw e;
 				}
 
 				this.is_displayable = displayable;
@@ -263,10 +235,7 @@ export default class PDF extends PlaylistItemBase {
 	}
 
 	async get_typst_export(full: boolean): Promise<PDFTypstExport> {
-		const return_object: PDFTypstExport = {
-			...(await super.get_typst_export()),
-			type: "pdf"
-		};
+		const return_object: PDFTypstExport = { ...(await super.get_typst_export()), type: "pdf" };
 
 		if (full) {
 			return_object.file = this.props.file;
@@ -281,14 +250,10 @@ async function create_base64(
 	img: sharp.Sharp,
 	modify_callback?: (img: sharp.Sharp) => sharp.Sharp
 ): Promise<string> {
-	const img_copy = img.clone();
-
-	modify_callback?.(img);
+	const pipeline = modify_callback ? modify_callback(img.clone()) : img.clone();
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	img_copy.webp({ nearLossless: true });
+	pipeline.webp({ nearLossless: true });
 
-	const thumbnail_buffer = await img_copy.toBuffer();
-
-	return "data:image/webp;base64," + thumbnail_buffer.toString("base64");
+	return "data:image/webp;base64," + (await pipeline.toBuffer()).toString("base64");
 }

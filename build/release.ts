@@ -11,28 +11,38 @@ import formatsPlugin from "ajv-formats";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 interface Config {
 	release_dir: string;
-	builds: Record<string, { script: string; files: string[]; } & (Record<string, never> | { script_path?: string; entry: string; })>;
+	builds: Record<
+		string,
+		{ script: string; files: string[] } & (
+			| Record<string, never>
+			| { script_path?: string; entry: string }
+		)
+	>;
 	license_report: {
 		config: Partial<IReporterCliConfiguration> & Pick<IReporterCliConfiguration, "ignore">;
 		path: string;
-		license: { path: string; destination?: string; }
+		license: { path: string; destination?: string };
 	};
 	mkdir?: string[];
 	copy?: { orig: string; dest?: string }[];
 	external_packages?: string[];
 	package_json?: string;
-	configs?: Record<string, { schema: string; orig: string; dest?: string; }>;
+	configs?: Record<string, { schema: string; orig: string; dest?: string }>;
 	keep?: boolean;
 }
 
 const ajv = new Ajv();
 formatsPlugin(ajv);
-const validate_config = ajv.compile(JSON.parse(fs.readFileSync(path.join(__dirname, "build_config.schema.json"), "utf-8")) as JSONSchemaType<Config>);
+const validate_config = ajv.compile(
+	JSON.parse(
+		fs.readFileSync(path.join(__dirname, "build_config.schema.json"), "utf-8")
+	) as JSONSchemaType<Config>
+);
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const config = yaml.parse(fs.readFileSync(path.join(__dirname, "build_config.yaml"), "utf-8"));
 if (!validate_config(config)) {
-	const errors = validate_config.errors?.map((error) => `${error.instancePath}: ${error.message}`)
+	const errors = validate_config.errors
+		?.map((error) => `${error.instancePath}: ${error.message}`)
 		.join(", ");
 
 	console.error(`invalid config file: ${errors}`);
@@ -60,12 +70,12 @@ function create_parent_dirs(pth: string) {
  * @param file path to the file
  * @param dest destination relative to the build-directory
  */
-function copy_build_file (file: string, dest?: string) {
+function copy_build_file(file: string, dest?: string) {
 	dest = path.join(build_dir, dest ?? file);
 
 	create_parent_dirs(dest);
 
-	fs.copyFileSync(file, dest);
+	fs.copyFileSync(fs.realpathSync(file), dest);
 }
 
 /**
@@ -74,7 +84,7 @@ function copy_build_file (file: string, dest?: string) {
  * @param dest destination relative to the build-directory
  * @param args optional. arguments for fs.cpSync
  */
-function copy_build_dir (dir: string, dest?: string, args?: fs.CopySyncOptions) {
+function copy_build_dir(dir: string, dest?: string, args?: fs.CopySyncOptions) {
 	dest = path.join(build_dir, dest ?? dir);
 
 	create_parent_dirs(dest);
@@ -87,12 +97,12 @@ function copy_build_dir (dir: string, dest?: string, args?: fs.CopySyncOptions) 
  * @param file path to the file
  * @param dest destination relative to the release-directory
  */
-function copy_release_file (file: string, dest?: string) {
+function copy_release_file(file: string, dest?: string) {
 	dest = path.join(release_dir_latest, dest ?? file);
 
 	create_parent_dirs(dest);
 
-	fs.copyFileSync(file, dest);
+	fs.copyFileSync(fs.realpathSync(file), dest);
 }
 
 /**
@@ -101,22 +111,22 @@ function copy_release_file (file: string, dest?: string) {
  * @param dest destination relative to the release-directory
  * @param args optional. arguments for fs.cpSync
  */
-function copy_release_dir (dir: string, dest?: string, args?: fs.CopySyncOptions) {
+function copy_release_dir(dir: string, dest?: string, args?: fs.CopySyncOptions) {
 	dest = path.join(release_dir_latest, dest ?? dir);
 
 	create_parent_dirs(dest);
 
-	fs.cpSync(dir, dest, { recursive: true, ...args });
+	fs.cpSync(fs.realpathSync(dir), dest, { recursive: true, ...args });
 }
 
 /**
  * copy a node-module into the release-directory
  * @param name name of the node_module
  */
-function copy_module (name: string) {
+function copy_module(name: string) {
 	console.log(`\t\t'${name}'`);
-	copy_release_dir(`node_modules/${name}`, `node_modules/${name}/`);
-};
+	execSync(`npm install --no-save --prefix ${release_dir_latest} ${name}`);
+}
 
 /**
  * (try to) delete a directory and create it again
@@ -128,7 +138,7 @@ function recreate_directory(pth: string) {
 	if (fs.existsSync(pth)) {
 		fs.rmSync(pth, { recursive: true, force: true });
 	}
-	
+
 	fs.mkdirSync(pth, { recursive: true });
 }
 
@@ -165,7 +175,7 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 		case "win32":
 			extension = ".bat";
 
-			content = `@echo off\ncd /D "%~dp0"\n${relative_path_prefix.replaceAll("/", "\\")}${exec_name} ${pth_js}\npause\n`
+			content = `@echo off\ncd /D "%~dp0"\n${relative_path_prefix.replaceAll("/", "\\")}${exec_name} ${pth_js}\npause\n`;
 
 			break;
 		case "linux":
@@ -176,7 +186,7 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 			break;
 	}
 
-	pth_script += extension
+	pth_script += extension;
 
 	console.log(`\t${name}: '${pth_script}' for '${pth_js}'`);
 
@@ -184,13 +194,13 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 
 	create_parent_dirs(pth_script);
 
-	fs.writeFileSync(pth_script, content,{ mode: "766" });
+	fs.writeFileSync(pth_script, content, { mode: "766" });
 }
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
 const exec_map: Partial<Record<NodeJS.Platform, string>> = {
-	"win32": "node.exe",
-	"linux": "node"
+	win32: "node.exe",
+	linux: "node"
 };
 let exec_name: string;
 // check, wether the build script supports the os
@@ -203,10 +213,14 @@ if (!(process.platform in exec_map)) {
 
 // load the package.json
 console.log(`Reading '${config.package_json ?? "package.json"}'`);
-const package_json = JSON.parse(fs.readFileSync(config.package_json ?? "package.json", "utf-8")) as { version: string; dependencies: Record<string, string>; name: string; };
+const package_json = JSON.parse(
+	fs.readFileSync(config.package_json ?? "package.json", "utf-8")
+) as { version: string; dependencies: Record<string, string>; name: string };
 const build_name = `${package_json.name}_${package_json.version}_${process.platform}`;
 
-console.log(`Building '${package_json.name}' version '${package_json.version}' for target '${process.platform}'`);
+console.log(
+	`Building '${package_json.name}' version '${package_json.version}' for target '${process.platform}'`
+);
 console.log();
 
 const release_dir_version = path.join(config.release_dir, build_name);
@@ -216,17 +230,17 @@ console.log(`Release directories are '${release_dir_latest}' and '${release_dir_
 console.log();
 
 // clear the build- and release-directories
-console.log("recreating directories")
+console.log("recreating directories");
 recreate_directory(build_dir);
 recreate_directory(release_dir_latest);
 recreate_directory(release_dir_version);
 console.log();
 
 // bundle the different scripts
-console.log("Running build-scripts")
+console.log("Running build-scripts");
 Object.entries(config.builds).forEach(([name, build]) => {
 	console.log(`\t${name}`);
-	execSync(`npm run ${build.script}`);
+	execSync(`pnpm run ${build.script}`);
 });
 console.log();
 
@@ -238,7 +252,7 @@ if (config.configs !== undefined) {
 		console.log(`\t${name}: from '${conf.orig}' to '${conf.dest}' validated by '${conf.schema}'`);
 
 		let file_format_library;
-	
+
 		switch (path.extname(conf.dest ?? conf.orig)) {
 			case ".yaml":
 			case ".yml":
@@ -250,10 +264,11 @@ if (config.configs !== undefined) {
 		}
 
 		if (file_format_library !== undefined) {
-			const validator = ajv.compile(JSON.parse(fs.readFileSync(conf.schema, "utf-8")))
+			const validator = ajv.compile(JSON.parse(fs.readFileSync(conf.schema, "utf-8")));
 
 			if (!validator(file_format_library(fs.readFileSync(conf.orig, "utf-8")))) {
-				const errors = validator.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
+				const errors =
+					validator.errors?.map((error) => `${error.instancePath}: ${error.message}`) ?? [];
 
 				throw new SyntaxError(`invalid config file: ${errors.join(", ")}`);
 			}
@@ -261,10 +276,12 @@ if (config.configs !== undefined) {
 			if (conf.dest !== undefined) {
 				create_parent_dirs(conf.dest);
 			}
-			
+
 			copy_release_file(conf.orig, conf.dest);
 		} else {
-			throw new SyntaxError(`config-file extension '${path.extname(conf.dest ?? conf.orig)}' is not supported`);
+			throw new SyntaxError(
+				`config-file extension '${path.extname(conf.dest ?? conf.orig)}' is not supported`
+			);
 		}
 	});
 	console.log();
@@ -272,8 +289,12 @@ if (config.configs !== undefined) {
 
 // create script-files, that start node with the entry-point
 type ObjectEntries<T extends object> = [keyof T, T[keyof T]][];
-type ConfigBuildsWithEntry = ObjectEntries<Record<string, Config["builds"][number] & Required<Pick<Config["builds"][number], "entry">>>>;
-const startup_script_builds = Object.entries(config.builds).filter(([, build]) => !!build.entry) as ConfigBuildsWithEntry;
+type ConfigBuildsWithEntry = ObjectEntries<
+	Record<string, Config["builds"][number] & Required<Pick<Config["builds"][number], "entry">>>
+>;
+const startup_script_builds = Object.entries(config.builds).filter(
+	([, build]) => !!build.entry
+) as ConfigBuildsWithEntry;
 
 if (startup_script_builds.length > 0) {
 	console.log(`Creating startup-scripts`);
@@ -287,22 +308,31 @@ if (startup_script_builds.length > 0) {
 // create and copy the licenses
 console.log("Aggregate licenses");
 
-const license_reporter_config_ts = `import { IReporterConfiguration } from "@weichwarenprojekt/license-reporter";export const configuration: Partial<IReporterConfiguration>=${JSON.stringify(config.license_report.config)}`
+const license_reporter_config_ts = `import { IReporterConfiguration } from "@weichwarenprojekt/license-reporter";export const configuration: Partial<IReporterConfiguration>=${JSON.stringify(config.license_report.config)}`;
 const license_reporter_config_ts_file = tmp.fileSync({ postfix: ".ts" });
 
 fs.writeFileSync(license_reporter_config_ts_file.name, license_reporter_config_ts);
 
 try {
-	execSync(`npx license-reporter --config ${license_reporter_config_ts_file.name}`, { stdio: "ignore" });
-} catch { /* empty */ }
+	execSync(`npx license-reporter --config ${license_reporter_config_ts_file.name}`, {
+		stdio: "ignore"
+	});
+} catch {
+	/* empty */
+}
 
 license_reporter_config_ts_file.removeCallback();
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-interface License { name: string; licenseText: string }
+interface License {
+	name: string;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	licenseText: string;
+}
 
 console.log("\tLoading licence-report");
-const licenses_orig = JSON.parse(fs.readFileSync(config.license_report.config.output, "utf-8")) as License[];
+const licenses_orig = JSON.parse(
+	fs.readFileSync(config.license_report.config.output, "utf-8")
+) as License[];
 
 const licenses: Record<string, License> = {};
 
@@ -320,7 +350,11 @@ Object.keys(package_json.dependencies).forEach((pack) => {
 	console.log(`\t\t'${lic.name}'`);
 
 	try {
-		fs.writeFileSync(path.join(release_dir_latest, config.license_report.path, `${lic.name}.txt`), lic.licenseText, "utf-8");
+		fs.writeFileSync(
+			path.join(release_dir_latest, config.license_report.path, `${lic.name}.txt`),
+			lic.licenseText,
+			"utf-8"
+		);
 	} catch {
 		if (lic.licenseText === undefined) {
 			throw new EvalError(`ERROR: no license was found for the package '${lic.name}'`);
@@ -328,7 +362,7 @@ Object.keys(package_json.dependencies).forEach((pack) => {
 	}
 });
 
-console.log(`\tWriting ${package_json.name}-licene`)
+console.log(`\tWriting ${package_json.name}-licene`);
 copy_release_file(config.license_report.license.path, config.license_report.license.destination);
 
 console.log();
@@ -341,9 +375,9 @@ if (startup_script_builds.length > 0) {
 }
 
 Object.entries(config.builds).forEach(([name, build]) => {
-	build.files.forEach(file => {
+	build.files.forEach((file) => {
 		const file_path = path.join(build_dir, file);
-		
+
 		console.log(`\t${name}: '${file_path}'`);
 
 		if (fs.statSync(file_path).isFile()) {
@@ -357,7 +391,7 @@ Object.entries(config.builds).forEach(([name, build]) => {
 // copy external packages
 if (config.external_packages !== undefined) {
 	console.log("\texternal node-modules");
-	
+
 	config.external_packages.forEach((module) => copy_module(module));
 }
 
@@ -373,7 +407,7 @@ config.copy?.forEach(({ orig, dest }) => {
 
 		console.log(`\t'${orig}' -> '${dest}'`);
 	} else {
-		console.log(`\t'${orig}'`)
+		console.log(`\t'${orig}'`);
 	}
 
 	// handle files and directories different
@@ -389,7 +423,7 @@ console.log();
 if (config.mkdir) {
 	console.log("Creating empty directories");
 
-	config.mkdir.forEach(dir => {
+	config.mkdir.forEach((dir) => {
 		console.log(`\t'${dir}'`);
 
 		fs.mkdirSync(path.join(release_dir_latest, dir), { recursive: true });

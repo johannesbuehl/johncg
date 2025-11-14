@@ -12,22 +12,15 @@ builds:
   templates:
     script: templates-build
     files: []
-  pandoc:
-    script: pandoc-build
-    entry: pandoc/pandoc-installer.js
-    script_path: pandoc/pandoc-installer
-    files:
-      - pandoc
 configs:
   server:
     schema: config.schema.json
     orig: config_default.yaml
     dest: config.yaml
 external_packages:
-  - "@img"
-  - canvas
-  - pdfjs-dist
-  - path2d
+  - pdf-parse
+  - sharp
+
 copy:
   - orig: casparcg
   - orig: files/Bibles
@@ -36,7 +29,7 @@ copy:
     dest: Psalms
   - orig: files/Songs
     dest: Songs
-  - orig: pandoc/texlive.profile
+  - orig: typst/johncg-export.typ
 mkdir:
   - Playlists
   - PDFs

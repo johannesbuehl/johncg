@@ -1,1 +1,1 @@
-npm run format-check && npm run lint || (npm run format-write && exit 1)
+pnpm run format-check && pnpm run lint || (pnpm run format-write && exit 1)

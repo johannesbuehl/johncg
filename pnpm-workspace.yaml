@@ -1,0 +1,8 @@
+ignoredBuiltDependencies:
+  - "@parcel/watcher"
+  - es5-ext
+  - sharp
+
+onlyBuiltDependencies:
+  - canvas
+  - esbuild

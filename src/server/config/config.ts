@@ -37,6 +37,7 @@ export interface ConfigYAML {
 		psalms: string;
 		pdfs: string;
 		bible: string;
+		typst?: string;
 	};
 	casparcg_connections: CasparCGConnectionSettings[];
 	client_server: {
@@ -342,6 +343,24 @@ class ConfigClass {
 		});
 
 		return `${book_id}${seperators.sep_book_chapter}${chapter_strings.join(seperators.sep_chapter)}`;
+	}
+
+	get typst_executable(): string {
+		if (!!this.config.path.typst) {
+			return this.config.path.typst;
+		} else {
+			switch (process.platform) {
+				case "win32":
+					return ".\\typst\\typst.exe";
+					break;
+				case "linux":
+					return "typst";
+					break;
+				default:
+					return "";
+					break;
+			}
+		}
 	}
 }
 

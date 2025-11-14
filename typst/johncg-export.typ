@@ -1,3 +1,5 @@
+#import "@preview/based:0.2.0": base64
+
 #{
     let data = json("data.json")
 
@@ -50,6 +52,21 @@
     }
     let render-json(v) = raw(lang: "json", to-json(v))
 
+    let image-b64(b64, width: 50%, left: 1em, right: 1em) = pad(
+        left: left,
+        right: right,
+        box(
+            radius: 0.25em,
+            clip: true,
+            image(
+                width: width,
+                base64.decode(
+                    b64.split(",").at(-1),
+                ),
+            ),
+        ),
+    )
+
     let song-lang-styles = (
         (),
         (style: "italic", fill: luma(50%)),
@@ -88,42 +105,42 @@
             )
 
             == #titles
+            #grid(
+                columns: (1fr, 1fr),
+                gutter: 1em,
 
-            TODO: BackgroundImage?: string;
-
-            #render-json(data.metadata)
-
-            #for part in data.metadata.VerseOrder {
                 [
-                    === #part
-                ]
 
+                    #for part in data.metadata.VerseOrder {
+                        [=== #part]
 
-                let song_text = data.text.find(p => p.part == part)
+                        let song_text = data.text.find(p => p.part == part)
 
-                if song_text != none {
-                    song_text
-                        .text
-                        .map(slide => if slide.flatten().join("").len() > 0 {
-                            box[
-                                #for line in slide {
-                                    let ii = 0
+                        if song_text != none {
+                            song_text
+                                .text
+                                .map(slide => if slide.flatten().join("").len() > 0 {
+                                    box[
+                                        #for line in slide {
+                                            let ii = 0
 
-                                    while ii < line.len() {
-                                        set par(hanging-indent: 1em, spacing: 0.6em)
-                                        set text(..song-lang-styles.at(ii))
+                                            while ii < line.len() {
+                                                set par(hanging-indent: 1em, spacing: 0.6em)
+                                                set text(..song-lang-styles.at(ii))
 
-                                        line.at(ii)
-                                        linebreak()
+                                                line.at(ii)
+                                                linebreak()
 
-                                        ii += 1
-                                    }
-                                }
-                            ]
-                        })
-                        .join(v(0em))
-                }
-            }
+                                                ii += 1
+                                            }
+                                        }
+                                    ]
+                                })
+                                .join(v(0em))
+                        }
+                    }],
+                image-b64(data.metadata.BackgroundImage, width: 100%, left: 0em, right: 1em),
+            )
         ]
     ]
 
@@ -162,7 +179,7 @@
 
             if "data" in data.template.keys() [
                 // #data.template.data
-                #render-json(data.template)
+                #render-json(data.template.data)
             ]
         }
     ]
@@ -173,9 +190,9 @@
                 ..table-row(data, "media", "Media"),
                 ..table-row(data, "loop", "Loop"),
             )
-        }
 
-        TODO: thumbnail
+            image-b64(data.thumbnail)
+        }
     ]
 
     let render-pdf = data => [
@@ -183,15 +200,55 @@
             metadata-table(
                 ..table-row(data, "file", "File"),
             )
-        }
 
-        TODO: thumbnails
+            pad(
+                x: 1em,
+                grid(
+                    columns: (1fr, 1fr),
+                    gutter: 1em,
+                    ..data.thumbnails.map(thumbnail => box(
+                        stroke: 0.5pt + black,
+                        clip: true,
+                        radius: 0.1em,
+                        image(width: 100%, base64.decode(
+                            thumbnail.split(",").at(-1),
+                        )),
+                    ))
+                ),
+            )
+        }
     ]
 
-    let render-countdown = data => [
-        #data
+    let countdown-modes = (
+        end_time: "Endtime",
+        duration: "Duration",
+        stopwatch: "Stopwatch",
+        clock: "Clock",
+    )
 
-        TODO
+    let render-countdown = data => [
+        #if "data" in data.keys() [
+            #metadata-table(
+                ..table-row(data.data, "time", "Time"),
+                "Mode",
+                countdown-modes.at(data.data.mode),
+                "Show seconds",
+                raw(if data.data.show_seconds { "true" } else { "false" }),
+                ..table-row(data.data, "font_size", "Textsize"),
+                "Textcolor",
+                [#box()[#square(
+                        size: 0.7em,
+                        fill: rgb(data.data.font_color),
+                        radius: 0.1em,
+                        stroke: 1pt + black,
+                    )] #h(0.2em) #raw(data.data.font_color)],
+                "Position",
+                raw("x: " + str(data.data.position.x) + ", y: " + str(data.data.position.y)),
+            )
+
+            #image-b64(data.thumbnail)
+        ]
+
     ]
 
     let render-text = data => [
@@ -246,7 +303,9 @@
             ]
             h(1fr)
 
-            raw(data.file)
+            if "file" in data.keys() {
+                data.file
+            }
 
             line(length: 100%, stroke: 0.5pt)
         },

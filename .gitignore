@@ -5,11 +5,10 @@ logs
 miktex
 out
 dist
-pandoc/*
 
 casparcg/Templates/JohnCG/*
 build/release.js
 *.map
 install-tl.log
 
-!pandoc/texlive.profile
+typst/typst.exe

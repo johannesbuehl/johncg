@@ -1,9 +1,7 @@
 import globals from "globals";
-// import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 import pluginVue from "eslint-plugin-vue";
 import jsdoc from "eslint-plugin-jsdoc";
-
 
 export default [
 	{
@@ -74,7 +72,7 @@ export default [
 	},
 	{
 		rules: {
-			"vue/no-use-v-if-with-v-for": "off",
+			"vue/no-use-v-if-with-v-for": "off"
 			// "vue/script-indent": [
 			// 	"error",
 			// 	"tab",
@@ -96,10 +94,10 @@ export default [
 				{
 					require: {
 						MethodDefinition: true,
-						ClassDeclaration: true,
-					},
-				},
-			],
+						ClassDeclaration: true
+					}
+				}
+			]
 		}
 	},
 	{
@@ -109,8 +107,8 @@ export default [
 			"src/version.ts",
 			"dist",
 			"out",
-			"pandoc",
+			"typst",
 			"build/release.js"
 		]
-	},
+	}
 ];

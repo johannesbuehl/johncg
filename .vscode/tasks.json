@@ -1,13 +1,7 @@
 {
 	"version": "2.0.0",
 	"tasks": [
-		{
-			"type": "npm",
-			"script": "build",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "build"
-		},
+		{ "type": "npm", "script": "build", "group": "build", "problemMatcher": [], "label": "build" },
 		{
 			"type": "npm",
 			"script": "templates-dev",
@@ -25,19 +19,14 @@
 		{
 			"type": "typescript",
 			"tsconfig": "src/server/tsconfig.json",
-			"problemMatcher": [
-				"$tsc"
-			],
+			"problemMatcher": ["$tsc"],
 			"group": "build",
 			"label": "tsc: build - server"
 		},
 		{
 			"label": "type-check and esbuild-server-sourcemap",
 			"dependsOrder": "sequence",
-			"dependsOn": [
-				"tsc: build - server",
-				"esbuild-server-sourcemap"
-			]
+			"dependsOn": ["tsc: build - server", "esbuild-server-sourcemap"]
 		},
 		{
 			"type": "npm",

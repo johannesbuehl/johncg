@@ -11,11 +11,7 @@ const esbuild_settings = {
 	platform: "node",
 	bundle: true,
 	keepNames: true,
-	external: [
-		"pdfjs-dist",
-		"canvas",
-		"hidefile"
-	]
+	external: ["sharp", "pdf-parse"]
 	/* eslint-enable @typescript-eslint/naming-convention */
 };
 
