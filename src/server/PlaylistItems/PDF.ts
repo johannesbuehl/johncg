@@ -68,12 +68,11 @@ export default class PDF extends PlaylistItemBase {
 
 		if (displayable) {
 			void (async () => {
-				const pth = Config.get_path("pdf", this.props.file).replaceAll("/", "\\");
+				const pth = Config.get_path("pdf", this.props.file);
 
 				logger.debug(`loading PDF-file (${pth})`);
 
 				try {
-					// maybe use pdf-parse to get size and maybe also create png through screenshot
 					const parser = new PDFParse({ url: pth });
 
 					const result = await parser.getInfo({
