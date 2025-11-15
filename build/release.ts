@@ -7,6 +7,7 @@ import tmp from "tmp";
 import yaml from "yaml";
 import Ajv, { JSONSchemaType } from "ajv";
 import formatsPlugin from "ajv-formats";
+import { env } from "process";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 interface Config {
@@ -51,10 +52,27 @@ if (!validate_config(config)) {
 }
 
 config.license_report.config.output ??= "build/3rdpartylicenses.json";
+
+// load the package.json
+console.log(`Reading '${config.package_json ?? "package.json"}'`);
+const package_json = JSON.parse(
+	fs.readFileSync(config.package_json ?? "package.json", "utf-8")
+) as { version: string; dependencies: Record<string, string>; name: string };
+
 const build_dir = path.join(config.release_dir, "build");
-const release_dir_latest = path.join(config.release_dir, "latest");
+const build_name = `${package_json.name}_${package_json.version}_${get_platform()}`;
+const release_dir = path.join(config.release_dir, build_name);
 
 // helper-functions
+/**
+ * returns the platform specified by the environment-variable "platform".
+ * If it is undefined, return process.platform instead
+ * @returns platform string
+ */
+function get_platform(): string {
+	return env.platform ?? process.platform;
+}
+
 /**
  * ensure the parent-directories of the file exist
  * @param pth path of the file
@@ -98,7 +116,7 @@ function copy_build_dir(dir: string, dest?: string, args?: fs.CopySyncOptions) {
  * @param dest destination relative to the release-directory
  */
 function copy_release_file(file: string, dest?: string) {
-	dest = path.join(release_dir_latest, dest ?? file);
+	dest = path.join(release_dir, dest ?? file);
 
 	create_parent_dirs(dest);
 
@@ -112,7 +130,7 @@ function copy_release_file(file: string, dest?: string) {
  * @param args optional. arguments for fs.cpSync
  */
 function copy_release_dir(dir: string, dest?: string, args?: fs.CopySyncOptions) {
-	dest = path.join(release_dir_latest, dest ?? dir);
+	dest = path.join(release_dir, dest ?? dir);
 
 	create_parent_dirs(dest);
 
@@ -162,7 +180,7 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 	let content: string = "";
 	const relative_path_prefix = "../".repeat((pth_script.match(/\//g) ?? []).length);
 
-	switch (process.platform) {
+	switch (get_platform()) {
 		case "win32":
 			extension = ".bat";
 
@@ -181,7 +199,7 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 
 	console.log(`\t${name}: '${pth_script}' for '${pth_js}'`);
 
-	pth_script = path.join(release_dir_latest, pth_script);
+	pth_script = path.join(release_dir, pth_script);
 
 	create_parent_dirs(pth_script);
 
@@ -189,42 +207,32 @@ function create_launch_script(pth_js: string, name: string, pth_script?: string)
 }
 /* eslint-enable @typescript-eslint/no-unused-vars */
 
-const exec_map: Partial<Record<NodeJS.Platform, string>> = {
+const exec_map: Record<string, string> = {
 	win32: "node.exe",
 	linux: "node"
 };
 let exec_name: string;
 // check, wether the build script supports the os
-if (!(process.platform in exec_map)) {
+if (!(get_platform() in exec_map)) {
 	console.error("Buildscript does not support this OS");
 	process.exit(1);
 } else {
-	exec_name = exec_map[process.platform] as string;
+	exec_name = exec_map[get_platform()] as string;
 }
 
-// load the package.json
-console.log(`Reading '${config.package_json ?? "package.json"}'`);
-const package_json = JSON.parse(
-	fs.readFileSync(config.package_json ?? "package.json", "utf-8")
-) as { version: string; dependencies: Record<string, string>; name: string };
-const build_name = `${package_json.name}_${package_json.version}_${process.platform}`;
-
 console.log(
-	`Building '${package_json.name}' version '${package_json.version}' for target '${process.platform}'`
+	`Building '${package_json.name}' version '${package_json.version}' for target '${get_platform()}'`
 );
 console.log();
 
-const release_dir_version = path.join(config.release_dir, build_name);
-
 console.log(`Build directory is '${build_dir}'`);
-console.log(`Release directories are '${release_dir_latest}' and '${release_dir_version}'`);
+console.log(`Release directories are '${release_dir}'`);
 console.log();
 
 // clear the build- and release-directories
 console.log("recreating directories");
 recreate_directory(build_dir);
-recreate_directory(release_dir_latest);
-recreate_directory(release_dir_version);
+recreate_directory(release_dir);
 console.log();
 
 // bundle the different scripts
@@ -332,7 +340,7 @@ licenses_orig.forEach((pack) => {
 });
 
 console.log("\tCreating licence-directory");
-fs.mkdirSync(path.join(release_dir_latest, config.license_report.path), { recursive: true });
+fs.mkdirSync(path.join(release_dir, config.license_report.path), { recursive: true });
 
 console.log("\tWriting licences");
 Object.keys(package_json.dependencies).forEach((pack) => {
@@ -342,7 +350,7 @@ Object.keys(package_json.dependencies).forEach((pack) => {
 
 	try {
 		fs.writeFileSync(
-			path.join(release_dir_latest, config.license_report.path, `${lic.name}.txt`),
+			path.join(release_dir, config.license_report.path, `${lic.name}.txt`),
 			lic.licenseText,
 			"utf-8"
 		);
@@ -357,7 +365,7 @@ console.log(`\tWriting ${package_json.name}-licene`);
 copy_release_file(config.license_report.license.path, config.license_report.license.destination);
 
 console.log();
-console.log(`Copying files to '${release_dir_latest}'`);
+console.log(`Copying files to '${release_dir}'`);
 
 // get the node executable
 if (startup_script_builds.length > 0) {
@@ -385,7 +393,7 @@ if (config.external_packages !== undefined) {
 	config.external_packages.forEach((module) => console.log(`\t\t'${module}'`));
 
 	execSync(
-		`npm install --no-save --prefix ${release_dir_latest} ${config.external_packages.join(" ")}`,
+		`npm install --os=${get_platform()} --no-save --prefix ${release_dir} ${config.external_packages.join(" ")}`,
 		{ stdio: "ignore" }
 	);
 }
@@ -393,7 +401,7 @@ if (config.external_packages !== undefined) {
 // copy additional directories
 config.copy?.forEach(({ orig, dest }) => {
 	if (dest !== undefined) {
-		const dest_parent = path.parse(path.join(release_dir_latest, dest)).dir;
+		const dest_parent = path.parse(path.join(release_dir, dest)).dir;
 
 		// if the destinations-parent doesn't exist, create it
 		if (!fs.existsSync(dest_parent)) {
@@ -421,25 +429,22 @@ if (config.mkdir) {
 	config.mkdir.forEach((dir) => {
 		console.log(`\t'${dir}'`);
 
-		fs.mkdirSync(path.join(release_dir_latest, dir), { recursive: true });
+		fs.mkdirSync(path.join(release_dir, dir), { recursive: true });
 	});
 
 	console.log();
 }
 
 // copy the release-latest directory to the versioned
-console.log(`Copying files to '${release_dir_version}'`);
-fs.cpSync(release_dir_latest, release_dir_version, { recursive: true });
-
 // pack the files
-console.log(`Packing release to '${release_dir_version}.zip'`);
-const zip_stream = fs.createWriteStream(release_dir_version + ".zip");
+console.log(`Packing release to '${release_dir}.zip'`);
+const zip_stream = fs.createWriteStream(release_dir + ".zip");
 
 const archive = archiver("zip");
 
 archive.pipe(zip_stream);
 
-archive.directory(release_dir_version, false);
+archive.directory(release_dir, false);
 
 void archive.finalize();
 
