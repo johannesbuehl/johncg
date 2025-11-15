@@ -120,15 +120,6 @@ function copy_release_dir(dir: string, dest?: string, args?: fs.CopySyncOptions)
 }
 
 /**
- * copy a node-module into the release-directory
- * @param name name of the node_module
- */
-function copy_module(name: string) {
-	console.log(`\t\t'${name}'`);
-	execSync(`npm install --no-save --prefix ${release_dir_latest} ${name}`);
-}
-
-/**
  * (try to) delete a directory and create it again
  * @param pth path of the directory
  */
@@ -391,8 +382,12 @@ Object.entries(config.builds).forEach(([name, build]) => {
 // copy external packages
 if (config.external_packages !== undefined) {
 	console.log("\texternal node-modules");
+	config.external_packages.forEach((module) => console.log(`\t\t'${module}'`));
 
-	config.external_packages.forEach((module) => copy_module(module));
+	execSync(
+		`npm install --no-save --prefix ${release_dir_latest} ${config.external_packages.join(" ")}`,
+		{ stdio: "ignore" }
+	);
 }
 
 // copy additional directories
