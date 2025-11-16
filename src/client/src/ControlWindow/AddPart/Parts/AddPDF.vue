@@ -4,12 +4,11 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
-		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import { NodeType, type PDFFile } from "@server/search_part_types";
+	import { NodeType, type ChooseNode, type PDFFile } from "@server/search_part_types";
 	import type { PDFProps } from "@server/PlaylistItems/PDF";
 	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 

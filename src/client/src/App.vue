@@ -123,7 +123,7 @@
 			let data: JCGPSend.Message;
 
 			try {
-				data = JSON.parse(event.data as string);
+				data = JSON.parse(event.data as string) as JCGPSend.Message;
 			} catch (e) {
 				if (e instanceof SyntaxError) {
 					Globals.message.error("received invalid JSON");
@@ -171,7 +171,7 @@
 				const message: string | undefined = (event as ErrorEvent).message;
 
 				Globals.message.error(
-					`Server connection encountered error${!!message ? ` '${message}''` : ""}. Closing socket`
+					`Server connection encountered error${message ? ` '${message}''` : ""}. Closing socket`
 				);
 			}
 
@@ -263,16 +263,16 @@
 			// trickery because of typescripts (too) strict typing
 			switch (data.type) {
 				case "media":
-					Globals.item_files.value.media = data.files as ItemNodeMapped<T>[];
+					Globals.item_files.value.media = data.files;
 					break;
 				case "pdf":
-					Globals.item_files.value.pdf = data.files as ItemNodeMapped<T>[];
+					Globals.item_files.value.pdf = data.files;
 					break;
 				case "playlist":
-					Globals.item_files.value.playlist = data.files as ItemNodeMapped<T>[];
+					Globals.item_files.value.playlist = data.files;
 					break;
 				case "template":
-					Globals.item_files.value.template = data.files as ItemNodeMapped<T>[];
+					Globals.item_files.value.template = data.files;
 					break;
 				case "psalm":
 					Globals.item_files.value.psalm = data.files as ItemNodeMapped<"psalm">[];

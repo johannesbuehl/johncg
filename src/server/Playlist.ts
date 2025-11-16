@@ -659,7 +659,7 @@ export default class Playlist {
 			if (this.playlist_items[item].displayable) {
 				const client_object = await this.playlist_items[item].create_client_object_item_slides();
 
-				if (!!client_object) {
+				if (client_object) {
 					if (client_object.media !== undefined) {
 						// check wether it is a color string
 						const test_rgb_string = client_object.media.match(

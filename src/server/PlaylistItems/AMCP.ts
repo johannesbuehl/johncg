@@ -140,17 +140,19 @@ export default class AMCP extends PlaylistItemBase {
 		);
 	}
 
-	async play(casparcg_connection?: CasparCGConnection): Promise<PromiseSettledResult<void>[]> {
+	play(casparcg_connection?: CasparCGConnection): Promise<PromiseSettledResult<void>[]> {
 		if (this.props.commands.set_active !== undefined) {
 			return this.send_custom_command(this.props.commands.set_active, casparcg_connection);
 		} else {
-			return Promise.allSettled([await Promise.resolve()]);
+			return Promise.allSettled([]);
 		}
 	}
 
 	stop(casparcg_connection?: CasparCGConnection) {
 		if (this.props.commands.set_inactive !== undefined) {
 			return this.send_custom_command(this.props.commands.set_inactive, casparcg_connection);
+		} else {
+			return Promise.allSettled([]);
 		}
 	}
 

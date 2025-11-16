@@ -271,7 +271,7 @@ export default class SongFile {
 		// split the header into the individual lines
 		const header_data: string[] = header.split("\n");
 
-		let chords;
+		let chords: Record<number, Record<number, Chord>> | undefined;
 
 		header_data.forEach((row) => {
 			const components = row.split("=");
@@ -327,7 +327,7 @@ export default class SongFile {
 
 		if (chords !== undefined) {
 			Object.values(chords).forEach((l) => {
-				Object.values(l!).forEach((c) => transpose_chord(c, this.metadata.Transpose ?? 0));
+				Object.values(l).forEach((c) => transpose_chord(c, this.metadata.Transpose ?? 0));
 			});
 		}
 

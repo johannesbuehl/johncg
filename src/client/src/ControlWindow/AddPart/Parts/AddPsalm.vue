@@ -4,12 +4,11 @@
 
 	import MenuButton from "@/ControlWindow/MenuBar/MenuButton.vue";
 	import FileDialogue, {
-		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import { NodeType, type PsalmFile } from "@server/search_part_types";
+	import { NodeType, type ChooseNode, type PsalmFile } from "@server/search_part_types";
 	import type { PsalmProps } from "@server/PlaylistItems/Psalm";
 	import { faPlus } from "@fortawesome/free-solid-svg-icons";
 

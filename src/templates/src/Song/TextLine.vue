@@ -1,19 +1,90 @@
 <script lang="ts">
-	export interface ChordDescriptor {
+	import { type Chord, transpose_chord } from "@server/PlaylistItems/SongFile/Chord";
+
+	interface ChordDescriptor {
 		text?: string;
 		super?: string;
 	}
 
-	export interface RenderChord {
+	interface RenderChord {
 		note: string;
 		descriptors?: ChordDescriptor[];
 		bass_note?: string;
 	}
+
+	function format_chord(chord: Chord): RenderChord {
+		// function format_chord(chord: undefined): undefined;
+		/**
+		 * formats a chord for rendering
+		 * @param chord chord-object
+		 * @returns chord split into individual parts used for rendering
+		 */
+		// function format_chord(chord: Chord | undefined): RenderChord | undefined {
+		return {
+			note: format_note(chord.note),
+			descriptors:
+				chord.chord_descriptors !== undefined
+					? format_descriptors(chord.chord_descriptors)
+					: undefined,
+			bass_note: chord.bass_note !== undefined ? "/" + format_note(chord.bass_note) : undefined
+		};
+	}
+
+	const note_replacer = {
+		/* eslint-disable @typescript-eslint/naming-convention */
+		"<": "♭",
+		"=": "♮",
+		"#": "♯"
+		/* eslint-enablee @typescript-eslint/naming-convention */
+	};
+	/**
+	 * inserts correct sharp and flat symbols
+	 * @param note
+	 * @returns formatted note
+	 */
+	function format_note(note: string): string {
+		Object.entries(note_replacer).forEach(
+			([pattern, replacement]) => (note = note.replace(pattern, replacement))
+		);
+
+		return note;
+	}
+
+	/**
+	 * formats the descriptors of the chord
+	 * @param descriptor string of all the descriptors of the chord
+	 * @returns array of the individual descriptors prepared for rendering
+	 */
+	function format_descriptors(descriptor: string): Required<RenderChord>["descriptors"] {
+		const descriptors_array: Required<RenderChord>["descriptors"] = [];
+
+		[...descriptor].forEach((c) => {
+			const descriptor_object: ChordDescriptor = {};
+
+			if (!Number.isNaN(Number(c))) {
+				descriptor_object.super = c;
+			} else {
+				descriptor_object.text = c;
+			}
+
+			descriptors_array.push(descriptor_object);
+		});
+
+		Object.entries(descriptor_replacer).forEach(([pattern, replacement]) => {
+			descriptors_array.forEach(
+				(descriptor) => (descriptor.text = descriptor.text?.replace(pattern, replacement))
+			);
+		});
+
+		return descriptors_array;
+	}
+
+	const descriptor_replacer = {
+		M: "maj"
+	};
 </script>
 
 <script setup lang="ts">
-	import { type Chord, transpose_chord } from "@server/PlaylistItems/SongFile/Chord";
-
 	const props = defineProps<{
 		text: string;
 		chords?: Record<number, Chord>;
@@ -141,80 +212,6 @@
 		}
 
 		return return_snippets;
-	}
-
-	const note_replacer = {
-		/* eslint-disable @typescript-eslint/naming-convention */
-		"<": "♭",
-		"=": "♮",
-		"#": "♯"
-		/* eslint-enablee @typescript-eslint/naming-convention */
-	};
-	/**
-	 * inserts correct sharp and flat symbols
-	 * @param note
-	 * @returns formatted note
-	 */
-	function format_note(note: string): string {
-		Object.entries(note_replacer).forEach(
-			([pattern, replacement]) => (note = note.replace(pattern, replacement))
-		);
-
-		return note;
-	}
-
-	const descriptor_replacer = {
-		M: "maj"
-	};
-	/**
-	 * formats the descriptors of the chord
-	 * @param descriptor string of all the descriptors of the chord
-	 * @returns array of the individual descriptors prepared for rendering
-	 */
-	function format_descriptors(descriptor: string): Required<RenderChord>["descriptors"] {
-		const descriptors_array: Required<RenderChord>["descriptors"] = [];
-
-		[...descriptor].forEach((c) => {
-			const descriptor_object: ChordDescriptor = {};
-
-			if (parseInt(c)) {
-				descriptor_object.super = c;
-			} else {
-				descriptor_object.text = c;
-			}
-
-			descriptors_array.push(descriptor_object);
-		});
-
-		Object.entries(descriptor_replacer).forEach(([pattern, replacement]) => {
-			descriptors_array.forEach(
-				(descriptor) => (descriptor.text = descriptor.text?.replace(pattern, replacement))
-			);
-		});
-
-		return descriptors_array;
-	}
-
-	function format_chord(chord: Chord): RenderChord;
-	function format_chord(chord: undefined): undefined;
-	/**
-	 * formats a chord for rendering
-	 * @param chord chord-object
-	 * @returns chord split into individual parts used for rendering
-	 */
-	function format_chord(chord: Chord | undefined): RenderChord | undefined {
-		if (chord === undefined) {
-			return undefined;
-		} else {
-			return {
-				note: format_note(chord.note),
-				descriptors:
-					chord.chord_descriptors !== undefined
-						? format_descriptors(chord.chord_descriptors)
-						: undefined,
-				bass_note: chord.bass_note !== undefined ? "/" + format_note(chord.bass_note) : undefined
-			};
-		}
 	}
 </script>
 

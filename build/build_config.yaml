@@ -1,3 +1,4 @@
+node_version: 24.11.1
 builds:
   server:
     script: server-build
@@ -30,6 +31,27 @@ copy:
   - orig: files/Songs
     dest: Songs
   - orig: typst/johncg-export.typ
+download_files:
+  - type: zip
+    src: https://github.com/typst/typst/releases/download/v0.14.0/typst-x86_64-pc-windows-msvc.zip
+    os: win32
+    files:
+      - src: typst-x86_64-pc-windows-msvc/typst.exe
+        dest: typst/typst.exe
+      - src: typst-x86_64-pc-windows-msvc/LICENSE
+        dest: typst/LICENSE
+      - src: typst-x86_64-pc-windows-msvc/NOTICE
+        dest: typst/NOTICE
+  - type: tar.xz
+    src: https://github.com/typst/typst/releases/download/v0.14.0/typst-x86_64-unknown-linux-musl.tar.xz
+    os: linux
+    files:
+      - src: typst-x86_64-unknown-linux-musl/typst
+        dest: typst/typst
+      - src: typst-x86_64-unknown-linux-musl/LICENSE
+        dest: typst/LICENSE
+      - src: typst-x86_64-unknown-linux-musl/NOTICE
+        dest: typst/NOTICE
 mkdir:
   - Playlists
   - PDFs

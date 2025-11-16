@@ -34,7 +34,7 @@
 			lyric_slides.value?.forEach((slide) => (slide.style.fontSize = ""));
 			ready.value = false;
 
-			nextTick(() => {
+			void nextTick(() => {
 				let max_width = 0;
 				let max_height = 0;
 

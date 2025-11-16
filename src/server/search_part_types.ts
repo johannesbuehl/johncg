@@ -28,14 +28,12 @@ export type CasparFile = FileBase;
 export type PDFFile = FileBase;
 export type PlaylistFile = FileBase;
 
+export type ChooseNode<T extends keyof ItemFileMap> = Node<T> | Search<T>;
 export type Node<K extends keyof ItemFileMap> = ItemFileMapped<K> | Directory<K>;
-export type Directory<K extends keyof ItemFileMap> = NodeBase &
-	{
-		[T in K]: {
-			children: Node<T>[];
-			type: NodeType.Directory;
-		};
-	}[K];
+export interface Directory<K extends keyof ItemFileMap> extends NodeBase {
+	type: NodeType.Directory;
+	children: Node<K>[];
+}
 export interface ItemFileMap {
 	song: SongFile;
 	psalm: PsalmFile;

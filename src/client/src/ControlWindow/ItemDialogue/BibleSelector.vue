@@ -77,7 +77,7 @@
 			if (book_selection !== undefined) {
 				chapter_verse_selection.value = {};
 
-				nextTick(() => {
+				void nextTick(() => {
 					create_verse_selection();
 				});
 			}

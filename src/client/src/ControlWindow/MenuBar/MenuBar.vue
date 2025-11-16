@@ -81,9 +81,9 @@
 	const fullscreen_request = ref<boolean>(!!document.fullscreenElement);
 	watch(fullscreen_request, () => {
 		if (fullscreen_request.value) {
-			document.documentElement.requestFullscreen();
+			void document.documentElement.requestFullscreen();
 		} else {
-			document.exitFullscreen();
+			void document.exitFullscreen();
 		}
 	});
 </script>

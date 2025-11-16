@@ -2,6 +2,9 @@
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"type": "object",
 	"properties": {
+		"node_version": {
+			"type": "string"
+		},
 		"release_dir": {
 			"type": "string"
 		},
@@ -31,10 +34,7 @@
 						"type": "string"
 					}
 				},
-				"required": [
-					"script",
-					"files"
-				],
+				"required": ["script", "files"],
 				"additionalProperties": false
 			}
 		},
@@ -98,10 +98,7 @@
 						},
 						"search": {
 							"type": "string",
-							"enum": [
-								"recursive",
-								"flat"
-							]
+							"enum": ["recursive", "flat"]
 						}
 					}
 				},
@@ -121,17 +118,11 @@
 							"type": "string"
 						}
 					},
-					"required": [
-						"path"
-					],
+					"required": ["path"],
 					"additionalProperties": false
 				}
 			},
-			"required": [
-				"config",
-				"path",
-				"license"
-			],
+			"required": ["config", "path", "license"],
 			"additionalProperties": false
 		},
 		"mkdir": {
@@ -154,7 +145,56 @@
 						"type": "string"
 					}
 				},
-				"additionalProperties": false
+				"additionalProperties": false,
+				"required": ["orig"]
+			}
+		},
+		"download_files": {
+			"description": "download files from the internet and unpack them to the release-directory",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"enum": ["zip", "tar.xz"]
+					},
+					"src": {
+						"type": "string"
+					},
+					"os": {
+						"enum": [
+							"aix",
+							"android",
+							"darwin",
+							"freebsd",
+							"haiku",
+							"linux",
+							"openbsd",
+							"sunos",
+							"win32",
+							"cygwin",
+							"netbsd"
+						]
+					},
+					"files": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"src": {
+									"type": "string"
+								},
+								"dest": {
+									"type": "string"
+								}
+							},
+							"additionalProperties": false,
+							"required": ["src"]
+						}
+					}
+				},
+				"additionalProperties": false,
+				"required": ["type", "src", "files"]
 			}
 		},
 		"external_packages": {
@@ -185,10 +225,7 @@
 						"type": "string"
 					}
 				},
-				"required": [
-					"schema",
-					"dest"
-				],
+				"required": ["schema", "dest"],
 				"additionalProperties": false
 			}
 		},
@@ -197,10 +234,6 @@
 			"type": "boolean"
 		}
 	},
-	"required": [
-		"release_dir",
-		"builds",
-		"license_report"
-	],
+	"required": ["release_dir", "builds", "license_report"],
 	"additionalProperties": false
 }

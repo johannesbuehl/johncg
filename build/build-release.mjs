@@ -2,21 +2,23 @@ import esbuild from "esbuild";
 import yaml from "yaml";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
-/* eslint-disable @typescript-eslint/naming-convention */
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
-/* eslint-enable @typescript-eslint/naming-convention */
 
-const build_config = yaml.parse(fs.readFileSync(path.join(__dirname, "build_config.yaml"), "utf-8"));
+const build_config = yaml.parse(
+	fs.readFileSync(path.join(__dirname, "build_config.yaml"), "utf-8")
+);
 
 // set the config-number in the build-config and version.json
-const package_json = JSON.parse(fs.readFileSync(build_config.package_json ?? "package.json", "utf-8"));
+const package_json = JSON.parse(
+	fs.readFileSync(build_config.package_json ?? "package.json", "utf-8")
+);
 
 fs.writeFileSync("src/version.ts", `export const Version = "${package_json.version}";\n`);
 
-esbuild.build({
+void esbuild.build({
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	entryPoints: ["./build/release.ts"],
 	outfile: "./build/release.js",

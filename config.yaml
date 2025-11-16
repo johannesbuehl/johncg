@@ -5,10 +5,10 @@ behaviour:
   bible_citation_style: 1. Moses 1:2-4, 6;7
   transition_length: 12 # transition-length in frames
 path: # path to the different files
-  playlists: /data/JohnCG-Johannes/11_Playlists # song-files
-  songs: /data/JohnCG-Johannes/52_Songs/Lieder # pdf-files
-  psalms: /data/JohnCG-Johannes/52_Songs/Psalme # psalm-files
-  pdfs: /data/JohnCG-Johannes/54_PDF/ # playlist-files
+  playlists: D:/JohnCG-Johannes/11_Playlists # song-files
+  songs: D:/JohnCG-Johannes/52_Songs/Lieder # pdf-files
+  psalms: D:/JohnCG-Johannes/52_Songs/Psalme # psalm-files
+  pdfs: D:/JohnCG-Johannes/54_PDF/ # playlist-files
   bible: files/Bibles/Lutherbibel.bbl # used bible
   # typst: typst
 casparcg_connections: # individual CasparCG-connections

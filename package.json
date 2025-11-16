@@ -13,7 +13,9 @@
 		"lint": "eslint .",
 		"format-check": "prettier --check src/",
 		"format-write": "prettier --write src/",
-		"release": "run-s lint format-check release-build",
+		"release": "run-s lint release:win32 release:linux",
+		"release:win32": "cross-env OS=win32 pnpm run release-build",
+		"release:linux": "cross-env OS=linux pnpm run release-build",
 		"release-build": "node build/build-release.mjs && node build/release.js",
 		"server-build": "node build/server.mjs release",
 		"server-debug": "node build/server.mjs debug",
@@ -64,6 +66,7 @@
 		"@types/mime-types": "^2.1.4",
 		"@types/node": "^20.19.25",
 		"@types/tar": "^6.1.13",
+		"@types/tar-stream": "^3.1.4",
 		"@types/tmp": "^0.2.6",
 		"@types/ws": "^8.18.1",
 		"@typescript-eslint/eslint-plugin": "^8.46.4",
@@ -74,18 +77,23 @@
 		"@vue/tsconfig": "^0.5.1",
 		"@weichwarenprojekt/license-reporter": "^1.1.0",
 		"archiver": "^7.0.1",
+		"cross-env": "^10.1.0",
 		"esbuild": "^0.27.0",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^9.1.2",
 		"eslint-plugin-jsdoc": "^50.8.0",
 		"eslint-plugin-vue": "^9.33.0",
+		"fflate": "^0.8.2",
 		"husky": "^9.1.7",
 		"npm-run-all2": "^6.2.6",
 		"postject": "1.0.0-alpha.6",
 		"prettier": "^3.6.2",
+		"tar-stream": "^3.1.7",
 		"typescript": "^5.9.3",
 		"vite": "^5.4.21",
-		"vue-tsc": "^2.2.12"
+		"vue-eslint-parser": "^10.2.0",
+		"vue-tsc": "^2.2.12",
+		"xz-decompress": "^0.2.3"
 	},
 	"pnpm": {
 		"supportedArchitectures": {
@@ -95,6 +103,11 @@
 			"cpu": [
 				"x64"
 			]
-		}
+		},
+		"onlyBuiltDependencies": [
+			"canvas",
+			"esbuild",
+			"xz"
+		]
 	}
 }

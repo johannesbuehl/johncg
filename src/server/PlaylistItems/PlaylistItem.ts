@@ -229,8 +229,9 @@ export abstract class PlaylistItemBase {
 		);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-	stop(_casparcg_connection?: CasparCGConnection) {}
+	stop(_casparcg_connection?: CasparCGConnection): Promise<PromiseSettledResult<void>[]> {
+		return Promise.allSettled([]);
+	}
 
 	protected play_media(casparcg_connection: CasparCGConnection): Promise<unknown> {
 		if (casparcg_connection.settings.layers.media !== undefined) {
@@ -386,7 +387,7 @@ export abstract class PlaylistItemBase {
 			connections
 				// don't hide stageview connections
 				.filter((connection) => !connection.settings.stageview)
-				.map((connection) => {
+				.map(async (connection) => {
 					if (visibility) {
 						const promises: Promise<unknown>[] = [];
 

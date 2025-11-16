@@ -42,7 +42,7 @@ export default class Control {
 
 	// mapping of the websocket-messages to the functions
 	private readonly client_ws_function_map: {
-		[T in JCGPRecv.Message["command"]]: (msg: never, ws: WebSocket) => void;
+		[T in JCGPRecv.Message["command"]]: (msg: never, ws: WebSocket) => void | Promise<void>;
 	} = {
 		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
 		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
@@ -1162,14 +1162,14 @@ export default class Control {
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		logger.debug(`received JCGP-message: ${raw_data.toString()}`);
 
-		let data: JCGPRecv.Message;
+		let data_parsed: unknown;
 		// try to parse the data as a JSON-object
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-base-to-string
-			data = JSON.parse(raw_data.toString());
+			// eslint-disable-next-line @typescript-eslint/no-base-to-string
+			data_parsed = JSON.parse(raw_data.toString());
 
 			// if the parsed is null or not an object, throw an exception
-			if (!data || typeof data !== "object") {
+			if (!data_parsed || typeof data_parsed !== "object") {
 				throw new SyntaxError();
 			}
 		} catch (e) {
@@ -1185,6 +1185,8 @@ export default class Control {
 				throw e;
 			}
 		}
+
+		const data = data_parsed as JCGPRecv.Message;
 
 		// check wether the JSON-object does contain a command and wether it is a valid command
 		if (typeof data.command !== "string") {

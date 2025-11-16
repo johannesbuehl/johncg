@@ -23,4 +23,4 @@ if (process.argv[2] === "debug") {
 	esbuild_settings.minify = true;
 }
 
-esbuild.build(esbuild_settings);
+void esbuild.build(esbuild_settings);

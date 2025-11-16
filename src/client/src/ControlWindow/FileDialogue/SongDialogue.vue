@@ -2,12 +2,11 @@
 	import { reactive, ref, toRaw, watch } from "vue";
 
 	import FileDialogue, {
-		type ChooseNode,
 		type SearchInputDefinitions
 	} from "@/ControlWindow/FileDialogue/FileDialogue.vue";
 	import Globals from "@/Globals";
 
-	import type { Directory, SongFile } from "@server/search_part_types";
+	import type { ChooseNode, Directory, SongFile } from "@server/search_part_types";
 	import type { SongProps } from "@server/PlaylistItems/Song";
 
 	const props = defineProps<{

@@ -243,22 +243,16 @@
 
 		files ??= file_tree.value ?? get_dirstack_top_dir()?.children ?? props.files;
 
-		current_nodes.push(
-			...(sort(files)
-				.map((ff) => {
-					if (ff.type === NodeType.Directory) {
-						return get_nodes_recursive(ff.children, search || search_string(ff));
-					} else {
-						if (search_string(ff)) {
-							return ff;
-						} else {
-							return undefined;
-						}
-					}
-				})
-				.filter((ff) => ff !== undefined)
-				.flat() as ItemFileMapped<T>[])
-		);
+		const results = sort(files).reduce<ItemFileMapped<T>[]>((acc, ff) => {
+			if (ff.type === NodeType.Directory) {
+				acc.push(...get_nodes_recursive(ff.children, search || search_string(ff)));
+			} else {
+				if (search_string(ff)) acc.push(ff);
+			}
+			return acc;
+		}, []);
+
+		current_nodes.push(...results);
 
 		return current_nodes;
 	}
@@ -426,9 +420,9 @@
 					<MenuButton v-if="new_button" :square="true" @click="emit('new_file')">
 						<FontAwesomeIcon :icon="faFileCirclePlus" />
 					</MenuButton>
-					<div id="search_input_wrapper">
+					<div id="search_input_wrapper" v-if="search_strings !== undefined">
+						<!--  this was part of the v-for, revert if it makes problems v-if="search_strings !== undefined" -->
 						<div
-							v-if="search_strings !== undefined"
 							v-for="({ placeholder, size }, index) in search_strings"
 							:key="index"
 							class="search_input_container"
