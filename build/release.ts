@@ -520,7 +520,7 @@ void (async () => {
 		config.external_packages.forEach((module) => console.log(`\t\t'${module}'`));
 
 		execSync(
-			`npm install --no-save --prefix ${release_dir} ${config.external_packages.join(" ")}`,
+			`npm install --os=${OS} --no-save --prefix ${release_dir} ${config.external_packages.join(" ")}`,
 			{ stdio: "ignore" }
 		);
 	}
