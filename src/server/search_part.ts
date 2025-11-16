@@ -246,16 +246,11 @@ function build_files<K extends "media" | "template">(
 		}
 	});
 
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 	return Object.entries(temp_object)
-		.map(([key, files]): Node<K> | undefined => {
-			// if the file is hidden, skip it
-			if (key[0] === ".") {
-				return undefined;
-			}
+		.map(([key, files]) => {
+			if (key[0] === ".") return undefined;
 
 			const file_path = (root ? root + "/" : "") + key;
-
 			const is_dir = files.length !== 0;
 
 			if (is_dir) {
@@ -264,7 +259,7 @@ function build_files<K extends "media" | "template">(
 					name: key,
 					path: file_path,
 					children: build_files(files, file_path)
-				};
+				} satisfies Directory<K>;
 			} else {
 				return {
 					type: NodeType.File,
