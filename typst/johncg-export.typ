@@ -64,7 +64,7 @@
             box(
                 radius: 0.25em,
                 clip: true,
-                image(b64, width),
+                b64-image(b64, width),
             ),
         )
     }
