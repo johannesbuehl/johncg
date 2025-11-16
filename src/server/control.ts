@@ -1004,7 +1004,7 @@ export default class Control {
 	private async create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
 		const typst_object = await this.playlist.get_playlist_typst(type === "full");
 
-		const temp_dir = tmp.dirSync({ keep: true });
+		const temp_dir = tmp.dirSync({ keep: true, tmpdir: "typst" });
 		const data_object_file = path.join(temp_dir.name, "data.json");
 		const typst_template = path.join(temp_dir.name, "johncg-export.typ");
 		const pdf_file = path.join(temp_dir.name, "playlist.pdf");
