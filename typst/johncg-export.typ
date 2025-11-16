@@ -52,20 +52,22 @@
     }
     let render-json(v) = raw(lang: "json", to-json(v))
 
-    let image-b64(b64, width: 50%, left: 1em, right: 1em) = pad(
-        left: left,
-        right: right,
-        box(
-            radius: 0.25em,
-            clip: true,
-            image(
-                width: width,
-                base64.decode(
-                    b64.split(",").at(-1),
-                ),
-            ),
-        ),
+    let b64-image(b64, width) = image(
+        width: width,
+        base64.decode(b64.split(",").at(-1)),
     )
+
+    let thumbnail-single(b64, width: 50%, left: 1em, right: 1em) = if b64.len() > 0 {
+        pad(
+            left: left,
+            right: right,
+            box(
+                radius: 0.25em,
+                clip: true,
+                image(b64, width),
+            ),
+        )
+    }
 
     let song-lang-styles = (
         (),
@@ -139,7 +141,7 @@
                                 .join(v(0em))
                         }
                     }],
-                image-b64(data.metadata.BackgroundImage, width: 100%, left: 0em, right: 1em),
+                thumbnail-single(data.metadata.BackgroundImage, width: 100%, left: 0em, right: 1em),
             )
         ]
     ]
@@ -191,7 +193,7 @@
                 ..table-row(data, "loop", "Loop"),
             )
 
-            image-b64(data.thumbnail)
+            thumbnail-single(data.thumbnail)
         }
     ]
 
@@ -206,14 +208,14 @@
                 grid(
                     columns: (1fr, 1fr),
                     gutter: 1em,
-                    ..data.thumbnails.map(thumbnail => box(
-                        stroke: 0.5pt + black,
-                        clip: true,
-                        radius: 0.1em,
-                        image(width: 100%, base64.decode(
-                            thumbnail.split(",").at(-1),
-                        )),
-                    ))
+                    ..data.thumbnails.map(thumbnail => if thumbnail.len() > 0 {
+                        box(
+                            stroke: 0.5pt + black,
+                            clip: true,
+                            radius: 0.1em,
+                            b64-image(thumbnail, 100%),
+                        )
+                    })
                 ),
             )
         }
@@ -246,7 +248,7 @@
                 raw("x: " + str(data.data.position.x) + ", y: " + str(data.data.position.y)),
             )
 
-            #image-b64(data.thumbnail)
+            #thumbnail-single(data.thumbnail)
         ]
 
     ]
