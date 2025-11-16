@@ -9,6 +9,7 @@ path: # path to the different files
   psalms: Psalms # psalm-files
   pdfs: PDFs # playlist-files
   bible: Bibles/Lutherbibel.bbl # used bible
+  # typst: typst # custom typst command
 casparcg_connections: # individual CasparCG-connections
   - host: 127.0.0.1
     port: 5250

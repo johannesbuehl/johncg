@@ -180,6 +180,7 @@ class ConfigClass {
 					} else {
 						switch (key) {
 							case "bible":
+							case "typst":
 								if (!fs.statSync(pth).isFile()) {
 									return `path for "${key}" is no file ("${pth}")`;
 								}
@@ -352,13 +353,10 @@ class ConfigClass {
 			switch (process.platform) {
 				case "win32":
 					return ".\\typst\\typst.exe";
-					break;
 				case "linux":
-					return "typst";
-					break;
+					return "typst/typst";
 				default:
 					return "";
-					break;
 			}
 		}
 	}
