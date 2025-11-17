@@ -3,6 +3,7 @@ import fs from "fs";
 import { CasparCG } from "casparcg-connection";
 import child_process from "child_process";
 import tmp from "tmp";
+import { encode } from "cbor2";
 
 import Playlist from "./Playlist";
 import type { ActiveItemSlide } from "./Playlist";
@@ -1002,56 +1003,52 @@ export default class Control {
 	}
 
 	private async create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
-		const typst_object = await this.playlist.get_playlist_typst(type === "full");
+		const typst_object = encode(await this.playlist.get_playlist_typst(type === "full"));
 
 		const temp_dir = tmp.dirSync({ keep: true, tmpdir: "typst" });
 		const data_object_file = path.join(temp_dir.name, "data.json");
 		const typst_template = path.join(temp_dir.name, "johncg-export.typ");
-		const pdf_file = path.join(temp_dir.name, "playlist.pdf");
 
-		fs.writeFile(
-			data_object_file,
-			JSON.stringify(typst_object, undefined, "\t"),
-			{ encoding: "utf-8" },
-			() => {
-				// copy the typst template
-				fs.copyFileSync("typst/johncg-export.typ", typst_template);
+		fs.writeFile(data_object_file, typst_object, () => {
+			// copy the typst template
+			fs.copyFileSync("typst/johncg-export.typ", typst_template);
 
-				// use different commands based on the operating system
-				const command: string = `${Config.typst_executable} compile "${typst_template}" "${pdf_file}"`;
+			// use different commands based on the operating system
+			const command: string = `${Config.typst_executable} compile ${typst_template} -`;
 
-				let message: JCGPSend.PlaylistPDF;
+			let message: JCGPSend.PlaylistPDF;
 
-				try {
-					child_process.execSync(command);
+			try {
+				logger.log(`Creating ${type}-PDF`);
 
-					logger.log(`Creating ${type}-PDF`);
+				const res = child_process.execSync(command, {
+					encoding: "base64"
+				});
 
-					message = {
-						command: "playlist_pdf",
-						playlist_pdf: fs.readFileSync(pdf_file).toString("base64"),
-						server_id
-					};
-				} catch (e) {
-					let error_text: string;
+				message = {
+					command: "playlist_pdf",
+					playlist_pdf: res.toString(),
+					server_id
+				};
+			} catch (e) {
+				let error_text: string;
 
-					if (e instanceof Error) {
-						error_text = `${e.name}: ${e.message}`;
-					} else {
-						error_text = `${e}`;
-					}
-
-					logger.error(`Can't create PDF: ${error_text}`);
-					ws_send_response(`Can't create PDF: ${error_text}`, false, ws);
-
-					return;
-				} finally {
-					fs.rmSync(temp_dir.name, { recursive: true, force: true });
+				if (e instanceof Error) {
+					error_text = `${e.name}: ${e.message}`;
+				} else {
+					error_text = `${e}`;
 				}
 
-				ws?.send(JSON.stringify(message));
+				logger.error(`Can't create PDF: ${error_text}`);
+				ws_send_response(`Can't create PDF: ${error_text}`, false, ws);
+
+				return;
+			} finally {
+				fs.rmSync(temp_dir.name, { recursive: true, force: true });
 			}
-		);
+
+			ws?.send(JSON.stringify(message));
+		});
 	}
 
 	private async toggle_visibility() {

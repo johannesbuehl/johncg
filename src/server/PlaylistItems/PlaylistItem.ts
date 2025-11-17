@@ -53,6 +53,7 @@ import {
 } from "../CasparCGConnection.js";
 import TextItem, { ClientTextItem, ClientTextSlides, TextProps, TextTypstExport } from "./Text";
 import Config from "../config/config";
+import sharp from "sharp";
 
 export type PlaylistItem =
 	| Song
@@ -509,4 +510,10 @@ export abstract class PlaylistItemBase {
 			})
 		);
 	}
+}
+
+export async function image_to_uint8array(b64: string): Promise<Uint8Array> {
+	const img_buffer = Buffer.from(b64.split(",")[-1], "base64");
+
+	return sharp(img_buffer).toBuffer();
 }

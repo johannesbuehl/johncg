@@ -6,7 +6,7 @@ import {
 } from "../CasparCGConnection";
 import Config from "../config/config";
 import { logger } from "../logger";
-import { PlaylistItemBase } from "./PlaylistItem";
+import { image_to_uint8array, PlaylistItemBase } from "./PlaylistItem";
 import type {
 	ClientItemBase,
 	ClientItemSlidesBase,
@@ -88,7 +88,10 @@ const validate_song_props = ajv.compile(song_props_schema);
 
 export interface SongTypstExport extends TypstExportBase {
 	type: "song";
-	metadata?: Omit<SongFileMetadata, "LangCount" | "Chords">;
+	metadata?: Omit<SongFileMetadata, "LangCount" | "Chords" | "BackgroundImage"> & {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		BackgroundImage?: Uint8Array;
+	};
 	text?: {
 		part: string;
 		text: string[][][];
@@ -349,7 +352,7 @@ export default class Song extends PlaylistItemBase {
 		};
 
 		if (full) {
-			const metadata: PartiallyOptional<SongFileMetadata, "Chords" | "LangCount"> = structuredClone(
+			const metadata: PartiallyOptional<SongFileMetadata, "LangCount"> = structuredClone(
 				this.song_file.metadata
 			);
 
@@ -367,10 +370,12 @@ export default class Song extends PlaylistItemBase {
 				thumbnail = await thumbnail_retrieve(this.media);
 			}
 
-			metadata.BackgroundImage = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
-
 			// write the metadata to the return object
-			return_object.metadata = metadata;
+			return_object.metadata = {
+				...metadata,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				BackgroundImage: thumbnail ? await image_to_uint8array(thumbnail[0]) : undefined
+			};
 
 			// get the used languages
 			const languages = this.props.languages ?? this.song_file.languages;

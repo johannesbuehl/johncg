@@ -1,6 +1,6 @@
 import { JSONSchemaType } from "ajv";
 
-import { PlaylistItemBase } from "./PlaylistItem";
+import { image_to_uint8array, PlaylistItemBase } from "./PlaylistItem";
 import type {
 	ClientItemBase,
 	ClientItemSlidesBase,
@@ -54,7 +54,7 @@ const validate_media_props = ajv.compile(media_props_schema);
 export interface MediaTypstExport extends TypstExportBase {
 	type: "media";
 	media?: string;
-	thumbnail?: string;
+	thumbnail?: Uint8Array;
 	loop?: boolean;
 }
 
@@ -142,7 +142,7 @@ export default class Media extends PlaylistItemBase {
 			}
 
 			return_object.media = this.props.media;
-			return_object.thumbnail = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+			return_object.thumbnail = thumbnail ? await image_to_uint8array(thumbnail[0]) : undefined;
 			return_object.loop = this.props.loop;
 		}
 

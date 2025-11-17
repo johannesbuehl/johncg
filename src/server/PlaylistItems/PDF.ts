@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { JSONSchemaType } from "ajv";
 import { PDFParse } from "pdf-parse";
 
-import { PlaylistItemBase } from "./PlaylistItem";
+import { image_to_uint8array, PlaylistItemBase } from "./PlaylistItem";
 import type {
 	ClientItemBase,
 	ClientItemSlidesBase,
@@ -45,7 +45,7 @@ const validate_pdf_props = ajv.compile(pdf_props_schema);
 export interface PDFTypstExport extends TypstExportBase {
 	type: "pdf";
 	file?: string;
-	thumbnails?: string[];
+	thumbnails?: Uint8Array[];
 }
 
 export default class PDF extends PlaylistItemBase {
@@ -238,7 +238,8 @@ export default class PDF extends PlaylistItemBase {
 
 		if (full) {
 			return_object.file = this.props.file;
-			return_object.thumbnails = this.thumbnails;
+
+			return_object.thumbnails = await Promise.all(this.thumbnails.map(image_to_uint8array));
 		}
 
 		return return_object;

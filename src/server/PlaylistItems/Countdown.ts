@@ -1,7 +1,7 @@
 import { JSONSchemaType } from "ajv";
 
 import { CountdownMode, ajv, countdown_title_map } from "../lib";
-import { PlaylistItemBase } from "./PlaylistItem";
+import { image_to_uint8array, PlaylistItemBase } from "./PlaylistItem";
 import type {
 	ClientItemBase,
 	ClientItemSlidesBase,
@@ -115,7 +115,7 @@ const validate_countdown_props = ajv.compile(countdown_props_schema);
 export interface CountdownTypstExport extends TypstExportBase {
 	type: "countdown";
 	media?: string;
-	thumbnail?: string;
+	thumbnail?: Uint8Array;
 	data?: CountdownTemplateData;
 }
 export default class Countdown extends PlaylistItemBase {
@@ -255,7 +255,7 @@ export default class Countdown extends PlaylistItemBase {
 			}
 
 			return_object.media = this.props.media;
-			return_object.thumbnail = thumbnail ? "data:image/png;base64," + thumbnail[0] : "";
+			return_object.thumbnail = thumbnail ? await image_to_uint8array(thumbnail[0]) : undefined;
 			return_object.data = this.get_template().data;
 		}
 

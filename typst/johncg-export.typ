@@ -1,7 +1,7 @@
 #import "@preview/based:0.2.0": base64
 
 #{
-    let data = json("data.json")
+    let data = cbor("data.cbor")
 
     let metadata-table = (..children) => table(
         columns: (auto, 1fr),
@@ -213,7 +213,7 @@
                             stroke: 0.5pt + black,
                             clip: true,
                             radius: 0.1em,
-                            b64-image(thumbnail, 100%),
+                            image(bytes(thumbnail.data)),
                         )
                     })
                 ),

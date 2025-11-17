@@ -180,10 +180,11 @@ class ConfigClass {
 					} else {
 						switch (key) {
 							case "bible":
-							case "typst":
 								if (!fs.statSync(pth).isFile()) {
 									return `path for "${key}" is no file ("${pth}")`;
 								}
+								break;
+							case "typst":
 								break;
 							default:
 								if (!fs.statSync(pth).isDirectory()) {
