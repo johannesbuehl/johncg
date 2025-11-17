@@ -1006,7 +1006,7 @@ export default class Control {
 		const typst_object = encode(await this.playlist.get_playlist_typst(type === "full"));
 
 		const temp_dir = tmp.dirSync({ keep: true, tmpdir: "typst" });
-		const data_object_file = path.join(temp_dir.name, "data.json");
+		const data_object_file = path.join(temp_dir.name, "data.cbor");
 		const typst_template = path.join(temp_dir.name, "johncg-export.typ");
 
 		fs.writeFile(data_object_file, typst_object, () => {

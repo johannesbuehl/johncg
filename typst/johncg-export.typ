@@ -52,11 +52,6 @@
     }
     let render-json(v) = raw(lang: "json", to-json(v))
 
-    let b64-image(b64, width) = image(
-        width: width,
-        base64.decode(b64.split(",").at(-1)),
-    )
-
     let thumbnail-single(b64, width: 50%, left: 1em, right: 1em) = if b64.len() > 0 {
         pad(
             left: left,
@@ -64,7 +59,7 @@
             box(
                 radius: 0.25em,
                 clip: true,
-                b64-image(b64, width),
+                image(bytes(b64.data), width: width),
             ),
         )
     }

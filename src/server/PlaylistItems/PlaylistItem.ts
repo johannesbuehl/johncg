@@ -513,7 +513,7 @@ export abstract class PlaylistItemBase {
 }
 
 export async function image_to_uint8array(b64: string): Promise<Uint8Array> {
-	const img_buffer = Buffer.from(b64.split(",")[-1], "base64");
+	const img_buffer = Buffer.from(b64.split(",").at(-1)!, "base64");
 
 	return sharp(img_buffer).toBuffer();
 }
