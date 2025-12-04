@@ -1,7 +1,7 @@
 #import "@preview/based:0.2.0": base64
 
 #{
-    let data = cbor("data.cbor")
+    let data = json("data.json")
 
     let metadata-table = (..children) => table(
         columns: (auto, 1fr),
@@ -116,22 +116,25 @@
                         if song_text != none {
                             song_text
                                 .text
-                                .map(slide => if slide.flatten().join("").len() > 0 {
-                                    box[
-                                        #for line in slide {
-                                            let ii = 0
+                                .map(slide => {
+                                    let slide-text = slide.flatten().join("")
+                                    if slide-text != none and slide-text.len() > 0 {
+                                        box[
+                                            #for line in slide {
+                                                let ii = 0
 
-                                            while ii < line.len() {
-                                                set par(hanging-indent: 1em, spacing: 0.6em)
-                                                set text(..song-lang-styles.at(ii))
+                                                while ii < line.len() {
+                                                    set par(hanging-indent: 1em, spacing: 0.6em)
+                                                    set text(..song-lang-styles.at(ii))
 
-                                                line.at(ii)
-                                                linebreak()
+                                                    line.at(ii)
+                                                    linebreak()
 
-                                                ii += 1
+                                                    ii += 1
+                                                }
                                             }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 })
                                 .join(v(0em))
                         }
