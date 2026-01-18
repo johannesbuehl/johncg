@@ -45,46 +45,46 @@ export default class Control {
 	private readonly client_ws_function_map: {
 		[T in JCGPRecv.Message["command"]]: (msg: never, ws: WebSocket) => void | Promise<void>;
 	} = {
-		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
-		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
-			this.load_playlist(msg?.playlist, msg.id, ws),
-		save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
-			this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
-		request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
-			this.get_item_slides(msg.item, msg?.client_id, ws),
-		select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
-			this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
-		navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
-			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
-		set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
-			this.set_visibility(msg.visibility, ws),
-		toggle_visibility: () => this.toggle_visibility(),
-		move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
-			this.move_playlist_item(msg.from, msg.to, ws),
-		add_item: (msg: JCGPRecv.AddItem, ws: WebSocket) =>
-			this.add_item(msg.props, msg.index, msg.set_active, ws),
-		update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
-			this.update_item(msg.index, msg.props, ws),
-		reload_item: (msg: JCGPRecv.ReloadItem, ws: WebSocket) => this.reload_item(msg.index, ws),
-		delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-		get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
-			this.get_item_files(msg.type, ws),
-		get_bible: (msg: JCGPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
-		get_media_thumbnails: (msg: JCGPRecv.GetMediaThumbnails, ws: WebSocket) =>
-			this.get_media_thumbnails(msg.files, ws),
-		get_item_data: (msg: JCGPRecv.GetItemData, ws: WebSocket) =>
-			this.get_item_data(msg.type, msg.file, ws),
-		create_playlist_pdf: (msg: JCGPRecv.CreatePlaylistPDF, ws: WebSocket) =>
-			this.create_playlist_pdf(ws, msg.type),
-		update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
-			this.update_playlist_caption(msg.caption, ws),
-		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) =>
-			this.save_file(msg.path, msg.id, msg, ws, msg.overwrite),
-		new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
-			this.new_directory(msg.path, msg.type, ws),
-		client_confirmation: (msg: JCGPRecv.ClientConfirmation, ws: WebSocket) =>
-			this.client_confirmation(msg.id, msg.option, ws)
-	};
+			new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
+			load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
+				this.load_playlist(msg?.playlist, msg.id, ws),
+			save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
+				this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
+			request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
+				this.get_item_slides(msg.item, msg?.client_id, ws),
+			select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
+				this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
+			navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
+				this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
+			set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
+				this.set_visibility(msg.visibility, ws),
+			toggle_visibility: () => this.toggle_visibility(),
+			move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
+				this.move_playlist_item(msg.from, msg.to, ws),
+			add_item: (msg: JCGPRecv.AddItem, ws: WebSocket) =>
+				this.add_item(msg.props, msg.index, msg.set_active, ws),
+			update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
+				this.update_item(msg.index, msg.props, ws),
+			reload_item: (msg: JCGPRecv.ReloadItem, ws: WebSocket) => this.reload_item(msg.index, ws),
+			delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
+			get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
+				this.get_item_files(msg.type, ws),
+			get_bible: (msg: JCGPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+			get_media_thumbnails: (msg: JCGPRecv.GetMediaThumbnails, ws: WebSocket) =>
+				this.get_media_thumbnails(msg.files, ws),
+			get_item_data: (msg: JCGPRecv.GetItemData, ws: WebSocket) =>
+				this.get_item_data(msg.type, msg.file, ws),
+			create_playlist_pdf: (msg: JCGPRecv.CreatePlaylistPDF, ws: WebSocket) =>
+				this.create_playlist_pdf(ws, msg.type),
+			update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
+				this.update_playlist_caption(msg.caption, ws),
+			save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) =>
+				this.save_file(msg.path, msg.id, msg, ws, msg.overwrite),
+			new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
+				this.new_directory(msg.path, msg.type, ws),
+			client_confirmation: (msg: JCGPRecv.ClientConfirmation, ws: WebSocket) =>
+				this.client_confirmation(msg.id, msg.option, ws)
+		};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -1014,20 +1014,18 @@ export default class Control {
 			fs.copyFileSync("typst/johncg-export.typ", typst_template);
 
 			// use different commands based on the operating system
-			const command: string = `${Config.typst_executable} compile ${typst_template} -`;
+			const command: string = `${Config.typst_executable} compile ${typst_template}`;
 
 			let message: JCGPSend.PlaylistPDF;
 
 			try {
 				logger.log(`Creating ${type}-PDF`);
 
-				const res = child_process.execSync(command, {
-					encoding: "base64"
-				});
+				child_process.execSync(command);
 
 				message = {
 					command: "playlist_pdf",
-					playlist_pdf: res.toString(),
+					playlist_pdf: fs.readFileSync(path.join(temp_dir.name, "johncg-export.pdf"), { encoding: "base64" }),
 					server_id
 				};
 			} catch (e) {
