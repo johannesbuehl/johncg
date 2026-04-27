@@ -71,16 +71,18 @@
 	}
 
 	#slide_wrapper {
-		font-size: 4em;
+		font-size: 6em;
 
 		font-family: Bahnschrift;
 
 		position: absolute;
 
-		left: 13%;
-		right: 14%;
-		top: 0;
-		bottom: 0;
+		left: 16.2%;
+		right: 13.7%;
+		top: 2%;
+		bottom: 1.5%;
+
+		overflow: hidden;
 	}
 
 	#slide_wrapper.transition {
@@ -95,8 +97,6 @@
 		color: white;
 
 		font-size: 1.25em;
-
-		margin-top: 0.375em;
 
 		display: flex;
 
