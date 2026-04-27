@@ -31,6 +31,9 @@ export interface CasparCGConnection {
 	framerate: number;
 }
 
+/**
+ *
+ */
 export default class Control {
 	private playlist: Playlist;
 	private ws_server: WebsocketServer;
@@ -45,46 +48,46 @@ export default class Control {
 	private readonly client_ws_function_map: {
 		[T in JCGPRecv.Message["command"]]: (msg: never, ws: WebSocket) => void | Promise<void>;
 	} = {
-			new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
-			load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
-				this.load_playlist(msg?.playlist, msg.id, ws),
-			save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
-				this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
-			request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
-				this.get_item_slides(msg.item, msg?.client_id, ws),
-			select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
-				this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
-			navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
-				this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
-			set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
-				this.set_visibility(msg.visibility, ws),
-			toggle_visibility: () => this.toggle_visibility(),
-			move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
-				this.move_playlist_item(msg.from, msg.to, ws),
-			add_item: (msg: JCGPRecv.AddItem, ws: WebSocket) =>
-				this.add_item(msg.props, msg.index, msg.set_active, ws),
-			update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
-				this.update_item(msg.index, msg.props, ws),
-			reload_item: (msg: JCGPRecv.ReloadItem, ws: WebSocket) => this.reload_item(msg.index, ws),
-			delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
-			get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
-				this.get_item_files(msg.type, ws),
-			get_bible: (msg: JCGPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
-			get_media_thumbnails: (msg: JCGPRecv.GetMediaThumbnails, ws: WebSocket) =>
-				this.get_media_thumbnails(msg.files, ws),
-			get_item_data: (msg: JCGPRecv.GetItemData, ws: WebSocket) =>
-				this.get_item_data(msg.type, msg.file, ws),
-			create_playlist_pdf: (msg: JCGPRecv.CreatePlaylistPDF, ws: WebSocket) =>
-				this.create_playlist_pdf(ws, msg.type),
-			update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
-				this.update_playlist_caption(msg.caption, ws),
-			save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) =>
-				this.save_file(msg.path, msg.id, msg, ws, msg.overwrite),
-			new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
-				this.new_directory(msg.path, msg.type, ws),
-			client_confirmation: (msg: JCGPRecv.ClientConfirmation, ws: WebSocket) =>
-				this.client_confirmation(msg.id, msg.option, ws)
-		};
+		new_playlist: (msg: JCGPRecv.NewPlaylist, ws: WebSocket) => this.new_playlist(ws),
+		load_playlist: (msg: JCGPRecv.OpenPlaylist, ws: WebSocket) =>
+			this.load_playlist(msg?.playlist, msg.id, ws),
+		save_playlist: (msg: JCGPRecv.SavePlaylist, ws: WebSocket) =>
+			this.save_playlist(msg.playlist, msg.id, ws, msg.overwrite),
+		request_item_slides: (msg: JCGPRecv.RequestItemSlides, ws: WebSocket) =>
+			this.get_item_slides(msg.item, msg?.client_id, ws),
+		select_item_slide: (msg: JCGPRecv.SelectItemSlide, ws: WebSocket) =>
+			this.select_item_slide(msg?.item, msg?.slide, msg?.client_id, ws),
+		navigate: (msg: JCGPRecv.Navigate, ws: WebSocket) =>
+			this.navigate(msg?.type, msg?.steps, msg?.client_id, ws),
+		set_visibility: (msg: JCGPRecv.SetVisibility, ws: WebSocket) =>
+			this.set_visibility(msg.visibility, ws),
+		toggle_visibility: () => this.toggle_visibility(),
+		move_playlist_item: (msg: JCGPRecv.MovePlaylistItem, ws: WebSocket) =>
+			this.move_playlist_item(msg.from, msg.to, ws),
+		add_item: (msg: JCGPRecv.AddItem, ws: WebSocket) =>
+			this.add_item(msg.props, msg.index, msg.set_active, ws),
+		update_item: (msg: JCGPRecv.UpdateItem, ws: WebSocket) =>
+			this.update_item(msg.index, msg.props, ws),
+		reload_item: (msg: JCGPRecv.ReloadItem, ws: WebSocket) => this.reload_item(msg.index, ws),
+		delete_item: (msg: JCGPRecv.DeleteItem, ws: WebSocket) => this.delete_item(msg.position, ws),
+		get_item_files: (msg: JCGPRecv.GetItemFiles, ws: WebSocket) =>
+			this.get_item_files(msg.type, ws),
+		get_bible: (msg: JCGPRecv.GetBible, ws: WebSocket) => this.get_bible(ws),
+		get_media_thumbnails: (msg: JCGPRecv.GetMediaThumbnails, ws: WebSocket) =>
+			this.get_media_thumbnails(msg.files, ws),
+		get_item_data: (msg: JCGPRecv.GetItemData, ws: WebSocket) =>
+			this.get_item_data(msg.type, msg.file, ws),
+		create_playlist_pdf: (msg: JCGPRecv.CreatePlaylistPDF, ws: WebSocket) =>
+			this.create_playlist_pdf(ws, msg.type),
+		update_playlist_caption: (msg: JCGPRecv.UpdatePlaylistCaption, ws: WebSocket) =>
+			this.update_playlist_caption(msg.caption, ws),
+		save_file: (msg: JCGPRecv.SaveFile, ws: WebSocket) =>
+			this.save_file(msg.path, msg.id, msg, ws, msg.overwrite),
+		new_directory: (msg: JCGPRecv.NewDirectory, ws: WebSocket) =>
+			this.new_directory(msg.path, msg.type, ws),
+		client_confirmation: (msg: JCGPRecv.ClientConfirmation, ws: WebSocket) =>
+			this.client_confirmation(msg.id, msg.option, ws)
+	};
 
 	private readonly ws_message_handler: WebsocketMessageHandler = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -99,6 +102,9 @@ export default class Control {
 		}
 	};
 
+	/**
+	 *
+	 */
 	constructor(ws_server_parameters: WebsocketServerArguments) {
 		// initialize the websocket server
 		logger.log("starting websocket-server");
@@ -109,6 +115,9 @@ export default class Control {
 		this.search_part = new SearchPart();
 	}
 
+	/**
+	 *
+	 */
 	private task_list_add(
 		callback: (options: JCGPSend.ClientConfirmation["options"][0]["value"], ws: WebSocket) => void
 	) {
@@ -123,6 +132,9 @@ export default class Control {
 		return id;
 	}
 
+	/**
+	 *
+	 */
 	private new_playlist(ws: WebSocket) {
 		if (!this.playlist.unsaved_changes) {
 			logger.log("creating new playlist");
@@ -285,6 +297,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private save_playlist(playlist: string, id: string, ws: WebSocket, overwrite: boolean = false) {
 		logger.log(`saving playlist at ${playlist}`);
 
@@ -365,6 +380,9 @@ export default class Control {
 		ws?.send(JSON.stringify(replay_message));
 	}
 
+	/**
+	 *
+	 */
 	private save_file(
 		file: string,
 		id: string,
@@ -473,6 +491,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private send_playlist(
 		new_item_order: number[] = Array.from(Array(this.playlist.playlist_items.length).keys()),
 		client_id?: string,
@@ -501,6 +522,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private send_state(client_id?: string, ws?: WebSocket) {
 		const message = { ...this.playlist.state, client_id };
 
@@ -568,6 +592,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private select_item_slide(item: number, slide: number, client_id?: string, ws?: WebSocket) {
 		// if there is no playlist loaded, send an error
 		if (typeof item !== "number") {
@@ -724,6 +751,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private move_playlist_item(from: number, to: number, ws: WebSocket) {
 		if (typeof from !== "number") {
 			logger.debug("Can't move item: 'from' has to be of type number");
@@ -751,6 +781,9 @@ export default class Control {
 		ws_send_response(`playlist-item has been moved: from '${from}' to '${to}`, true, ws);
 	}
 
+	/**
+	 *
+	 */
 	private add_item(
 		props: ItemProps,
 		index: number | undefined,
@@ -789,6 +822,9 @@ export default class Control {
 		);
 	}
 
+	/**
+	 *
+	 */
 	private update_item(index: number, props: ClientPlaylistItem, ws: WebSocket) {
 		let result: boolean = false;
 
@@ -824,6 +860,9 @@ export default class Control {
 	}
 
 	// reload an item from the disk
+	/**
+	 *
+	 */
 	private reload_item(index: number, ws?: WebSocket) {
 		logger.log(`reloading item: position '${index}'`);
 
@@ -836,6 +875,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private update_playlist_caption(playlist_caption: string, ws: WebSocket) {
 		if (typeof playlist_caption === "string") {
 			logger.debug(`Updating playlist-name to '${playlist_caption}'`);
@@ -852,6 +894,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private delete_item(position: number, ws: WebSocket) {
 		let state_change: boolean = false;
 
@@ -890,6 +935,9 @@ export default class Control {
 		ws_send_response("deleted item from playlist", true, ws);
 	}
 
+	/**
+	 *
+	 */
 	private async get_item_files<K extends keyof ItemFileMap>(type: K, ws: WebSocket) {
 		logger.debug(`retrieving item-files: '${type}'`);
 
@@ -916,6 +964,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private get_bible(ws: WebSocket) {
 		logger.debug("retrieving bible-file");
 
@@ -950,6 +1001,9 @@ export default class Control {
 		ws?.send(JSON.stringify(message));
 	}
 
+	/**
+	 *
+	 */
 	private async get_media_thumbnails(files: CasparFile[], ws: WebSocket) {
 		const thumbnails: Record<string, string> = {};
 
@@ -974,6 +1028,9 @@ export default class Control {
 		ws.send(JSON.stringify(message));
 	}
 
+	/**
+	 *
+	 */
 	private async get_item_data(type: JCGPRecv.GetItemData["type"], path: string, ws: WebSocket) {
 		logger.debug(`Retrieving item-file: '${type}' (${path})`);
 
@@ -1002,6 +1059,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private async create_playlist_pdf(ws: WebSocket, type: JCGPRecv.CreatePlaylistPDF["type"]) {
 		const typst_object = encode(await this.playlist.get_playlist_typst(type === "full"));
 
@@ -1014,7 +1074,7 @@ export default class Control {
 			fs.copyFileSync("typst/johncg-export.typ", typst_template);
 
 			// use different commands based on the operating system
-			const command: string = `${Config.typst_executable} compile ${typst_template}`;
+			const command: string = `${Config.typst_executable} compile "${typst_template}"`;
 
 			let message: JCGPSend.PlaylistPDF;
 
@@ -1025,7 +1085,9 @@ export default class Control {
 
 				message = {
 					command: "playlist_pdf",
-					playlist_pdf: fs.readFileSync(path.join(temp_dir.name, "johncg-export.pdf"), { encoding: "base64" }),
+					playlist_pdf: fs.readFileSync(path.join(temp_dir.name, "johncg-export.pdf"), {
+						encoding: "base64"
+					}),
 					server_id
 				};
 			} catch (e) {
@@ -1049,6 +1111,9 @@ export default class Control {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private async toggle_visibility() {
 		logger.log(
 			`Toggling CasparCG-visibility: '${this.playlist.visibility ? "hidden" : "visible"}'`
@@ -1067,6 +1132,9 @@ export default class Control {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private new_directory<T extends JCGPRecv.NewDirectory["type"]>(
 		path: string,
 		type: T,
@@ -1102,6 +1170,9 @@ export default class Control {
 		});
 	}
 
+	/**
+	 *
+	 */
 	private client_confirmation(
 		id: string,
 		option: JCGPRecv.ClientConfirmation["option"],
@@ -1153,6 +1224,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private ws_on_message(ws: WebSocket, raw_data: RawData) {
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		logger.debug(`received JCGP-message: ${raw_data.toString()}`);
@@ -1197,6 +1271,9 @@ export default class Control {
 		}
 	}
 
+	/**
+	 *
+	 */
 	private check_playlist_loaded(ws?: WebSocket): boolean {
 		if (this.playlist) {
 			return true;
