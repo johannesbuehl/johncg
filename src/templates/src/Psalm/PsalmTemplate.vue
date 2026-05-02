@@ -77,10 +77,10 @@
 
 		position: absolute;
 
-		left: 16.2%;
-		right: 13.7%;
+		left: 6%;
+		right: 5%;
 		top: 2%;
-		bottom: 1.5%;
+		bottom: 3%;
 
 		overflow: hidden;
 	}
@@ -96,7 +96,7 @@
 	#title {
 		color: white;
 
-		font-size: 1.25em;
+		font-size: 1em;
 
 		display: flex;
 
@@ -108,14 +108,12 @@
 	}
 
 	.slide {
+		margin-top: 0.125em;
 		font-size: 0.825em;
 
 		color: black;
 
 		position: absolute;
-
-		top: 14%;
-		bottom: 9%;
 
 		display: flex;
 		flex-direction: column;

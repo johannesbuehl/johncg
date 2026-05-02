@@ -14,6 +14,7 @@
 				caption: "",
 				indent: false
 			},
+			version: "1.0.0",
 			text: []
 		}
 	});
